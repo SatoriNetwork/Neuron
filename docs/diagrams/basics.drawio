@@ -1,0 +1,129 @@
+<mxfile host="65bd71144e">
+    <diagram id="NL--5AqLcosKv5CawPTn" name="Page-1">
+        <mxGraphModel dx="1486" dy="472" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="245" y="280" width="360" height="360" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="Prediction" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fillColor=none;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="25" target="4" edge="1">
+                    <mxGeometry x="0.3537" relative="1" as="geometry">
+                        <Array as="points"/>
+                        <mxPoint as="offset"/>
+                        <mxPoint x="770" y="510" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="24" value="3" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="38" target="25" edge="1">
+                    <mxGeometry x="0.6697" y="10" relative="1" as="geometry">
+                        <mxPoint x="680" y="310" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="660" y="599"/>
+                            <mxPoint x="660" y="599"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="4" value="UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="683" y="299.5" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="1" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="5" target="43" edge="1">
+                    <mxGeometry x="-0.4361" y="15" relative="1" as="geometry">
+                        <mxPoint x="310" y="460" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="105" y="460"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="5" value="External &lt;br&gt;Data Stream&lt;br&gt;Source" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="44" y="299.5" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="&lt;h1&gt;1&lt;/h1&gt;&lt;span style=&quot;text-align: center&quot;&gt;Satori&amp;nbsp;&lt;/span&gt;&lt;span&gt;is meant to consume data whenever it is available, incrementally adding it to the dataset it uses to generate&amp;nbsp; predictive models.&lt;/span&gt;&lt;span style=&quot;text-align: center&quot;&gt;&lt;br&gt;&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="45" y="90" width="190" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="&lt;h1&gt;2&lt;/h1&gt;&lt;span style=&quot;text-align: center&quot;&gt;Satori&amp;nbsp;&lt;/span&gt;&lt;span&gt;continually runs, producing and evaluating models to discover the best way to predict the future values of the data source(s) it consumes.&lt;/span&gt;&lt;span style=&quot;text-align: center&quot;&gt;&lt;br&gt;&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="329" y="90" width="190" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="&lt;h1&gt;3&lt;/h1&gt;&lt;div&gt;Whenever data is added, and a models re-generated, predictions are made available to be consumed by the system or displayed to a user.&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="615" y="90" width="190" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="&lt;h1&gt;4&lt;/h1&gt;&lt;span style=&quot;text-align: center&quot;&gt;Satori&amp;nbsp;&lt;/span&gt;&lt;span&gt;can ingest multiple sources of data, and the set of data sources can be easily updated even in production.&lt;/span&gt;&lt;span style=&quot;text-align: center&quot;&gt;&lt;br&gt;&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="46" y="680" width="190" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="&lt;h1&gt;5&lt;/h1&gt;&lt;span style=&quot;text-align: center&quot;&gt;Satori&amp;nbsp;&lt;/span&gt;&lt;span&gt;conforms the data into multiple possible features through the use of pipelines, allowing it to treat feature selection as merely another hyperparameter to tune.&lt;/span&gt;&lt;span style=&quot;text-align: center&quot;&gt;&lt;br&gt;&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="330" y="680" width="190" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="&lt;h1&gt;6&lt;/h1&gt;&lt;span style=&quot;text-align: center&quot;&gt;Satori&amp;nbsp;&lt;/span&gt;&lt;span&gt;can produce multiple models predicting different response variables. It also semi-chaotically searches for the best parameters and hyper parameters over fime.&lt;/span&gt;&lt;span style=&quot;text-align: center&quot;&gt;&lt;br&gt;&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="615" y="680" width="190" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="Data Stream" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="683" y="569" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="External &lt;br&gt;Data Stream&lt;br&gt;Source" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="45" y="569" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="4" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;fillColor=none;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="27" target="43" edge="1">
+                    <mxGeometry x="-0.3946" y="-15" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="105" y="460"/>
+                        </Array>
+                        <mxPoint x="165.00000000000045" y="480" as="sourcePoint"/>
+                        <mxPoint x="310" y="460" as="targetPoint"/>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="36" style="edgeStyle=orthogonalEdgeStyle;html=1;" parent="1" source="29" target="31" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="Feature Engineering" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="299.5" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="37" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="31" target="32" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="Feature Selection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="390" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" style="edgeStyle=orthogonalEdgeStyle;html=1;" parent="1" source="32" target="38" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="Hyperparameter Tuning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="480" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="42" value="2" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="38" target="29" edge="1">
+                    <mxGeometry x="-0.6624" y="10" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="570" y="599"/>
+                            <mxPoint x="570" y="330"/>
+                            <mxPoint x="530" y="330"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="38" value="Model Training" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="569" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" value="5" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="43" target="29" edge="1">
+                    <mxGeometry x="-0.4301" y="10" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="390" y="460"/>
+                            <mxPoint x="390" y="330"/>
+                            <mxPoint x="410" y="330"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="43" value="Data&lt;br&gt;Merge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="290" y="299.5" width="68" height="321" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="Satori Node" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="383" y="250" width="85" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="Features of the Satori predictive Engine" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=32;" parent="1" vertex="1">
+                    <mxGeometry width="850" height="80" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

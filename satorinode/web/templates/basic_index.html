@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% block head %}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    {% include 'links.html' %}
+    {% block inner_head %}
+    {% block preamble %}{% endblock %}
+    {% block resources %}
+      {% block css_resources %}
+      {{ bokeh_css | indent(8) if bokeh_css }}
+      {% endblock %}
+      {% block js_resources %}
+      {{ bokeh_js | indent(8) if bokeh_js }}
+      {% endblock %}
+    {% endblock %}
+    {% block postamble %}{% endblock %}
+    {% endblock %}
+  </head>
+  {% endblock %}
+  <body class="g-sidenav-show bg-gray-200">
+    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+      {% include 'header.html' %}
+      <div class="container-fluid py-4">
+		{% block content %}
+		{% endblock %}
+        {% include 'footer.html' %}
+      </div>
+    </main>
+  </body>
+</html>

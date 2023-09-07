@@ -1,0 +1,927 @@
+{% extends "basic.html" %}
+{% block content %}
+
+<div class="row">
+  <div class="col-xl-6 col-sm-12 mb-xl-0 mb-4">
+    <div class="card  {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-3 pt-2  {% if darkmode %}dark-colors{% endif %}">
+        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-less-drastic-reverse shadow-drastic{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">wallet</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Wallet</h4>
+        </div>
+        <div class="text-center pt-1">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.showBalance() }}</h4>
+          <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATS</p>
+        </div>
+      </div>
+      <div class="card-footer p-1">
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6 col-sm-12 mt-4 mb-3">
+    <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-drastic{% endif %} border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-line-tasks" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style='float:left;'>Observations</h6>
+        <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>up to 100 most recent observations</p>
+      </div>
+    </div>
+  </div>
+  <!-- we are commenting these out because we're just going to have two stats to start with, we'll add more as we learn to care about them 
+  
+  <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+    <div class="card">
+      <div class="card-header p-3 pt-2">
+        <div class="icon icon-lg icon-shape bg-gradient-primary-reverse1 shadow-drastic text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">water</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0">Predictions</h4>
+        </div>
+        <div class="text-center pt-1">
+          <h4 class="mb-0">53</h4>
+          <p class="text-sm mb-0 text-capitalize">Streams</p>
+        </div>
+      </div>
+      <div class="card-footer p-1">
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+    <div class="card">
+      <div class="card-header p-3 pt-2">
+        <div class="icon icon-lg icon-shape bg-gradient-primary-reverse2 shadow-drastic text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">person</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0">Subscribers</h4>
+        </div>
+        <div class="text-center pt-1">
+          <h4 class="mb-0">53</h4>
+          <p class="text-sm mb-0 text-capitalize">devices</p>
+        </div>
+      </div>
+      <div class="card-footer p-1">
+      </div>
+    </div>
+  </div>
+  -->
+
+<!-- We will add in rank next
+  <div class="col-xl-6 col-sm-6">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+        <div class="icon icon-lg icon-shape bg-gradient-less-drastic-reverse shadow-drastic text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">golf_course</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Rank</h4>
+        </div>
+        <div class="text-center pt-1">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">coming soon</h4>
+          <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">percentile</p>
+        </div>
+      </div>
+      <div class="card-footer p-1">
+      </div>
+    </div>
+  </div>
+-->
+</div>
+
+<!--
+<div class="row mt-4">
+  <div class="col-lg-4 col-md-6 mt-4 mb-4">
+    <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-drastic{% endif %} border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-bars" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style='float:left;'>Win Rate</h6>
+        <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>prior 7 days</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4 col-md-6 mt-4 mb-4">
+    <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-drastic{% endif %} border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-line" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style='float:left;'>Accuracy</h6>
+        <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>entire history</p>
+      </div>
+    </div>
+  </div>
+  
+</div>
+-->
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Predictions</h6>
+            <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+              Prediction data streams published by this Satori Node 
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Source</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Latest</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Prediction</th>
+              </tr>
+            </thead>
+            <tbody id="updating_table">
+              {% for streamOverview in streamsOverview %}
+              <tr class='yellow-hover' onmouseover="setData(chartOne,{{ streamOverview['predictions'] }});setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setData(chartThree,[4,3,2,1]);">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['source'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['stream'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['target'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['value'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['prediction'] }}</h6>
+                  </div>
+                </td>                                                                
+                <!-- example
+                <td>{{ streamOverview['accuracy'] }}</td>
+              <tr>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Streamr</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Gold-4hr</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Close</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">2196</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">2192</h6>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Satori</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">BTC-10min-pred</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">High</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">36912</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">47681</h6>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Streamr</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Montana-Weather-Daily</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Average Temperature</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">68</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">71</h6>
+                  </div>
+                </td>
+                -->
+              </tr> 
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mb-4" style="margin-bottom: 3rem !important;">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+    <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
+      <div class="row">
+      <div class="col-lg-6 col-7">
+        <h6 class="{% if darkmode %}dark-colors{% endif %}">Data Streams</h6>
+        <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
+        Primary data streams published by this Satori Node 
+        </p>
+      </div>
+      </div>
+    </div>
+    <div class="card-body px-0 pb-2">
+      <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+      <table class="table align-items-center mb-0" style="min-width: 1200px;">
+        
+        <thead>
+        <tr>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Name</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Cadence</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Offset</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Datatype</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Description</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Tags</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Url</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Uri</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Headers</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Payload</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Hook</th>
+          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}"></th>
+        </tr>
+        </thead>
+        <tbody id="updating_table">
+        {% for existingRelayStream in relayStreams %}
+		<tr class='yellow-hover'>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['streamId']['stream'] }}</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+            <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['streamId']['target'] }}</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['cadence'] }}</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['offset'] }}</h6>
+                  </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['datatype'] }}</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['description'] }}</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['tags'] }}</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['url'] }}</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['uri'] }}</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['headers'] }}</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['payload'] }}</h6>
+            </div>
+          </td>
+          <td >
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ existingRelayStream['hook'] }}</h6>
+            </div>
+          </td>
+          <td >
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">
+			          <a href="{{ url_for('editStream', topic=existingRelayStream['topic']) }}" onclick="showWorking();">
+                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                    <i class="material-icons {% if darkmode %}dark-text{% endif %}">edit</i>
+                  </button>
+                </a>
+                <a href="{{ url_for('removeStream', source=existingRelayStream['streamId']['source'], stream=existingRelayStream['streamId']['stream'], target=existingRelayStream['streamId']['target']) }}" onclick="showWorking();">
+                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                    <i class="material-icons {% if darkmode %}dark-text{% endif %}">clear</i>
+                  </button>
+                </a>
+			        </h6>
+            </div>
+          </td>
+        </tr> 
+        {% endfor %}
+        <div class="text-center pt-1">
+		  <form action="/register_stream" method="post">
+          {{ newRelayStream.hidden_tag() }}
+		  {{ newRelayStream.csrf_token }}
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="nameDescription();">
+                {{ newRelayStream.name(size=32, class_="tight form-control", placeholder="BTC1HR") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="targetDescription();">
+                {{ newRelayStream.target(size=32, class_="tight form-control", placeholder="Close") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="cadenceDescription();">
+                {{ newRelayStream.cadence(size=32, class_="tight form-control", placeholder="3600") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="offsetDescription();">
+                {{ newRelayStream.offset(size=32, class_="tight form-control", placeholder="108000") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="datatypeDescription();">
+                {{ newRelayStream.datatype(size=32, class_="tight form-control", placeholder="float") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="descriptionDescription();">
+                {{ newRelayStream.description(size=32, class_="tight form-control", placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="tagsDescription();">
+                {{ newRelayStream.tags(size=32, class_="tight form-control", placeholder="bitcoin, 1hr") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="urlDescription();">
+                {{ newRelayStream.url(size=32, class_="tight form-control", placeholder="https://finance.yahoo.com/bitcoin") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="uriDescription();">
+                {{ newRelayStream.uri(size=32, class_="tight form-control", placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="headersDescription();">
+                {{ newRelayStream.headers(size=32, class_="tight form-control", placeholder="Accept: application/json") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="payloadDescription();">
+                {{ newRelayStream.payload(size=32, class_="tight form-control", placeholder="Accept: application/json") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="hookDescription();">
+                {{ newRelayStream.hook(size=32, class_="tight form-control", placeholder="def postRequestHook(r): return -1.0 if r.status_code != 200 else float(r.json['Close'])") }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+              <div class="input-group input-group-outline" onmouseover="submitDescription();" onclick="showWorking();">
+                {{ newRelayStream.submit(size=32, class_="tight form-control") }}
+              </div>
+            </div>
+          </td>
+		  </form>
+        </tbody>
+      </table>
+      <div class="pt-1">
+        <p id="ErrorArea" class="mb-0 text-sm">
+		      {% if newRelayStream.name.errors %}
+            <ul class="errors">
+              {% for error in newRelayStream.name.errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+        	{% endif %}
+    		</p>
+        <p id="helpArea" class="mb-0 text-sm"></p>
+      </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<p id="learn_output"></p>
+<p id="learn_output2"></p>
+<p id="learn_output3"></p>
+
+<script>
+	function deleteRelayStream(name, target) {
+		console.log('DELETE');
+		console.log(name);
+		console.log(target);
+	}	
+</script>
+<script>
+  function defaultMessage() {
+    document.getElementById("helpArea").innerHTML = ""; 
+  }
+  defaultMessage();
+  function nameDescription() {
+    document.getElementById("helpArea").innerHTML = "Name: Name of the data stream.";
+  }
+  function targetDescription() {
+    document.getElementById("helpArea").innerHTML = "Target: (optional) Target, or key of the data stream if that data stream is in the form of a json object with keys and values.";
+  }
+  function cadenceDescription() {
+    document.getElementById("helpArea").innerHTML = "Cadence: The interval in seconds between data points. How often should the endpoint be called and the data collected?";
+  }
+  function offsetDescription() {
+    document.getElementById("helpArea").innerHTML = "Offset: (optional) The offset in seconds from UTC time. For example, if the data is collected at 1 hour intervals, and the offset is 3 hours, then the data will be collected at 1 hour intervals starting at 3 hours after midnight UTC.";
+  }
+  function datatypeDescription() {
+    document.getElementById("helpArea").innerHTML = "Datatype: (optional) The datatype of the target, or stream. For example, 'float' or 'int', or even 'json' if the target data is in the form of a json object.";
+  }
+  function descriptionDescription() {
+    document.getElementById("helpArea").innerHTML = "Description: (optional) A short human-readable description of the data stream.";
+  }
+  function tagsDescription() {
+    document.getElementById("helpArea").innerHTML = "Tag: (optional) List of tags, separated by commas, that describe the data stream.";
+  }  
+  function urlDescription() {
+    document.getElementById("helpArea").innerHTML = "Url: The base URL of the data stream. For example https://finance.yahoo.com/bitcoin";
+  }  
+  function uriDescription() {
+    document.getElementById("helpArea").innerHTML = "Uri: The full URI of the data stream. For example https://finance.yahoo.com/bitcoin?key=supersecretkey. The information input into this field is not saved to the server.";
+  }  
+  function headersDescription() {
+    document.getElementById("helpArea").innerHTML = "Headers: (optional) The headers of the request. The information input into this field is not saved to the server.";
+  }
+  function payloadDescription() {
+    document.getElementById("helpArea").innerHTML = "Payload: (optional) The payload of the request. The information input into this field is not saved to the server.";
+  }  
+  function hookDescription() {
+    document.getElementById("helpArea").innerHTML = "Hook: (optional) A python function that intercepts the response before broadcasting. This can be used to filter the data down to a specific key known as the target. The information input into this field never leaves this device. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly the code does before you submit this form.";
+  }  
+</script>
+
+
+<script src="{{ url_for('static', filename='js/plugins/chartjs.min.js') }}"></script>
+{% if darkmode %}
+<script>
+</script>
+{% else %}
+{% endif %}
+<script>
+  function addData(chart, label, data) {
+    chart.data.labels.push(label);
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.push(data);
+    });
+    chart.update();
+  }
+  function addDataChartThree(label, data, prediction) {
+    chartThree.data.labels.push(label);
+    chartThree.data.datasets[0].data.push(data);
+    chartThree.data.datasets[1].data.push(prediction);
+    chartThree.update();
+  }
+  function addDataChartOne() {
+    addData(chartOne, '', [1]);
+  }
+
+  function removeData(chart) {
+    chart.data.labels.pop();
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.pop();
+    });
+    chart.update();
+  }
+  function removeAllData(chart) {
+    chart.data.labels = [];
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data = [];
+    });
+    chart.update();
+  }
+  function removeDataChartOne() {
+    removeAllData(chartOne);
+  }
+  function setData(chart, data) {
+    removeAllData(chart);
+    let labels = [];
+    for (let x in data) {
+      labels.push('');
+      if (labels.length == data.length){
+        addData(chart, 'now', data[x]);
+      } else {
+        addData(chart, '', data[x]);
+      }
+    }
+  }
+  function setDataChartThree(data, prediction) {
+    removeAllData(chartThree);
+    let labels = [];
+    for (let x in data) {
+      labels.push('');
+      if (labels.length == data.length){
+        addDataChartThree('now', data[x], null);
+      } else {
+        addDataChartThree('', data[x], null);
+      }
+    }
+    console.log(prediction)
+    addDataChartThree('next', null, prediction);
+  }
+  
+  var ctx = document.getElementById("chart-bars").getContext("2d");
+  var chartOne = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["", "", "", "", "", "", "Today"],
+      datasets: [{
+        label: "",
+        tension: 0.4,
+        borderWidth: 0,
+        borderRadius: 4,
+        borderSkipped: false,
+        backgroundColor: "rgba(60, 60, 60, .8)",
+        data: [50, 20, 10, 22, 50, 10, 40],
+        maxBarThickness: 4
+      }, ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            suggestedMin: 0,
+            suggestedMax: 500,
+            beginAtZero: true,
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+            color: "#98999a"
+          },
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [5, 5],
+            color: 'rgba(45, 45, 45, .0)'
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+
+
+  var ctx2 = document.getElementById("chart-line").getContext("2d");
+
+  var chartTwo = new Chart(ctx2, {
+    type: "line",
+    data: {
+      labels: ["", "", "", "", "", "", "", "", "Now"],
+      datasets: [{
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointBackgroundColor: "rgba(60, 60, 60, .8)",
+        pointBorderColor: "transparent",
+        borderColor: "rgba(60, 60, 60, .8)",
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [50, 40, 300, 320, 500, 350, 200, 230, 500],
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+            borderDash: [5, 5]
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+
+  var ctx3 = document.getElementById("chart-line-tasks").getContext("2d");
+
+  var chartThree = new Chart(ctx3, {
+    type: "line",
+    data: {
+      labels: ["", "", "", "", "", "", "", "", "", "Next"],
+      datasets: [{
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointBackgroundColor: "rgba(60, 60, 60, .8)",
+        pointBorderColor: "transparent",
+        borderColor: "rgba(60, 60, 60, .8)",
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [50, 40, 300, 220, 500, 250, 400, 230, 500, null],
+      }, {
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 3,
+        pointBackgroundColor: "rgba(246, 176, 66, .8)",
+        pointBorderColor: "rgba(246, 176, 66, .8)",
+        borderColor: "rgba(246, 176, 66, .8)",
+        borderWidth: 0,
+        backgroundColor: "rgba(246, 176, 66, .8)",
+        fill: true,
+        data: [null, null, null, null, null, null, null, null, null, 450],
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            display: true,
+            padding: 10,
+            color: '#98999a',
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+            borderDash: [5, 5]
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+  var table_output = document.getElementById("updating_table");
+  var table_update = new EventSource("/model-updates");
+  table_update.onmessage = function (e) {
+    if (e.data == "close") {
+      table_update.close();
+    } else {
+      const streamOverview = JSON.parse(e.data);
+      var rows = [];
+      for (var i=0; i<streamOverview.length; i++) {
+		//<tr class='yellow-hover' onmouseenter="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `);">
+        rows.push(`
+        <tr class='yellow-hover' onclick="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `);">
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["source"] + `</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["stream"] + `</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["target"] + `</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["value"] + `</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["prediction"] + `</h6>
+            </div>
+          </td>                                                                
+        </tr>`);
+      }
+      table_output.innerHTML = rows.join("");
+    }
+  };
+</script>
+
+{% endblock %}
+
+
+
+

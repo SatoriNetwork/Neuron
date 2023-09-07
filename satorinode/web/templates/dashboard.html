@@ -1,0 +1,1300 @@
+{% extends "basic.html" %}
+{% block content %}
+
+<div class="row">
+  <div class="col-xl-3 col-sm-12 mb-xl-0 mb-4">
+    <div class="card  {% if darkmode %}dark-colors{% endif %}" style="height:94.6%;">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-less-drastic-reverse shadow-drastic{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">wallet</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Wallet</h4>
+        </div>
+        <div class="text-center pt-1" style="padding-top:5rem !important;">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.showBalance() }}</h4>
+          <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATS</p>
+        </div>
+      </div>
+      <div class="card-footer p-1">
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-9 col-sm-12 mt-4 mb-3">
+    <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-drastic{% endif %} border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-line-tasks" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style='float:left;'>Observations</h6>
+        <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>up to 100 most recent observations</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-4" style="display:none;">
+  <div class="col-lg-4 col-md-6 mt-4 mb-4">
+    <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-drastic{% endif %} border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-bars" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style='float:left;'>Win Rate</h6>
+        <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>prior 7 days</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4 col-md-6 mt-4 mb-4">
+    <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-drastic{% endif %} border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-line" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style='float:left;'>Accuracy</h6>
+        <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>entire history</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Predictions</h6>
+            <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+              Prediction data streams published by this Satori Node 
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Source</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Latest</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Prediction</th>
+              </tr>
+            </thead>
+            <tbody id="updating_table">
+              {% for streamOverview in streamsOverview %}
+              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onmouseover="setData(chartOne,{{ streamOverview['predictions'] }});setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setData(chartThree,[4,3,2,1]);">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['source'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['stream'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['target'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['value'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['prediction'] }}</h6>
+                  </div>
+                </td>                                                                
+                <!-- example
+                <td>{{ streamOverview['accuracy'] }}</td>
+              <tr>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Streamr</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Gold-4hr</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Close</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">2196</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">2192</h6>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Satori</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">BTC-10min-pred</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">High</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">36912</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">47681</h6>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Streamr</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Montana-Weather-Daily</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">Average Temperature</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">68</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm">71</h6>
+                  </div>
+                </td>
+                -->
+              </tr> 
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Data Streams</h6>
+            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
+            Primary data streams published by this Satori Node 
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0" style="min-width: 1200px;">
+            <thead>
+            <tr>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Actions</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Name</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Value</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Cadence</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Offset</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Datatype</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Description</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Tags</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Url</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Uri</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Headers</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Payload</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Hook</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">History</th>
+            </tr>
+            </thead>
+            <tbody id="updating_table">
+              {% for existingRelayStream in relayStreams %}
+              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
+                <td >
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="edit">
+                      <a href="{{ url_for('editStream', topic=existingRelayStream['topic']) }}" onclick="showWorking();">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                          <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">edit</i>
+                        </button>
+                      </a>
+                    </h6>
+                    <h6 class="mb-0 text-lg {% if darkmode %}dark-text{% endif %}" title="remove">
+                      <!--<a href=" url_for('removeStream', source=existingRelayStream['streamId']['source'], stream=existingRelayStream['streamId']['stream'], target=existingRelayStream['streamId']['target']) " onclick="showWorking();">-->
+                      <a href="{{ url_for('removeStream', topic=existingRelayStream['topic']) }}" onclick="showWorking();">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                          <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-left:24px">delete</i>
+                        </button>
+                      </a>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['streamId']['stream'] }}">{{ existingRelayStream['streamId']['stream'] }} </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['streamId']['target'] }}">{{ existingRelayStream['streamId']['target'] }} </h6>
+                  </div>
+                </td>
+                <td >
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['latest'] }}">{{ existingRelayStream['latest'] }} </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="every {{ existingRelayStream['cadence'] }} seconds">{{ existingRelayStream['cadenceStr'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="offset from midnight UTC by {{ existingRelayStream['offset'] }} seconds">{{ existingRelayStream['offsetStr'] }} </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['datatype'] }}">
+                      {% if existingRelayStream['datatype']|length > 33 %} {{ existingRelayStream['datatype'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['datatype'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['description'] }}">
+                      {% if existingRelayStream['description']|length > 33 %} {{ existingRelayStream['description'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['description'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['tags'] }}">
+                      {% if existingRelayStream['tags']|length > 33 %} {{ existingRelayStream['tags'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['tags'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['url'] }}">
+                      {% if existingRelayStream['url']|length > 33 %} {{ existingRelayStream['url'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['url'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['uri'] }}">
+                      {% if existingRelayStream['uri'] != existingRelayStream['url'] %}
+                        {% if existingRelayStream['uri']|length > 33 %} {{ existingRelayStream['uri'][0:30] + '...' }}
+                        {% else %} {{ existingRelayStream['uri'] }}
+                        {% endif %} 
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['headers'] }}">
+                      {% if existingRelayStream['headers']|length > 33 %} {{ existingRelayStream['headers'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['headers'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['payload'] }}">
+                      {% if existingRelayStream['payload']|length > 33 %} {{ existingRelayStream['payload'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['payload'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td >
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['hook'] }}">
+                      {% if existingRelayStream['hook']|length > 33 %} {{ existingRelayStream['hook'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['hook'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td >
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['history'] }}">
+                      {% if existingRelayStream['history']|length > 33 %} {{ existingRelayStream['history'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['history'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+              </tr> 
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mb-4" style="margin-bottom: 3rem !important;">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-12 col-12">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Create Data Stream</h6>
+            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
+              Fill out the form to published a new primary data stream to the Satori Network
+            </p>
+            <div class="pt-3 px-3" style="height:100px;">
+              <p id="ErrorArea" class="mb-0 text-sm">
+                {% if newRelayStream.errors %}
+                <ul class="errors">
+                  {% for field, errors in newRelayStream.errors.items() %}
+                    <li>
+                      {{ field }}
+                      {% for error in errors %}
+                        <ul class="errors">
+                          <li>{{ error }}</li>
+                        </ul>
+                      {% endfor %}
+                    </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </p>
+              <p id="helpArea1" class="mb-0 text-sm"></p>
+              <p id="helpArea" class="mb-0 text-sm"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div style="padding: 1.25rem;">
+          <form action="/register_stream" method="POST">
+            {{ newRelayStream.hidden_tag() }}
+            {{ newRelayStream.csrf_token }}
+            <div class="row">
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="nameDescription();">
+                <div class="tight text-format-table-header">*
+                  {% if darkmode %}{{ newRelayStream.name.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.name.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="nameDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.name(size=32, class_="tight form-control dark-colors", placeholder="BTC1HR") }}
+                    {% else %}{{ newRelayStream.name(size=32, class_="tight form-control", placeholder="BTC1HR") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="targetDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.target.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.target.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="targetDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.target(size=32, class_="tight form-control dark-colors", placeholder="Close") }}
+                    {% else %}{{ newRelayStream.target(size=32, class_="tight form-control", placeholder="Close") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="cadenceDescription();">
+                <div class="tight text-format-table-header">*
+                  {% if darkmode %}{{ newRelayStream.cadence.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.cadence.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="cadenceDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
+                    <input type="number" id="dayCadence" name="dayCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" max=3650>
+                    <span style="font-size: xx-small;display: flex;align-items: center;">hours</span> 
+                    <input type="number" id="hourCadence" name="hourCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" max=24>
+                    <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span> 
+                    <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" max=60>
+                    <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span> 
+                    <input type="number" id="secondCadence" name="secondCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" max=60>
+                    {% if darkmode %}{{ newRelayStream.cadence(size=32, class_="tight form-control dark-colors", placeholder="3600", style="display:none;", id="cadence") }}
+                    {% else %}{{ newRelayStream.cadence(size=32, class_="tight form-control", placeholder="3600", style="display:none;", id="cadence") }}
+                    {% endif %}
+                    <script>
+                      function calculateCadence() {
+                        var seconds = (dayCadenceInput.value*24*60*60) + (hourCadenceInput.value*60*60) + (minuteCadenceInput.value*60) + (secondCadenceInput.value*1)
+                        if (seconds >= 60) {
+                          document.getElementById('cadence').value = seconds;
+                        } else {
+                          document.getElementById('cadence').value = 60;
+                        }
+                      }
+                      const dayCadenceInput = document.getElementById('dayCadence');
+                      const hourCadenceInput = document.getElementById('hourCadence');
+                      const minuteCadenceInput = document.getElementById('minuteCadence');
+                      const secondCadenceInput = document.getElementById('secondCadence');
+                      dayCadenceInput.addEventListener('change', calculateCadence);
+                      hourCadenceInput.addEventListener('change', calculateCadence);
+                      minuteCadenceInput.addEventListener('change', calculateCadence);
+                      secondCadenceInput.addEventListener('change', calculateCadence);
+                      function showCadence() {
+                        var seconds = document.getElementById('cadence').value;
+                        const daySeconds = Math.floor(seconds/24/60/60);
+                        if (daySeconds > 0) {
+                          dayCadenceInput.value = daySeconds;
+                          seconds = seconds - (daySeconds*24*60*60);
+                        }
+                        const hourSeconds = Math.floor(seconds/60/60);
+                        if (hourSeconds > 0) {
+                          hourCadenceInput.value = hourSeconds;
+                          seconds = seconds - (hourSeconds*60*60);
+                        }
+                        const minuteSeconds = Math.floor(seconds/60);
+                        if (minuteSeconds > 0) {
+                          minuteCadenceInput.value = minuteSeconds;
+                          seconds = seconds - (minuteSeconds*60);
+                        }
+                        secondCadenceInput.value = seconds;
+                      }
+                      showCadence();
+                    </script>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="offsetDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.offset.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.offset.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="offsetDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    <span style="font-size: xx-small;display: flex;align-items: center;">hours</span> 
+                    <input type="number" id="hourOffset" name="hourOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" max=24>
+                    <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span> 
+                    <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" max=60>
+                    <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span> 
+                    <input type="number" id="secondOffset" name="secondOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" max=60>
+                    {% if darkmode %}{{ newRelayStream.offset(size=32, class_="tight form-control dark-colors", placeholder="108000", style="display:none;", id="offset") }}
+                    {% else %}{{ newRelayStream.offset(size=32, class_="tight form-control", placeholder="108000", style="display:none;", id="offset") }}
+                    {% endif %}
+                    <script>
+                      function calculateOffset() {
+                        document.getElementById('offset').value = (hourOffsetInput.value*60*60) + (minuteOffsetInput.value*60) + (secondOffsetInput.value*1);
+                      }
+                      const hourOffsetInput = document.getElementById('hourOffset');
+                      const minuteOffsetInput = document.getElementById('minuteOffset');
+                      const secondOffsetInput = document.getElementById('secondOffset');
+                      hourOffsetInput.addEventListener('change', calculateOffset);
+                      minuteOffsetInput.addEventListener('change', calculateOffset);
+                      secondOffsetInput.addEventListener('change', calculateOffset);
+                      function showOffset() {
+                        var seconds = document.getElementById('offset').value;
+                        const hourSeconds = Math.floor(seconds/60/60);
+                        if (hourSeconds > 0) {
+                          hourOffsetInput.value = hourSeconds;
+                          seconds = seconds - (hourSeconds*60*60);
+                        }
+                        const minuteSeconds = Math.floor(seconds/60);
+                        if (minuteSeconds > 0) {
+                          minuteOffsetInput.value = minuteSeconds;
+                          seconds = seconds - (minuteSeconds*60);
+                        }
+                        secondOffsetInput.value = seconds;
+                      }
+                      showOffset();
+                    </script>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="urlDescription();">
+                <div class="tight text-format-table-header">*
+                  {% if darkmode %}{{ newRelayStream.url.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.url.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="urlDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.url(size=32, class_="tight form-control dark-colors", placeholder="https://finance.yahoo.com/bitcoin") }}
+                    {% else %}{{ newRelayStream.url(size=32, class_="tight form-control", placeholder="https://finance.yahoo.com/bitcoin") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="datatypeDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.datatype.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.datatype.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="datatypeDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.datatype(size=32, class_="tight form-control dark-colors", placeholder="float") }}
+                    {% else %}{{ newRelayStream.datatype(size=32, class_="tight form-control", placeholder="float") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="uriDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.uri.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.uri.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="uriDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.uri(size=32, class_="tight form-control dark-colors", placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
+                    {% else %}{{ newRelayStream.uri(size=32, class_="tight form-control", placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="tagsDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.tags.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.tags.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="tagsDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.tags(size=32, class_="tight form-control dark-colors", placeholder="bitcoin, 1hr") }}
+                    {% else %}{{ newRelayStream.tags(size=32, class_="tight form-control", placeholder="bitcoin, 1hr") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div> 
+            </div>
+            <div class="row">
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="headersDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.headers.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.headers.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="headersDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.headers(size=32, class_="tight form-control dark-colors", placeholder="Accept: application/json") }}
+                    {% else %}{{ newRelayStream.headers(size=32, class_="tight form-control", placeholder="Accept: application/json") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="descriptionDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.description.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.description.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="descriptionDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.description(size=32, class_="tight form-control dark-colors", placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
+                    {% else %}{{ newRelayStream.description(size=32, class_="tight form-control", placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>         
+            </div>
+            <div class="row">
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="payloadDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.payload.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.payload.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="payloadDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.payload(size=32, class_="tight form-control dark-colors", placeholder="Accept: application/json") }}
+                    {% else %}{{ newRelayStream.payload(size=32, class_="tight form-control", placeholder="Accept: application/json") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="historyUploadDescription();">
+                <div class="tight text-format-table-header"><label for="historyUpload" class="{% if darkmode %}dark-colors{% endif %}">History File</label></div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="historyUploadDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    <div class='{% if darkmode %}dark-colors{% else %}{%endif%} tight form-control'>
+
+                      <!--<form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">not needed for input field</form>-->
+                      <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" type="file" id="csvFile" name="file" accept=".csv">
+                      <script>
+                        //const form = document.getElementById('uploadForm');
+                        const fileInput = document.getElementById('csvFile');
+                        fileInput.addEventListener('change', () => {
+                            const file = fileInput.files[0];
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            fetch('/upload', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.text())
+                            .then(data => {
+                              console.log(data);  // Optional: Display response from the server
+                              if (data == "Successful upload."){
+                                var historyCode = document.getElementById('historyCode');
+                                historyCode.value = historyCode.value || (
+"class GetHistory(object):"+
+"\n    '''"+
+"\n    supplies the history of the data stream"+
+"\n    one observation at a time (getNext, isDone)"+
+"\n    or all at once (getAll)"+
+"\n    '''"+
+"\n"+
+"\n    def __init__(self):"+
+"\n        super(GetHistory, self).__init__()"+
+"\n"+
+"\n    def getNext(self):"+
+"\n        '''"+
+"\n        should return a value or a list of two values,"+
+"\n        the first being the time in UTC as a string of the observation,"+
+"\n        the second being the observation value"+
+"\n        '''"+
+"\n        return None"+
+"\n"+
+"\n    def isDone(self):"+
+"\n        ''' returns true when there are no more observations to supply '''"+
+"\n        return None"+
+"\n"+
+"\n    def getAll(self):"+
+"\n        ''' "+
+"\n        if getAll returns a list or pandas DataFrame"+
+"\n        then getNext is never called."+
+"\n        csv history sourced from ______"+
+"\n        index assumed to be the first column if there are 2"+
+"\n        '''"+
+"\n        import re"+
+"\n        import pandas as pd"+
+"\n        import datetime as dt"+
+"\n        df = pd.read_csv('/SatoriNode/uploaded/history.csv')"+
+"\n        # if the csv is just a list of values (oldest should be first)"+
+"\n        if len(df.columns) == 1:"+
+"\n            now = str(dt.datetime.utcnow())"+
+"\n            df.index = [now for _ in range(len(df))]"+
+"\n            return df"+
+"\n        # if the csv has two columns the first should be a datetime in the format:"+
+"\n        # YYYY-MM-DD HH:MM:SS.000000"+
+"\n        elif len(df.columns) == 2:"+
+"\n            df = pd.read_csv('/SatoriNode/uploaded/history.csv', index_col=0)"+
+"\n            # if only YYYY-MM-DD are provide, add 0s"+
+"\n            if re.search(r'^\d{4}-\d{2}-\d{2}$', df.index[0]):"+
+"\n                df.index = [f'{d} 00:00:00.000000' for d in df.index]"+
+"\n            df.index.name = None"+
+"\n            return df"+
+"\n        # otherwise just try to use what is given"+
+"\n        return df"+
+"\n");
+                              }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                            });
+                        });
+                      </script>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="hookDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.hook.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.hook.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="hookDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder dark-colors", placeholder=placeholderPostRequestHook )}}
+                    {% else %}{{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder", placeholder=placeholderPostRequestHook) }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="historyDescription();">
+                <div class="tight text-format-table-header">
+                  {% if darkmode %}{{ newRelayStream.history.label(class="dark-colors") }}
+                  {% else %}{{ newRelayStream.history.label }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="historyDescription();">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder dark-colors", placeholder=placeholderGetHistory, id="historyCode") }}
+                    {% else %}{{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder", placeholder=placeholderGetHistory, id="historyCode") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xl-12 col-sm-12">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
+                  <div class="input-group input-group-outline" onclick="">
+                    {% if darkmode %}{{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateJs()) showWorking();") }}
+                    {% else %}{{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateJs()) showWorking();") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p id="learn_output"></p>
+<p id="learn_output2"></p>
+<p id="learn_output3"></p>
+
+<script>
+  function shorten(x) {
+    if (x.length > 25) {
+      return x.substring(0,15) + '...';
+    }
+    return x;
+	}
+
+	function validateJs() {
+		/// this validation() method is always false:
+		//console.log("{ { newRelayStream.validate() } }");
+		//return "{ { newRelayStream.validate() } }" == "True";
+		
+		/// so we're using js to validate the required fields manually:
+		return (
+			document.getElementById("name").value != "" && 
+			document.getElementById("cadence").value >= 60 && 
+			document.getElementById("url").value.startsWith("http")
+      // don't require uri, if blank it'll automatically populate from url
+			//  && document.getElementById("uri").value.startsWith("http") 
+      );
+	}
+</script>
+<script>
+	function deleteRelayStream(name, target) {
+		console.log('DELETE');
+		console.log(name);
+		console.log(target);
+	}	
+</script>
+<script>
+  function defaultMessage() {
+    document.getElementById("helpArea").innerHTML = ""; 
+  }
+  defaultMessage();
+  function nameDescription() {
+    document.getElementById("helpArea1").innerHTML = "Name (required)";
+    document.getElementById("helpArea").innerHTML = "A name of the data stream. No special Characters allowed.";
+  }
+  function targetDescription() {
+    document.getElementById("helpArea1").innerHTML = "Target";
+    document.getElementById("helpArea").innerHTML = "The target, or key of the data stream if that data stream is in the form of a json object with keys and values.";
+  }
+  function cadenceDescription() {
+    document.getElementById("helpArea1").innerHTML = "Cadence (required)";
+    document.getElementById("helpArea").innerHTML = "The interval between data points. How often should the endpoint be called and the data collected?";
+  }
+  function offsetDescription() {
+    document.getElementById("helpArea1").innerHTML = "Offset";
+    document.getElementById("helpArea").innerHTML = "The offset from UTC time. For example, if the data is collected at 1 hour intervals, and the offset is 3 hours, then the data will be collected at 1 hour intervals starting at 3 hours after midnight UTC.";
+  }
+  function datatypeDescription() {
+    document.getElementById("helpArea1").innerHTML = "Datatype";
+    document.getElementById("helpArea").innerHTML = "The datatype of the target, or stream. For example, 'float' or 'int', or even 'json' if the target data is in the form of a json object.";
+  }
+  function descriptionDescription() {
+    document.getElementById("helpArea1").innerHTML = "Description";
+    document.getElementById("helpArea").innerHTML = "A short human-readable description of the data stream.";
+  }
+  function tagsDescription() {
+    document.getElementById("helpArea1").innerHTML = "Tags";
+    document.getElementById("helpArea").innerHTML = "A list of tags, separated by commas, that describe the data stream.";
+  }  
+  function urlDescription() {
+    document.getElementById("helpArea1").innerHTML = "Url (required)";
+    document.getElementById("helpArea").innerHTML = "The base URL of the data stream. For example https://finance.yahoo.com/bitcoin.";
+  }  
+  function uriDescription() {
+    document.getElementById("helpArea1").innerHTML = "Uri (private)";
+    document.getElementById("helpArea").innerHTML = "The full URI of the data stream. For example https://finance.yahoo.com/bitcoin?key=supersecretkey.";
+  }  
+  function headersDescription() {
+    document.getElementById("helpArea1").innerHTML = "Headers (private)";
+    document.getElementById("helpArea").innerHTML = "The headers of the request.";
+  }
+  function payloadDescription() {
+    document.getElementById("helpArea1").innerHTML = "Payload (private)";
+    document.getElementById("helpArea").innerHTML = "The payload of the request.";
+  }  
+  function hookDescription() {
+    document.getElementById("helpArea1").innerHTML = "Hook (private)";
+    document.getElementById("helpArea").innerHTML = "A python function that intercepts the response before broadcasting. This can be used to filter the data down to a specific key known as the target. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly what the code does before you submit this form.";
+  }
+  function historyUploadDescription() {
+    document.getElementById("helpArea1").innerHTML = "History Upload";
+    document.getElementById("helpArea").innerHTML = "A CSV file containing two columns: an index of timestamps (in format YYYY-MM-DD HH:MM:SS.000000) and associated values. This upload will get interpreted by the History code below it.";
+  }
+  function historyDescription() {
+    document.getElementById("helpArea1").innerHTML = "History (private)";
+    document.getElementById("helpArea").innerHTML = "A python class that gathers the history of this data stream before making the data stream publicly available. <br />NOTE: Gathering the history can take a long time, so if you see a spinner for a long time please be patient. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly what the code does before you submit this form.";
+  }  
+</script>
+
+
+<script src="{{ url_for('static', filename='js/plugins/chartjs.min.js') }}"></script>
+{% if darkmode %}
+<script>
+  const lineColor= "rgba(180, 180, 180, .8)";
+</script>
+{% else %}
+<script>
+  const lineColor="rgba(60, 60, 60, .8)";
+</script>
+{% endif %}
+<script>
+  function addData(chart, label, data) {
+    chart.data.labels.push(label);
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.push(data);
+    });
+    chart.update();
+  }
+  function addDataChartThree(label, data, prediction) {
+    chartThree.data.labels.push(label);
+    chartThree.data.datasets[0].data.push(data);
+    chartThree.data.datasets[1].data.push(prediction);
+    chartThree.update();
+  }
+  function addDataChartOne() {
+    addData(chartOne, '', [1]);
+  }
+
+  function removeData(chart) {
+    chart.data.labels.pop();
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.pop();
+    });
+    chart.update();
+  }
+  function removeAllData(chart) {
+    chart.data.labels = [];
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data = [];
+    });
+    chart.update();
+  }
+  function removeDataChartOne() {
+    removeAllData(chartOne);
+  }
+  function setData(chart, data) {
+    removeAllData(chart);
+    let labels = [];
+    for (let x in data) {
+      labels.push('');
+      if (labels.length == data.length){
+        addData(chart, 'now', data[x]);
+      } else {
+        addData(chart, '', data[x]);
+      }
+    }
+  }
+  function setDataChartThree(data, prediction) {
+    removeAllData(chartThree);
+    let labels = [];
+    for (let x in data) {
+      labels.push('');
+      if (labels.length == data.length){
+        addDataChartThree('now', data[x], null);
+      } else {
+        addDataChartThree('', data[x], null);
+      }
+    }
+    console.log(prediction)
+    addDataChartThree('next', null, prediction);
+  }
+  
+  var ctx = document.getElementById("chart-bars").getContext("2d");
+  var chartOne = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["", "", "", "", "", "", "Today"],
+      datasets: [{
+        label: "",
+        tension: 0.4,
+        borderWidth: 0,
+        borderRadius: 4,
+        borderSkipped: false,
+        backgroundColor: lineColor,//"rgba(60, 60, 60, .8)",
+        data: [50, 20, 10, 22, 50, 10, 40],
+        maxBarThickness: 4
+      }, ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            suggestedMin: 0,
+            suggestedMax: 500,
+            beginAtZero: true,
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+            color: "#98999a"
+          },
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [5, 5],
+            color: 'rgba(45, 45, 45, .0)'
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+
+
+  var ctx2 = document.getElementById("chart-line").getContext("2d");
+
+  var chartTwo = new Chart(ctx2, {
+    type: "line",
+    data: {
+      labels: ["", "", "", "", "", "", "", "", "Now"],
+      datasets: [{
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointBackgroundColor: "rgba(60, 60, 60, .8)",
+        pointBorderColor: "transparent",
+        borderColor: lineColor,
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [50, 40, 300, 320, 500, 350, 200, 230, 500],
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+            borderDash: [5, 5]
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+
+  var ctx3 = document.getElementById("chart-line-tasks").getContext("2d");
+
+  var chartThree = new Chart(ctx3, {
+    type: "line",
+    data: {
+      labels: ["", "", "", "", "", "", "", "", "", "Next"],
+      datasets: [{
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointBackgroundColor: "rgba(60, 60, 60, .8)",
+        pointBorderColor: "transparent",
+        borderColor: lineColor,
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [50, 40, 300, 220, 500, 250, 400, 230, 500, null],
+      }, {
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 3,
+        pointBackgroundColor: "rgba(246, 176, 66, .8)",
+        pointBorderColor: "rgba(246, 176, 66, .8)",
+        borderColor: "rgba(246, 176, 66, .8)",
+        borderWidth: 0,
+        backgroundColor: "rgba(246, 176, 66, .8)",
+        fill: true,
+        data: [null, null, null, null, null, null, null, null, null, 450],
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            display: true,
+            padding: 10,
+            color: '#98999a',
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+            borderDash: [5, 5]
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+  var table_output = document.getElementById("updating_table");
+  var table_update = new EventSource("/model-updates");
+  table_update.onmessage = function (e) {
+    if (e.data == "close") {
+      table_update.close();
+    } else {
+      const streamOverview = JSON.parse(e.data);
+      var rows = [];
+      for (var i=0; i<streamOverview.length; i++) {
+		//<tr class='yellow-hover' onmouseenter="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `);">
+        rows.push(`
+        <tr class='{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{%endif%}' onclick="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `);">
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["source"] + `</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["stream"] + `</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["target"] + `</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["value"] + `</h6>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex px-3 py-1">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["prediction"] + `</h6>
+            </div>
+          </td>                                                                
+        </tr>`);
+      }
+      table_output.innerHTML = rows.join("");
+    }
+  };
+</script>
+
+{% endblock %}
+
+
+
+

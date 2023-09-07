@@ -1,0 +1,162 @@
+<!-- SETUP WALLET AND SECURITY -->
+<!-- EXAMPLE REPLACE WITH BETTER TEMPLATE -->
+
+{% extends "basic.html" %}
+
+{% block content %}
+
+  <div class="row">
+    <div class="col-xl-6 col-sm-6 mb-xl-0 mb-4">
+      <form action="" method="post" novalidate>
+        <div class="card {% if darkmode %}dark-colors{% endif %}">
+          <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+            <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-less-drastic-reverse shadow-drastic{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+              <i class="material-icons opacity-10">settings</i>
+            </div>
+            <div class="text-end pt-1">
+              <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Configuration</h4>
+            </div>
+            <div class="text-center pt-1">
+              {{ edit_configuration.hidden_tag() }}
+              <br />
+              <p>
+                <div class="input-group input-group-outline" onmouseover="flaskPortMessage();">
+                  <label class="form-label">{{ edit_configuration.flaskPort.label }}</label>
+                    {% if darkmode %}{{ edit_configuration.flaskPort(size=32, class_="form-control dark-colors") }}
+					{% else %}{{ edit_configuration.flaskPort(size=32, class_="form-control") }}
+					{% endif %}
+                </div>
+              </p><br />
+              <p>
+                <div class="input-group input-group-outline" onmouseover="nodejsPortMessage();">
+                  <label class="form-label">{{ edit_configuration.nodejsPort.label }}</label>
+                    {% if darkmode %}{{ edit_configuration.nodejsPort(size=32, class_="form-control dark-colors") }}
+					{% else %}{{ edit_configuration.nodejsPort(size=32, class_="form-control") }}
+					{% endif %}
+                </div>
+              </p><br />
+              <p>
+                <div class="input-group input-group-outline" onmouseover="dataPathMessage();">
+                  <label class="form-label">{{ edit_configuration.dataPath.label }}</label>
+                    {% if darkmode %}{{ edit_configuration.dataPath(size=32, class_="form-control dark-colors") }}
+					{% else %}{{ edit_configuration.dataPath(size=32, class_="form-control") }}
+					{% endif %}
+                </div>
+              </p><br />
+              <p>
+                <div class="input-group input-group-outline" onmouseover="modelPathMessage();">
+                  <label class="form-label">{{ edit_configuration.modelPath.label }}</label>
+                    {% if darkmode %}{{ edit_configuration.modelPath(size=32, class_="form-control dark-colors") }}
+					{% else %}{{ edit_configuration.modelPath(size=32, class_="form-control") }}
+					{% endif %}
+                </div>
+              </p><br />
+              <p>
+                <div class="input-group input-group-outline" onmouseover="walletPathMessage();">
+                  <label class="form-label">{{ edit_configuration.walletPath.label }}</label>
+                  {% if darkmode %}{{ edit_configuration.walletPath(size=32, class_="form-control dark-colors") }}
+				  {% else %}{{ edit_configuration.walletPath(size=32, class_="form-control") }}
+				  {% endif %}
+                </div>
+              </p><br />
+              <!-- not necessary to show yet, involves some other setup to make it work right.
+                <p>
+                <div class="input-group input-group-outline" onmouseover="defaultSourceMessage();">
+                  <label class="form-label">{ edit_configuration.defaultSource.label }</label>
+                  { edit_configuration.defaultSource(size=3, class_="form-control") }
+                </div>
+              </p><br />-->    
+              <!--  haven't made ability to save chocies to yaml, 
+                    and this isn't right as is, it needs to allow users to add or remove servers.
+              <p>
+                <div class="input-group input-group-outline" onmouseover="electrumxServersMessage();">
+                  <label class="form-label">{ edit_configuration.electrumxServers.label }</label>
+                  { edit_configuration.electrumxServers(size=3, class_="form-control") }
+                </div>
+              </p>-->    
+            </div>
+          </div>
+          <div class="card-footer p-1" onclick="showWorking();">
+            {% if darkmode %}{{ edit_configuration.submit(class_="form-control btn p-0 fixed-plugin-close-button dark-colors") }}
+			{% else %}{{ edit_configuration.submit(class_="form-control btn p-0 fixed-plugin-close-button text-dark") }}
+			{% endif %}
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="col-xl-6 col-sm-6 mb-xl-0 mb-4">
+      <div class="card {% if darkmode %}dark-colors{% endif %}">
+        <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+          <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-less-drastic-reverse shadow-drastic{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+            <i class="material-icons opacity-10">help</i>
+          </div>
+          <div class="text-end pt-1">
+            <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Info</h4>
+          </div>
+          <div class="pt-1">
+            <br /><br />
+            <p id="helpArea" class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}"></p>
+          </div>
+          <br />
+          <hr class="dark horizontal my-0">
+          <div class="card-footer p-1">
+            <p id="warningArea" class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function defaultMessage() {
+      var helpArea = document.getElementById("helpArea");
+      var warningArea = document.getElementById("warningArea");
+      helpArea.innerHTML = "There is a configuration yaml in the directory in which Satori is installed that can be modified directly.";
+      warningArea.innerHTML = "WARNING: These configuration details modify how your Satori Node runs. Please do not modify this value unless you know what you're doing.";
+    }
+    defaultMessage();
+    function flaskPortMessage() {
+      var helpArea = document.getElementById("helpArea");
+      var warningArea = document.getElementById("warningArea");
+      helpArea.innerHTML = "The user interface port is is the port number in the url of this very user interface.";
+      warningArea.innerHTML = "WARNING: Do not modify this value unless you know what you're doing.";
+    }
+    function nodejsPortMessage() {
+      var helpArea = document.getElementById("helpArea");
+      var warningArea = document.getElementById("warningArea");
+      helpArea.innerHTML = "The streamr light client port is the port used to communicate with the Streamr pub sub network.";
+      warningArea.innerHTML = "WARNING: Do not modify this value unless you know what you're doing.";
+    }
+    function dataPathMessage() {
+      var helpArea = document.getElementById("helpArea");
+      var warningArea = document.getElementById("warningArea");
+      helpArea.innerHTML = "The absolute data path is the full path of the folder where streaming data is saved.";
+      warningArea.innerHTML = "WARNING: Do not modify this value unless you know what you're doing.";
+    }
+    function modelPathMessage() {
+      var helpArea = document.getElementById("helpArea");
+      var warningArea = document.getElementById("warningArea");
+      helpArea.innerHTML = "The absolute model path is the full path of the folder where models are saved.";
+      warningArea.innerHTML = "WARNING: Do not modify this value unless you know what you're doing.";
+    }
+    function walletPathMessage() {
+      var helpArea = document.getElementById("helpArea");
+      var warningArea = document.getElementById("warningArea");
+      helpArea.innerHTML = "The absolute wallet path is the full path of the folder where your wallet details are saved. Do not allow anyone else to have access to this directory.";
+      warningArea.innerHTML = "WARNING: Keep it secret, keep it safe. Do not modify this value unless you know what you're doing.";
+    }
+    function defaultSourceMessage() {
+      var helpArea = document.getElementById("helpArea");
+      var warningArea = document.getElementById("warningArea");
+      helpArea.innerHTML = "The default data stream source is the pub sub network this Satori node publishes to automatically. Typically Satori nodes use the satori network, but can use the streamr network for added decentralization. This option requires a small upfront fee to publish the stream to Streamr payable in MATIC, and requires a little configruation in order to pay this fee automatically.";
+      warningArea.innerHTML = "WARNING: Do not select a different source unless you know what you're doing.";
+    }
+    function electrumxServersMessage() {
+      var helpArea = document.getElementById("helpArea");
+      var warningArea = document.getElementById("warningArea");
+      helpArea.innerHTML = "The electrumx servers supply this Satori Node with wallet balances and transaction histories. To reduce the load on any one electrumx server multiple servers can be specified and a random one will be chosen on startup.";
+      warningArea.innerHTML = "WARNING: Do not add or remove servers unless you know what you're doing.";
+    }
+  </script>
+  
+{% endblock %}

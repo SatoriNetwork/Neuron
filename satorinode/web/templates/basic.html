@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% block head %}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    {% include 'links.html' %}
+    {% block inner_head %}
+    {% block preamble %}{% endblock %}
+    {% block resources %}
+      {% block css_resources %}
+      {{ bokeh_css | indent(8) if bokeh_css }}
+      {% endblock %}
+      {% block js_resources %}
+      {{ bokeh_js | indent(8) if bokeh_js }}
+      {% endblock %}
+    {% endblock %}
+    {% block postamble %}{% endblock %}
+    {% endblock %}
+  </head>
+  {% endblock %}
+  <body class="g-sidenav-show {% if darkmode %}bg-gray-900{% else %}bg-gray-200{% endif %}">
+	<div id="working" class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="display: none;">
+		<div class="container-for-center vertical-center" style="padding-left: 0px;">
+		{% if darkmode %}<img src="{{ url_for('static', filename='img/loading_dark.gif') }}" class="loadingThingy">{% else %}<img src="{{ url_for('static', filename='img/loading_light.gif') }}" class="loadingThingy">{% endif %}	
+		</div>
+	  </div>
+    <!--{ % include 'loader.html' %}-->
+    <!--{ % include 'header.html' % }-->
+    {% include 'nav-side.html' %}
+    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+      {% include 'header.html' %}
+      <div class="container-fluid py-4">
+        {% include 'flash.html' %}
+        {% block content %}
+        {% endblock %}
+        {% include 'footer.html' %}
+      </div>
+    </main>
+    <!--{ % include 'settings.html' % }-->
+    {% include 'scripts.html' %}
+	<script>
+		function showWorking() {
+			document.getElementById("working").style.display = "block";
+		}
+		function hideWorking() {
+			document.getElementById("working").style.display = "none";
+		}
+	</script>
+  </body>
+</html>

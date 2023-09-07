@@ -1,0 +1,32 @@
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "BTCUSD", "target": "daily"}'
+: headers: '{"X-CoinAPI-Key" : "88E64267-36B2-49FB-92A4-31E636CC1729"}'
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'):\r\n    '''{'time': '2023-05-27T15:42:21.0000000Z',\
+    \ \r\n        'asset_id_base': 'BTC', \r\n        'asset_id_quote': 'USD', \r\n\
+    \        'rate': 26679.519881731812}\r\n    '''\r\n    if response.status_code\
+    \ == 200 and response.text != '':\r\n        return response.json().get('rate')\r\
+    \n    return None"
+  payload: null
+  uri: https://rest.coinapi.io/v1/exchangerate/BTC/USD
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "something", "target": ""}'
+: headers: null
+  history: null
+  hook: null
+  payload: null
+  uri: http://something.com
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "something", "target": "test"}'
+: headers: null
+  history: null
+  hook: null
+  payload: null
+  uri: http://something.com
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "test", "target": "test"}'
+: headers: null
+  history: null
+  hook: null
+  payload: null
+  uri: http://something.com

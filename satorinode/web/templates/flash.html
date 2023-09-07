@@ -1,0 +1,26 @@
+  <script>
+    function deleteThis(flash){
+		flash.remove();
+    }
+  </script>
+  <article class="flashes">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul style="display: inline-block;">
+          {% for message in messages %}
+		  <li onclick=deleteThis(this) style='padding-bottom: 1rem; list-style-type: disc;'>
+			<!-- would love to have this x as the list-style-type <i class="small material-icons right">close</i>-->
+			<div class="card {% if darkmode %}dark-colors{% endif %}">
+			<a title="remove">
+				<p style="margin: 15px; color: {% if darkmode %}snow{% else %}darkslategray{% endif %}; cursor: pointer;">
+				{{message}}
+				</p>
+			</a>
+			</div>
+          </li>
+		
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+  </article>

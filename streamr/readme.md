@@ -1,0 +1,1 @@
+this folder is the root of a node app designed to contain the streamr light client.

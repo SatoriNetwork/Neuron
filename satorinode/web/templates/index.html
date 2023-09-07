@@ -1,0 +1,406 @@
+<!--<meta http-equiv="refresh" content="3;url={{url_for('index')}}" />-->
+<div class="overlayWhite">
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="container-for-center vertical-center" style="padding-left: 0px;">
+      <li class="card">
+          {% for message in messages %}
+          <h2 class="mb-0" style="margin-bottom: 15px !important; margin-top: 15px; color: #000000; cursor: pointer;">{{message}}</h2>
+          {% endfor %}
+          <h4 id='updating_loading' class="mb-0" style="margin-bottom: 15px !important; margin-top: 15px; color: #000000; cursor: pointer;"></h4>
+        </li>
+    </ul>
+  {% endif %}
+{% endwith %}
+</div>
+{% extends "basic_index.html" %}
+{% block content %}
+
+<div class="row">
+  <div class="col-xl-6 col-sm-6 mb-xl-0 mb-4">
+    <div class="card">
+      <div class="card-header p-3 pt-2">
+        <div class="icon icon-lg icon-shape bg-gradient-less-drastic-reverse shadow-drastic text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">wallet</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0">Wallet</h4>
+        </div>
+        <div class="text-center pt-1">
+          <h4 class="mb-0">unknown</h4>
+          <p class="text-sm mb-0 text-capitalize">SATS</p>
+        </div>
+      </div>
+      <div class="card-footer p-1">
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-xl-6 col-sm-6">
+    <div class="card">
+      <div class="card-header p-3 pt-2">
+        <div class="icon icon-lg icon-shape bg-gradient-less-drastic-reverse shadow-drastic text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">golf_course</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0">Rank</h4>
+        </div>
+        <div class="text-center pt-1">
+          <h4 class="mb-0">unknown</h4>
+          <p class="text-sm mb-0 ">percentile</p>
+        </div>
+      </div>
+      <div class="card-footer p-1">
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mt-4">
+  <div class="col-lg-4 col-md-6 mt-4 mb-4">
+    <div class="card z-index-2 ">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="bg-gradient-lightgrey shadow-drastic border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-bars" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0" style='float:left;'>Win Rate</h6>
+        <p class="mb-0 text-sm" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>prior 7 days</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4 col-md-6 mt-4 mb-4">
+    <div class="card z-index-2  ">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="bg-gradient-lightgrey shadow-drastic border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-line" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0" style='float:left;'>Accuracy</h6>
+        <p class="mb-0 text-sm" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>entire history</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4 mt-4 mb-3">
+    <div class="card z-index-2 ">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="bg-gradient-lightgrey shadow-drastic border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-line-tasks" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0" style='float:left;'>Observations</h6>
+        <p class="mb-0 text-sm" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>up to 100 most recent observations</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card">
+      <div class="card-header pb-0">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6>Predictions</h6>
+            <p class="text-sm mb-0">
+              Streams published by this Satori Node 
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Source</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Stream</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Target</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Latest</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Prediction</th>
+              </tr>
+            </thead>
+            <tbody id="updating_table">
+              
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p id="learn_output"></p>
+<p id="learn_output2"></p>
+<p id="learn_output3"></p>
+<script src="{{ url_for('static', filename='js/plugins/chartjs.min.js') }}"></script>
+<script>
+  var ctx = document.getElementById("chart-bars").getContext("2d");
+  var chartOne = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "",
+        tension: 0.4,
+        borderWidth: 0,
+        borderRadius: 4,
+        borderSkipped: false,
+        backgroundColor: "rgba(60, 60, 60, .8)",
+        data: [],
+        maxBarThickness: 4
+      }, ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            suggestedMin: 0,
+            suggestedMax: 500,
+            beginAtZero: true,
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+            color: "#98999a"
+          },
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [5, 5],
+            color: 'rgba(45, 45, 45, .0)'
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+
+
+  var ctx2 = document.getElementById("chart-line").getContext("2d");
+
+  var chartTwo = new Chart(ctx2, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointBackgroundColor: "rgba(60, 60, 60, .8)",
+        pointBorderColor: "transparent",
+        borderColor: "rgba(60, 60, 60, .8)",
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [],
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+            borderDash: [5, 5]
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+
+  var ctx3 = document.getElementById("chart-line-tasks").getContext("2d");
+
+  var chartThree = new Chart(ctx3, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointBackgroundColor: "rgba(60, 60, 60, .8)",
+        pointBorderColor: "transparent",
+        borderColor: "rgba(60, 60, 60, .8)",
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [],
+      }, {
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 3,
+        pointBackgroundColor: "rgba(246, 176, 66, .8)",
+        pointBorderColor: "rgba(246, 176, 66, .8)",
+        borderColor: "rgba(246, 176, 66, .8)",
+        borderWidth: 0,
+        backgroundColor: "rgba(246, 176, 66, .8)",
+        fill: true,
+        data: [],
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            display: true,
+            padding: 10,
+            color: '#98999a',
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+            borderDash: [5, 5]
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+  var loading_output = document.getElementById("updating_loading");
+  var loading_update = new EventSource("/loading-progress");
+  loading_update.onmessage = function (e) {
+    if (e.data == "close") {
+      loading_update.close();
+      window.location.replace("{{url_for('dashboard')}}");
+    } else {
+      loading_output.innerHTML = e.data;
+    }
+  }
+</script>
+
+{% endblock %}
+
+
+
+

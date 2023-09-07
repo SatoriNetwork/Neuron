@@ -1,0 +1,318 @@
+<mxfile host="65bd71144e">
+    <diagram id="8B1UM-TKubpfmvhL9nei" name="Page-1">
+        <mxGraphModel dx="2707" dy="472" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="18" value="Data Management" style="swimlane;" parent="1" vertex="1">
+                    <mxGeometry x="-840" y="40" width="800" height="1040" as="geometry"/>
+                </mxCell>
+                <mxCell id="56" value="Merge Process" style="swimlane;" parent="18" vertex="1">
+                    <mxGeometry x="40" y="40" width="720" height="200" as="geometry">
+                        <mxRectangle x="40" y="40" width="120" height="23" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="57" style="edgeStyle=none;html=1;" parent="56" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="160" y="70" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="59" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="56" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="100" y="100" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="61" style="edgeStyle=none;html=1;" parent="56" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="320" y="70" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="62" style="edgeStyle=none;html=1;" parent="56" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="260" y="120" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="65" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="56" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="560" y="150" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="77" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="56" source="70" target="75" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="70" value="notify all modelers that predict on that stream" style="rounded=1;whiteSpace=wrap;html=1;" parent="56" vertex="1">
+                    <mxGeometry x="360" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="74" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="56" source="71" target="143" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" value="data comes in on a stream" style="rounded=1;whiteSpace=wrap;html=1;" parent="56" vertex="1">
+                    <mxGeometry x="40" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="144" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="56" source="143" target="70">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="143" value="append to historic memory of stream" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="56">
+                    <mxGeometry x="200" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="75" value="notify all modelers that use that stream to predict another" style="rounded=1;whiteSpace=wrap;html=1;" parent="56" vertex="1">
+                    <mxGeometry x="520" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="79" value="Recommender Process" style="swimlane;" parent="18" vertex="1">
+                    <mxGeometry x="40" y="280" width="720" height="120" as="geometry">
+                        <mxRectangle x="40" y="40" width="120" height="23" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="80" style="edgeStyle=none;html=1;" parent="79" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="160" y="70" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="81" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="79" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="100" y="100" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="82" style="edgeStyle=none;html=1;" parent="79" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="320" y="70" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="83" style="edgeStyle=none;html=1;" parent="79" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="260" y="120" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="84" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="79" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="560" y="150" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="85" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="79" target="92" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="540" y="70" as="targetPoint"/>
+                        <mxPoint x="480" y="70" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="86" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="79" source="87" target="90" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="87" value="inspect the pub sub map from the chain&lt;br&gt;to produce a recommendation" style="rounded=1;whiteSpace=wrap;html=1;" parent="79" vertex="1">
+                    <mxGeometry x="200" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="88" style="edgeStyle=orthogonalEdgeStyle;html=1;" parent="79" source="89" target="87" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="89" value="for all models" style="rounded=1;whiteSpace=wrap;html=1;" parent="79" vertex="1">
+                    <mxGeometry x="40" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="90" value="get the historic data, and subscribe to datastream" style="rounded=1;whiteSpace=wrap;html=1;" parent="79" vertex="1">
+                    <mxGeometry x="360" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="92" value="notify all modelers that a new dataset is available" style="rounded=1;whiteSpace=wrap;html=1;" parent="79" vertex="1">
+                    <mxGeometry x="520" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="110" value="Garbage CollectionProcess " style="swimlane;" parent="18" vertex="1">
+                    <mxGeometry x="40" y="440" width="720" height="120" as="geometry">
+                        <mxRectangle x="40" y="40" width="120" height="23" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="111" style="edgeStyle=none;html=1;" parent="110" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="160" y="70" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="112" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="110" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="100" y="100" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="113" style="edgeStyle=none;html=1;" parent="110" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="320" y="70" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="114" style="edgeStyle=none;html=1;" parent="110" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="260" y="120" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="115" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="110" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="560" y="150" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="117" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="110" source="118" target="121" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="118" value="unsubscribe from the datastream" style="rounded=1;whiteSpace=wrap;html=1;" parent="110" vertex="1">
+                    <mxGeometry x="340" y="40" width="80" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="119" style="edgeStyle=orthogonalEdgeStyle;html=1;" parent="110" source="120" target="118" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="120" value="If the last time a datastream was used in a model was a 30 or more days ago..." style="rounded=1;whiteSpace=wrap;html=1;" parent="110" vertex="1">
+                    <mxGeometry x="150" y="40" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="142" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="110" source="121" target="123" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="121" value="purge historic &lt;br&gt;dataset" style="rounded=1;whiteSpace=wrap;html=1;" parent="110" vertex="1">
+                    <mxGeometry x="450" y="40" width="80" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="123" value="notify all models that the datastream is no longer available" style="rounded=1;whiteSpace=wrap;html=1;" parent="110" vertex="1">
+                    <mxGeometry x="560" y="40" width="150" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="140" style="edgeStyle=orthogonalEdgeStyle;html=1;" parent="110" source="139" target="120" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="139" value="Every data trigger the process&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;" parent="110" vertex="1">
+                    <mxGeometry x="40" y="40" width="80" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="Model Management" style="swimlane;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="40" width="800" height="1040" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" style="edgeStyle=none;html=1;" parent="20" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="640" y="938" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" style="edgeStyle=none;html=1;" parent="20" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="640" y="902" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="11" style="edgeStyle=none;html=1;" parent="20" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="450" y="950" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="12" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="20" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="440" y="860" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="13" style="edgeStyle=none;html=1;" parent="20" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="240" y="860" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="17" style="edgeStyle=none;html=1;" parent="20" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="500" y="830" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="16" style="edgeStyle=none;html=1;" parent="20" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="450" y="770" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="22" value="Model Creation" style="swimlane;" parent="20" vertex="1">
+                    <mxGeometry x="40" y="40" width="720" height="200" as="geometry">
+                        <mxRectangle x="40" y="40" width="120" height="23" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="28" style="edgeStyle=none;html=1;" parent="22" source="24" target="26" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="Feature Engineering&lt;br&gt;(metrics)" style="rounded=1;whiteSpace=wrap;html=1;" parent="22" vertex="1">
+                    <mxGeometry x="40" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="22" source="25" target="24" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="Feature Selection&lt;br&gt;(Whatever is chosen)" style="rounded=1;whiteSpace=wrap;html=1;" parent="22" vertex="1">
+                    <mxGeometry x="40" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" style="edgeStyle=none;html=1;" parent="22" source="26" target="29" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" style="edgeStyle=none;html=1;" parent="22" source="26" target="31" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="Model Training" style="rounded=1;whiteSpace=wrap;html=1;" parent="22" vertex="1">
+                    <mxGeometry x="200" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="Predict" style="rounded=1;whiteSpace=wrap;html=1;" parent="22" vertex="1">
+                    <mxGeometry x="360" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="55" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="22" source="31" target="52" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="Remember Score&lt;br&gt;(accuracy / confidence)" style="rounded=1;whiteSpace=wrap;html=1;" parent="22" vertex="1">
+                    <mxGeometry x="200" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="53" value="Publish Prediction to Stream" style="rounded=1;whiteSpace=wrap;html=1;" parent="22" vertex="1">
+                    <mxGeometry x="560" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="22" source="29" target="53" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="720" y="70" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="52" value="await new data&lt;br&gt;then repeat" style="rounded=1;whiteSpace=wrap;html=1;" parent="22" vertex="1">
+                    <mxGeometry x="560" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="Test Model Creation" style="swimlane;" parent="20" vertex="1">
+                    <mxGeometry x="40" y="280" width="720" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" style="edgeStyle=none;html=1;" parent="23" source="34" target="36" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="34" value="Feature Engineering&lt;br&gt;(metrics)" style="rounded=1;whiteSpace=wrap;html=1;" parent="23" vertex="1">
+                    <mxGeometry x="40" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="39" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="23" source="35" target="34" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="35" value="Feature Selection&lt;br&gt;(smart explore)" style="rounded=1;whiteSpace=wrap;html=1;" parent="23" vertex="1">
+                    <mxGeometry x="40" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" style="edgeStyle=none;html=1;" parent="23" source="36" target="38" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="36" value="Model Training" style="rounded=1;whiteSpace=wrap;html=1;" parent="23" vertex="1">
+                    <mxGeometry x="200" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="43" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="23" source="38" target="42" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="38" value="compare score with Real Model score" style="rounded=1;whiteSpace=wrap;html=1;" parent="23" vertex="1">
+                    <mxGeometry x="360" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" style="edgeStyle=none;html=1;" parent="23" source="42" target="47" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="42" value="Maybe replace real model features and parameters" style="rounded=1;whiteSpace=wrap;html=1;" parent="23" vertex="1">
+                    <mxGeometry x="560" y="40" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" style="edgeStyle=none;html=1;" parent="23" source="44" target="36" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="Hyperparameter Tuning" style="rounded=1;whiteSpace=wrap;html=1;" parent="23" vertex="1">
+                    <mxGeometry x="200" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="23" source="47" target="35" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="620" y="220"/>
+                            <mxPoint x="100" y="220"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="47" value="repeat" style="rounded=1;whiteSpace=wrap;html=1;" parent="23" vertex="1">
+                    <mxGeometry x="560" y="120" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="49" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="23" source="47" target="44" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="350" y="150" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="620" y="220"/>
+                            <mxPoint x="260" y="220"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
