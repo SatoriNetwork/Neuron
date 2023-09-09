@@ -128,7 +128,7 @@ def upload_csv():
     if f.filename == '':
         return 'No selected file', 400
     if f and f.filename.endswith('.csv'):
-        f.save('/SatoriNeuron/uploaded/history.csv')
+        f.save('/Satori/Neuron/uploaded/history.csv')
         # redirect('/dashboard')  # url_for('dashboard')
         return 'Successful upload.', 200
     else:

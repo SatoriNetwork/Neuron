@@ -26,8 +26,8 @@ If you want to run the code you can...
 0. fork and clone this repo
 1. download, install, and run docker
 2. you can mount your local code with this command:  
-    - `docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Node:/SatoriNeuron --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 ./start.sh`
-    - notice `c:\repos\Satori\Node` should be your local path to this repository
+    - `docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 ./start.sh`
+    - notice `c:\repos\Satori\Neuron` should be your local path to this repository
     - notice `--env SATORI_RUN_MODE=prod` indicates that it'll talk to the official servers at satorinet.io
     - while  `--env SATORI_RUN_MODE=dockerdev` indicates that it'll talk to locally running servers which we will opensource eventually.
 
