@@ -1,5 +1,5 @@
-from satoriserver.pubsub.client.a import run as runa
-from satoriserver.pubsub.client.b import run as runb
+from satoricentral.pubsub.client.a import run as runa
+from satoricentral.pubsub.client.b import run as runb
 
 runa()
 runb()

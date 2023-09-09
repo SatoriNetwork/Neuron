@@ -1,7 +1,7 @@
 import json
 import time
-from satoriserver.utils import Crypt
-from satoriserver.pubsub.client.client import Client
+from satoricentral.utils import Crypt
+from satoricentral.pubsub.client.client import Client
 
 
 def run():

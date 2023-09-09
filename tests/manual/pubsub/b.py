@@ -1,6 +1,6 @@
 import json
 import time
-from satoriserver.utils import Crypt
+from satoricentral.utils import Crypt
 from satorilib.pubsub import SatoriPubSubConn
 
 
