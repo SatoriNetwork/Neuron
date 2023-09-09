@@ -1,7 +1,7 @@
 # requires that you disable decryption on pubsub first
 
 import json
-from satoricentral.web.watcher import SatoriPubSubConn
+from satorilib.pubsub import SatoriPubSubConn
 akey = '{"publisher": [{"source": "SATORI", "author": "a", "stream": "stream1_p", "target": "target"}], "subscriptions": [{"source": "SATORI", "author": "b", "stream": "stream3", "target": "target"}]}'
 bkey = '{"publisher": [{"source": "SATORI", "author": "b", "stream": "stream3", "target": "target"}], "subscriptions": [{"source": "SATORI", "author": "a", "stream": "stream1_p", "target": "target"}]}'
 a = SatoriPubSubConn(uid='a', payload=akey)
