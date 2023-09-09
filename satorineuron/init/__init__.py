@@ -8,9 +8,9 @@ from satorilib.pubsub import SatoriPubSubConn
 from satoriengine.concepts import HyperParameter
 from satoriengine.model import metrics
 from satoriengine import ModelManager, Engine, DataManager
-from satorinode import config
-from satorinode import logging
-from satorinode.init.start import StartupDag
+from satorineuron import config
+from satorineuron import logging
+from satorineuron.init.start import StartupDag
 
 
 def establishConnection(pubkey: str, key: str, start: StartupDag, url: str = None):

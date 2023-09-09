@@ -1,6 +1,6 @@
-# from satorinode import spoof
-# from satorinode import init
-from satorinode import config
+# from satorineuron import spoof
+# from satorineuron import init
+from satorineuron import config
 from satorilib import logging
 from satorilib.api.wallet import Wallet
 from satorilib.api.disk import Disk

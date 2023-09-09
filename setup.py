@@ -15,7 +15,7 @@ def get_long_description():
 
 
 def get_name():
-    return 'satorinode'
+    return 'satorineuron'
 
 
 def get_version():

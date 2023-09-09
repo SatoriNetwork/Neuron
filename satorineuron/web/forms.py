@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, IntegerField, SelectField, TextAreaField
 from wtforms.validators import InputRequired, Length, URL, NumberRange, ValidationError
-from satorinode import config
+from satorineuron import config
 
 
 class EditConfigurationForm(FlaskForm):

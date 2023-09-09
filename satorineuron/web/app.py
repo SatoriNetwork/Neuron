@@ -12,12 +12,12 @@ import webbrowser
 from waitress import serve
 from flask import Flask, url_for, render_template, redirect, jsonify
 from flask import send_from_directory, session, request, flash, Response
-from satorinode import config
-from satorinode import logging
-from satorinode.web import forms
+from satorineuron import config
+from satorineuron import logging
+from satorineuron.web import forms
 from satorilib.concepts.structs import Observation, StreamId, StreamsOverview
-from satorinode.init.start import StartupDag
-from satorinode.web.utils import deduceCadenceString
+from satorineuron.init.start import StartupDag
+from satorineuron.web.utils import deduceCadenceString
 
 ###############################################################################
 ## Helpers ####################################################################
@@ -25,7 +25,7 @@ from satorinode.web.utils import deduceCadenceString
 
 
 def spoofStreamer():
-    from satorinode import spoof
+    from satorineuron import spoof
     thread = threading.Thread(target=spoof.Streamr(
         sourceId='streamrSpoof',
         streamId='simpleEURCleanedHL',
@@ -128,7 +128,7 @@ def upload_csv():
     if f.filename == '':
         return 'No selected file', 400
     if f and f.filename.endswith('.csv'):
-        f.save('/SatoriNode/uploaded/history.csv')
+        f.save('/SatoriNeuron/uploaded/history.csv')
         # redirect('/dashboard')  # url_for('dashboard')
         return 'Successful upload.', 200
     else:
@@ -563,7 +563,7 @@ def dashboard():
         newRelayStream.hook.data = badForm.get('hook', '')
         newRelayStream.history.data = badForm.get('history', '')
         return newRelayStream
-    # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorinode.com', uri='https://www.satorinode.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
+    # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
     resp = {
         'darkmode': darkmode,
         'title': 'Satori',

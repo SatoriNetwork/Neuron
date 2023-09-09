@@ -13,7 +13,7 @@ In short, the network watches everything in the real world that people find valu
 
 ## The Code
 
-The SatoriNode repository is the Miner. It houses the Satori AI Engine, a User Interface, an interface to disk, an interface to the Satori Network, and an interface to the blockchain through the SatoriWallet library. Most of the logic of the project lies in the SatoriNode repo, or it's associated libraries. For security reasons the Satori Server code is not publically available.
+The SatoriNeuron repository is the Miner. It houses the Satori AI Engine, a User Interface, an interface to disk, an interface to the Satori Network, and an interface to the blockchain through the SatoriWallet library. Most of the logic of the project lies in the SatoriNeuron repo, or it's associated libraries. For security reasons the Satori Server code is not publically available.
 
 ### Current State
 
@@ -26,7 +26,7 @@ If you want to run the code you can...
 0. fork and clone this repo
 1. download, install, and run docker
 2. you can mount your local code with this command:  
-    - `docker run --rm -it --name satorinode -p 24601:24601 -v c:\repos\Satori\Node:/SatoriNode --env SATORI_RUN_MODE=prod satorinet/satorinode:v1 ./start.sh`
+    - `docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Node:/SatoriNeuron --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 ./start.sh`
     - notice `c:\repos\Satori\Node` should be your local path to this repository
     - notice `--env SATORI_RUN_MODE=prod` indicates that it'll talk to the official servers at satorinet.io
     - while  `--env SATORI_RUN_MODE=dockerdev` indicates that it'll talk to locally running servers which we will opensource eventually.
@@ -34,7 +34,7 @@ If you want to run the code you can...
 ### How to get involved
 
 Review the code, feel free to submit pull requests, review the issues for things that need to be done.
-Feel free to tackle any of these issues or make any improvement you can see using pull requests. You'll notice that the entry point is currently in satorinode/web/app.py
+Feel free to tackle any of these issues or make any improvement you can see using pull requests. You'll notice that the entry point is currently in satorineuron/web/app.py
 
 #### Testing
 

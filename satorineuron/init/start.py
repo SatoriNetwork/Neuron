@@ -2,7 +2,7 @@
 import json
 import time
 import threading
-import satorinode
+import satorineuron
 from satorilib.concepts.structs import StreamId, Stream
 from satorilib.api import disk
 from satorilib.api.wallet import Wallet
@@ -10,9 +10,9 @@ from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.api.udp.rendezvous import UDPRendezvousConnection
-from satorinode import logging
-from satorinode import config
-from satorinode.relay import RawStreamRelayEngine, ValidateRelayStream
+from satorineuron import logging
+from satorineuron import config
+from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 
 
 class StartupDag(object):
@@ -37,7 +37,7 @@ class StartupDag(object):
         self.pubsub: SatoriPubSubConn = None
         self.rendezvous: UDPRendezvousConnection = None
         self.relay: RawStreamRelayEngine = None
-        self.engine: satorinode.engine.Engine = None
+        self.engine: satorineuron.engine.Engine = None
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
 
@@ -84,7 +84,7 @@ class StartupDag(object):
             ''' filter down to prediciton publications '''
             return [s for s in streams if s.predicting is not None]
 
-        self.engine = satorinode.init.getEngine(
+        self.engine = satorineuron.init.getEngine(
             subscriptions=self.subscriptions,
             publications=predictionStreams(self.publications),
             start=self)
@@ -97,7 +97,7 @@ class StartupDag(object):
             self.pubsub = None
         if self.key:
             signature = self.wallet.sign(self.key)
-            self.pubsub = satorinode.init.establishConnection(
+            self.pubsub = satorineuron.init.establishConnection(
                 url=self.urlPubsub,
                 pubkey=self.wallet.publicKey,
                 key=signature + '|' + self.key,
@@ -118,7 +118,7 @@ class StartupDag(object):
 
     def startRelay(self):
         def append(streams: list[Stream]):
-            relays = satorinode.config.get('relay')
+            relays = satorineuron.config.get('relay')
             rawStreams = []
             for x in streams:
                 topic = x.streamId.topic(asJson=True)

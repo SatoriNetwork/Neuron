@@ -7,7 +7,7 @@ import datetime as dt
 import pandas as pd
 from satorilib.api import disk
 from satorilib.concepts.structs import StreamId
-from satorinode import config
+from satorineuron import config
 
 
 class Streamr():
@@ -71,7 +71,7 @@ class Streamr():
 
 
 '''
-from satorinode.lib.engine.structs import Observation
+from satorineuron.lib.engine.structs import Observation
 JSON = (
     '{'
     '"source":"streamrSpoof",'

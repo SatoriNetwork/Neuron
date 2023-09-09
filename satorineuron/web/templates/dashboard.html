@@ -752,7 +752,7 @@
 "\n        import re"+
 "\n        import pandas as pd"+
 "\n        import datetime as dt"+
-"\n        df = pd.read_csv('/SatoriNode/uploaded/history.csv')"+
+"\n        df = pd.read_csv('/SatoriNeuron/uploaded/history.csv')"+
 "\n        # if the csv is just a list of values (oldest should be first)"+
 "\n        if len(df.columns) == 1:"+
 "\n            now = str(dt.datetime.utcnow())"+
@@ -761,7 +761,7 @@
 "\n        # if the csv has two columns the first should be a datetime in the format:"+
 "\n        # YYYY-MM-DD HH:MM:SS.000000"+
 "\n        elif len(df.columns) == 2:"+
-"\n            df = pd.read_csv('/SatoriNode/uploaded/history.csv', index_col=0)"+
+"\n            df = pd.read_csv('/SatoriNeuron/uploaded/history.csv', index_col=0)"+
 "\n            # if only YYYY-MM-DD are provide, add 0s"+
 "\n            if re.search(r'^\d{4}-\d{2}-\d{2}$', df.index[0]):"+
 "\n                df.index = [f'{d} 00:00:00.000000' for d in df.index]"+

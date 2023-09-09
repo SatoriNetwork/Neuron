@@ -9,9 +9,9 @@ from satorilib.api import system
 from satorilib.api.wallet import Wallet
 from satorilib.concepts.structs import Observation, StreamId
 from satorilib.api import hash
-from satorinode import config
-from satorinode import logging
-from satorinode.relay.history import GetHistory
+from satorineuron import config
+from satorineuron import logging
+from satorineuron.relay.history import GetHistory
 
 
 def postRequestHookForNone(r: requests.Response):
