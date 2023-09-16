@@ -100,7 +100,7 @@ class StartupDag(object):
             self.pubsub = satorineuron.init.establishConnection(
                 url=self.urlPubsub,
                 pubkey=self.wallet.publicKey,
-                key=signature + '|' + self.key,
+                key=signature.decode() + '|' + self.key,
                 start=self)
         else:
             raise Exception('no key provided by satori server')

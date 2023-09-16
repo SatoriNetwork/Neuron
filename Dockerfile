@@ -81,4 +81,5 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # RUN OPTIONS
 # docker run --rm -it --name satorineuron -p 24601:24601 -p 24602:4001 -p 24603:5001 -p 24604:23384 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=dockerdev satorinet/satorineuron:v1 bash
 # docker run --rm -it --name satorineuron -p 24601:24601 -p 24602:4001 -p 24603:5001 -p 24604:23384 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 ./start.sh
+# docker run --rm -it --name satorineuron -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:v1 bash
 # docker exec -it satorineuron bash
