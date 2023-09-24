@@ -1,5 +1,21 @@
+'''
+our connection to the rendezvous server and to other peers has to work like this:
+
+0. we sync our topics peers with the rendezvous server client lists:
+    1. we connect to the rendezvous server
+    2. we tell the rendezvous server which streams we want to connect to:
+1. for each stream:
+    1. we create a topic (StreamId)
+    2. we create a channel for each connection in that topic
+    3. if a topic has a connection that was not provided by the server, we 
+    drop that connection.
+    4. we sync history 
+        1. we broadcast a message to all channels in that topic asking for history
+        2. we wait for a response from each channel, and take the most popular
+        3. we receive a request
+        
+'''
 import json
-import time
 from satorilib.concepts import StreamId
 from satorirendezvous.example.client.structs.protocol import ToServerSubscribeProtocol
 from satorirendezvous.example.client.connect import RendezvousAuthenticatedConnection
