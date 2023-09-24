@@ -23,8 +23,9 @@ RUN cd kubo && bash install.sh
 
 RUN mkdir /Satori
 RUN mkdir /Satori/Lib
-RUN mkdir /Satori/Engine
+RUN mkdir /Satori/Rendezvous
 RUN mkdir /Satori/Wallet
+RUN mkdir /Satori/Engine
 RUN mkdir /Satori/Neuron
 RUN mkdir /Satori/Neuron/data
 RUN mkdir /Satori/Neuron/temp
@@ -35,26 +36,31 @@ RUN mkdir /Satori/Neuron/wallet
 COPY Lib/satorilib /Satori/Lib/satorilib
 COPY Lib/setup.py /Satori/Lib/setup.py
 COPY Lib/requirements.txt /Satori/Lib/requirements.txt
-COPY Engine/satoriengine /Satori/Engine/satoriengine
-COPY Engine/setup.py /Satori/Engine/setup.py
-COPY Engine/requirements.txt /Satori/Engine/requirements.txt
+COPY Rendezvous/satorirendezvous /Satori/Rendezvous/satorirendezvous
+COPY Rendezvous/setup.py /Satori/Rendezvous/setup.py
+COPY Rendezvous/requirements.txt /Satori/Rendezvous/requirements.txt
 COPY Wallet/satoriwallet /Satori/Wallet/satoriwallet
 COPY Wallet/reqs /Satori/Wallet/reqs
 COPY Wallet/setup.py /Satori/Wallet/setup.py
 COPY Wallet/requirements.txt /Satori/Wallet/requirements.txt
+COPY Engine/satoriengine /Satori/Engine/satoriengine
+COPY Engine/setup.py /Satori/Engine/setup.py
+COPY Engine/requirements.txt /Satori/Engine/requirements.txt
 COPY Neuron/satorineuron/ /Satori/Neuron/satorineuron/
 COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
 COPY Neuron/setup.py /Satori/Neuron/setup.py
 COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
 
-RUN chmod -R 777 /Satori/Engine
 RUN chmod -R 777 /Satori/Lib
+RUN chmod -R 777 /Satori/Rendezvous
 RUN chmod -R 777 /Satori/Wallet
+RUN chmod -R 777 /Satori/Engine
 RUN chmod -R 777 /Satori/Neuron
 
-RUN cd /Satori/Engine && python setup.py develop
 RUN cd /Satori/Lib && python setup.py develop
+RUN cd /Satori/Rendezvous && python setup.py develop
 RUN cd /Satori/Wallet && python setup.py develop
+RUN cd /Satori/Engine && python setup.py develop
 RUN cd /Satori/Neuron && python setup.py develop
 
 # satori ui
