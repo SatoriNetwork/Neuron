@@ -18,8 +18,8 @@ our connection to the rendezvous server and to other peers has to work like this
 import json
 from satorilib.concepts import StreamId
 from satorirendezvous.example.client.structs.protocol import ToServerSubscribeProtocol
-from satorirendezvous.example.client.connect import RendezvousAuthenticatedConnection
-from satorirendezvous.example.peer.peer import SubscribingPeer
+from satorirendezvous.example.client.rest import RendezvousByRestAuthenticated
+from satorirendezvous.example.peer.rest import SubscribingPeer
 from satorineuron.init.rendezvous.topic import Topic, Topics
 
 
@@ -48,7 +48,8 @@ class AuthenticatedSubscribingPeer(SubscribingPeer):
 
     # override
     def createTopics(self, topics: list[str]):
-        self.topics: Topics = Topics({k: Topic(k) for k in topics})
+        self.topics: Topics = Topics({
+            s.topic(): Topic(s) for s in self.streamIds})
 
     def topicFor(self, streamId: StreamId):
         for name, topic in self.topics.items():
@@ -59,7 +60,7 @@ class AuthenticatedSubscribingPeer(SubscribingPeer):
     # override
 
     def connect(self, rendezvousHost: str, rendezvousPort: int):
-        self.rendezvous: RendezvousAuthenticatedConnection = RendezvousAuthenticatedConnection(
+        self.rendezvous: RendezvousByRestAuthenticated = RendezvousByRestAuthenticated(
             signature=self.signature,
             key=self.key,
             host=rendezvousHost,
