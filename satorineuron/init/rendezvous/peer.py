@@ -23,12 +23,39 @@ from satorirendezvous.example.peer.rest import SubscribingPeer
 from satorineuron.init.rendezvous.topic import Topic, Topics
 
 
+class SignedStreamId(StreamId):
+    ''' unique identifier for a stream '''
+
+    def __init__(
+        self,
+        source: str,
+        author: str,
+        stream: str,
+        target: str = '',
+        sig: str = '',
+        msg: str = '',
+        publish: bool = False
+    ):
+        super().__init__(
+            source,
+            author,
+            stream,
+            target)
+        self.sign(sig, msg, publish)
+
+    def sign(self, sig: str, msg: str, publish: bool = False):
+        ''' proof that I sub/pub to this StreamId; signed by the server '''
+        self.signature = sig
+        self.signed = msg
+        self.publish = publish
+
+
 class AuthenticatedSubscribingPeer(SubscribingPeer):
     ''' manages connection to the rendezvous server and all our udp topics '''
 
     def __init__(
         self,
-        streamIds: list[StreamId],
+        streamIds: list[SignedStreamId],
         rendezvousHost: str,  # https://satorinet.io/rendezvous
         rendezvousPort: int,
         signature: str = None,
