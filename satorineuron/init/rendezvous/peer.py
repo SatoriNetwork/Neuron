@@ -29,7 +29,7 @@ class AuthenticatedSubscribingPeer(SubscribingPeer):
     def __init__(
         self,
         streamIds: list[StreamId],
-        rendezvousHost: str,
+        rendezvousHost: str,  # https://satorinet.io/rendezvous
         rendezvousPort: int,
         signature: str = None,
         key: str = None,
