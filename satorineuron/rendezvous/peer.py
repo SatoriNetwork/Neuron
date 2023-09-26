@@ -15,83 +15,61 @@ our connection to the rendezvous server and to other peers has to work like this
         3. we receive a request
         
 '''
+from typing import Union
 import json
 from satorilib.concepts import StreamId
 from satorirendezvous.example.client.structs.protocol import ToServerSubscribeProtocol
 from satorirendezvous.example.client.rest import RendezvousByRestAuthenticated
 from satorirendezvous.example.peer.rest import SubscribingPeer
-from satorineuron.init.rendezvous.topic import Topic, Topics
+from satorineuron.rendezvous.topic import Topic, Topics
+from satorineuron.rendezvous.structs.domain import SignedStreamId
 
 
-class SignedStreamId(StreamId):
-    ''' unique identifier for a stream '''
-
-    def __init__(
-        self,
-        source: str,
-        author: str,
-        stream: str,
-        target: str = '',
-        sig: str = '',
-        msg: str = '',
-        publish: bool = False
-    ):
-        super().__init__(
-            source,
-            author,
-            stream,
-            target)
-        self.sign(sig, msg, publish)
-
-    def sign(self, sig: str, msg: str, publish: bool = False):
-        ''' proof that I sub/pub to this StreamId; signed by the server '''
-        self.signature = sig
-        self.signed = msg
-        self.publish = publish
-
-
-class AuthenticatedSubscribingPeer(SubscribingPeer):
-    ''' manages connection to the rendezvous server and all our udp topics '''
+class RendezvousPeer(SubscribingPeer):
+    '''
+    manages connection to the rendezvous server and all our udp topics:
+    authenticates and subscribes to our streams
+    '''
+    # TODO: I need to provide my signed wallet id, to prove who I am, just as I
+    # do for the pubsub or sometihng. then the rendezvous server will know I'm
+    # allowed by the server and that my ip is who I say I am. then it will take
+    # my signed stream ids and subscribe me to those streams.
 
     def __init__(
         self,
-        streamIds: list[SignedStreamId],
-        rendezvousHost: str,  # https://satorinet.io/rendezvous
-        rendezvousPort: int,
-        signature: str = None,
-        key: str = None,
+        signedStreamIds: list[SignedStreamId],
+        rendezvousHost: str,
+        signature: str,
+        signed: str,
         handlePeriodicCheckin: bool = True,
         periodicCheckinSeconds: int = 60*60*1,
     ):
         self.signature = signature
-        self.key = key
-        self.streamIds = streamIds
+        self.signed = signed
+        self.signedStreamIds = signedStreamIds
         super().__init__(
             rendezvousHost=rendezvousHost,
-            rendezvousPort=rendezvousPort,
-            topics=[streamId.topic() for streamId in streamIds],
+            topics=[streamId.topic() for streamId in signedStreamIds],
             handlePeriodicCheckin=handlePeriodicCheckin,
             periodicCheckinSeconds=periodicCheckinSeconds)
 
     # override
-    def createTopics(self, topics: list[str]):
+    def createTopics(self):
         self.topics: Topics = Topics({
-            s.topic(): Topic(s) for s in self.streamIds})
+            s.topic(): Topic(s) for s in self.signedStreamIds})
 
-    def topicFor(self, streamId: StreamId):
+    def topicFor(self, streamId: StreamId) -> Union[Topic, None]:
         for name, topic in self.topics.items():
             if name == streamId.topic():
                 return topic
         return None
 
     # override
-
-    def connect(self, rendezvousHost: str, rendezvousPort: int):
+    def connect(self, rendezvousHost: str):
         self.rendezvous: RendezvousByRestAuthenticated = RendezvousByRestAuthenticated(
             signature=self.signature,
-            key=self.key,
+            signed=self.signed,
             host=rendezvousHost,
-            port=rendezvousPort,
             onMessage=self.handleRendezvousMessage)
 
     # never called

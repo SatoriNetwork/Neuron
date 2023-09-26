@@ -9,10 +9,13 @@ from satorilib.api.wallet import Wallet
 from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.pubsub import SatoriPubSubConn
-from satorilib.api.udp.rendezvous import UDPRendezvousConnection
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
+# from satorilib.api.udp.rendezvous import UDPRendezvousConnection # todo: remove from lib
+from satorineuron.rendezvous.peer import RendezvousPeer
+from satorineuron.rendezvous import rendezvous
+from satorineuron.rendezvous.structs.domain import SignedStreamId
 
 
 class StartupDag(object):
@@ -31,11 +34,12 @@ class StartupDag(object):
         self.idKey = None
         self.subscriptionKeys = None
         self.publicationKeys = None
-        self.ipfs: Ipfs = None
+        # self.ipfs: Ipfs = None # remove? idk yet.
+        self.signedStreamIds: list[SignedStreamId] = None
         self.relayValidation: ValidateRelayStream = None
         self.server: SatoriServerClient = None
         self.pubsub: SatoriPubSubConn = None
-        self.rendezvous: UDPRendezvousConnection = None
+        self.peer: RendezvousPeer = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satorineuron.engine.Engine = None
         self.publications: list[Stream] = []
@@ -45,11 +49,11 @@ class StartupDag(object):
         ''' start the satori engine. '''
         if self.full:
             self.createRelayValidation()
-            self.ipfsCli()
+            # self.ipfsCli() # not using ipfs at the moment
             self.openWallet()
             self.checkin()
             self.buildEngine()
-            self.connect()
+            self.pubsubConnect()
             self.rendezvousConnect()
             self.startRelay()
             self.downloadDatasets()
@@ -68,6 +72,7 @@ class StartupDag(object):
         self.details = self.server.checkin()
         self.key = self.details.get('key')
         self.idKey = self.details.get('idKey')
+        self.signedStreamIds: list[SignedStreamId] = None  # todo parse this
         self.subscriptionKeys = self.details.get('subscriptionKeys')
         self.publicationKeys = self.details.get('publicationKeys')
         self.publications = [
@@ -90,7 +95,7 @@ class StartupDag(object):
             start=self)
         self.engine.run()
 
-    def connect(self):
+    def pubsubConnect(self):
         ''' establish a pubsub connection. '''
         if self.pubsub is not None:
             self.pubsub.disconnect()
@@ -109,10 +114,10 @@ class StartupDag(object):
         ''' establish a rendezvous connection. '''
         if self.idKey:
             signature = self.wallet.sign(self.idKey)
-            self.rendezvous = UDPRendezvousConnection(
+            self.peer = rendezvous.generatePeer(
                 signature=signature,
-                key=self.idKey,
-                messageCallback=None,)  # todo: replace with function
+                signed=self.idKey,
+                signedStreamIds=self.signedStreamIds)
         else:
             raise Exception('no key provided by satori server')
 
@@ -140,7 +145,11 @@ class StartupDag(object):
         self.relay.run()
 
     def downloadDatasets(self):
-        ''' download pins (by ipfs address) received from satori server. '''
+        '''
+        download pins (by ipfs address) received from satori server:
+        look at each pin, if not up to date, download it to temporary disk,
+        merge on disk, tell models to pull data again.
+        '''
         def threadedDownload(ipfsAddress, ipfsStream, ipfsPeer, diskApi):
             # TODO:
             # if this fails ask the server for all the pins of this stream.
@@ -197,6 +206,22 @@ class StartupDag(object):
                     args=[ipfsAddress, ipfsStream, ipfsPeer, diskApi],
                     daemon=True)
                 threads[ipfsAddress].start()
+
+    def incrementallyDownloadDatasets(self):
+        '''
+        download pins incrementally by using our p2p rendezvous network:
+        (pins must be signed by self and server for rendezvous to authenticate)
+        for each pin, within it's own thread trigger a download process,
+        during that process send every observation to the Data Manager via 
+        rx streams. the data manager will merge them in memory and write to disk
+        if necessary. beautiful.
+        '''
+        # todo: is a pin already signed, etc?
+        # we don't really need a pin do we? we need a signed stream. which we
+        # should have already received from the server and parsed into objects.
+        # we should make the peer prior to this elsewhere, like this:
+        # for signedStreamId in signedStreamIds:
+        #   rendezvous.getHistoryOf(peer=self.peer, streamId=signedStreamId.streamId)
 
     def pause(self, timeout: int = 60):
         ''' pause the engine. '''

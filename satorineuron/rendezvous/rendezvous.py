@@ -1,21 +1,30 @@
-from satorineuron.init.rendezvous.peer import AuthenticatedSubscribingPeer
-from satorirendezvous.example.server.behaviors.subscribe import SubscribingClientConnect
+from satorilib.concepts import StreamId
+from satorilib.api.time import datetimeFromString, now
+from satorirendezvous.example.peer.structs.message import PeerMessage
+from satorineuron.rendezvous.peer import RendezvousPeer
+from satorineuron.rendezvous.structs.domain import SignedStreamId
 
 
-def exampleUse():
-    ''' 
-    example of how to extend and thereby use the satorirendezvous package
-    '''
-    peer = AuthenticatedSubscribingPeer(
-        behavior=SubscribingClientConnect(),
-        rendezvousHost='161.35.238.159',
-        rendezvousPort=49152,
-        topics=['topic1', 'topic2'],
-        signature='',
-        key='',
+def generatePeer(signature: str, signed: str, signedStreamIds: list[SignedStreamId]):
+    ''' generates a p2p peer '''
+    # ws 161.35.238.159:49152
+    return RendezvousPeer(
+        signedStreamIds=signedStreamIds,
+        rendezvousHost='https://rendezvous.satorinet.io/api/v0/raw',
+        signature=signature,  # 'my signature, encrypted by the server',
+        signed=signed,  # 'my public key and magic salt')
     )
-    peer.topics['topic1'].broadcast('hello world')
-    # use peer, etc...
+
+
+def getHistoryOf(peer: RendezvousPeer, streamId: StreamId):
+    topic = peer.topicFor(streamId)
+    if topic is None:
+        return None  # error?
+    obs: PeerMessage = topic.getOneObservation(time=now())
+    while obs is not None and not obs.isNoObservationResponse():
+        obs = topic.getOneObservation(
+            time=datetimeFromString(obs.observationTime))
+        # save to topic history...
 
 
 #########################
