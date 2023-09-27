@@ -37,6 +37,21 @@ def getHistoryOf(peer: RendezvousPeer, streamId: StreamId, start: StartupDag):
         msg: PeerMessage = topic.getOneObservation(time=now())
         while msg is not None and not msg.isNoObservationResponse():
             foundMsg = True
+            # here we have a situation. we should tell the data manager about
+            # this and let it handle it. but this stream isnt' the best way to
+            # do that because it is built for only new realtime data in mind.
+            # well. we have history datapoints that we may or may not already
+            # have, furthermore, if we do already have it, we should probably
+            # top asking... so what do we do here? technically all ipfs sync
+            # is save the entire ipfs history to disk using:
+            # diskApi.path(aggregate=None, temp=True)
+            # then combines it with what is currently known, on disk, using:
+            # diskApi.compress(includeTemp=True)
+            # but we don't want to do that because we dont' want to download the
+            # entire history. we want to stop once we start seeing data we
+            # already have. so we really need 2-way communication with the data
+            # manager of the engine... so we need to listen to a stream on which
+            # it can respond. which is pretty nasty. so we'll think about it...
             start.engine.data.newData.on_next(
                 ObservationFromPeerMessage.fromPeerMessage(msg))
             msg = topic.getOneObservation(

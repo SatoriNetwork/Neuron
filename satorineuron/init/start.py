@@ -34,7 +34,7 @@ class StartupDag(object):
         self.idKey = None
         self.subscriptionKeys = None
         self.publicationKeys = None
-        # self.ipfs: Ipfs = None # remove? idk yet.
+        self.ipfs: Ipfs = None
         self.signedStreamIds: list[SignedStreamId] = None
         self.relayValidation: ValidateRelayStream = None
         self.server: SatoriServerClient = None
@@ -49,7 +49,7 @@ class StartupDag(object):
         ''' start the satori engine. '''
         if self.full:
             self.createRelayValidation()
-            # self.ipfsCli() # not using ipfs at the moment
+            # self.ipfsCli() # ipfs might be used as a backup to rendezvous
             self.openWallet()
             self.checkin()
             self.buildEngine()
