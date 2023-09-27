@@ -72,7 +72,7 @@ class StartupDag(object):
         self.details = self.server.checkin()
         self.key = self.details.get('key')
         self.idKey = self.details.get('idKey')
-        self.signedStreamIds: list[SignedStreamId] = None  # todo parse this
+        self.signedStreamIds = None  # todo parse this
         self.subscriptionKeys = self.details.get('subscriptionKeys')
         self.publicationKeys = self.details.get('publicationKeys')
         self.publications = [
@@ -220,8 +220,11 @@ class StartupDag(object):
         # we don't really need a pin do we? we need a signed stream. which we
         # should have already received from the server and parsed into objects.
         # we should make the peer prior to this elsewhere, like this:
-        # for signedStreamId in signedStreamIds:
-        #   rendezvous.getHistoryOf(peer=self.peer, streamId=signedStreamId.streamId)
+        for signedStreamId in self.signedStreamIds:
+            rendezvous.getHistoryOf(
+                peer=self.peer,
+                streamId=signedStreamId.streamId,
+                start=self)
 
     def pause(self, timeout: int = 60):
         ''' pause the engine. '''

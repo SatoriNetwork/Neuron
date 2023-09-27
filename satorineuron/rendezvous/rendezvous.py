@@ -1,8 +1,11 @@
-from satorilib.concepts import StreamId
+from satorilib.concepts import StreamId, Observation
 from satorilib.api.time import datetimeFromString, now
 from satorirendezvous.example.peer.structs.message import PeerMessage
 from satorineuron.rendezvous.peer import RendezvousPeer
+from satorineuron.rendezvous.peer import RendezvousPeer
+from satorirendezvous.server.rest.constants import rendezvousPort
 from satorineuron.rendezvous.structs.domain import SignedStreamId
+from satorineuron.init.start import StartupDag
 
 
 def generatePeer(signature: str, signed: str, signedStreamIds: list[SignedStreamId]):
@@ -10,21 +13,60 @@ def generatePeer(signature: str, signed: str, signedStreamIds: list[SignedStream
     # ws 161.35.238.159:49152
     return RendezvousPeer(
         signedStreamIds=signedStreamIds,
-        rendezvousHost='https://rendezvous.satorinet.io/api/v0/raw',
+        rendezvousHost=f'https://satorinet.io:{rendezvousPort}/api/v0/raw/',
         signature=signature,  # 'my signature, encrypted by the server',
         signed=signed,  # 'my public key and magic salt')
     )
 
 
-def getHistoryOf(peer: RendezvousPeer, streamId: StreamId):
-    topic = peer.topicFor(streamId)
-    if topic is None:
-        return None  # error?
-    obs: PeerMessage = topic.getOneObservation(time=now())
-    while obs is not None and not obs.isNoObservationResponse():
-        obs = topic.getOneObservation(
-            time=datetimeFromString(obs.observationTime))
-        # save to topic history...
+def getHistoryOf(peer: RendezvousPeer, streamId: StreamId, start: StartupDag):
+    def tellModelsAboutNewHistory():
+        tellEm = False
+        for model in start.engine.models:
+            if model.variable == streamId:
+                tellEm = True
+            else:
+                for target in model.targets:
+                    if target == streamId:
+                        tellEm = True
+        if tellEm:
+            model.inputsUpdated.on_next(True)
+
+    def gatherHistory():
+        foundMsg = False
+        msg: PeerMessage = topic.getOneObservation(time=now())
+        while msg is not None and not msg.isNoObservationResponse():
+            foundMsg = True
+            start.engine.data.newData.on_next(
+                ObservationFromPeerMessage.fromPeerMessage(msg))
+            msg = topic.getOneObservation(
+                time=datetimeFromString(msg.observationTime))
+        return foundMsg
+
+    def findTopic():
+        return peer.topicFor(streamId)
+        # if topic is None: return False  # error?
+
+    topic = findTopic()
+    if topic and gatherHistory():
+        tellModelsAboutNewHistory()
+
+
+class ObservationFromPeerMessage(Observation):
+    ''' observation object that is created from a peer message '''
+
+    def __init__(self, raw, **kwargs):
+        super().__init__(raw, **kwargs)
+
+    @staticmethod
+    def fromPeerMessage(message: PeerMessage):
+        return Observation(
+            raw=message.raw,
+            sent=message.sent,
+            time=message.time,
+            prefix=message.prefix,
+            observationTime=message.observationTime,
+            data=message.data)
 
 
 #########################
