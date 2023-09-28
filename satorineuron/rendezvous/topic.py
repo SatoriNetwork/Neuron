@@ -84,7 +84,17 @@ class Topic(BaseTopic):
 
     def getLocalCount(self, timestamp: str) -> Union[int, None]:
         ''' returns the count of observations before the timestamp '''
-        return self.disk.getRowCounts()
+        if self.disk.exists() and self.disk.getRowCounts() > self.rows:
+            self.data = self.disk.read()
+        if not hasattr(self, 'data') or self.data is None or (
+            isinstance(self.data, pd.DataFrame) and self.data.empty
+        ):
+            return None
+        try:
+            rows = self.data.loc[self.data.index < timestamp]
+            return rows.shape[0]
+        except IndexError as _:
+            return 0
 
 
 class Topics(LockableDict[str, Topic]):
