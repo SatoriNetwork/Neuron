@@ -1,6 +1,8 @@
-from time import sleep
 from typing import Union
+from time import sleep
 import datetime as dt
+import pandas as pd
+from satorilib.api.disk import Disk
 from satorilib.api.time import now
 from satorirendezvous.lib.lock import LockableDict
 from satorirendezvous.peer.p2p.topic import Topic as BaseTopic
@@ -17,6 +19,8 @@ class Topic(BaseTopic):
         self.channels: Channels = Channels([])
         super().__init__(name=signedStreamId.topic(), port=port)
         self.signedStreamId = signedStreamId
+        self.disk = Disk(id=self.signedStreamId.streamId)
+        self.rows = -1
 
     # override
     def create(self, ip: str, port: int, localPort: int):
@@ -29,7 +33,8 @@ class Topic(BaseTopic):
                     ip=ip,
                     port=port,
                     localPort=localPort,
-                    topicSocket=self.sock))
+                    topicSocket=self.sock,
+                    parent=self))
 
     def getOneObservation(self, time: dt.datetime) -> PeerMessage:
         ''' time is of the most recent observation '''
@@ -54,6 +59,32 @@ class Topic(BaseTopic):
         # by saying this message must make up at least 67% of the responses
         # but I don't think it's necessary for now.
         return mostPopularResponse
+
+    def getLocalObservation(
+        self, timestamp: str,
+    ) -> Union[tuple[Union[str, None], Union[str, None]], None]:
+        ''' returns the observation before the timestamp '''
+        if self.disk.exists() and self.disk.getRowCounts() > self.rows:
+            self.data = self.disk.read()
+        if not hasattr(self, 'data') or self.data is None or (
+            isinstance(self.data, pd.DataFrame) and self.data.empty
+        ):
+            return None
+        if self.signedStreamId.streamId.stream in self.data.columns:
+            column = self.signedStreamId.streamId.stream
+        elif self.signedStreamId.streamId.target in self.data.columns:
+            column = self.signedStreamId.streamId.stream
+        else:
+            column = self.data.columns[0]
+        try:
+            row = self.data.loc[self.data.index < timestamp].iloc[-1]
+            return (row.index, row[column])
+        except IndexError as _:
+            return (None, None)
+
+    def getLocalCount(self, timestamp: str) -> Union[int, None]:
+        ''' returns the count of observations before the timestamp '''
+        return self.disk.getRowCounts()
 
 
 class Topics(LockableDict[str, Topic]):

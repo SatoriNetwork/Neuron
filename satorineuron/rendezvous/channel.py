@@ -7,6 +7,7 @@ from satorirendezvous.lib.lock import LockableList
 from satorirendezvous.peer.p2p.channel import Channel as BaseChannel
 from satorirendezvous.example.peer.structs.message import PeerMessage, PeerMessages
 from satorirendezvous.example.peer.structs.protocol import PeerProtocol
+from satorineuron.rendezvous.topic import Topic
 
 
 class Channel(BaseChannel):
@@ -19,10 +20,12 @@ class Channel(BaseChannel):
         port: int,
         localPort: int,
         topicSocket: socket.socket,
+        parent: Topic,
     ):
         self.streamId = streamId
         self.messages: PeerMessages = PeerMessages([])
         self.disk = Disk(self.streamId)
+        self.parent = parent
         super().__init__(
             topic=self.streamId.topic(),
             ip=ip,
@@ -31,16 +34,66 @@ class Channel(BaseChannel):
             topicSocket=topicSocket)
 
     # override
-    def add(
+    def onMessage(
         self,
         message: bytes,
         sent: bool,
         time: dt.datetime = None,
         **kwargs,
     ):
+        message = PeerMessage(sent=sent, raw=message, time=time)
+        self.add(message=message)
+        self.router(message=message, **kwargs)
+
+    # override
+    def add(self, message: PeerMessage):
         with self.messages:
-            self.messages.append(PeerMessage(
-                sent=sent, raw=message, time=time))
+            self.messages.append(message)
+
+    def router(self, message: PeerMessage, **kwargs):
+        ''' routes the message to the appropriate handler '''
+        # if message.isPing(): do nothing
+        if message.isRequest(subcmd=PeerProtocol.observationSub):
+            self.giveOneObservation(timestamp=message.data)
+        if message.isRequest(subcmd=PeerProtocol.countSub):
+            self.giveCount(timestamp=message.data)
+        # elif message.isResponse():
+        #    self.handleResponse(message=message, **kwargs)
+
+    def giveOneObservation(self, timestamp: str):
+        ''' 
+        returns the observation prior to the time of the most recent observation
+        '''
+        if isinstance(timestamp, dt.datetime):
+            timestamp = datetimeToString(timestamp)
+        # observation = self.disk.lastRowStringBefore(timestap=time)
+        observation = self.parent.getLocalObservation(timestap=timestamp)
+        if observation is None:
+            pass  # send nothing: we don't know.
+        elif observation == (None, None):
+            self.send(PeerProtocol.respondNone(
+                subcmd=PeerProtocol.observationSub))
+        else:
+            self.send(PeerProtocol.respond(
+                subcmd=PeerProtocol.observationSub,
+                time=observation[0],
+                data=observation[1]))
+
+    def giveCount(self, timestamp: str):
+        ''' 
+        returns the observation prior to the time of the most recent observation
+        '''
+        if isinstance(timestamp, dt.datetime):
+            timestamp = datetimeToString(timestamp)
+        # observation = self.disk.lastRowStringBefore(timestap=time)
+        count = self.parent.getLocalCount(timestamp=timestamp)
+        if count is None:
+            pass  # send nothing: we don't know.
+        else:
+            self.send(PeerProtocol.respond(
+                subcmd=PeerProtocol.countSub,
+                time=timestamp,
+                data=count))
 
     def requests(self):
         return [msg for msg in self.messages if msg.isRequest()]
@@ -62,20 +115,6 @@ class Channel(BaseChannel):
 
     def responseAfter(self, time: dt.datetime):
         return [msg for msg in self.theirResponses() if msg.time > time]
-
-    def giveOneObservation(self, time: dt.datetime):
-        ''' 
-        returns the observation prior to the time of the most recent observation
-        '''
-        if isinstance(time, dt.datetime):
-            time = datetimeToString(time)
-        observation = self.disk.lastRowStringBefore(timestap=time)
-        if observation is None:
-            self.send(PeerProtocol.respondNoObservation())
-        else:
-            self.send(PeerProtocol.respondObservation(
-                time=observation[0],
-                data=observation[1]))
 
 
 class Channels(LockableList[Channel]):
