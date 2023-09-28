@@ -1,8 +1,10 @@
 # todo create config if no config present, use config if config present
+from typing import Union
 import json
 import time
 import threading
 import satorineuron
+import satoriengine
 from satorilib.concepts.structs import StreamId, Stream
 from satorilib.api import disk
 from satorilib.api.wallet import Wallet
@@ -13,7 +15,6 @@ from satorineuron import logging
 from satorineuron import config
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 # from satorilib.api.udp.rendezvous import UDPRendezvousConnection # todo: remove from lib
-from satorineuron.rendezvous.peer import RendezvousPeer
 from satorineuron.rendezvous import rendezvous
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 
@@ -23,25 +24,25 @@ class StartupDag(object):
 
     def __init__(self, urlServer: str = None, urlPubsub: str = None, *args):
         super(StartupDag, self).__init__(*args)
-        self.full = True
-        self.urlServer = urlServer
-        self.urlPubsub = urlPubsub
-        self.paused = False
-        self.pauseThread = None
-        self.wallet = None
-        self.details = None
-        self.key = None
-        self.idKey = None
-        self.subscriptionKeys = None
-        self.publicationKeys = None
-        self.ipfs: Ipfs = None
-        self.signedStreamIds: list[SignedStreamId] = None
-        self.relayValidation: ValidateRelayStream = None
-        self.server: SatoriServerClient = None
-        self.pubsub: SatoriPubSubConn = None
-        self.peer: RendezvousPeer = None
-        self.relay: RawStreamRelayEngine = None
-        self.engine: satorineuron.engine.Engine = None
+        self.full: bool = True
+        self.urlServer: str = urlServer
+        self.urlPubsub: str = urlPubsub
+        self.paused: bool = False
+        self.pauseThread: Union[threading.Thread, None] = None
+        self.wallet: Wallet
+        self.details: dict
+        self.key: str
+        self.idKey: str
+        self.subscriptionKeys: str
+        self.publicationKeys: str
+        self.ipfs: Ipfs
+        self.signedStreamIds: list[SignedStreamId]
+        self.relayValidation: ValidateRelayStream
+        self.server: SatoriServerClient
+        self.pubsub: SatoriPubSubConn
+        self.peer: rendezvous.RendezvousEngine
+        self.relay: RawStreamRelayEngine
+        self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
 
@@ -89,7 +90,7 @@ class StartupDag(object):
             ''' filter down to prediciton publications '''
             return [s for s in streams if s.predicting is not None]
 
-        self.engine = satorineuron.init.getEngine(
+        self.engine: satoriengine.Engine = satorineuron.init.getEngine(
             subscriptions=self.subscriptions,
             publications=predictionStreams(self.publications),
             start=self)
@@ -114,10 +115,12 @@ class StartupDag(object):
         ''' establish a rendezvous connection. '''
         if self.idKey:
             signature = self.wallet.sign(self.idKey)
-            self.peer = rendezvous.generatePeer(
-                signature=signature,
-                signed=self.idKey,
-                signedStreamIds=self.signedStreamIds)
+            self.peer = rendezvous.RendezvousEngine(
+                peer=rendezvous.generatePeer(
+                    signature=signature,
+                    signed=self.idKey,
+                    signedStreamIds=self.signedStreamIds),
+                start=self)
         else:
             raise Exception('no key provided by satori server')
 
@@ -150,7 +153,12 @@ class StartupDag(object):
         look at each pin, if not up to date, download it to temporary disk,
         merge on disk, tell models to pull data again.
         '''
-        def threadedDownload(ipfsAddress, ipfsStream, ipfsPeer, diskApi):
+        def threadedDownload(
+            ipfsAddress: str,
+            ipfsStream: StreamId,
+            ipfsPeer: str,
+            diskApi: disk.Disk,
+        ):
             # TODO:
             # if this fails ask the server for all the pins of this stream.
             # the other pins will be reported by the subscribers. download
@@ -220,11 +228,11 @@ class StartupDag(object):
         # we don't really need a pin do we? we need a signed stream. which we
         # should have already received from the server and parsed into objects.
         # we should make the peer prior to this elsewhere, like this:
-        for signedStreamId in self.signedStreamIds:
-            rendezvous.getHistoryOf(
-                peer=self.peer,
-                streamId=signedStreamId.streamId,
-                start=self)
+        # this is something we need to do on a periodic basis, and not right
+        # as soon as we start up. so like the engine, and the relay service,
+        # this should be run in a separate thread... which will cycle through
+        # our streamIds and gather history for each one periodically.
+        self.peer.run()
 
     def pause(self, timeout: int = 60):
         ''' pause the engine. '''

@@ -57,7 +57,7 @@ def getEngine(
     subscriptions: list[Stream],
     publications: list[Stream],
     start: StartupDag,
-):
+) -> Engine:
     ''' starts the Engine. returns Engine. '''
 
     def generateModelManager():
