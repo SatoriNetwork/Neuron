@@ -7,7 +7,7 @@ from satorirendezvous.lib.lock import LockableList
 from satorirendezvous.peer.p2p.channel import Channel as BaseChannel
 from satorirendezvous.example.peer.structs.message import PeerMessage, PeerMessages
 from satorirendezvous.example.peer.structs.protocol import PeerProtocol
-from satorineuron.rendezvous.topic import Topic
+# from satorineuron.rendezvous.topic import Topic
 
 
 class Channel(BaseChannel):
@@ -20,7 +20,7 @@ class Channel(BaseChannel):
         port: int,
         localPort: int,
         topicSocket: socket.socket,
-        parent: Topic,
+        parent: 'Topic',
     ):
         self.streamId = streamId
         self.messages: PeerMessages = PeerMessages([])

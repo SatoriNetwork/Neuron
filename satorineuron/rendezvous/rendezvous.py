@@ -1,21 +1,20 @@
 import time
 import threading
 from satorilib.concepts import StreamId, Observation
-from satorilib.api import disk
 from satorilib.utils.eq import eq
+from satorilib.api import disk
 from satorilib.api.time import datetimeFromString, now
 from satorirendezvous.example.peer.structs.message import PeerMessage
-from satorineuron.rendezvous.peer import RendezvousPeer
-from satorineuron.rendezvous.peer import RendezvousPeer
 from satorirendezvous.server.rest.constants import rendezvousPort
+from satorineuron.rendezvous.peer import RendezvousPeer
 from satorineuron.rendezvous.structs.domain import SignedStreamId
-from satorineuron.init.start import StartupDag
+# from satorineuron.init.start import StartupDag
 
 
 class RendezvousEngine():
-    def __init__(self, peer: RendezvousPeer, start: StartupDag):
+    def __init__(self, peer: RendezvousPeer, start: 'StartupDag'):
         self.peer: RendezvousPeer = peer
-        self.start: StartupDag = start
+        self.start: 'StartupDag' = start
 
     def getHistoryOf(self, streamId: StreamId):
 

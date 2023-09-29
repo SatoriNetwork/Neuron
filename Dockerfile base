@@ -4,7 +4,7 @@
 
 # python:slim will eventually fail, if we need to revert try this:
 # FROM python:slim3.12.0b1-slim
-FROM python:slim
+FROM python:3.9-slim
 
 RUN apt-get update
 RUN apt-get install -y build-essential
@@ -21,6 +21,7 @@ RUN cd kubo && bash install.sh
 # echo $IPFS_PATH
 # RUN ipfs init # do not init. it will be initialized by the node, so that each container has a unique ID.
 
+# todo: maybe just move all this to the code part.
 RUN mkdir /Satori
 RUN mkdir /Satori/Lib
 RUN mkdir /Satori/Rendezvous
@@ -65,13 +66,12 @@ RUN cd /Satori/Neuron && python setup.py develop
 
 # satori ui
 EXPOSE 24601 
-# i don't remember what these are for... 
-EXPOSE 3000
 
 # ipfs web ui
-EXPOSE 5002
+#EXPOSE 5002
 # ipfs 
-EXPOSE 4001 5001 23384
+#EXPOSE 4001 5001 23384
+#EXPOSE 3000
 
 WORKDIR /Satori/Neuron/satorineuron/web
 
@@ -79,13 +79,12 @@ WORKDIR /Satori/Neuron/satorineuron/web
 #CMD ["python", "./app.py" ]
 
 # BUILD PROCESS:
-# copy to and run from ../ (cd C:\repos\Satori)
-# C:\repos\Satori> docker build --no-cache -t satorinet/satorineuron:v1 .
-# docker push satorinet/satorineuron:v1
-# description: Miner environment and software for the Satori Network
+# copy to and run from ../ (cd ..)
+# \Satori> docker build --no-cache -t satorinet/satorineuron:base .
 
 # RUN OPTIONS
-# docker run --rm -it --name satorineuron -p 24601:24601 -p 24602:4001 -p 24603:5001 -p 24604:23384 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=dockerdev satorinet/satorineuron:v1 bash
-# docker run --rm -it --name satorineuron -p 24601:24601 -p 24602:4001 -p 24603:5001 -p 24604:23384 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 ./start.sh
-# docker run --rm -it --name satorineuron -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:v1 bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -p 24602:4001 -p 24603:5001 -p 24604:23384 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=dockerdev satorinet/satorineuron:base bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -p 24602:4001 -p 24603:5001 -p 24604:23384 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=prod satorinet/satorineuron:base ./start.sh
+# docker run --rm -it --name satorineuron -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:base bash
+# docker run --rm -it --name satorineuron satorinet/satorineuron:base bash
 # docker exec -it satorineuron bash
