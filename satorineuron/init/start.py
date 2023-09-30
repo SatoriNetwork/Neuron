@@ -52,10 +52,10 @@ class StartupDag(object):
         # self.ipfsCli() # ipfs might be used as a backup to rendezvous
         self.openWallet()
         self.checkin()
-        # self.buildEngine()
-        # self.pubsubConnect()
+        self.buildEngine()
+        self.pubsubConnect()
+        self.startRelay()
         # self.rendezvousConnect()
-        # self.startRelay()
         # self.downloadDatasets()
 
     def createRelayValidation(self):
@@ -70,19 +70,17 @@ class StartupDag(object):
     def checkin(self):
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
         self.details = CheckinDetails(self.server.checkin())
-        print('details', self.details)
-        self.key = self.details.get('key')
-        self.idKey = self.details.get('idKey')
+        self.key = self.details.key
+        self.idKey = self.details.idKey
         self.signedStreamIds = None  # todo parse this
-        self.subscriptionKeys = self.details.get('subscriptionKeys')
-        self.publicationKeys = self.details.get('publicationKeys')
+        self.subscriptionKeys = self.details.subscriptionKeys
+        self.publicationKeys = self.details.publicationKeys
         self.publications = [
             Stream.fromMap(x)
-            for x in json.loads(self.details.get('publications'))]
-        logging.debug("publications:", self.publications)
+            for x in json.loads(self.details.publications)]
         self.subscriptions = [
             Stream.fromMap(x)
-            for x in json.loads(self.details.get('subscriptions'))]
+            for x in json.loads(self.details.subscriptions)]
 
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
@@ -140,9 +138,7 @@ class StartupDag(object):
             return rawStreams
 
         if self.relay is not None:
-            logging.debug('killing!')
             self.relay.kill()
-            logging.debug('done killing!')
         self.relay = RawStreamRelayEngine(
             start=self, streams=append(self.publications))
         self.relay.run()
@@ -165,20 +161,11 @@ class StartupDag(object):
             # them at random. or latest updated or oldest stream? idk.
 
             # go get the ipfs history and merge it in to the dataset.
-            # logging.debug('diskApi.readBoth()')
-            # logging.debug(diskApi.readBoth(temp=True))
-            # logging.debug('ipfs.get')
-            logging.debug('IPFSSTREAM', ipfsStream)
-            logging.debug(self.ipfs.connectIfMissing(peer=ipfsPeer))
-            logging.debug(self.ipfs.get(
+            self.ipfs.connectIfMissing(peer=ipfsPeer)
+            self.ipfs.get(
                 hash=ipfsAddress,
-                abspath=diskApi.path(aggregate=None, temp=True)))
-            logging.debug('merging...')
+                abspath=diskApi.path(aggregate=None, temp=True))
             diskApi.compress(includeTemp=True)
-            # logging.debug('ipfs.get2')
-            # logging.debug(ipfs.get(
-            #    hash=ipfs,
-            #    abspath=diskApi.path(aggregate=None, temp=True)))
             # tell models that use this dataset to go get all their data.
             for model in self.engine.models:
                 if model.variable == ipfsStream:
@@ -191,10 +178,9 @@ class StartupDag(object):
         # we should make the download run in parellel so using async functions
         # here. but in the meantime, we'll do them sequentially.
         threads = {}
-        pins = self.details.get('pins')
+        pins = self.details.pins
         if isinstance(pins, str):
             pins = json.loads(pins)
-        logging.debug('pins', pins)
         for pin in [p for p in pins if p.get('pin_author') == p.get('stream_author')]:
             ipfsAddress = pin.get('ipfs')
             ipfsPeer = pin.get('peer')

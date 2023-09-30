@@ -790,7 +790,7 @@
                   {% endif %}
                 </div>
               </div>
-              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="hookDescription();">
+              <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="hookDescription();" onclick="hookCreation();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
                     {% if darkmode %}{{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder dark-colors", placeholder=placeholderPostRequestHook )}}
@@ -928,7 +928,11 @@
   function historyDescription() {
     document.getElementById("helpArea1").innerHTML = "History (private)";
     document.getElementById("helpArea").innerHTML = "A python class that gathers the history of this data stream before making the data stream publicly available. <br />NOTE: Gathering the history can take a long time, so if you see a spinner for a long time please be patient. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly what the code does before you submit this form.";
-  }  
+  } 
+  async function hookCreation()  {
+    const response = await fetch('http://127.0.0.1:24601/hook/' + document.getElementById("target").value);
+    document.getElementById("hook").value = await response.text();
+  }
 </script>
 
 

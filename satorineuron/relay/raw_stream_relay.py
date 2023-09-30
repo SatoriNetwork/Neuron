@@ -17,12 +17,12 @@ from satorilib import logging
 
 
 def postRequestHookForNone(r: requests.Response):
-    logging.debug('postRequestHook default method')
+    # logging.debug('postRequestHook default method')
     return r.text
 
 
 def postRequestHook(r: requests.Response):
-    logging.debug('postRequestHook default method')
+    # logging.debug('postRequestHook default method')
     return r.text
 
 
@@ -91,16 +91,15 @@ class RawStreamRelayEngine:
                     exec(stream.hook, globals())
                     hookFunction = postRequestHook
                 except Exception as e:
-                    logging.debug('HOOK CREATION ERROR 1:', e)
+                    logging.error('HOOK CREATION ERROR 1:', e)
                     return None
             try:
                 text = hookFunction(r)
             except Exception as e:
-                logging.debug('HOOK EXECUTION ERROR 2:', e)
+                logging.error('HOOK EXECUTION ERROR 2:', e)
                 return None
             if text in ['', None] or (isinstance(text, str) and len(text) > 1000):
                 return None  # ret could return boolean, so return None if failure
-            logging.debug('called!', text)
             return text
         return None
 
@@ -120,7 +119,7 @@ class RawStreamRelayEngine:
             self.relay(stream, data=result)
         else:
             # log or flash message or something...
-            logging.debug(
+            logging.error(
                 'result is None, something is wrong, maybe the API is down?')
 
     def runForever(self):

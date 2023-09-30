@@ -15,12 +15,12 @@ from satorineuron.relay.history import GetHistory
 
 
 def postRequestHookForNone(r: requests.Response):
-    logging.debug('postRequestHook default method')
+    # logging.debug('postRequestHook default method')
     return r.text
 
 
 def postRequestHook(r: requests.Response):
-    logging.debug('postRequestHook default method')
+    # logging.debug('postRequestHook default method')
     return r.text
 
 
@@ -71,19 +71,19 @@ class ValidateRelayStream(object):
         #    # heuristic, there's a possibility, if something went wrong,
         #    # that the stream is saved locally but not registered on server...
         #    return True
-        logging.debug('REGISTER STREAM')
-        logging.debug({
-            'source': data.get('source', 'satori'),
-            'pubkey': self.start.wallet.publicKey,
-            'stream': data.get('name'),
-            'target': data.get('target', ''),
-            'cadence': data.get('cadence'),
-            'offset': data.get('offset'),
-            'datatype': data.get('datatype'),
-            'url': data.get('url'),
-            'tags': data.get('tags'),
-            'description': data.get('description'),
-        })
+        # logging.debug('REGISTER STREAM')
+        # logging.debug({
+        #    'source': data.get('source', 'satori'),
+        #    'pubkey': self.start.wallet.publicKey,
+        #    'stream': data.get('name'),
+        #    'target': data.get('target', ''),
+        #    'cadence': data.get('cadence'),
+        #    'offset': data.get('offset'),
+        #    'datatype': data.get('datatype'),
+        #    'url': data.get('url'),
+        #    'tags': data.get('tags'),
+        #    'description': data.get('description'),
+        # })
         r = self.start.server.registerStream(stream={
             'source': data.get('source', 'satori'),
             'pubkey': self.start.wallet.publicKey,
@@ -125,7 +125,7 @@ class ValidateRelayStream(object):
             },
             'reason': {},
         })
-        logging.debug(f'trying to subscribe to my own datastream: {r.text}')
+        # logging.debug(f'trying to subscribe to my own datastream: {r.text}')
         if (r.status_code == 200 and r.text not in ['', None]):
             return r.text
         return False
@@ -209,12 +209,12 @@ class ValidateRelayStream(object):
                 exec(data.get('hook'), globals())
                 hookFunction = postRequestHook
             except Exception as e:
-                logging.debug('HOOK CREATION ERROR:', e)
+                logging.error('HOOK CREATION ERROR:', e)
                 return None
         try:
             ret = hookFunction(text)
         except Exception as e:
-            logging.debug('HOOK EXECUTION ERROR:', e)
+            logging.error('HOOK EXECUTION ERROR:', e)
             return None
         if ret in ['', None] or (isinstance(ret, str) and len(ret) > 1000):
             return None  # ret could return boolean, so return None if failure
@@ -227,14 +227,14 @@ class ValidateRelayStream(object):
                 exec(data.get('history'), globals())
                 historyInstance = GetHistory()
             except Exception as e:
-                logging.debug('HISTORY CREATION ERROR:', e)
+                logging.error('HISTORY CREATION ERROR:', e)
                 return False
             if historyInstance is not None:
                 try:
                     if not historyInstance.isDone():
                         nextValue = historyInstance.getNext()
                 except Exception as e:
-                    logging.debug('HISTORY EXECUTION ERROR:', e)
+                    logging.error('HISTORY EXECUTION ERROR:', e)
                     return False
                 return True  # return nextValue? no, just tell is no err.
         return None
@@ -256,7 +256,7 @@ class ValidateRelayStream(object):
                 saver.saveAll([i for i in generator()])
                 return True
             except Exception as e:
-                logging.debug(e)
+                logging.error(e)
                 return False
 
         def saveIncrementally():
@@ -314,7 +314,6 @@ class RelayStreamHistorySaver(object):
         ''' save this observation to the right parquet file on disk '''
         index = []
         columns = []
-        logging.debug('saveAll', values)
         if isinstance(values, list) and len(values) > 0:
             if all([isinstance(v, str) for v in values]):
                 index = [str(dt.datetime.utcnow()) for _ in values]
@@ -345,7 +344,6 @@ class RelayStreamHistorySaver(object):
                         [self.id.author],
                         [self.id.stream],
                         columns]))
-            logging.debug('saveAll df', df)
             self.disk.write(df.sort_index())
             return True
         return False
@@ -362,7 +360,7 @@ class RelayStreamHistorySaver(object):
         try:
             self.disk.compress()
         except Exception as e:
-            logging.debug('ERROR: unable to compress:', e)
+            logging.error('ERROR: unable to compress:', e)
 
     def pin(self, path: str = None):
         ''' pins the data to ipfs, returns pin address '''
@@ -388,7 +386,6 @@ class RelayStreamHistorySaver(object):
             #           it at this time.
         }
         self.start.server.registerPin(pin=payload)
-        logging.debug('validation registerPin:', payload)
 
     def pathForDataset(self):
         return self.disk.path(aggregate=None)

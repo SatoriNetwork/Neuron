@@ -240,6 +240,37 @@ def edit_configuration():
     return present_form(edit_configuration)
 
 
+@app.route('/hook/<target>', methods=['GET'])
+def hook(target: str = 'Close'):
+    ''' generates a hook for the given target '''
+    def replaceLastOccurrence(input_str, old_substring, new_substring):
+        parts = input_str.rsplit(old_substring, 1)
+        if len(parts) > 1:
+            return parts[0] + new_substring + parts[1]
+        else:
+            return input_str
+
+    def generateDrill():
+        parts = target.split('.')
+        return replaceLastOccurrence(''.join([
+            '.get("' + part + '", {})' for part in parts]), ', {})', ', None)')
+
+    target = target if target != '' else 'Close'
+    return f"""def postRequestHook(response: 'requests.Response'): 
+    '''
+    called and given the response each time
+    the endpoint for this data stream is hit.
+    returns the value of the observaiton 
+    as a string, integer or double.
+    if empty string is returned the observation
+    is not relayed to the network.
+    '''                    
+    if response.text != '':
+        return float(response.json(){generateDrill()})
+    return None
+""", 200
+
+
 @app.route('/relay', methods=['POST'])
 def relay():
     '''
@@ -413,7 +444,6 @@ def editStream(topic=None):
         badForm = [
             s for s in start.relay.streams
             if s.streamId.topic() == topic][0].asMap(noneToBlank=True)
-        logging.debug('badForm', badForm)
     except IndexError:
         # on rare occasions
         # IndexError: list index out of range
@@ -454,7 +484,6 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
             start.startRelay()
         else:
             msg = 'Unable to delete stream.'
-        logging.debug('removeStream', msg, doRedirect)
         if doRedirect:
             flash(msg)
             return redirect('/dashboard')
@@ -517,8 +546,8 @@ def dashboard():
                             'accuracy': '97.062 %', 'prediction': '3621.00', 'value': '3548.00', 'predictions': [2, 3, 1]}]
     else:
         streamsOverview = [model.overview() for model in start.engine.models]
-    logging.debug('streamsOverview')
-    logging.debug(streamsOverview)
+    # logging.debug('streamsOverview')
+    # logging.debug(streamsOverview)
 
     import importlib
     global forms
@@ -586,7 +615,7 @@ def dashboard():
     is not relayed to the network.
     '''                    
     if response.text != '':
-        return float(response.json.get('Close', -1.0))
+        return float(response.json().get('Close', -1.0))
     return -1.0
 """,
         'placeholderGetHistory': """class GetHistory(object):
@@ -710,8 +739,6 @@ def update():
     so we can call .on_next() here to pass along the update got here from the
     Streamr LightClient, and trigger a new prediction.
     '''
-    # logging.debug('POSTJSON:', request.json)
-    logging.debug('POSTJSON...')
     x = Observation(request.json)
     start.engine.data.newData.on_next(x)
 

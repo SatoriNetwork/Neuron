@@ -179,9 +179,6 @@ def getEngine(
     DataManager.setConfig(config)
     modelManager = generateModelManager()
     dataMananger = DataManager(start=start)
-    logging.debug("modelManager", modelManager)
-    logging.debug("dataMananger", dataMananger)
-    logging.debug('----------------------------------------------------')
     return Engine(
         start=start,
         data=dataMananger,
