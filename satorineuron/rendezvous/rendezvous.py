@@ -8,13 +8,13 @@ from satorirendezvous.example.peer.structs.message import PeerMessage
 from satorirendezvous.server.rest.constants import rendezvousPort
 from satorineuron.rendezvous.peer import RendezvousPeer
 from satorineuron.rendezvous.structs.domain import SignedStreamId
-# from satorineuron.init.start import StartupDag
+# from satorineuron.init.start import StartupDag # circular import...
 
 
 class RendezvousEngine():
-    def __init__(self, peer: RendezvousPeer, start: 'StartupDag'):
+    def __init__(self, peer: RendezvousPeer, start):  # 'StartupDag'
         self.peer: RendezvousPeer = peer
-        self.start: 'StartupDag' = start
+        self.start = start  # 'StartupDag'
 
     def getHistoryOf(self, streamId: StreamId):
 

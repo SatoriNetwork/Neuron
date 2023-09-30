@@ -65,14 +65,7 @@ start = StartupDag(
         'prod': None,  # 'ws://satorinet.io:3000',
         'dockerdev': 'ws://192.168.0.10:3000',
     }[MODE])
-start.createRelayValidation()
-start.ipfsCli()
-start.openWallet()
-start.checkin()
-start.buildEngine()
-start.connect()
-start.startRelay()
-start.downloadDatasets()
+start.start()
 
 ###############################################################################
 ## Functions ##################################################################

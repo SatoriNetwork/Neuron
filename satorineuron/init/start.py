@@ -10,6 +10,7 @@ from satorilib.api import disk
 from satorilib.api.wallet import Wallet
 from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
+from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
 from satorineuron import logging
 from satorineuron import config
@@ -24,7 +25,6 @@ class StartupDag(object):
 
     def __init__(self, urlServer: str = None, urlPubsub: str = None, *args):
         super(StartupDag, self).__init__(*args)
-        self.full: bool = True
         self.urlServer: str = urlServer
         self.urlPubsub: str = urlPubsub
         self.paused: bool = False
@@ -39,25 +39,24 @@ class StartupDag(object):
         self.signedStreamIds: list[SignedStreamId]
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
-        self.pubsub: SatoriPubSubConn
+        self.pubsub: SatoriPubSubConn = None
         self.peer: rendezvous.RendezvousEngine
-        self.relay: RawStreamRelayEngine
+        self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
 
     def start(self):
         ''' start the satori engine. '''
-        if self.full:
-            self.createRelayValidation()
-            # self.ipfsCli() # ipfs might be used as a backup to rendezvous
-            self.openWallet()
-            self.checkin()
-            self.buildEngine()
-            self.pubsubConnect()
-            self.rendezvousConnect()
-            self.startRelay()
-            self.downloadDatasets()
+        self.createRelayValidation()
+        # self.ipfsCli() # ipfs might be used as a backup to rendezvous
+        self.openWallet()
+        self.checkin()
+        # self.buildEngine()
+        # self.pubsubConnect()
+        # self.rendezvousConnect()
+        # self.startRelay()
+        # self.downloadDatasets()
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream(start=self)
@@ -70,7 +69,8 @@ class StartupDag(object):
 
     def checkin(self):
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
-        self.details = self.server.checkin()
+        self.details = CheckinDetails(self.server.checkin())
+        print('details', self.details)
         self.key = self.details.get('key')
         self.idKey = self.details.get('idKey')
         self.signedStreamIds = None  # todo parse this
