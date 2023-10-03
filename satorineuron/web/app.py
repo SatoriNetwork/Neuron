@@ -739,7 +739,7 @@ def update():
     so we can call .on_next() here to pass along the update got here from the
     Streamr LightClient, and trigger a new prediction.
     '''
-    x = Observation(request.json)
+    x = Observation.parse(request.json)
     start.engine.data.newData.on_next(x)
 
     return request.json

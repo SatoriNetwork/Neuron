@@ -350,7 +350,7 @@ class RelayStreamHistorySaver(object):
 
     def saveIncremental(self, value):
         ''' save this observation to the right parquet file on disk '''
-        self.disk.append(Observation({
+        self.disk.append(Observation.parse({
             'topic': self.id.topic(),
             'data': value
         }).df.copy())

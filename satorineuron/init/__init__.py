@@ -23,7 +23,7 @@ def establishConnection(pubkey: str, key: str, start: StartupDag, url: str = Non
         # manager seems like a extra thread that isn't necessary, a middle man.
         if response != 'failure: error, a minimum 10 seconds between publications per topic.':
             if response.startswith('{"topic":') or response.startswith('{"data":'):
-                start.engine.data.newData.on_next(Observation(response))
+                start.engine.data.newData.on_next(Observation.parse(response))
         # furthermore, shouldn't we do more than route it to the correct models?
         # like, shouldn't we save it to disk, compress if necessary, pin, and
         # report the pin to the satori server? like so:

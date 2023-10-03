@@ -35,7 +35,7 @@ class StartupDag(object):
         self.idKey: str
         self.subscriptionKeys: str
         self.publicationKeys: str
-        self.ipfs: Ipfs
+        self.ipfs: Ipfs = Ipfs()
         self.signedStreamIds: list[SignedStreamId]
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
@@ -49,7 +49,6 @@ class StartupDag(object):
     def start(self):
         ''' start the satori engine. '''
         self.createRelayValidation()
-        # self.ipfsCli() # ipfs might be used as a backup to rendezvous
         self.openWallet()
         self.checkin()
         self.buildEngine()
@@ -60,9 +59,6 @@ class StartupDag(object):
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream(start=self)
-
-    def ipfsCli(self):
-        self.ipfs = Ipfs()
 
     def openWallet(self):
         self.wallet = Wallet(config.walletPath('wallet.yaml'))()
