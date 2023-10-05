@@ -149,3 +149,6 @@ predictions/
 .elixir_ls
 
 config/ipfs
+config/relay.yaml
+config/config.yaml
+config/manifest.yaml

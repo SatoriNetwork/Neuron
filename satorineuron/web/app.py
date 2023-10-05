@@ -295,7 +295,7 @@ def relay():
                 return 'Unable to register stream with server', 500
             # get pubkey, recreate connection...
             start.checkin()
-            start.connect()
+            start.pubsubConnect()
         # ...pass data onto pubsub
         start.pubsub.publish(
             topic=StreamId(
@@ -416,7 +416,7 @@ def registerStream():
                 return redirect('/dashboard')
         # get pubkey, recreate connection, restart relay engine
         start.checkin()
-        start.connect()
+        start.pubsubConnect()
         start.startRelay()
         if save == False:
             badForm = data
@@ -480,7 +480,7 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
             except Exception as e:
                 logging.error(e)
             start.checkin()
-            start.connect()
+            start.pubsubConnect()
             start.startRelay()
         else:
             msg = 'Unable to delete stream.'
@@ -509,7 +509,7 @@ def removeStreamByPost():
             except Exception as e:
                 logging.error(e)
             start.checkin()
-            start.connect()
+            start.pubsubConnect()
             start.startRelay()
         else:
             msg = 'Unable to delete stream.'

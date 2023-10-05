@@ -23,6 +23,162 @@
   payload: null
   uri: https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true
 ? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesAAVE", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=AAVE
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesADA", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=ADA
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesALGO", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=ALGO
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesBTC", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=BTC
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesDOGE", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=DOGE
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesETH", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=ETH
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesGALA", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=GALA
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesHBAR", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=HBAR
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesPOLY", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=POLY
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesUSD", "target": "data.rates.BTC"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"BTC\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=USD
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesUSD", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=BTC
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
+  "stream": "coinbasePricesXMR", "target": "data.rates.USD"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"USD\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=XMR
+? '{"source": "satori", "author": "021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb",
   "stream": "something", "target": ""}'
 : headers: null
   history: null
