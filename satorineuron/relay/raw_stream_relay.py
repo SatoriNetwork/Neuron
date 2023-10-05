@@ -85,23 +85,27 @@ class RawStreamRelayEngine:
         else:
             r = method(stream.uri)
         if r.status_code == 200:
-            hookFunction = postRequestHookForNone
-            if stream.hook is not None or (isinstance(stream.hook, str) and stream.hook.strip() == ''):
-                try:
-                    exec(stream.hook, globals())
-                    hookFunction = postRequestHook
-                except Exception as e:
-                    logging.error('HOOK CREATION ERROR 1:', e)
-                    return None
-            try:
-                text = hookFunction(r)
-            except Exception as e:
-                logging.error('HOOK EXECUTION ERROR 2:', e)
-                return None
-            if text in ['', None] or (isinstance(text, str) and len(text) > 1000):
-                return None  # ret could return boolean, so return None if failure
-            return text
+            return r
         return None
+
+    @staticmethod
+    def callHook(stream: Stream, r: requests.Response):
+        hookFunction = postRequestHookForNone
+        if stream.hook is not None or (isinstance(stream.hook, str) and stream.hook.strip() == ''):
+            try:
+                exec(stream.hook, globals())
+                hookFunction = postRequestHook
+            except Exception as e:
+                logging.error('HOOK CREATION ERROR 1:', e)
+                return None
+        try:
+            text = hookFunction(r)
+        except Exception as e:
+            logging.error('HOOK EXECUTION ERROR 2:', e)
+            return None
+        if text in ['', None] or (isinstance(text, str) and len(text) > 1000):
+            return None  # ret could return boolean, so return None if failure
+        return text
 
     def relay(self, stream: Stream, data: str = None):
         ''' relays data to pubsub '''
@@ -112,11 +116,18 @@ class RawStreamRelayEngine:
         self.latest[stream.streamId.topic()] = data
         self.start.pubsub.publish(topic=stream.streamId.topic(), data=data)
 
-    def callRelay(self, stream: Stream):
+    def callRelay(self, streams: list[Stream]):
         ''' calls API and relays data to pubsub '''
-        result = RawStreamRelayEngine.call(stream)
-        if (result is not None):
-            self.relay(stream, data=result)
+        result = RawStreamRelayEngine.call(streams[0])
+        if result is not None:
+            for stream in streams:
+                result = RawStreamRelayEngine.callHook(stream, result)
+                if result is not None:
+                    self.relay(stream, data=result)
+                else:
+                    # log or flash message or something...
+                    logging.error(
+                        'result is None, hook failed?')
         else:
             # log or flash message or something...
             logging.error(
@@ -130,11 +141,21 @@ class RawStreamRelayEngine:
         start = int(time.time())
         while not self.killed:
             now = int(time.time())
+            streams: list[Stream] = []
             for stream in self.streams:
                 if (now - start) % cadence(stream) == 0:
-                    threading.Thread(
-                        target=self.callRelay,
-                        args=[stream]).start()
+                    streams.append(stream)
+                if len(streams) > 0:
+                    segmentedStreams: dict[str, list[Stream]] = {}
+                    for s in streams:
+                        uri = s.uri + s.headers
+                        if uri not in segmentedStreams.keys():
+                            segmentedStreams[uri] = []
+                        segmentedStreams[uri].append(s)
+                    for _, ss in segmentedStreams.items():
+                        threading.Thread(
+                            target=self.callRelay,
+                            args=[ss]).start()
             time.sleep(.99999)
 
     def run(self):
