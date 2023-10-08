@@ -10,45 +10,24 @@ a response with the observation. if there is no observation, NONE is returned:
 import datetime as dt
 from satorilib.api.time import datetimeToString, datetimeFromString, now
 
-from satorirendezvous.lib.protocol import Protocol
+from satorirendezvous.example.peer.structs.protocol import PeerProtocol as Protocol
 
 
 class PeerProtocol(Protocol):
 
-    requestPrefix: bytes = b'REQUEST'
-    respondPrefix: bytes = b'RESPOND'
+    hashSub: bytes = b'hash'
 
     @staticmethod
-    def requestObservationBefore(time: dt.datetime) -> bytes:
-        if isinstance(time, dt.datetime):
-            time = datetimeToString(time)
-        if isinstance(time, str):
-            time = time.encode()
-        return PeerProtocol.requestPrefix + b'|' + time
-
-    @staticmethod
-    def respondObservation(time: dt.datetime, data: str) -> bytes:
-        if isinstance(data, str):
-            data = data.encode()
-        if isinstance(time, dt.datetime):
-            time = datetimeToString(time)
-        if isinstance(time, str):
-            time = time.encode()
-        return PeerProtocol.respondPrefix + b'|' + time + b'|' + data
-
-    @staticmethod
-    def respondNoObservation() -> bytes:
-        return PeerProtocol.respondPrefix + b'|' + b'NONE|NONE'
-
-    @staticmethod
-    def prefixes():
+    def subCommands():
         return [
-            PeerProtocol.requestPrefix,
-            PeerProtocol.respondPrefix]
+            PeerProtocol.observationSub,
+            # PeerProtocol.countSub,  # unused
+            PeerProtocol.hashSub,]
 
     @staticmethod
     def isValidCommand(cmd: bytes) -> bool:
-        return PeerProtocol.toBytes(cmd) in PeerProtocol.prefixes() or any([
-            PeerProtocol.toBytes(cmd).startswith(prefix)
-            for prefix in PeerProtocol.prefixes()
-        ])
+        return PeerProtocol.toBytes(cmd) in PeerProtocol.prefixes()
+
+    @staticmethod
+    def isValidCommand(subcmd: bytes) -> bool:
+        return PeerProtocol.toBytes(subcmd) in PeerProtocol.subCommands()

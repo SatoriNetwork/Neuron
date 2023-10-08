@@ -15,6 +15,7 @@ class RendezvousEngine():
     def __init__(self, peer: RendezvousPeer, start):  # 'StartupDag'
         self.peer: RendezvousPeer = peer
         self.start = start  # 'StartupDag'
+        self.peer.parent = start
 
     def getHistoryOf(self, streamId: StreamId):
 
@@ -48,7 +49,7 @@ class RendezvousEngine():
             msg: PeerMessage = topic.getOneObservation(time=now())
             incrementalsChecked = False
             msgsToSave = []
-            while msg is not None and not msg.isNoObservationResponse():
+            while msg is not None and not msg.isNoneResponse():
                 # here we have a situation. we should tell the data manager about
                 # this and let it handle it. but this stream isnt' the best way to
                 # do that because it is built for only new realtime data in mind:
@@ -105,18 +106,21 @@ class RendezvousEngine():
                 tellModelsAboutNewHistory()
 
     def runForever(self, interval=60*60):
+        relayStreamIds = [
+            stream.streamId for stream in self.start.relay.streams]
         while True:
             for signedStreamId in self.peer.signedStreamIds:
-                time.sleep(interval)
-                # TODO NEXT
-                # instead of this we should ask peers for a count of their
-                # history, compare the count to our count and then if its
-                # different we do this starting with the most recent data,
-                # if we don't find anything then we start at the oldest data,
-                # if we don't find anyting we just ask for everything.
-                # (for that) we could use ipfs or something.
-                # if it's the same, we do nothing.
-                self.getHistoryOf(streamId=signedStreamId.streamId)
+                if signedStreamId.streamId not in relayStreamIds:
+                    time.sleep(interval)
+                    # TODO NEXT
+                    # instead of this we should ask peers for a count of their
+                    # history, compare the count to our count and then if its
+                    # different we do this starting with the most recent data,
+                    # if we don't find anything then we start at the oldest data,
+                    # if we don't find anyting we just ask for everything.
+                    # (for that) we could use ipfs or something.
+                    # if it's the same, we do nothing.
+                    self.getHistoryOf(streamId=signedStreamId.streamId)
 
     def run(self):
         self.thread = threading.Thread(target=self.runForever, daemon=True)

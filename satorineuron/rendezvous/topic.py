@@ -4,23 +4,24 @@ import datetime as dt
 import pandas as pd
 from satorilib.api.disk import Disk
 from satorilib.api.time import now
-from satorirendezvous.lib.lock import LockableDict
-from satorirendezvous.peer.p2p.topic import Topic as BaseTopic
-from satorirendezvous.example.peer.structs.message import PeerMessage
-from satorirendezvous.example.peer.structs.protocol import PeerProtocol
+from satorineuron.rendezvous.structs.message import PeerMessage
+from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.channel import Channel, Channels
+from satorirendezvous.lib.lock import LockableDict
+from satorirendezvous.peer.p2p.topic import Topic as BaseTopic
 
 
 class Topic(BaseTopic):
     ''' manages all our udp channels for a single topic '''
 
-    def __init__(self, signedStreamId: SignedStreamId, port: int):
+    def __init__(self, signedStreamId: SignedStreamId, port: int, parent: 'RendezvousPeer'):
         self.channels: Channels = Channels([])
         super().__init__(name=signedStreamId.topic(), port=port)
         self.signedStreamId = signedStreamId
         self.disk = Disk(id=self.signedStreamId.streamId)
         self.rows = -1
+        self.parent = parent
 
     # override
     def create(self, ip: str, port: int, localPort: int):
@@ -38,7 +39,7 @@ class Topic(BaseTopic):
 
     def getOneObservation(self, time: dt.datetime) -> PeerMessage:
         ''' time is of the most recent observation '''
-        msg = PeerProtocol.requestObservationBefore(time)
+        msg = PeerProtocol.request(time, subcmd=PeerProtocol.observationSub)
         sentTime = now()
         with self.channels:
             for channel in self.channels:
@@ -86,6 +87,25 @@ class Topic(BaseTopic):
         ''' returns the count of observations before the timestamp '''
         if self.disk.exists() and self.disk.getRowCounts() > self.rows:
             self.data = self.disk.read()
+        if not hasattr(self, 'data') or self.data is None or (
+            isinstance(self.data, pd.DataFrame) and self.data.empty
+        ):
+            return None
+        try:
+            rows = self.data.loc[self.data.index < timestamp]
+            return rows.shape[0]
+        except IndexError as _:
+            return 0
+
+    def getLocalHash(self, timestamp: str) -> Union[int, None]:
+        ''' returns the count of observations before the timestamp '''
+        rendezvousEngine = self.parent.parent  # todo remove parents.
+        hashes = rendezvousEngine.start.engine.data.hashes[self.signedStreamId.streamId.generateHash]
+        # get the row of the dataframe with a timestamp index that is just before the given timestamp
+        # get the rows between that timestamp and the given timestamp from disk
+        # generate all the hashes
+        # return the hash just before the given timestamp
+        # jesus Christ, we should keep all these hashes in memory? just pull from the disk everytime?
         if not hasattr(self, 'data') or self.data is None or (
             isinstance(self.data, pd.DataFrame) and self.data.empty
         ):

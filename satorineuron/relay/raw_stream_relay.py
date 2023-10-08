@@ -156,7 +156,10 @@ class RawStreamRelayEngine:
                         threading.Thread(
                             target=self.callRelay,
                             args=[ss]).start()
-            time.sleep(.99999)
+            newNow = time.time()
+            if int(newNow) == now:
+                # wait till the next second
+                time.sleep((int(newNow)+1)-newNow)
 
     def run(self):
         self.thread = threading.Thread(target=self.runForever, daemon=True)

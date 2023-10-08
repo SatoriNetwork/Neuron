@@ -3,7 +3,8 @@ from satorilib.concepts import StreamId
 
 class PubSubStreamId(StreamId):
     ''' 
-    unique identifier for a stream, with indicators for being a publisher and subscriber
+    unique identifier for a stream, with indicators for being a publisher and
+    subscriber
     '''
 
     def __init__(

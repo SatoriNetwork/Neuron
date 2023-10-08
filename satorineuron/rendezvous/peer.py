@@ -18,11 +18,11 @@ our connection to the rendezvous server and to other peers has to work like this
 from typing import Union
 import json
 from satorilib.concepts import StreamId
+from satorineuron.rendezvous.topic import Topic, Topics
+from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorirendezvous.example.client.structs.protocol import ToServerSubscribeProtocol
 from satorirendezvous.example.client.rest import RendezvousByRestAuthenticated
 from satorirendezvous.example.peer.rest import SubscribingPeer
-from satorineuron.rendezvous.topic import Topic, Topics
-from satorineuron.rendezvous.structs.domain import SignedStreamId
 
 
 class RendezvousPeer(SubscribingPeer):
@@ -47,6 +47,7 @@ class RendezvousPeer(SubscribingPeer):
         self.signature = signature
         self.signed = signed
         self.signedStreamIds = signedStreamIds
+        self.parent: 'RendezvousEngine' = None
         super().__init__(
             rendezvousHost=rendezvousHost,
             topics=[streamId.topic() for streamId in signedStreamIds],
@@ -56,7 +57,7 @@ class RendezvousPeer(SubscribingPeer):
     # override
     def createTopics(self):
         self.topics: Topics = Topics({
-            s.topic(): Topic(s) for s in self.signedStreamIds})
+            s.topic(): Topic(s, parent=self) for s in self.signedStreamIds})
 
     def topicFor(self, streamId: StreamId) -> Union[Topic, None]:
         for name, topic in self.topics.items():

@@ -3,10 +3,10 @@ import datetime as dt
 from satorilib.api.time import datetimeToString
 from satorilib.concepts import StreamId
 from satorilib.api.disk.disk import Disk
+from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
+from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorirendezvous.lib.lock import LockableList
 from satorirendezvous.peer.p2p.channel import Channel as BaseChannel
-from satorirendezvous.example.peer.structs.message import PeerMessage, PeerMessages
-from satorirendezvous.example.peer.structs.protocol import PeerProtocol
 # from satorineuron.rendezvous.topic import Topic
 
 
@@ -57,6 +57,8 @@ class Channel(BaseChannel):
             self.giveOneObservation(timestamp=message.data)
         if message.isRequest(subcmd=PeerProtocol.countSub):
             self.giveCount(timestamp=message.data)
+        if message.isRequest(subcmd=PeerProtocol.hashSub):
+            self.giveHash(timestamp=message.data)
         # elif message.isResponse():
         #    self.handleResponse(message=message, **kwargs)
 
@@ -94,6 +96,22 @@ class Channel(BaseChannel):
                 subcmd=PeerProtocol.countSub,
                 time=timestamp,
                 data=count))
+
+    def giveHash(self, timestamp: str):
+        ''' 
+        returns the hash associated with the observation prior to the time of 
+        the most recent observation or prior to timestamp
+        '''
+        if isinstance(timestamp, dt.datetime):
+            timestamp = datetimeToString(timestamp)
+        hash = self.parent.getLocalHash(timestamp=timestamp)
+        if hash is None:
+            pass  # send nothing: we don't know.
+        else:
+            self.send(PeerProtocol.respond(
+                subcmd=PeerProtocol.hashSub,
+                time=timestamp,
+                data=hash))
 
     def requests(self):
         return [msg for msg in self.messages if msg.isRequest()]
