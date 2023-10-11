@@ -13,8 +13,10 @@ class PeerMessage(Message):
         observationTime: Union[str, None] = None,
         data: Union[str, None] = None,
         msgId: Union[str, None] = None,
+        hash: Union[str, None] = None,
     ):
         self.msgId: Union[str, None] = msgId
+        self.hash: Union[str, None] = hash
         super().__init__(
             sent=sent, raw=raw, time=time,
             prefix=prefix,
@@ -28,7 +30,8 @@ class PeerMessage(Message):
             self.subCommand is None and
             self.msgId is None and
             self.observationTime is None and
-            self.data is None
+            self.data is None and
+            self.hash is None
         ):
             self.interpret()
 
@@ -46,6 +49,7 @@ class PeerMessage(Message):
                 self.msgId = parts[2]
                 self.observationTime = parts[3]
                 self.data = parts[4]
+                self.hash = parts[5]
         except Exception as e:
             print(e)
 
@@ -73,7 +77,8 @@ class PeerMessage(Message):
                     subCommand=parts[1],
                     msgId=parts[2],
                     observationTime=parts[3],
-                    data=parts[4])
+                    data=parts[4],
+                    hash=parts[5])
         except Exception as e:
             print(e)
 

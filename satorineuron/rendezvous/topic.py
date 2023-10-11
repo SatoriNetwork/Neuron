@@ -38,6 +38,7 @@ class Topic(BaseTopic):
                     parent=self))
 
     def getOneObservation(self, time: dt.datetime) -> PeerMessage:
+        # todo: giving an observation must include hash.
         ''' time is of the most recent observation '''
         msg = PeerProtocol.request(time, subcmd=PeerProtocol.observationSub)
         sentTime = now()

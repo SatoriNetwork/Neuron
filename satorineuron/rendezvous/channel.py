@@ -2,7 +2,6 @@ import socket
 import datetime as dt
 from satorilib.api.time import datetimeToString
 from satorilib.concepts import StreamId
-from satorilib.api.disk.disk import Disk
 from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorirendezvous.lib.lock import LockableList
@@ -24,7 +23,6 @@ class Channel(BaseChannel):
     ):
         self.streamId = streamId
         self.messages: PeerMessages = PeerMessages([])
-        self.disk = Disk(self.streamId)
         self.parent = parent
         super().__init__(
             topic=self.streamId.topic(),
