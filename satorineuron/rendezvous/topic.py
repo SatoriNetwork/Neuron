@@ -64,25 +64,32 @@ class Topic(BaseTopic):
 
     def getLocalObservation(
         self, timestamp: str,
-    ) -> Union[tuple[Union[str, None], Union[str, None]], None]:
+    ) -> Union[tuple[Union[str, None], Union[str, None], Union[str, None]], None]:
         ''' returns the observation before the timestamp '''
-        if self.disk.exists() and self.disk.getRowCounts() > self.rows:
-            self.data = self.disk.read()
-        if not hasattr(self, 'data') or self.data is None or (
-            isinstance(self.data, pd.DataFrame) and self.data.empty
+        self.data = self.disk.getObservationBefore(timestamp)
+        if (
+            not hasattr(self, 'data') or
+            not hasattr(self, 'hash') or
+            self.data is None or
+            (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
             return None
-        if self.signedStreamId.streamId.stream in self.data.columns:
-            column = self.signedStreamId.streamId.stream
-        elif self.signedStreamId.streamId.target in self.data.columns:
-            column = self.signedStreamId.streamId.stream
-        else:
-            column = self.data.columns[0]
+        # value, hash are the only columns in the dataframe now
+        # if self.signedStreamId.streamId.stream in self.data.columns:
+        #    column = self.signedStreamId.streamId.stream
+        # elif self.signedStreamId.streamId.target in self.data.columns:
+        #    column = self.signedStreamId.streamId.stream
+        # else:
+        #    column = self.data.columns[0]
         try:
+            if (row.shape[0] == 0):
+                return (None, None, None)
+            if (row.shape[0] == 1):
+                return (row.index, row['value'].values[0], row['hash'].values[0])
             row = self.data.loc[self.data.index < timestamp].iloc[-1]
-            return (row.index, row[column])
+            return (row.index, row['value'], row['hash'])
         except IndexError as _:
-            return (None, None)
+            return (None, None, None)
 
     def getLocalCount(self, timestamp: str) -> Union[int, None]:
         ''' returns the count of observations before the timestamp '''

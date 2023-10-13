@@ -121,9 +121,9 @@ class RawStreamRelayEngine:
         result = RawStreamRelayEngine.call(streams[0])
         if result is not None:
             for stream in streams:
-                result = RawStreamRelayEngine.callHook(stream, result)
-                if result is not None:
-                    self.relay(stream, data=result)
+                hookResult = RawStreamRelayEngine.callHook(stream, result)
+                if hookResult is not None:
+                    self.relay(stream, data=hookResult)
                 else:
                     # log or flash message or something...
                     logging.error(
@@ -145,21 +145,23 @@ class RawStreamRelayEngine:
             for stream in self.streams:
                 if (now - start) % cadence(stream) == 0:
                     streams.append(stream)
-                if len(streams) > 0:
-                    segmentedStreams: dict[str, list[Stream]] = {}
-                    for s in streams:
-                        uri = s.uri + s.headers
-                        if uri not in segmentedStreams.keys():
-                            segmentedStreams[uri] = []
-                        segmentedStreams[uri].append(s)
-                    for _, ss in segmentedStreams.items():
-                        threading.Thread(
-                            target=self.callRelay,
-                            args=[ss]).start()
+            if len(streams) > 0:
+                segmentedStreams: dict[str, list[Stream]] = {}
+                for stream in streams:
+                    uri = (stream.uri + str(stream.headers) +
+                           str(stream.payload))
+                    if uri not in segmentedStreams.keys():
+                        segmentedStreams[uri] = []
+                    segmentedStreams[uri].append(stream)
+                for _, ss in segmentedStreams.items():
+                    threading.Thread(
+                        target=self.callRelay,
+                        args=[ss]).start()
             newNow = time.time()
             if int(newNow) == now:
                 # wait till the next second
-                time.sleep((int(newNow)+1)-newNow)
+                sleep = (int(newNow)+1)-newNow
+                time.sleep(sleep)
 
     def run(self):
         self.thread = threading.Thread(target=self.runForever, daemon=True)

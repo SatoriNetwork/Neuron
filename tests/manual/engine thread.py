@@ -51,11 +51,11 @@ class RawStreamRelayEngine:
         self.killed = False
 
 
-x = RawStreamRelayEngine()
-x.run()
-
-x.kill()
-
+# x = RawStreamRelayEngine()
+# x.run()
+#
+# x.kill()
+#
 
 # test
 # a = Stream(name='A', cadence=5)

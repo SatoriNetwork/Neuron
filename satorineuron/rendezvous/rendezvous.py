@@ -50,13 +50,10 @@ class RendezvousEngine():
 
         topic = findTopic()
         if topic:
-            remoteHash = topic.getOneHash(time=now())  # TODO CREATE!
-            localHash = topic.disk.getLastHash()
-            if remoteHash != localHash:
-                msgs = gatherUnknownHistory()
-                if len(msgs) > 0:
-                    topic.disk.append(msgsToDataframe(msgs))
-                    tellModelsAboutNewHistory()
+            msgs = gatherUnknownHistory()
+            if len(msgs) > 0:
+                topic.disk.append(msgsToDataframe(msgs))
+                tellModelsAboutNewHistory()
 
     def runForever(self, interval=60*60):
         relayStreamIds = [
