@@ -81,6 +81,7 @@ def generatePeer(signature: str, signed: str, signedStreamIds: list[SignedStream
     return RendezvousPeer(
         signedStreamIds=signedStreamIds,
         rendezvousHost=f'https://satorinet.io:{rendezvousPort}/api/v0/raw/',
+        # is this right? is it my signature signed by the server? or is it the server's signature signed by me?
         signature=signature,  # 'my signature, encrypted by the server',
         signed=signed,  # 'my public key and magic salt')
     )

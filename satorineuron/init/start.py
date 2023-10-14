@@ -3,6 +3,8 @@ from typing import Union
 import json
 import time
 import threading
+
+from satorilib.utils import colored
 import satorineuron
 import satoriengine
 from satorilib.concepts.structs import StreamId, Stream
@@ -54,7 +56,8 @@ class StartupDag(object):
         self.buildEngine()
         self.pubsubConnect()
         self.startRelay()
-        self.rendezvousConnect()
+        # TODO NEXT: get authentication working and everything else
+        # self.rendezvousConnect()
         # self.downloadDatasets()
 
     def createRelayValidation(self):
@@ -68,15 +71,38 @@ class StartupDag(object):
         self.details = CheckinDetails(self.server.checkin())
         self.key = self.details.key
         self.idKey = self.details.idKey
-        self.signedStreamIds = None  # todo parse this
         self.subscriptionKeys = self.details.subscriptionKeys
         self.publicationKeys = self.details.publicationKeys
-        self.publications = [
-            Stream.fromMap(x)
-            for x in json.loads(self.details.publications)]
         self.subscriptions = [
             Stream.fromMap(x)
             for x in json.loads(self.details.subscriptions)]
+        self.publications = [
+            Stream.fromMap(x)
+            for x in json.loads(self.details.publications)]
+        self.signedStreamIds = [
+            SignedStreamId(
+                source=s.id.source,
+                author=s.id.author,
+                stream=s.id.stream,
+                target=s.id.target,
+                publish=False,
+                subscribe=True,
+                signature=sig,  # doesn't the server need my pubkey?
+                signed=self.wallet.sign(sig)) for s, sig in zip(
+                    self.subscriptions,
+                    self.subscriptionKeys)
+        ] + [
+            SignedStreamId(
+                source=p.id.source,
+                author=p.id.author,
+                stream=p.id.stream,
+                target=p.id.target,
+                publish=False,
+                subscribe=True,
+                signature=sig,  # doesn't the server need my pubkey?
+                signed=self.wallet.sign(sig)) for p, sig in zip(
+                    self.publications,
+                    self.publicationKeys)]
 
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''

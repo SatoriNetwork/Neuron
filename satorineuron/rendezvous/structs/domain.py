@@ -82,6 +82,10 @@ class SignedStreamId(PubSubStreamId):
         self.signature = signature
         self.signed = signed
 
+    def sign(self):
+        ''' signs the signature given by the server '''
+        self.signed = 'sign(signature)'
+
     @property
     def streamId(self):
         return StreamId(
