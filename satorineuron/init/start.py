@@ -54,7 +54,7 @@ class StartupDag(object):
         self.buildEngine()
         self.pubsubConnect()
         self.startRelay()
-        # self.rendezvousConnect()
+        self.rendezvousConnect()
         # self.downloadDatasets()
 
     def createRelayValidation(self):
