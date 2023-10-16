@@ -655,6 +655,10 @@ def dashboard():
 @app.route('/model-updates')
 def modelUpdates():
     def update():
+        global updating
+        if updating:
+            yield 'data: []\n\n'
+        updating = True
         streamsOverview = StreamsOverview(start.engine)
         listeners = []
         # listeners.append(start.engine.data.newData.subscribe(
@@ -673,11 +677,8 @@ def modelUpdates():
         else:
             yield "data: " + str(streamsOverview.demo).replace("'", '"') + "\n\n"
 
-    global updating
     import time
-    if not updating:
-        updating = True
-        return Response(update(), mimetype='text/event-stream')
+    return Response(update(), mimetype='text/event-stream')
 
 
 @app.route('/wallet')
