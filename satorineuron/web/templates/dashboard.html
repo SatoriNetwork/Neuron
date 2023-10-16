@@ -37,8 +37,45 @@
   </div>
 </div>
 
+<br/>
+<div class="row">
+  <div class="col-xl-3 col-sm-12 mb-xl-0 mb-4">
+    <div class="card  {% if darkmode %}dark-colors{% endif %}" style="height:94.6%;">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-less-drastic-reverse shadow-drastic{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">golf_course</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Rank</h4>
+        </div>
+        <div class="text-center pt-1" style="padding-top:5rem !important;">
+          <!--<h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.showBalance() }}</h4>-->
+          <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">coming soon</p>
+        </div>
+      </div>
+      <div class="card-footer p-1">
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-9 col-sm-12 mt-4 mb-3">
+    <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
+        <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-drastic{% endif %} border-radius-lg py-3 pe-1">
+          <div class="chart">
+            <canvas id="chart-line" class="chart-canvas" height="170"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style='float:left;'>Error Rate</h6>
+        <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>entire history</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row mt-4" style="display:none;">
-  <div class="col-lg-4 col-md-6 mt-4 mb-4">
+  <div class="col-lg-3 col-md-12 mt-0 mb-4">
     <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
         <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-drastic{% endif %} border-radius-lg py-3 pe-1">
@@ -53,7 +90,7 @@
       </div>
     </div>
   </div>
-  <div class="col-lg-4 col-md-6 mt-4 mb-4">
+  <div class="col-lg-9 col-md-12 mt-3 mb-3">
     <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
         <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-drastic{% endif %} border-radius-lg py-3 pe-1">
@@ -70,6 +107,7 @@
   </div>
 </div>
 
+<br/>
 <div class="row mb-4">
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
@@ -1279,7 +1317,7 @@
       for (var i=0; i<streamOverview.length; i++) {
 		//<tr class='yellow-hover' onmouseenter="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `);">
         rows.push(`
-        <tr class='{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{%endif%}' onclick="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `,[` + streamOverview[i]["predictions"] + `]);">
+        <tr class='{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{%endif%}' onclick="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[` + streamOverview[i]["errs"] + `]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `,[` + streamOverview[i]["predictions"] + `]);">
           <td>
             <div class="d-flex px-3 py-1">
               <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["source"] + `</h6>
