@@ -48,6 +48,7 @@ darkmode = False
 badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
+updating = False
 
 ###############################################################################
 ## Startup ####################################################################
@@ -672,8 +673,11 @@ def modelUpdates():
         else:
             yield "data: " + str(streamsOverview.demo).replace("'", '"') + "\n\n"
 
+    global updating
     import time
-    return Response(update(), mimetype='text/event-stream')
+    if not updating:
+        updating = True
+        return Response(update(), mimetype='text/event-stream')
 
 
 @app.route('/wallet')
