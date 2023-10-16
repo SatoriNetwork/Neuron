@@ -1343,7 +1343,7 @@
           </td>
           <td>
             <div class="d-flex px-3 py-1">
-              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["prediction"] + `</h6>
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview[i]["prediction"]) + `</h6>
             </div>
           </td>                                                                
         </tr>`);
@@ -1351,6 +1351,15 @@
       table_output.innerHTML = rows.join("");
     }
   };
+  function predictionOrEmptyString(p) {
+    if (p == 'null') {
+      return '';
+    }
+    if (p === null) {
+      return '';
+    }
+    return p;
+    }
 </script>
 
 {% endblock %}
