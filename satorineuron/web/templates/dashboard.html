@@ -1133,7 +1133,7 @@
     data: {
       labels: ["", "", "", "", "", "", "", "", "Now"],
       datasets: [{
-        label: "",
+        label: "error rate",
         tension: .2,
         borderWidth: 0,
         pointRadius: 0,
@@ -1143,7 +1143,7 @@
         borderWidth: 3,
         backgroundColor: "transparent",
         fill: true,
-        data: [50, 40, 300, 320, 500, 350, 200, 230, 500],
+        data: [500, 400, 300, 320, 420, 350, 270, 230, 220],
       }],
     },
     options: {
@@ -1211,7 +1211,7 @@
     data: {
       labels: ["", "", "", "", "", "", "", "", "", "Next"],
       datasets: [{
-        label: "",
+        label: "observations",
         tension: .2,
         borderWidth: 0,
         pointRadius: 0,
@@ -1223,7 +1223,7 @@
         fill: true,
         data: [50, 40, 300, 220, 500, 250, 400, 230, 500, null],
       }, {
-        label: "",
+        label: "future prediction",
         tension: .2,
         borderWidth: 0,
         pointRadius: 3,
@@ -1235,17 +1235,17 @@
         fill: true,
         data: [null, null, null, null, null, null, null, null, null, 450],
       }, {
-        label: "",
+        label: "predictions",
         tension: .2,
         borderWidth: 0,
-        pointRadius: 3,
+        pointRadius: 0,
         pointBackgroundColor: "rgba(246, 176, 66, .8)",
         pointBorderColor: "transparent",
         borderColor: "rgba(246, 176, 66, .8)",
         borderWidth: 3,
         backgroundColor: "transparent",
         fill: true,
-        data: [50, 40, 300, 220, 500, 250, 400, 230, 500, null],
+        data: [50-5, 40-2, 300+16, 220-20, 500-35, 250-65, 400-25, 230-10, 500+10, null],
       }],
     },
     options: {
