@@ -954,10 +954,11 @@
     });
     chart.update();
   }
-  function addDataChartThree(label, data, prediction) {
+  function addDataChartThree(label, data, prediction, predictions) {
     chartThree.data.labels.push(label);
     chartThree.data.datasets[0].data.push(data);
     chartThree.data.datasets[1].data.push(prediction);
+    chartThree.data.datasets[2].data.push(predictions);
     chartThree.update();
   }
   function addDataChartOne() {
@@ -993,19 +994,20 @@
       }
     }
   }
-  function setDataChartThree(data, prediction) {
+  function setDataChartThree(data, prediction, predictions) {
     removeAllData(chartThree);
     let labels = [];
-    for (let x in data) {
+    for (var i=0; i<data.length; i++) {
+      let x = data[i];
       labels.push('');
       if (labels.length == data.length){
-        addDataChartThree('now', data[x], null);
+        addDataChartThree('now', data[i], null, predictions.length-data.length+i >= 0 ? predictions[predictions.length-data.length+i] : null);
       } else {
-        addDataChartThree('', data[x], null);
+        addDataChartThree('', data[i], null, predictions.length-data.length+i >= 0 ? predictions[predictions.length-data.length+i] : null);
       }
     }
     console.log(prediction)
-    addDataChartThree('next', null, prediction);
+    addDataChartThree('next', null, prediction, null);
   }
   
   var ctx = document.getElementById("chart-bars").getContext("2d");
@@ -1194,6 +1196,18 @@
         backgroundColor: "rgba(246, 176, 66, .8)",
         fill: true,
         data: [null, null, null, null, null, null, null, null, null, 450],
+      }, {
+        label: "",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 3,
+        pointBackgroundColor: "rgba(246, 176, 66, .8)",
+        pointBorderColor: "transparent",
+        borderColor: "rgba(246, 176, 66, .8)",
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [50, 40, 300, 220, 500, 250, 400, 230, 500, null],
       }],
     },
     options: {
@@ -1260,11 +1274,12 @@
       table_update.close();
     } else {
       const streamOverview = JSON.parse(e.data);
+      console.log(streamOverview);
       var rows = [];
       for (var i=0; i<streamOverview.length; i++) {
 		//<tr class='yellow-hover' onmouseenter="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `);">
         rows.push(`
-        <tr class='{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{%endif%}' onclick="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `);">
+        <tr class='{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{%endif%}' onclick="setData(chartOne,[` + streamOverview[i]["predictions"] + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i]["values"] + `], ` + streamOverview[i]["prediction"] + `,[` + streamOverview[i]["predictions"] + `]);">
           <td>
             <div class="d-flex px-3 py-1">
               <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["source"] + `</h6>
