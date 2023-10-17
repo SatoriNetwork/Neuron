@@ -57,7 +57,7 @@ class StartupDag(object):
         self.pubsubConnect()
         self.startRelay()
         # TODO NEXT: get authentication working and everything else
-        # self.rendezvousConnect()
+        self.rendezvousConnect()
         # self.downloadDatasets()
 
     def createRelayValidation(self):

@@ -96,7 +96,7 @@ def not_found(e):
 ###############################################################################
 
 
-@app.route('/favicon.ico')
+@app.route('/favicon.ico/')
 def favicon():
     return send_from_directory(
         os.path.join(app.root_path, 'static/img/favicon'),
@@ -104,17 +104,17 @@ def favicon():
         mimetype='image/vnd.microsoft.icon')
 
 
-@app.route('/static/<path:path>')
+@app.route('/static/<path:path>/')
 def send_static(path):
     return send_from_directory('static', path)
 
 
-@app.route('/generated/<path:path>')
+@app.route('/generated/<path:path>/')
 def send_generated(path):
     return send_from_directory('generated', path)
 
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload/', methods=['POST'])
 def upload_csv():
     if 'file' not in request.files:
         return 'No file uploaded', 400
@@ -129,13 +129,13 @@ def upload_csv():
         return 'Invalid file format. Only CSV files are allowed', 400
 
 
-@app.route('/test')
+@app.route('/test/')
 def test():
     logging.info(request.MOBILE)
     return render_template('test.html')
 
 
-@app.route('/kwargs')
+@app.route('/kwargs/')
 def kwargs():
     ''' ...com/kwargs?0-name=widget_name0&0-value=widget_value0&0-type=widget_type0&1-name=widget_name1&1-value=widget_value1&1-#type=widget_type1 '''
     kwargs = {}
@@ -148,13 +148,13 @@ def kwargs():
     return jsonify(kwargs)
 
 
-@app.route('/ping', methods=['GET'])
+@app.route('/ping/', methods=['GET'])
 def ping():
     from datetime import datetime
     return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
 
-@app.route('/pause/<timeout>', methods=['GET'])
+@app.route('/pause/<timeout>/', methods=['GET'])
 def pause(timeout):
     try:
         timeout = int(timeout)
@@ -165,20 +165,20 @@ def pause(timeout):
     return redirect(url_for('dashboard'))
 
 
-@app.route('/unpause', methods=['GET'])
+@app.route('/unpause/', methods=['GET'])
 def unpause():
     start.unpause()
     return redirect(url_for('dashboard'))
 
 
-@app.route('/mode/light', methods=['GET'])
+@app.route('/mode/light/', methods=['GET'])
 def modeLight():
     global darkmode
     darkmode = False
     return redirect(url_for('dashboard'))
 
 
-@app.route('/mode/dark', methods=['GET'])
+@app.route('/mode/dark/', methods=['GET'])
 def modeDark():
     global darkmode
     darkmode = True
@@ -189,7 +189,7 @@ def modeDark():
 ###############################################################################
 
 
-@app.route('/configuration', methods=['GET', 'POST'])
+@app.route('/configuration/', methods=['GET', 'POST'])
 def edit_configuration():
     import importlib
     global forms
@@ -241,7 +241,7 @@ def edit_configuration():
     return present_form(edit_configuration)
 
 
-@app.route('/hook/<target>', methods=['GET'])
+@app.route('/hook/<target>/', methods=['GET'])
 def hook(target: str = 'Close'):
     ''' generates a hook for the given target '''
     def replaceLastOccurrence(input_str, old_substring, new_substring):
@@ -272,7 +272,7 @@ def hook(target: str = 'Close'):
 """, 200
 
 
-@app.route('/relay', methods=['POST'])
+@app.route('/relay/', methods=['POST'])
 def relay():
     '''
     format for json post (as python dict):{
@@ -311,7 +311,7 @@ def relay():
     return accept_submittion(payload)
 
 
-@app.route('/register_stream', methods=['POST'])
+@app.route('/register_stream/', methods=['POST'])
 def registerStream():
     import importlib
     global forms
@@ -434,7 +434,7 @@ def registerStream():
     return accept_submittion(newRelayStream)
 
 
-@app.route('/edit_stream/<topic>', methods=['GET'])
+@app.route('/edit_stream/<topic>/', methods=['GET'])
 def editStream(topic=None):
     # name,target,cadence,offset,datatype,description,tags,url,uri,headers,payload,hook
     import importlib
@@ -453,9 +453,9 @@ def editStream(topic=None):
     return redirect('/dashboard')
 
 
-# @app.route('/remove_stream/<source>/<stream>/<target>', methods=['GET'])
+# @app.route('/remove_stream/<source>/<stream>/<target>/', methods=['GET'])
 # def removeStream(source=None, stream=None, target=None):
-@app.route('/remove_stream/<topic>', methods=['GET'])
+@app.route('/remove_stream/<topic>/', methods=['GET'])
 def removeStream(topic=None):
     # removeRelayStream = {
     #    'source': source or 'satori',
@@ -492,7 +492,7 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
     return accept_submittion(removeRelayStream, doRedirect)
 
 
-@app.route('/remove_stream_by_post', methods=['POST'])
+@app.route('/remove_stream_by_post/', methods=['POST'])
 def removeStreamByPost():
 
     def accept_submittion(removeRelayStream):
@@ -525,8 +525,8 @@ def removeStreamByPost():
 
 
 @app.route('/', methods=['GET'])
-@app.route('/home', methods=['GET'])
-@app.route('/dashboard', methods=['GET'])
+@app.route('/home/', methods=['GET'])
+@app.route('/dashboard/', methods=['GET'])
 def dashboard():
     '''
     UI
@@ -652,7 +652,7 @@ def dashboard():
     return render_template('dashboard.html', **resp)
 
 
-@app.route('/model-updates')
+@app.route('/model-updates/')
 def modelUpdates():
     def update():
         global updating
@@ -681,7 +681,7 @@ def modelUpdates():
     return Response(update(), mimetype='text/event-stream')
 
 
-@app.route('/wallet')
+@app.route('/wallet/')
 def wallet():
     # not handling buffering correctly, so getting a list of transactions gets cut off and kills the page.
     start.wallet.get(allWalletInfo=False)
@@ -707,7 +707,7 @@ def wallet():
 ###############################################################################
 
 
-@app.route('/subscription/update', methods=['POST'])
+@app.route('/subscription/update/', methods=['POST'])
 def update():
     """
     returns nothing
@@ -755,7 +755,7 @@ def update():
 ###############################################################################
 
 
-@app.route('/history/request')
+@app.route('/history/request/')
 def publsih():
     ''' to streamr - create a new datastream to publish to '''
     # todo: spoof a dataset response - random generated data, so that the
