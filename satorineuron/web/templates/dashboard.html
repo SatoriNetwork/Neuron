@@ -38,7 +38,7 @@
 </div>
 
 <br/>
-<div class="row">
+<div class="row" style="display:none;">
   <div class="col-xl-3 col-sm-12 mb-xl-0 mb-4">
     <div class="card  {% if darkmode %}dark-colors{% endif %}" style="height:94.6%;">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
@@ -67,7 +67,7 @@
         </div>
       </div>
       <div class="card-body">
-        <h6 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style='float:left;'>Error Rate</h6>
+        <h6 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style='float:left;'>Model Imrpovement Over Time</h6>
         <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" style='float:right;'><i class="material-icons text-sm my-auto me-1">schedule</i>entire history</p>
       </div>
     </div>
@@ -1345,7 +1345,7 @@
             <div class="d-flex px-3 py-1">
               <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview[i]["prediction"]) + `</h6>
             </div>
-          </td>                                                                
+          </td>
         </tr>`);
       }
       table_output.innerHTML = rows.join("");

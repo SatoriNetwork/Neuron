@@ -75,14 +75,18 @@ class RendezvousEngine():
         self.thread.start()
 
 
-def generatePeer(signature: str, signed: str, signedStreamIds: list[SignedStreamId]):
+def generatePeer(
+    signature: str,
+    signed: str,
+    signedStreamIds: list[SignedStreamId],
+) -> RendezvousPeer:
     ''' generates a p2p peer '''
-    # ws 161.35.238.159:49152
     return RendezvousPeer(
         signedStreamIds=signedStreamIds,
+        # rendezvousHost = 161.35.238.159:49152, #ws
         rendezvousHost=f'https://satorinet.io:{rendezvousPort}/api/v0/raw/',
         # is this right? is it my signature signed by the server? or is it the server's signature signed by me?
-        signature=signature,  # 'my signature, encrypted by the server',
+        signature=signature,  # the server's signature signed by me,
         signed=signed,  # 'my public key and magic salt')
     )
 

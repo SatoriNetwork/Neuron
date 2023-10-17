@@ -131,7 +131,7 @@ def upload_csv():
 
 @app.route('/test')
 def test():
-    logging.debug(request.MOBILE)
+    logging.info(request.MOBILE)
     return render_template('test.html')
 
 

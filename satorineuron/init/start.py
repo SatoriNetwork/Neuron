@@ -134,10 +134,9 @@ class StartupDag(object):
     def rendezvousConnect(self):
         ''' establish a rendezvous connection. '''
         if self.idKey:
-            signature = self.wallet.sign(self.idKey)
             self.peer = rendezvous.RendezvousEngine(
                 peer=rendezvous.generatePeer(
-                    signature=signature,
+                    signature=self.wallet.sign(self.idKey),
                     signed=self.idKey,
                     signedStreamIds=self.signedStreamIds),
                 start=self)

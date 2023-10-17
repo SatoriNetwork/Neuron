@@ -55,9 +55,9 @@ class RendezvousPeer(SubscribingPeer):
             periodicCheckinSeconds=periodicCheckinSeconds)
 
     # override
-    def createTopics(self):
+    def createTopics(self, _: list[str]):
         self.topics: Topics = Topics({
-            s.topic(): Topic(s, parent=self) for s in self.signedStreamIds})
+            s.topic(): Topic(s) for s in self.signedStreamIds})
 
     def topicFor(self, streamId: StreamId) -> Union[Topic, None]:
         for name, topic in self.topics.items():

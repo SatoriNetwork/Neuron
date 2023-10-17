@@ -15,13 +15,12 @@ from satorirendezvous.peer.p2p.topic import Topic as BaseTopic
 class Topic(BaseTopic):
     ''' manages all our udp channels for a single topic '''
 
-    def __init__(self, signedStreamId: SignedStreamId, port: int, parent: 'RendezvousPeer'):
+    def __init__(self, signedStreamId: SignedStreamId, port: int = None):
         self.channels: Channels = Channels([])
         super().__init__(name=signedStreamId.topic(), port=port)
         self.signedStreamId = signedStreamId
         self.disk = Disk(id=self.signedStreamId.streamId)
         self.rows = -1
-        self.parent = parent
 
     # override
     def create(self, ip: str, port: int, localPort: int):
@@ -107,22 +106,18 @@ class Topic(BaseTopic):
 
     def getLocalHash(self, timestamp: str) -> Union[int, None]:
         ''' returns the count of observations before the timestamp '''
-        rendezvousEngine = self.parent.parent  # todo remove parents.
-        hashes = rendezvousEngine.start.engine.data.hashes[self.signedStreamId.streamId.generateHash]
-        # get the row of the dataframe with a timestamp index that is just before the given timestamp
-        # get the rows between that timestamp and the given timestamp from disk
-        # generate all the hashes
-        # return the hash just before the given timestamp
-        # jesus Christ, we should keep all these hashes in memory? just pull from the disk everytime?
-        if not hasattr(self, 'data') or self.data is None or (
-            isinstance(self.data, pd.DataFrame) and self.data.empty
-        ):
-            return None
-        try:
-            rows = self.data.loc[self.data.index < timestamp]
-            return rows.shape[0]
-        except IndexError as _:
-            return 0
+        if self.disk.exists():
+            self.disk.getHashBefore(timestamp)
+        else:
+            if not hasattr(self, 'data') or self.data is None or (
+                isinstance(self.data, pd.DataFrame) and self.data.empty
+            ):
+                return None
+            try:
+                rows = self.data.loc[self.data.index < timestamp]
+                return rows.shape[0]
+            except IndexError as _:
+                return 0
 
 
 class Topics(LockableDict[str, Topic]):
