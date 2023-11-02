@@ -18,11 +18,11 @@ our connection to the rendezvous server and to other peers has to work like this
 from typing import Union
 import json
 from satorilib.concepts import StreamId
+from satorirendezvous.example.client.structs.protocol import ToServerSubscribeProtocol
+from satorirendezvous.example.peer.rest import SubscribingPeer
 from satorineuron.rendezvous.topic import Topic, Topics
 from satorineuron.rendezvous.structs.domain import SignedStreamId
-from satorirendezvous.example.client.structs.protocol import ToServerSubscribeProtocol
-from satorirendezvous.example.client.rest import RendezvousByRestAuthenticated
-from satorirendezvous.example.peer.rest import SubscribingPeer
+from satorineuron.rendezvous.rest import RendezvousByRest
 
 
 class RendezvousPeer(SubscribingPeer):
@@ -67,7 +67,7 @@ class RendezvousPeer(SubscribingPeer):
 
     # override
     def connect(self, rendezvousHost: str):
-        self.rendezvous: RendezvousByRestAuthenticated = RendezvousByRestAuthenticated(
+        self.rendezvous: RendezvousByRest = RendezvousByRest(
             signature=self.signature,
             signed=self.signed,
             host=rendezvousHost,
