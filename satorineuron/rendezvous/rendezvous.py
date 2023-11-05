@@ -121,7 +121,7 @@ class ObservationFromPeerMessage(Observation):
 # we also have many streams which represent a topic
 # we need to make many connections per topic
 #
-# todo: modularize this
+# modularize this
 # also remove the hard coded functionality and make a new layer that manages the
 # topic synchronization. we have a design now that stays connected to the server
 # and only asks for our peers per topic once. No. we should ask for our peers

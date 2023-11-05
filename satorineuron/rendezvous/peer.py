@@ -21,8 +21,6 @@ import threading
 from satorilib import logging
 from satorilib.concepts import StreamId
 from satorirendezvous.client.structs.message import FromServerMessage
-from satorirendezvous.peer.p2p.topic import Topic, Topics
-from satorirendezvous.client.rest import RendezvousByRest
 from satorineuron.rendezvous.topic import Topic, Topics
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.rest import RendezvousByRest
@@ -46,17 +44,12 @@ class RendezvousPeer():
         self.signature = signature
         self.signed = signed
         self.signedStreamIds = signedStreamIds
-        self.parent: 'RendezvousEngine' = None
+        self.parent = None  # 'RendezvousEngine'
         self.createTopics()
         self.connect(rendezvousHost)
         if handlePeriodicCheckin:
             self.periodicCheckinSeconds = periodicCheckinSeconds
             self.periodicCheckin()
-        super().__init__(
-            rendezvousHost=rendezvousHost,
-            topics=[streamId.topic() for streamId in signedStreamIds],
-            handlePeriodicCheckin=handlePeriodicCheckin,
-            periodicCheckinSeconds=periodicCheckinSeconds)
 
     def periodicCheckin(self):
         self.checker = threading.Thread(target=self.checkin, daemon=True)
@@ -68,6 +61,7 @@ class RendezvousPeer():
             self.rendezvous.checkin()
 
     def createTopics(self):
+        logging.debug('---CREATE TOPICS---', print='magenta')
         self.topics: Topics = Topics({
             s.topic(): Topic(s) for s in self.signedStreamIds})
 

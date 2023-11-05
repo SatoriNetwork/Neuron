@@ -2,20 +2,22 @@ from typing import Union
 from time import sleep
 import datetime as dt
 import pandas as pd
+from satorilib import logging
 from satorilib.api.disk import Disk
 from satorilib.api.time import now
+from satorirendezvous.lib.lock import LockableDict
+from satorirendezvous.peer.p2p.topic import Topic as BaseTopic
 from satorineuron.rendezvous.structs.message import PeerMessage
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.channel import Channel, Channels
-from satorirendezvous.lib.lock import LockableDict
-from satorirendezvous.peer.p2p.topic import Topic as BaseTopic
 
 
 class Topic(BaseTopic):
     ''' manages all our udp channels for a single topic '''
 
     def __init__(self, signedStreamId: SignedStreamId, port: int = None):
+        logging.debug('---TOPIC---', signedStreamId.stream, print='magenta')
         self.channels: Channels = Channels([])
         super().__init__(name=signedStreamId.topic(), port=port)
         self.signedStreamId = signedStreamId

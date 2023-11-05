@@ -1,11 +1,12 @@
 import socket
 import datetime as dt
-from satorilib.api.time import datetimeToString
+from satorilib import logging
 from satorilib.concepts import StreamId
-from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
-from satorineuron.rendezvous.structs.protocol import PeerProtocol
+from satorilib.api.time import datetimeToString
 from satorirendezvous.lib.lock import LockableList
 from satorirendezvous.peer.p2p.channel import Channel as BaseChannel
+from satorineuron.rendezvous.structs.protocol import PeerProtocol
+from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
 # from satorineuron.rendezvous.topic import Topic
 
 
@@ -24,6 +25,7 @@ class Channel(BaseChannel):
         self.streamId = streamId
         self.messages: PeerMessages = PeerMessages([])
         self.parent = parent
+        logging.debug('---INIT CHANNEL---', print='magenta')
         super().__init__(
             topic=self.streamId.topic(),
             ip=ip,

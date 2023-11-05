@@ -9,6 +9,7 @@ import json
 import threading
 import secrets
 import webbrowser
+import time
 from waitress import serve
 from flask import Flask, url_for, render_template, redirect, jsonify
 from flask import send_from_directory, session, request, flash, Response
@@ -55,18 +56,28 @@ updating = False
 ###############################################################################
 
 MODE = os.environ.get('SATORI_RUN_MODE', 'dev')
-start = StartupDag(
-    urlServer={
-        'dev': 'http://localhost:5002',
-        'prod': None,  # 'https://satorinet.io',
-        'dockerdev': 'http://192.168.0.10:5002',
-    }[MODE],
-    urlPubsub={
-        'dev': 'ws://localhost:3000',
-        'prod': None,  # 'ws://satorinet.io:3000',
-        'dockerdev': 'ws://192.168.0.10:3000',
-    }[MODE])
-start.start()
+while True:
+    try:
+        start = StartupDag(
+            urlServer={
+                'dev': 'http://localhost:5002',
+                'prod': None,  # 'https://satorinet.io',
+                'dockerdev': 'http://192.168.0.10:5002',
+            }[MODE],
+            urlPubsub={
+                'dev': 'ws://localhost:3000',
+                'prod': None,  # 'ws://satorinet.io:3000',
+                'dockerdev': 'ws://192.168.0.10:3000',
+            }[MODE])
+        start.start()
+        break
+    except ConnectionError as e:
+        # try again...
+        time.sleep(30)
+    # except RemoteDisconnected as e:
+    except Exception as e:
+        # try again...
+        time.sleep(30)
 
 ###############################################################################
 ## Functions ##################################################################
