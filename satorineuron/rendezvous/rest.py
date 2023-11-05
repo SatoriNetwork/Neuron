@@ -20,7 +20,6 @@ class RendezvousByRest():
         *args,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
         self.msgId = 0
         self.rendezvousServer = host
         self.timed = timed
@@ -79,7 +78,12 @@ class RendezvousByRest():
 
         payload = generatePayload()
         if payload is not None:
-            sendPayload(payload)
+            try:
+                sendPayload(payload)
+            except Exception as e:
+                # server is down
+                logging.error(
+                    'rendezvous server is unreachable', e, print=True)
 
     def checkin(self):
         ''' authenticated checkin '''

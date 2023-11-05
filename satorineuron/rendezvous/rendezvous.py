@@ -1,8 +1,6 @@
 import time
 import threading
 from satorilib.concepts import StreamId, Observation
-from satorilib.utils.eq import eq
-from satorilib.api import disk
 from satorilib.api.time import datetimeFromString, now
 from satorirendezvous.example.peer.structs.message import PeerMessage
 from satorirendezvous.server.rest.constants import rendezvousPort
@@ -85,10 +83,8 @@ def generatePeer(
         signedStreamIds=signedStreamIds,
         # rendezvousHost = 161.35.238.159:49152, #ws
         rendezvousHost=f'https://satorinet.io:{rendezvousPort}/api/v0/raw/',
-        # is this right? is it my signature signed by the server? or is it the server's signature signed by me?
-        signature=signature,  # the server's signature signed by me,
-        signed=signed,  # 'my public key and magic salt')
-    )
+        signature=signature,
+        signed=signed)
 
 
 def msgsToDataframe(messages: list[PeerMessage]):

@@ -16,24 +16,23 @@ our connection to the rendezvous server and to other peers has to work like this
         
 '''
 from typing import Union
-import json
+import time
+import threading
+from satorilib import logging
 from satorilib.concepts import StreamId
-from satorirendezvous.example.client.structs.protocol import ToServerSubscribeProtocol
-from satorirendezvous.example.peer.rest import SubscribingPeer
+from satorirendezvous.client.structs.message import FromServerMessage
+from satorirendezvous.peer.p2p.topic import Topic, Topics
+from satorirendezvous.client.rest import RendezvousByRest
 from satorineuron.rendezvous.topic import Topic, Topics
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.rest import RendezvousByRest
 
 
-class RendezvousPeer(SubscribingPeer):
+class RendezvousPeer():
     '''
     manages connection to the rendezvous server and all our udp topics:
     authenticates and subscribes to our streams
     '''
-    # TODO: I need to provide my signed wallet id, to prove who I am, just as I
-    # do for the pubsub or sometihng. then the rendezvous server will know I'm
-    # allowed by the server and that my ip is who I say I am. then it will take
-    # my signed stream ids and subscribe me to those streams.
 
     def __init__(
         self,
@@ -48,24 +47,30 @@ class RendezvousPeer(SubscribingPeer):
         self.signed = signed
         self.signedStreamIds = signedStreamIds
         self.parent: 'RendezvousEngine' = None
+        self.createTopics()
+        self.connect(rendezvousHost)
+        if handlePeriodicCheckin:
+            self.periodicCheckinSeconds = periodicCheckinSeconds
+            self.periodicCheckin()
         super().__init__(
             rendezvousHost=rendezvousHost,
             topics=[streamId.topic() for streamId in signedStreamIds],
             handlePeriodicCheckin=handlePeriodicCheckin,
             periodicCheckinSeconds=periodicCheckinSeconds)
 
-    # override
-    def createTopics(self, _: list[str]):
+    def periodicCheckin(self):
+        self.checker = threading.Thread(target=self.checkin, daemon=True)
+        self.checker.start()
+
+    def checkin(self):
+        while True:
+            time.sleep(self.periodicCheckinSeconds)
+            self.rendezvous.checkin()
+
+    def createTopics(self):
         self.topics: Topics = Topics({
             s.topic(): Topic(s) for s in self.signedStreamIds})
 
-    def topicFor(self, streamId: StreamId) -> Union[Topic, None]:
-        for name, topic in self.topics.items():
-            if name == streamId.topic():
-                return topic
-        return None
-
-    # override
     def connect(self, rendezvousHost: str):
         self.rendezvous: RendezvousByRest = RendezvousByRest(
             signature=self.signature,
@@ -73,25 +78,44 @@ class RendezvousPeer(SubscribingPeer):
             host=rendezvousHost,
             onMessage=self.handleRendezvousMessage)
 
-    # never called
-    def sendTopics(self):
-        ''' send our topics to the rendezvous server to get peer lists '''
-        for topic in self.topics.keys():
-            self.sendTopic(topic)
+    def handleRendezvousMessage(self, msg: FromServerMessage):
+        ''' receives all messages from the rendezvous server '''
+        logging.debug('Rendezvous FromServerMessage: ', msg, print='teal')
+        if msg.isConnect:
+            logging.debug('isConnect', print='teal')
+            try:
+                topic = msg.payload.get('topic')
+                logging.debug('topic', topic, print='teal')
+                ip = msg.payload.get('peerIp')
+                logging.debug('ip', ip, print='teal')
+                port = int(msg.payload.get('peerPort'))
+                logging.debug('port', port, print='teal')
+                localPort = int(msg.payload.get('clientPort'))
+                logging.debug('localPort', localPort, print='teal')
+                if topic is not None and ip is not None:
+                    with self.topics:
+                        if topic in self.topics.keys():
+                            self.topics[topic].create(
+                                ip=ip,
+                                port=port,
+                                localPort=localPort)
+                        else:
+                            logging.error('topic not found', topic, print=True)
+            except ValueError as e:
+                logging.error('error parsing message', e, print=True)
 
-    def sendTopic(self, topic: str):
-        self.rendezvous.send(
-            cmd=ToServerSubscribeProtocol.subscribePrefix,
-            msgs=[
-                "signature doesn't matter during testing",
-                json.dumps({
-                    **{'pubkey': 'wallet.pubkey'},
-                    # **(
-                    #    {
-                    #        'publisher': [topic]}
-                    # ),
-                    **(
-                        {
-                            'subscriptions': [topic]
-                        }
-                    )})])
+    # unused...
+
+    def add(self, topic: str):
+        with self.topics:
+            self.topics[topic] = Topic(topic)
+
+    def remove(self, topic: str):
+        with self.topics:
+            del (self.topics[topic])
+
+    def topicFor(self, streamId: StreamId) -> Union[Topic, None]:
+        for name, topic in self.topics.items():
+            if name == streamId.topic():
+                return topic
+        return None
