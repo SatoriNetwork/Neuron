@@ -16,11 +16,12 @@ our connection to the rendezvous server and to other peers has to work like this
         
 '''
 from typing import Union
+import json
 import time
 import threading
 from satorilib import logging
 from satorilib.concepts import StreamId
-from satorirendezvous.client.structs.message import FromServerMessage
+from satorirendezvous.client.structs.rest.message import FromServerMessage
 from satorineuron.rendezvous.topic import Topic, Topics
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.rest import RendezvousByRest
@@ -78,23 +79,34 @@ class RendezvousPeer():
         if msg.isConnect:
             logging.debug('isConnect', print='teal')
             try:
-                topic = msg.payload.get('topic')
-                logging.debug('topic', topic, print='teal')
-                ip = msg.payload.get('peerIp')
-                logging.debug('ip', ip, print='teal')
-                port = int(msg.payload.get('peerPort'))
-                logging.debug('port', port, print='teal')
-                localPort = int(msg.payload.get('clientPort'))
-                logging.debug('localPort', localPort, print='teal')
-                if topic is not None and ip is not None:
-                    with self.topics:
-                        if topic in self.topics.keys():
-                            self.topics[topic].create(
-                                ip=ip,
-                                port=port,
-                                localPort=localPort)
-                        else:
-                            logging.error('topic not found', topic, print=True)
+                # json.loads(s[0][0])
+                # {'topic': {'source': 'satori', 'author': '0355efd5fbc8ee719669d775026018a9097120bb2707b0ae1d92e0371907c754f6', 'stream': 'coinbaseDOGE-USD', 'target': 'data.rates.DOGE'}, 'peer.ip': '97.117.28.178', 'peer.port': 100, 'client.port': 100}
+                for subscribable in msg.messages:
+                    for connection in subscribable:
+                        details = json.loads(connection)
+                        logging.debug('details', details, print='teal')
+                        topic = details.get('topic')
+                        ip = details.get('peer.ip')
+                        port = details.get('peer.port')
+                        localPort = details.get('client.port')
+                # topic = msg.payload.get('topic')
+                # logging.debug('topic', topic, print='teal')
+                # ip = msg.payload.get('peerIp')
+                # logging.debug('ip', ip, print='teal')
+                # port = int(msg.payload.get('peerPort'))
+                # logging.debug('port', port, print='teal')
+                # localPort = int(msg.payload.get('clientPort'))
+                # logging.debug('localPort', localPort, print='teal')
+                        if topic is not None and ip is not None:
+                            with self.topics:
+                                if topic in self.topics.keys():
+                                    self.topics[topic].create(
+                                        ip=ip,
+                                        port=port,
+                                        localPort=localPort)
+                                else:
+                                    logging.error(
+                                        'topic not found', topic, print=True)
             except ValueError as e:
                 logging.error('error parsing message', e, print=True)
 

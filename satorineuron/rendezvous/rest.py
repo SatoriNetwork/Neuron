@@ -3,7 +3,7 @@ from typing import Callable
 import requests
 from satorilib import logging
 from satorilib.utils import colored
-from satorirendezvous.client.structs.message import FromServerMessage
+from satorirendezvous.client.structs.rest.message import FromServerMessage
 from satorirendezvous.example.client.structs.protocol import ToServerSubscribeProtocol as ToServerProtocol
 
 
@@ -72,8 +72,10 @@ class RendezvousByRest():
             #    self.inbox.append(message)
             #    self.onMessage(message)
             msg = response.json()['response']
-            message = FromServerMessage(msg)
-            self.inbox.append(message)
+            logging.debug('response.json()', response.json(), print='blue')
+
+            message = FromServerMessage.fromJson(msg)
+            self.inbox.append(message)  # todo: does this ever get cleaned?
             self.onMessage(message)
 
         payload = generatePayload()
