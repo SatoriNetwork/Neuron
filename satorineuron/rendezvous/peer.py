@@ -89,15 +89,13 @@ class RendezvousPeer():
                         ip = details.get('peer.ip')
                         port = details.get('peer.port')
                         localPort = details.get('client.port')
-                # topic = msg.payload.get('topic')
-                # logging.debug('topic', topic, print='teal')
-                # ip = msg.payload.get('peerIp')
-                # logging.debug('ip', ip, print='teal')
-                # port = int(msg.payload.get('peerPort'))
-                # logging.debug('port', port, print='teal')
-                # localPort = int(msg.payload.get('clientPort'))
-                # logging.debug('localPort', localPort, print='teal')
-                        if topic is not None and ip is not None:
+                        if (
+                            topic is not None and
+                            ip is not None and
+                            port is not None and
+                            localPort is not None
+                        ):
+                            logging.debug('localPort', localPort, print='teal')
                             with self.topics:
                                 if topic in self.topics.keys():
                                     self.topics[topic].create(
