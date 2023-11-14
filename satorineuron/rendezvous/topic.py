@@ -19,6 +19,7 @@ class Topic(BaseTopic):
     def __init__(self, signedStreamId: SignedStreamId, port: int = None):
         logging.debug('---TOPIC---', signedStreamId.stream, print='magenta')
         self.channels: Channels = Channels([])
+        self.port = None
         super().__init__(name=signedStreamId.topic(), port=port)
         self.signedStreamId = signedStreamId
         self.disk = Disk(id=self.signedStreamId.streamId)
@@ -26,10 +27,15 @@ class Topic(BaseTopic):
 
     # override
     def create(self, ip: str, port: int, localPort: int):
+        logging.debug('in create', ip, port, localPort,
+                      self.port, print='blue')
         if self.port is None:
+            logging.debug('port is none', print='magenta')
             self.setPort(localPort)
         if self.findChannel(ip, port, localPort) is None:
+            logging.debug('find channel', print='magenta')
             with self.channels:
+                logging.debug('making channel', print='magenta')
                 self.channels.append(Channel(
                     streamId=self.signedStreamId.streamId,
                     ip=ip,

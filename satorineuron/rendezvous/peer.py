@@ -82,22 +82,31 @@ class RendezvousPeer():
                 # json.loads(s[0][0])
                 # {'topic': {'source': 'satori', 'author': '0355efd5fbc8ee719669d775026018a9097120bb2707b0ae1d92e0371907c754f6', 'stream': 'coinbaseDOGE-USD', 'target': 'data.rates.DOGE'}, 'peer.ip': '97.117.28.178', 'peer.port': 100, 'client.port': 100}
                 for subscribable in msg.messages:
+                    logging.debug('subscribable', subscribable,
+                                  print='teal')
                     for connection in subscribable:
-                        details = json.loads(connection)
-                        logging.debug('details', details, print='teal')
-                        topic = details.get('topic')
-                        ip = details.get('peer.ip')
-                        port = details.get('peer.port')
-                        localPort = details.get('client.port')
+                        logging.debug('connection', type(
+                            connection), connection, print='teal')
+                        topic = connection.get('topic')
+                        ip = connection.get('peer.ip')
+                        port = connection.get('peer.port')
+                        localPort = connection.get('client.port')
                         if (
                             topic is not None and
                             ip is not None and
                             port is not None and
                             localPort is not None
                         ):
+                            topic = str(connection.get('topic'))
                             logging.debug('localPort', localPort, print='teal')
                             with self.topics:
+                                logging.debug('with self.topics',
+                                              topic, print='magenta')
+                                logging.debug('self.topics.keys()',
+                                              self.topics.keys(), print='teal')
                                 if topic in self.topics.keys():
+                                    logging.debug(
+                                        'topic in self.topics.keys()', print='teal')
                                     self.topics[topic].create(
                                         ip=ip,
                                         port=port,
