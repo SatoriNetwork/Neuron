@@ -41,6 +41,7 @@ class Channel(BaseChannel):
         time: dt.datetime = None,
         **kwargs,
     ):
+        logging.debug('---ON MESSAGE---', print='magenta')
         message = PeerMessage(sent=sent, raw=message, time=time)
         self.add(message=message)
         self.router(message=message, **kwargs)
