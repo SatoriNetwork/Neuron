@@ -1,5 +1,6 @@
 import time
 import threading
+from satorilib import logging
 from satorilib.concepts import StreamId, Observation
 from satorilib.api.time import datetimeFromString, now
 from satorirendezvous.example.peer.structs.message import PeerMessage
@@ -79,6 +80,7 @@ def generatePeer(
     signedStreamIds: list[SignedStreamId],
 ) -> RendezvousPeer:
     ''' generates a p2p peer '''
+    logging.debug('---RENDZEVIOUS CONNECT---1', print='magenta')
     return RendezvousPeer(
         signedStreamIds=signedStreamIds,
         # rendezvousHost = 161.35.238.159:49152, #ws

@@ -67,6 +67,7 @@ class RendezvousPeer():
             s.topic(): Topic(s) for s in self.signedStreamIds})
 
     def connect(self, rendezvousHost: str):
+        logging.debug('---RENDZEVIOUS CONNECT---2', print='magenta')
         self.rendezvous: RendezvousByRest = RendezvousByRest(
             signature=self.signature,
             signed=self.signed,

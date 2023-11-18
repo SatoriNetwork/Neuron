@@ -29,6 +29,7 @@ class RendezvousByRest():
         self.outbox = {}
         self.signature = signature
         self.signed = signed
+        logging.debug('---RENDZEVIOUS CONNECT---3', print='magenta')
         self.checkin()
 
     def display(self, msg, addr=None):
@@ -92,6 +93,7 @@ class RendezvousByRest():
         # self.send(f'CHECKIN|{self.msgId}|{self.signature}|{self.signed}')
         # self.send(f'SUBSCRIBE|{self.msgId}|{self.signature}|{self.signed}')
         logging.debug('checkin started', print='red')
+        logging.debug('---RENDZEVIOUS CONNECT---4', print='magenta')
         self.send(
             cmd=ToServerProtocol.subscribePrefix,
             msgs=[self.signature, self.signed])
