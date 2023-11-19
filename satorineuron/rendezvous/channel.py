@@ -42,6 +42,7 @@ class Channel(BaseChannel):
     ):
         if (message is None):
             return
+        logging.debug('ON MESSAGE:', message, sent, time, print='magenta')
         message = PeerMessage(sent=sent, raw=message, time=time)
         self.add(message=message)
         self.router(message=message, **kwargs)
