@@ -62,12 +62,10 @@ class RendezvousPeer():
             self.rendezvous.checkin()
 
     def createTopics(self):
-        logging.debug('---CREATE TOPICS---', print='magenta')
         self.topics: Topics = Topics({
             s.topic(): Topic(s) for s in self.signedStreamIds})
 
     def connect(self, rendezvousHost: str):
-        logging.debug('---RENDZEVIOUS CONNECT---2', print='magenta')
         self.rendezvous: RendezvousByRest = RendezvousByRest(
             signature=self.signature,
             signed=self.signed,
@@ -76,18 +74,10 @@ class RendezvousPeer():
 
     def handleRendezvousMessage(self, msg: FromServerMessage):
         ''' receives all messages from the rendezvous server '''
-        logging.debug('Rendezvous FromServerMessage: ', msg, print='teal')
         if msg.isConnect:
-            logging.debug('isConnect', print='teal')
             try:
-                # json.loads(s[0][0])
-                # {'topic': {'source': 'satori', 'author': '0355efd5fbc8ee719669d775026018a9097120bb2707b0ae1d92e0371907c754f6', 'stream': 'coinbaseDOGE-USD', 'target': 'data.rates.DOGE'}, 'peer.ip': '97.117.28.178', 'peer.port': 100, 'client.port': 100}
                 for subscribable in msg.messages:
-                    logging.debug('subscribable', subscribable,
-                                  print='teal')
                     for connection in subscribable:
-                        logging.debug('connection', type(
-                            connection), connection, print='teal')
                         topic = connection.get('topic')
                         ip = connection.get('peer.ip')
                         port = connection.get('peer.port')
@@ -99,15 +89,8 @@ class RendezvousPeer():
                             localPort is not None
                         ):
                             topic = str(connection.get('topic'))
-                            logging.debug('localPort', localPort, print='teal')
                             with self.topics:
-                                logging.debug('with self.topics',
-                                              topic, print='magenta')
-                                logging.debug('self.topics.keys()',
-                                              self.topics.keys(), print='teal')
                                 if topic in self.topics.keys():
-                                    logging.debug(
-                                        'topic in self.topics.keys()', print='teal')
                                     self.topics[topic].create(
                                         ip=ip,
                                         port=port,

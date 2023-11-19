@@ -29,7 +29,6 @@ class RendezvousByRest():
         self.outbox = {}
         self.signature = signature
         self.signed = signed
-        logging.debug('---RENDZEVIOUS CONNECT---3', print='magenta')
         self.checkin()
 
     def display(self, msg, addr=None):
@@ -55,14 +54,9 @@ class RendezvousByRest():
         def sendPayload(payload: str = None):
             self.msgId += 1
             self.outbox[self.msgId] = payload
-            logging.debug('Rendezvous payload: ', payload, print='teal')
             response = requests.post(self.rendezvousServer, data=payload)
-            logging.debug('Rendezvous response: ', response, print='blue')
             if response.status_code != 200 or not response.text.startswith('{"response": '):
                 logging.warning('bad response', response, payload)
-            else:
-                logging.debug('good response', response)
-            logging.debug('response.json()', response.json(), print='blue')
             # response.json() {'response': "RendezvousClient(('97.117.28.178', 4431), 0)"}
             # why is it giving this back?
 
@@ -73,7 +67,6 @@ class RendezvousByRest():
             #    self.inbox.append(message)
             #    self.onMessage(message)
             msg = response.json()['response']
-            logging.debug('response.json()', response.json(), print='blue')
 
             message = FromServerMessage.fromJson(msg)
             self.inbox.append(message)  # todo: does this ever get cleaned?
@@ -92,8 +85,6 @@ class RendezvousByRest():
         ''' authenticated checkin '''
         # self.send(f'CHECKIN|{self.msgId}|{self.signature}|{self.signed}')
         # self.send(f'SUBSCRIBE|{self.msgId}|{self.signature}|{self.signed}')
-        logging.debug('checkin started', print='red')
-        logging.debug('---RENDZEVIOUS CONNECT---4', print='magenta')
         self.send(
             cmd=ToServerProtocol.subscribePrefix,
             msgs=[self.signature, self.signed])

@@ -135,7 +135,6 @@ class StartupDag(object):
         ''' establish a rendezvous connection. '''
         # if self.idKkey: # rendezvous has changed, instead of sending just our
         # ID key, we need to send our signed stream ids in a subscription msg.
-        logging.debug('---RENDZEVIOUS CONNECT---0', print='magenta')
         if self.key:
             self.peer = rendezvous.RendezvousEngine(
                 peer=rendezvous.generatePeer(

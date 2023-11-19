@@ -25,7 +25,6 @@ class Channel(BaseChannel):
         self.streamId = streamId
         self.messages: PeerMessages = PeerMessages([])
         self.parent = parent
-        logging.debug('---INIT CHANNEL---', print='magenta')
         super().__init__(
             topic=self.streamId.topic(),
             ip=ip,
@@ -41,7 +40,6 @@ class Channel(BaseChannel):
         time: dt.datetime = None,
         **kwargs,
     ):
-        logging.debug('---ON MESSAGE---', print='magenta')
         if (message is None):
             return
         message = PeerMessage(sent=sent, raw=message, time=time)
