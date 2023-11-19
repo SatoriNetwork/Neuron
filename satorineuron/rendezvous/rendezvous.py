@@ -80,6 +80,7 @@ def generatePeer(
     signedStreamIds: list[SignedStreamId],
 ) -> RendezvousPeer:
     ''' generates a p2p peer '''
+    logging.debug('generatePeer', print='magenta')
     return RendezvousPeer(
         signedStreamIds=signedStreamIds,
         # rendezvousHost = 161.35.238.159:49152, #ws

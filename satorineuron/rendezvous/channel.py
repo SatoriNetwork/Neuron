@@ -4,7 +4,7 @@ import threading
 import datetime as dt
 from satorilib import logging
 from satorilib.concepts import StreamId
-from satorilib.api.time import datetimeToString
+from satorilib.api.time import datetimeToString, now
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
 from satorineuron.rendezvous.connect import Connection
@@ -29,13 +29,12 @@ class Channel:
         self.messages: PeerMessages = PeerMessages([])
         self.parent = parent
         self.topic = self.streamId.topic()
-        self.connection = (
-            self.connection if hasattr(self, 'connection') else Connection(
-                topicSocket=topicSocket,
-                peerIp=ip,
-                peerPort=port,
-                port=localPort,
-                onMessage=self.onMessage))
+        self.connection = Connection(
+            topicSocket=topicSocket,
+            peerIp=ip,
+            peerPort=port,
+            port=localPort,
+            onMessage=self.onMessage)
         self.connection.establish()
         if ping:
             self.setupPing()
@@ -45,7 +44,10 @@ class Channel:
         def pingForever(interval=28):
             while True:
                 time.sleep(interval)
-                self.send(cmd=PeerProtocol.pingPrefix)
+                self.send(
+                    cmd=PeerProtocol.request(
+                        time=datetimeToString(now()),
+                        subcmd=PeerProtocol.pingSub))
 
         self.pingThread = threading.Thread(target=pingForever)
         self.pingThread.start()

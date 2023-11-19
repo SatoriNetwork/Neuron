@@ -57,6 +57,7 @@ class Connection:
         # todo:  add a heart beat ping if needed
 
     def makePayload(self, cmd: str, msgs: list[str] = None) -> Union[bytes, None]:
+        logging.debug('make payload cmd', cmd, print='red')
         if not PeerProtocol.isValidCommand(cmd):
             logging.error('command not valid', cmd, print=True)
             return None
@@ -68,10 +69,12 @@ class Connection:
             logging.warning('err w/ payload', e, cmd, msgs)
 
     def send(self, cmd: str, msgs: list[str] = None):
-        payload = self.makePayload(cmd, msgs)
-        if payload is None:
-            return False
-        self.topicSocket.sendto(payload, (self.peerIp, self.port))
+        payload = cmd
         logging.debug('sent pyaload:', payload, print='magenta')
+        self.topicSocket.sendto(payload, (self.peerIp, self.port))
+        # payload = self.makePayload(cmd, msgs)
+        # if payload is None:
+        #    return False
+        # self.topicSocket.sendto(payload, (self.peerIp, self.port))
         self.onMessage(msgs, sent=True, time=now())
         return True

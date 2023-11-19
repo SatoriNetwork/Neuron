@@ -10,10 +10,13 @@ a response with the observation. if there is no observation, NONE is returned:
 import datetime as dt
 from satorilib.api.time import datetimeToString
 
+from satorilib import logging
 from satorirendezvous.example.peer.structs.protocol import PeerProtocol as Protocol
 
 
 class PeerProtocol(Protocol):
+
+    pingSub: bytes = b'ping'
 
     @staticmethod
     def respond(time: dt.datetime, data: str, hashId: str, subcmd: bytes = None) -> bytes:
@@ -54,6 +57,11 @@ class PeerProtocol(Protocol):
 
     @staticmethod
     def isValidCommand(cmd: bytes) -> bool:
+        logging.debug('cmd', cmd, print='red')
+        logging.debug('PeerProtocol.toBytes(cmd)',
+                      PeerProtocol.toBytes(cmd), print='red')
+        logging.debug('PeerProtocol.prefixes()',
+                      PeerProtocol.prefixes(), print='red')
         return PeerProtocol.toBytes(cmd) in PeerProtocol.prefixes()
 
     @staticmethod
