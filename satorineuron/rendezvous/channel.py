@@ -1,16 +1,18 @@
+import time
 import socket
+import threading
 import datetime as dt
 from satorilib import logging
 from satorilib.concepts import StreamId
 from satorilib.api.time import datetimeToString
-from satorirendezvous.lib.lock import LockableList
-from satorirendezvous.peer.p2p.channel import Channel as BaseChannel
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
-# from satorineuron.rendezvous.topic import Topic
+from satorineuron.rendezvous.connect import Connection
+from satorirendezvous.lib.lock import LockableList
+# from satorineuron.rendezvous.topic import Topic # circular import
 
 
-class Channel(BaseChannel):
+class Channel:
     ''' manages a single connection between two nodes over UDP '''
 
     def __init__(
@@ -21,16 +23,32 @@ class Channel(BaseChannel):
         localPort: int,
         topicSocket: socket.socket,
         parent: 'Topic',
+        ping: bool = True,
     ):
         self.streamId = streamId
         self.messages: PeerMessages = PeerMessages([])
         self.parent = parent
-        super().__init__(
-            topic=self.streamId.topic(),
-            ip=ip,
-            port=port,
-            localPort=localPort,
-            topicSocket=topicSocket)
+        self.topic = self.streamId.topic()
+        self.connection = (
+            self.connection if hasattr(self, 'connection') else Connection(
+                topicSocket=topicSocket,
+                peerIp=ip,
+                peerPort=port,
+                port=localPort,
+                onMessage=self.onMessage))
+        self.connection.establish()
+        if ping:
+            self.setupPing()
+
+    def setupPing(self):
+
+        def pingForever(interval=28):
+            while True:
+                time.sleep(interval)
+                self.send(cmd=PeerProtocol.pingPrefix)
+
+        self.pingThread = threading.Thread(target=pingForever)
+        self.pingThread.start()
 
     # override
     def onMessage(
@@ -51,6 +69,9 @@ class Channel(BaseChannel):
     def add(self, message: PeerMessage):
         with self.messages:
             self.messages.append(message)
+
+    def send(self, cmd: str, msgs: list[str] = None):
+        self.connection.send(cmd, msgs)
 
     def router(self, message: PeerMessage, **kwargs):
         ''' routes the message to the appropriate handler '''
@@ -117,6 +138,21 @@ class Channel(BaseChannel):
 
     def responseAfter(self, time: dt.datetime):
         return [msg for msg in self.theirResponses() if msg.time > time]
+
+    def orderedMessages(self) -> list[PeerMessage]:
+        ''' most recent last messages by PeerMessage.time '''
+        return sorted(self.messages, key=lambda msg: msg.time)
+
+    def messagesAfter(self, time: dt.datetime) -> list[PeerMessage]:
+        return [msg for msg in self.messages if msg.time > time]
+
+    def receivedAfter(self, time: dt.datetime) -> list[PeerMessage]:
+        return [
+            msg for msg in self.messages
+            if msg.time > time and not msg.sent]
+
+    def isReady(self) -> bool:
+        return len(self.receivedAfter(time=dt.datetime.now() - dt.timedelta(minutes=28))) > 0
 
 
 class Channels(LockableList[Channel]):
