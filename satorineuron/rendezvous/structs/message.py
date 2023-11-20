@@ -1,6 +1,11 @@
+from satorirendezvous.server.structs.rest import ToClientRestProtocol as Protocol
+from satorilib import logging
+import json
 import datetime as dt
 from typing import Union
+from satorilib.api.time import now
 from satorirendezvous.lib.lock import LockableList
+from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorirendezvous.example.peer.structs.message import PeerMessage as Message
 
 
@@ -17,12 +22,71 @@ class PeerMessage(Message):
     ):
         self.msgId: Union[str, None] = msgId
         self.hash: Union[str, None] = hash
-        super().__init__(
-            sent=sent, raw=raw, time=time,
-            prefix=prefix,
-            subCommand=subCommand,
-            observationTime=observationTime,
-            data=data)
+        self.raw: bytes = raw
+        self.sent: bool = sent
+        self.time: dt.datetime = time or now()
+        self.prefix: Union[str, None] = prefix
+        self.subCommand: Union[str, None] = subCommand
+        self.observationTime: Union[str, None] = observationTime
+        self.data: Union[str, None] = data
+        self.initiateInterpret()
+
+    @staticmethod
+    def none(msgId: int = -1) -> 'PeerMessage':
+        return PeerMessage(
+            sent=False,
+            raw=b'',
+            time=now(), msgId=str(msgId))
+
+    @staticmethod
+    def fromJson(data: str, sent: bool = False) -> Union['PeerMessage', None]:
+        logging.debug('fromStr---: ', data, print='teal')
+        if isinstance(data, dict):
+            msg = PeerMessage(**data)
+        if isinstance(data, str):
+            try:
+                msg = PeerMessage(**json.loads(data))
+            except Exception as e:
+                logging.error('FromServerMessage.fromJson error: ',
+                              e, data, print=True)
+                msg = PeerMessage(raw=data)
+        if isinstance(msg, PeerMessage):
+            msg.sent = sent
+            msg.time = msg.time or now()
+            return msg
+        return None
+
+    @property
+    def asJsonStr(self) -> str:
+        return json.dumps(self.asJson)
+
+    @property
+    def asJson(self) -> dict:
+        return {
+            'sent': self.sent,
+            'raw': self.raw,
+            'time': self.time,
+            'prefix': self.prefix,
+            'subCommand': self.subCommand,
+            'observationTime': self.observationTime,
+            'data': self.data,
+            'msgId': self.msgId,
+            'hash': self.hash,
+        }
+
+    def __str__(self):
+        return (
+            f'PeerMessage(\n'
+            f'\tsent={self.sent},\n'
+            f'\traw={self.raw},\n'
+            f'\ttime={self.time},\n'
+            f'\tprefix={self.prefix},\n'
+            f'\tsubCommand={self.subCommand},\n'
+            f'\tobservationTime={self.observationTime},\n'
+            f'\tdata={self.data},\n'
+            f'\tmsgId={self.msgId},\n'
+            f'\thash={self.hash},\n'
+            ')')
 
     def initiateInterpret(self):
         if (
@@ -38,12 +102,12 @@ class PeerMessage(Message):
     def interpret(self):
         try:
             parts = self.messageAsString.split('|')
-            if self.isRequest:
+            if self.isRequest():
                 self.prefix = parts[0]
                 self.subCommand = parts[1]
                 self.msgId = parts[2]
                 self.observationTime = parts[3]
-            elif self.isResponse:
+            elif self.isResponse():
                 self.prefix = parts[0]
                 self.subCommand = parts[1]
                 self.msgId = parts[2]
@@ -82,6 +146,42 @@ class PeerMessage(Message):
         except Exception as e:
             print(e)
 
+    def __eq__(self, __value: object) -> bool:
+        return self.raw == __value.raw
+
+    @staticmethod
+    def _asString(raw: bytes) -> str:
+        return raw.decode()
+
+    @staticmethod
+    def _isResponse(raw: bytes, subcmd: bytes = None) -> bool:
+        return raw.startswith(PeerProtocol.respondPrefix + b'|' + (subcmd if subcmd is not None else b''))
+
+    @staticmethod
+    def _isRequest(raw: bytes, subcmd: bytes = None) -> bool:
+        return raw.startswith(PeerProtocol.requestPrefix + b'|' + (subcmd if subcmd is not None else b''))@staticmethod
+
+    @staticmethod
+    def _isNoneResponse(raw: bytes, subcmd: bytes = None) -> bool:
+        return raw.endswith(b'NONE|NONE') and PeerMessage._isResponse(subcmd=subcmd)
+
+    @property
+    def messageAsString(self) -> str:
+        return self.raw.decode()
+
+    @property
+    def isPing(self):
+        return self.subCommand == PeerProtocol.pingSub
+
+    def isResponse(self, subcmd: bytes = None) -> bool:
+        return PeerMessage._isResponse(self.raw, subcmd=subcmd or self.subCommand)
+
+    def isRequest(self, subcmd: bytes = None) -> bool:
+        return PeerMessage.isRequest(self.raw, subcmd=subcmd or self.subCommand)
+
+    def isNoneResponse(self, subcmd: bytes = None) -> bool:
+        return PeerMessage._isNoneResponse(self.raw, subcmd=subcmd or self.subCommand)
+
 
 class PeerMessages(LockableList[PeerMessage]):
     '''
@@ -90,3 +190,72 @@ class PeerMessages(LockableList[PeerMessage]):
             for message in messages:
                 message.read()
     '''
+
+
+class FromServerMessage():
+    ''' a strcuture describing a message from the server '''
+
+    def __init__(
+        self,
+        command: Union[str, None] = None,
+        msgId: Union[int, None] = None,
+        messages: Union[list, None] = None,
+        raw: Union[str, None] = None,
+    ):
+        self.command = command
+        self.msgId = msgId
+        self.messages = messages
+        self.raw = raw
+
+    @staticmethod
+    def none(msgId: int = -1):
+        return FromServerMessage(
+            command=Protocol.responseCommand,
+            msgId=msgId,
+            messages=[],
+            raw=None)
+
+    @staticmethod
+    def fromJson(data: str):
+        logging.debug('fromStr---: ', data, print='teal')
+        if isinstance(data, dict):
+            return FromServerMessage(**data)
+        if isinstance(data, str):
+            try:
+                return FromServerMessage(**json.loads(data))
+            except Exception as e:
+                logging.error('FromServerMessage.fromJson error: ',
+                              e, data, print=True)
+                return FromServerMessage(raw=data)
+
+    @property
+    def isResponse(self) -> bool:
+        return self.command == Protocol.responseCommand
+
+    @property
+    def isConnect(self) -> bool:
+        return self.command == Protocol.connectCommand
+
+    @property
+    def asResponse(self) -> str:
+        return json.dumps({'response': self.asJson})
+
+    @property
+    def asJsonStr(self) -> str:
+        return json.dumps(self.asJson)
+
+    @property
+    def asJson(self) -> dict:
+        return {
+            'command': self.command,
+            'msgId': self.msgId,
+            'messages': self.messages,
+            'raw': self.raw}
+
+    def __str__(self):
+        return (
+            f'FromServerMessage(\n'
+            f'\tcommand={self.command},\n'
+            f'\tmsgId={self.msgId},\n'
+            f'\tmessages={self.messages},\n'
+            f'\traw={self.raw})')

@@ -6,6 +6,7 @@ from typing import Union
 from satorilib import logging
 from satorilib.api.time import now
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
+from satorineuron.rendezvous.structs.message import PeerMessage
 
 
 class Connection:
@@ -45,7 +46,7 @@ class Connection:
                 data, addr = self.topicSocket.recvfrom(1024)
                 logging.debug('---channel message recieved---',
                               data, addr, print='magenta')
-                self.onMessage(data, sent=False, time=now(), addr=addr)
+                self.onMessage(PeerMessage.fromJson(data.decode(), sent=False))
 
         logging.debug('establishing connection', print='magenta')
         punchAHole()
@@ -68,10 +69,13 @@ class Connection:
         except Exception as e:
             logging.warning('err w/ payload', e, cmd, msgs)
 
-    def send(self, cmd: str, msgs: list[str] = None):
+    def send(self, cmd: str, msg: PeerMessage = None):
+        # TODO: make this take a PeerMessage object and do that everywhere
         payload = cmd
         logging.debug('sent pyaload:', payload, print='magenta')
         self.topicSocket.sendto(payload, (self.peerIp, self.port))
+        self.topicSocket.sendto(msg.asJsonStr.decode(),
+                                (self.peerIp, self.port))
         # payload = self.makePayload(cmd, msgs)
         # if payload is None:
         #    return False
