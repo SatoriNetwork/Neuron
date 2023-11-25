@@ -169,3 +169,66 @@ async def main():
 
 
 asyncio.run(main())
+
+
+# # just testing - couldn't get ws to work right, decided to use sse instead
+
+# import asyncio
+# import websockets
+
+
+# class UDPRelay():
+
+#     def __init__(self):
+#         self.listeners = []
+#         self.loop = asyncio.get_event_loop()
+#         self.websocket: websockets.WebSocketClientProtocol = None
+
+#     async def initWebsocket(self):
+#         self.websocket = await websockets.connect('ws://127.0.0.1:24602/websocket')
+#         self.listeners.append(asyncio.create_task(self.listenToWebsocket()))
+
+#     async def listenToWebsocket(self):
+#         try:
+#             async for message in self.websocket:
+#                 self.relay(message)
+#         except websockets.ConnectionClosed:
+#             print("WebSocket connection closed.")
+#             # TODO: Handle reconnection if necessary
+
+#     def relay(self, message):
+#         print(f"Received message: {message} from websocket")
+
+#     async def listen(self):
+#         await asyncio.gather(*self.listeners)
+
+#     async def shutdown(self):
+#         async def cancel():
+#             ''' cancel all listen_to_socket tasks '''
+#             for task in self.listeners:
+#                 task.cancel()
+#                 try:
+#                     await task
+#                 except asyncio.CancelledError:
+#                     pass
+
+#         async def closeWebSocket():
+#             await self.websocket.close()
+
+#         await cancel()
+#         await closeWebSocket()
+
+# async def main():
+#     try:
+#         udp_conns = UDPRelay()
+#         await udp_conns.initWebsocket()
+#         try:
+#             await udp_conns.listen()
+#             await asyncio.sleep(60)
+#         finally:
+#             await udp_conns.shutdown()
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
+
+
+# asyncio.run(main())

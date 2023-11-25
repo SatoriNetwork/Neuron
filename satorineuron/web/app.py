@@ -11,9 +11,9 @@ import secrets
 import webbrowser
 import time
 from waitress import serve
-from flask import Flask, url_for, render_template, redirect, jsonify
-from flask import send_from_directory, session, request, flash, Response
-from flask_sockets import Sockets
+from flask import Flask, Response, url_for, redirect, jsonify, flash
+from flask import session, request
+from flask import send_from_directory, stream_with_context, render_template
 from satorineuron import config
 from satorineuron import logging
 from satorineuron.web import forms
@@ -51,7 +51,6 @@ badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updating = False
-sockets = Sockets(app)
 
 ###############################################################################
 ## Startup ####################################################################
@@ -788,18 +787,24 @@ def publsihMeta():
 ###############################################################################
 
 
-@sockets.route('/websocket')
-def handle_websocket(ws):
-    while not ws.closed:
-        message = ws.receive()
-        print('received message: ' + message)
-        ws.send('Data received!')
+@app.route('/stream')
+def stream():
+
+    def event_stream():
+        count = 0
+        while True:
+            time.sleep(1)
+            count += 1
+            yield f"data: {count}\n\n"
+
+    return Response(
+        stream_with_context(event_stream()),
+        content_type='text/event-stream')
 
 
 ###############################################################################
 ## Entry ######################################################################
 ###############################################################################
-
 
 if __name__ == '__main__':
     # if False:
@@ -808,24 +813,12 @@ if __name__ == '__main__':
     # serve(app, host='0.0.0.0', port=config.get()['port'])
     if not debug:
         webbrowser.open('http://127.0.0.1:24601', new=0, autoraise=True)
-
-    from gevent import pywsgi
-    from geventwebsocket.handler import WebSocketHandler
-    server = pywsgi.WSGIServer(
-        ('0.0.0.0', config.flaskPort()),
-        app,
-        handler_class=WebSocketHandler,
-        # threaded=True,
-        # use_reloader=False,
-        # debug=debug
-    )
-    server.serve_forever()
-    # app.run(
-    #    host='0.0.0.0',
-    #    port=config.flaskPort(),
-    #    threaded=True,
-    #    debug=debug,
-    #    use_reloader=False)   # fixes run twice issue
+    app.run(
+        host='0.0.0.0',
+        port=config.flaskPort(),
+        threaded=True,
+        debug=debug,
+        use_reloader=False)   # fixes run twice issue
     # app.run(host='0.0.0.0', port=config.get()['port'], threaded=True)
     # https://stackoverflow.com/questions/11150343/slow-requests-on-local-flask-server
     # did not help
