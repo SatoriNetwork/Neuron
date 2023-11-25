@@ -9,7 +9,7 @@ flask server and the remote peers.
 import socket
 import asyncio
 import datetime as dt
-import aiohttp
+import websockets
 
 
 class UDPRelay():
@@ -20,18 +20,24 @@ class UDPRelay():
         self.socks: list[socket.socket] = []
         self.listeners = []
         self.loop = asyncio.get_event_loop()
+        self.websocket: websockets.WebSocketClientProtocol = None
 
-    async def sse_listener(self, url):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                async for line in response.content:
-                    if line.startswith(b"data:"):
-                        message = line.decode('utf-8')[5:].strip()
-                        print("SSE message:", message)
-                        # Process SSE message here
+    async def initWebsocket(self):
+        self.websocket = await websockets.connect('ws://localhost:24601/websocket')
+        self.listeners.append(asyncio.create_task(self.listenToWebsocket()))
 
-    def initSseListener(self, url):
-        self.listeners.append(asyncio.create_task(self.sse_listener(url)))
+    async def listenToWebsocket(self):
+        try:
+            async for message in self.websocket:
+                self.relay(message)
+        except websockets.ConnectionClosed:
+            print("WebSocket connection closed.")
+            # TODO: Handle reconnection if necessary
+
+    def relay(self, message):
+        # TODO: send to correct socket
+        for sock in self.socks:
+            sock.sendto(message.encode(), (sock.remoteIp, sock.remotePort))
 
     # this should be done at higher level
     # async def runForever(self):
@@ -97,11 +103,10 @@ class UDPRelay():
         createAllSockets()
 
     async def listen(self):
-        self.initSseListener('http://localhost:24601/stream')
-        self.listeners += [
+        self.listeners = self.listeners + [
             asyncio.create_task(self.listenTo(sock))
             for sock in self.socks]
-        await asyncio.gather(*self.listeners)
+        return await asyncio.gather(*self.listeners)
 
     async def shutdown(self):
         async def cancel():
@@ -118,8 +123,12 @@ class UDPRelay():
             for sock in self.socks:
                 sock.close()
 
+        async def closeWebSocket():
+            await self.websocket.close()
+
         await cancel()
         close()
+        await closeWebSocket()
 
     def handle(self, sock: socket.socket, data: bytes, addr: tuple[str, int]):
         ''' send to flask server with identifying information '''
@@ -149,14 +158,12 @@ async def main():
         try:
             udp_conns = UDPRelay(ports)
             await udp_conns.initSockets()
+            await udp_conns.initWebsocket()
             try:
-                await udp_conns.listen()
-                while newPorts == ports:
-                    await asyncio.sleep(seconds())
-                    newPorts = getPorts()
-                ports = newPorts
-            finally:
-                await udp_conns.shutdown()
+                await asyncio.wait_for(udp_conns.listen(), seconds())
+            except asyncio.TimeoutError:
+                print('Listen period ended. Proceeding to shutdown.')
+            await udp_conns.shutdown()
         except Exception as e:
             print(f"An error occurred: {e}")
 

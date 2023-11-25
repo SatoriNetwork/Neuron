@@ -2,14 +2,14 @@
 we discovered that udp hole punching inside docker containers is not possible.
 we thought it was.
 this host script is meant to run on the host machine. 
-it will establish a websocket connection with the flask server running inside
+it will establish a sse connection with the flask server running inside
 the container. it will handle the UDP hole punching, passing data between the
 flask server and the remote peers.
 '''
 import socket
 import asyncio
 import datetime as dt
-import websockets
+import aiohttp
 
 
 class UDPRelay():
@@ -20,24 +20,18 @@ class UDPRelay():
         self.socks: list[socket.socket] = []
         self.listeners = []
         self.loop = asyncio.get_event_loop()
-        self.websocket: websockets.WebSocketClientProtocol = None
 
-    async def initWebsocket(self):
-        self.websocket = await websockets.connect('ws://localhost:24601/websocket')
-        self.listeners.append(asyncio.create_task(self.listenToWebsocket()))
+    async def sseListener(self, url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                async for line in response.content:
+                    if line.startswith(b"data:"):
+                        message = line.decode('utf-8')[5:].strip()
+                        print("SSE message:", message)
+                        # Process SSE message here
 
-    async def listenToWebsocket(self):
-        try:
-            async for message in self.websocket:
-                self.relay(message)
-        except websockets.ConnectionClosed:
-            print("WebSocket connection closed.")
-            # TODO: Handle reconnection if necessary
-
-    def relay(self, message):
-        # TODO: send to correct socket
-        for sock in self.socks:
-            sock.sendto(message.encode(), (sock.remoteIp, sock.remotePort))
+    def initSseListener(self, url):
+        self.listeners.append(asyncio.create_task(self.sseListener(url)))
 
     # this should be done at higher level
     # async def runForever(self):
@@ -103,10 +97,11 @@ class UDPRelay():
         createAllSockets()
 
     async def listen(self):
-        self.listeners = self.listeners + [
+        self.initSseListener('http://localhost:24601/stream')
+        self.listeners += [
             asyncio.create_task(self.listenTo(sock))
             for sock in self.socks]
-        await asyncio.gather(*self.listeners)
+        return await asyncio.gather(*self.listeners)
 
     async def shutdown(self):
         async def cancel():
@@ -123,12 +118,8 @@ class UDPRelay():
             for sock in self.socks:
                 sock.close()
 
-        async def closeWebSocket():
-            await self.websocket.close()
-
         await cancel()
         close()
-        await closeWebSocket()
 
     def handle(self, sock: socket.socket, data: bytes, addr: tuple[str, int]):
         ''' send to flask server with identifying information '''
@@ -158,17 +149,107 @@ async def main():
         try:
             udp_conns = UDPRelay(ports)
             await udp_conns.initSockets()
-            await udp_conns.initWebsocket()
             try:
-                await udp_conns.listen()
-                while newPorts == ports:
-                    await asyncio.sleep(seconds())
-                    newPorts = getPorts()
-                ports = newPorts
-            finally:
-                await udp_conns.shutdown()
+                await asyncio.wait_for(udp_conns.listen(), seconds())
+            except asyncio.TimeoutError:
+                print('Listen period ended. Proceeding to shutdown.')
+            await udp_conns.shutdown()
         except Exception as e:
             print(f"An error occurred: {e}")
 
 
 asyncio.run(main())
+
+
+# # just testing
+# import asyncio
+# import aiohttp
+
+
+# class UDPRelay():
+
+#     def __init__(self):
+#         self.listeners = []
+#         self.loop = asyncio.get_event_loop()
+
+#     async def sseListener(self, url):
+#         async with aiohttp.ClientSession() as session:
+#             async with session.get(url) as response:
+#                 async for line in response.content:
+#                     if line.startswith(b"data:"):
+#                         message = line.decode('utf-8')[5:].strip()
+#                         print("SSE message:", message)
+#                         # Process SSE message here
+
+#     def initSseListener(self, url):
+#         self.listeners.append(asyncio.create_task(self.sseListener(url)))
+
+#     async def testListener(self):
+#         for x in range(100):
+#             await asyncio.sleep(1)
+#             print("x:", x)
+
+#     def initTestListener(self):
+#         self.listeners.append(asyncio.create_task(self.testListener()))
+
+#     async def listen(self):
+#         self.initSseListener('http://localhost:24604/stream')
+#         self.initTestListener()
+#         return await asyncio.gather(*self.listeners)
+
+#     async def shutdown(self):
+#         ''' cancel all listen_to_socket tasks '''
+#         print('shutting down')
+#         for task in self.listeners:
+#             task.cancel()
+#             try:
+#                 await task
+#             except asyncio.CancelledError:
+#                 pass
+
+# async def main():
+#     while True:
+#         try:
+#             udp_conns = UDPRelay()
+#             try:
+#                 await asyncio.wait_for(udp_conns.listen(), 60)
+#             except asyncio.TimeoutError:
+#                 print('Listen period ended. Proceeding to shutdown.')
+#             print('cancelling')
+#             await udp_conns.shutdown()
+#             await asyncio.sleep(10)
+#             # try:
+#             #     await udp_conns.listen()
+#             #     await asyncio.sleep(60)
+#             # finally:
+#             #     await udp_conns.shutdown()
+#             #     await asyncio.sleep(10)
+#         except Exception as e:
+#             print(f"An error occurred: {e}")
+
+# asyncio.run(main())
+
+# ## server for testing
+# from flask import Flask, Response, stream_with_context
+# import time
+
+# app = Flask(__name__)
+
+
+# def event_stream():
+#     count = 0
+#     while True:
+#         time.sleep(1)
+#         count += 1
+#         yield f"data: {count}\n\n"
+
+
+# @app.route('/stream')
+# def stream():
+#     return Response(
+#         stream_with_context(event_stream()),
+#         content_type='text/event-stream')
+
+
+# if __name__ == '__main__':
+#     app.run('0.0.0.0', port=24604, debug=True)
