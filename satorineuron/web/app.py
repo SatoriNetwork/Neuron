@@ -13,6 +13,7 @@ import time
 from waitress import serve
 from flask import Flask, url_for, render_template, redirect, jsonify
 from flask import send_from_directory, session, request, flash, Response
+from flask_socketio import SocketIO
 from satorineuron import config
 from satorineuron import logging
 from satorineuron.web import forms
@@ -50,6 +51,7 @@ badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updating = False
+socketio = SocketIO(app)
 
 ###############################################################################
 ## Startup ####################################################################
@@ -782,6 +784,17 @@ def publsihMeta():
     return render_template('unknown.html', **resp)
 
 ###############################################################################
+## Socket #####################################################################
+###############################################################################
+
+
+@socketio.on('websocket')
+def handle_websocket(message):
+    print('received message: ' + message)
+    socketio.emit('response', {'response': 'Data received!'})
+
+
+###############################################################################
 ## Entry ######################################################################
 ###############################################################################
 
@@ -793,12 +806,19 @@ if __name__ == '__main__':
     # serve(app, host='0.0.0.0', port=config.get()['port'])
     if not debug:
         webbrowser.open('http://127.0.0.1:24601', new=0, autoraise=True)
-    app.run(
+    socketio.run(
+        app,
         host='0.0.0.0',
         port=config.flaskPort(),
         threaded=True,
-        debug=debug,
-        use_reloader=False)   # fixes run twice issue
+        use_reloader=False,
+        debug=debug)
+    # app.run(
+    #    host='0.0.0.0',
+    #    port=config.flaskPort(),
+    #    threaded=True,
+    #    debug=debug,
+    #    use_reloader=False)   # fixes run twice issue
     # app.run(host='0.0.0.0', port=config.get()['port'], threaded=True)
     # https://stackoverflow.com/questions/11150343/slow-requests-on-local-flask-server
     # did not help

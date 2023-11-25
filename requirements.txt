@@ -48,6 +48,10 @@ Crypto==1.4.1
 websocket-client==1.4.2 # not sure if we need this
 websockets==10.4 # import websocket; websocket.WebSocket()
 
+# needed for Satori rendezvous outside udp hole punching
+#flask-socketio==5.3.6
+Flask-Sockets==0.2.1
+
 ## needed? for old view
 #IPython==8.7.0  # 7.23.0
 #matplotlib==3.6.2 # 3.4.1
