@@ -791,11 +791,21 @@ def publsihMeta():
 def udpStream():
 
     def event_stream():
-        count = 0
         while True:
             time.sleep(1)
-            count += 1
-            yield f"data: {count}\n\n"
+            # here we gather all the messages from the rendezvous object
+            # it will be a list of tuples (address, message)
+            # then we have to organize it into a dictionary for the udp relay
+            # then make it a string. will be interpretted this way:
+            # literal: dict[str, object] = ast.literal_eval(message)
+            # data = literal.get('data', None)
+            # localPort = literal.get('localPort', None)
+            payload = [
+                (localPort, bytesPayload)
+                for localPort, bytesPayload in [(1, b'')]
+                # for localPort, bytesPayload in start.relay.rendezvous.messages
+            ]
+            yield f"data: {payload}\n\n"
 
     return Response(
         stream_with_context(event_stream()),
@@ -811,17 +821,18 @@ def udpMessage():
             return json_data
         except json.JSONDecodeError:
             # Handle non-JSON data or log it
-            print(f'Invalid JSON received from {payload.get("address")}: {payload.get("data")}')
+            print(
+                f'Invalid JSON received from {payload.get("address")}: {payload.get("data")}')
         except Exception as e:
             # General error handling
             print(f'Error processing data from {payload.get("address")}: {e}')
     payload = request.json
-    data = validateJson() # should data actually be json? is the protocol?
+    data = validateJson()  # should data actually be json? is the protocol?
     print(data)
 
 
 @app.route('/udp/ports', methods=['GET'])
-def udpGet():
+def udpPorts():
     ''' recieves data from udp relay '''
     # return {localPort: (remoteIp, remotePort)}
     return jsonify({})
