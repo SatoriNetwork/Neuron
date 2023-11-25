@@ -11,9 +11,9 @@ import secrets
 import webbrowser
 import time
 from waitress import serve
-from flask import Flask, Response, url_for, redirect, jsonify, flash
-from flask import session, request
-from flask import send_from_directory, stream_with_context, render_template
+from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
+from flask import session, request, render_template
+from flask import Response, stream_with_context
 from satorineuron import config
 from satorineuron import logging
 from satorineuron.web import forms
@@ -783,12 +783,12 @@ def publsihMeta():
     return render_template('unknown.html', **resp)
 
 ###############################################################################
-## Socket #####################################################################
+## UDP communication ##########################################################
 ###############################################################################
 
 
-@app.route('/stream')
-def stream():
+@app.route('/udp/stream')
+def udpStream():
 
     def event_stream():
         count = 0
@@ -802,9 +802,35 @@ def stream():
         content_type='text/event-stream')
 
 
+@app.route('/udp/message', methods=['POST'])
+def udpMessage():
+    ''' recieves data from udp relay '''
+    def validateJson() -> bool:
+        try:
+            json_data = json.loads(payload.get('data', ''))
+            return json_data
+        except json.JSONDecodeError:
+            # Handle non-JSON data or log it
+            print(f'Invalid JSON received from {payload.get("address")}: {payload.get("data")}')
+        except Exception as e:
+            # General error handling
+            print(f'Error processing data from {payload.get("address")}: {e}')
+    payload = request.json
+    data = validateJson() # should data actually be json? is the protocol?
+    print(data)
+
+
+@app.route('/udp/ports', methods=['GET'])
+def udpGet():
+    ''' recieves data from udp relay '''
+    # return {localPort: (remoteIp, remotePort)}
+    return jsonify({})
+
+
 ###############################################################################
 ## Entry ######################################################################
 ###############################################################################
+
 
 if __name__ == '__main__':
     # if False:

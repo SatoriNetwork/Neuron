@@ -74,3 +74,6 @@ websockets==10.4 # import websocket; websocket.WebSocket()
 ## slim linux
 # apt-get update 
 # apt-get install build-essential -y
+
+
+# aiohttp==3.8.4 needed for udprelay outside container

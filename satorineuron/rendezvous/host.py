@@ -10,6 +10,11 @@ import socket
 import asyncio
 import datetime as dt
 import aiohttp
+import requests
+
+localUrl = 'http://localhost'
+satoriPort = 24601
+satoriUrl = f'{localUrl}:{satoriPort}/udp'
 
 
 class UDPRelay():
@@ -27,16 +32,33 @@ class UDPRelay():
                 async for line in response.content:
                     if line.startswith(b"data:"):
                         message = line.decode('utf-8')[5:].strip()
-                        print("SSE message:", message)
-                        # Process SSE message here
+                        self.relayToSocket(message)
 
     def initSseListener(self, url):
         self.listeners.append(asyncio.create_task(self.sseListener(url)))
 
-    # this should be done at higher level
-    # async def runForever(self):
-        # self.loop.run_until_complete(self.main())
-        # asyncio.run(udp_conns.main())
+    def relayToSocket(self, message: str):
+        def parseMessage() -> tuple[bytes, int]:
+            ''' parse message into local port and message '''
+            # TODO
+            data = None
+            localPort = None
+            return data, localPort
+
+        print("SSE message:", message)
+        data, localPort = parseMessage()
+        if localPort is None:
+            return
+        sock = self.getSocketByLocalPort(localPort)
+        if sock is None:
+            return
+        self.speak(sock=sock, data=data)
+
+    def getSocketByLocalPort(self, localPort: int) -> socket.socket:
+        for sock in self.socks():
+            if self.getLocalPort(sock) == localPort:
+                return sock
+        return None
 
     @staticmethod
     def getLocalPort(sock: socket.socket) -> int:
@@ -97,11 +119,14 @@ class UDPRelay():
         createAllSockets()
 
     async def listen(self):
-        self.initSseListener('http://localhost:24601/stream')
+        self.initSseListener(f'{satoriUrl}/stream')
         self.listeners += [
             asyncio.create_task(self.listenTo(sock))
             for sock in self.socks]
         return await asyncio.gather(*self.listeners)
+
+    async def speak(self, sock: socket.socket, data: bytes):
+        sock.sendto(data, (self.getRemoteIp(sock), self.getRemotePort(sock)))
 
     async def shutdown(self):
         async def cancel():
@@ -123,9 +148,14 @@ class UDPRelay():
 
     def handle(self, sock: socket.socket, data: bytes, addr: tuple[str, int]):
         ''' send to flask server with identifying information '''
-        print(
-            f"Received data: {data} from {addr} on port {UDPRelay.getLocalPort(sock)}")
-        # TODO: send to flask server over http request
+        print(f"Received {data} from {addr} on {UDPRelay.getLocalPort(sock)}")
+        requests.post(
+            f'{satoriUrl}/message',
+            json={
+                'data': data.decode(),
+                'address': {
+                    'listen': {'ip': addr[0], 'port': addr[1]},
+                    'speak': {'port': UDPRelay.getLocalPort(sock)}}})
 
 
 async def main():
@@ -140,7 +170,18 @@ async def main():
 
     def getPorts() -> dict[int, tuple[str, int]]:
         ''' gets ports from the flask server '''
-        # TODO: get ports from flask server over http request
+        r = requests.get(f'{satoriUrl}/ports')
+        if r.status_code == 200:
+            try:
+                ports_data: dict = r.json()
+                validated_ports = {}
+                for key, value in ports_data.items():
+                    if isinstance(key, int) and isinstance(value, list) and len(value) == 2:
+                        validated_ports[key] = tuple(value)
+                return validated_ports
+            except (ValueError, TypeError):
+                print("Invalid format of received data")
+                return {}
         return {}
 
     newPorts = getPorts()
