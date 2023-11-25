@@ -13,7 +13,7 @@ import time
 from waitress import serve
 from flask import Flask, url_for, render_template, redirect, jsonify
 from flask import send_from_directory, session, request, flash, Response
-from flask_socketio import SocketIO
+from flask_sockets import Sockets
 from satorineuron import config
 from satorineuron import logging
 from satorineuron.web import forms
@@ -51,7 +51,7 @@ badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updating = False
-socketio = SocketIO(app)
+sockets = Sockets(app)
 
 ###############################################################################
 ## Startup ####################################################################
@@ -788,10 +788,12 @@ def publsihMeta():
 ###############################################################################
 
 
-@socketio.on('websocket')
-def handle_websocket(message):
-    print('received message: ' + message)
-    socketio.emit('response', {'response': 'Data received!'})
+@sockets.route('/websocket')
+def handle_websocket(ws):
+    while not ws.closed:
+        message = ws.receive()
+        print('received message: ' + message)
+        ws.send('Data received!')
 
 
 ###############################################################################
@@ -806,13 +808,18 @@ if __name__ == '__main__':
     # serve(app, host='0.0.0.0', port=config.get()['port'])
     if not debug:
         webbrowser.open('http://127.0.0.1:24601', new=0, autoraise=True)
-    socketio.run(
+
+    from gevent import pywsgi
+    from geventwebsocket.handler import WebSocketHandler
+    server = pywsgi.WSGIServer(
+        ('0.0.0.0', config.flaskPort()),
         app,
-        host='0.0.0.0',
-        port=config.flaskPort(),
-        threaded=True,
-        use_reloader=False,
-        debug=debug)
+        handler_class=WebSocketHandler,
+        # threaded=True,
+        # use_reloader=False,
+        # debug=debug
+    )
+    server.serve_forever()
     # app.run(
     #    host='0.0.0.0',
     #    port=config.flaskPort(),
