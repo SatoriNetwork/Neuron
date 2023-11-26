@@ -16,6 +16,28 @@ class RendezvousEngine():
         self.start = start  # 'StartupDag'
         self.peer.parent = start
 
+    def gatherMessages(self) -> list[tuple[int, bytes]]:
+        ''' empties and returns whatever messages are in the queue '''
+        x = self.peer.outbox
+        self.peer.outbox = []
+        return x
+        # return [(1, b'')]
+
+    def gatherChannels(self) -> dict[int, list[tuple[str, int]]]:
+        '''
+        gets the localPort of all the topics, get's the remoteIp and remotePort
+        of all channels per topic 
+        '''
+        # TODO.
+        structure = {}
+        for topic in self.peer.topics:
+            structure[topic.port] = []
+            for channel in topic.channels:
+                structure[topic.port].append(
+                    channel.localPort, channel.remoteIp, channel.remotePort)
+
+        return {0: [('ip', 0)]}
+
     def getHistoryOf(self, streamId: StreamId):
 
         def tellModelsAboutNewHistory():

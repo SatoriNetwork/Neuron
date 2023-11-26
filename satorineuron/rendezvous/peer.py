@@ -46,11 +46,16 @@ class RendezvousPeer():
         self.signed = signed
         self.signedStreamIds = signedStreamIds
         self.parent = None  # 'RendezvousEngine'
+        # need a lock? don't think so
+        self.outbox: list[tuple[int, str, int, bytes]] = []
         self.createTopics()
         self.connect(rendezvousHost)
         if handlePeriodicCheckin:
             self.periodicCheckinSeconds = periodicCheckinSeconds
             self.periodicCheckin()
+
+    def toOutbox(self, message: tuple[int, str, int, bytes]):
+        self.outbox.append(message)
 
     def periodicCheckin(self):
         self.checker = threading.Thread(target=self.checkin, daemon=True)
@@ -63,7 +68,7 @@ class RendezvousPeer():
 
     def createTopics(self):
         self.topics: Topics = Topics({
-            s.topic(): Topic(s) for s in self.signedStreamIds})
+            s.topic(): Topic(s, outbox=self.toOutbox) for s in self.signedStreamIds})
 
     def connect(self, rendezvousHost: str):
         self.rendezvous: RendezvousByRest = RendezvousByRest(
@@ -91,10 +96,11 @@ class RendezvousPeer():
                             topic = str(connection.get('topic'))
                             with self.topics:
                                 if topic in self.topics.keys():
+                                    self.topics[topic].setLocalPort(
+                                        localPort=localPort)
                                     self.topics[topic].create(
                                         ip=ip,
-                                        port=port,
-                                        localPort=localPort)
+                                        port=port)
                                 else:
                                     logging.error(
                                         'topic not found', topic, print=True)

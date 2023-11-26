@@ -20,57 +20,65 @@ satoriUrl = f'{localUrl}:{satoriPort}/udp'
 
 
 class UDPRelay():
-
-    def __init__(self, ports: dict[int, tuple[str, int]]):
+    # incorrect assumption: localPorts have only one remote port.
+    # that's not right. localports are by topic.
+    # they can have multple ports that they interface with.
+    # perhaps I need to reverse this {remotePort: (remoteIp, localport)}?
+    # or is a listgood enough: {localPort: [(remoteIp, remotePort)]}
+    # I could do that if I don't have to get remote by local.
+    def __init__(self, ports: dict[int, list[tuple[str, int]]]):
         # {localport: (remoteIp, remotePort)}
-        self.ports: dict[int, tuple[str, int]] = ports
+        self.ports: dict[int, list[tuple[str, int]]] = ports
         self.socks: list[socket.socket] = []
         self.listeners = []
         self.loop = asyncio.get_event_loop()
 
-    async def sseListener(self, url):
+    async def sseListener(self, url: str):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 async for line in response.content:
                     if line.startswith(b"data:"):
-                        messages = line.decode('utf-8')[5:].strip()
+                        messages = line.decode('utf-8').strip()
                         self.relayToSocket(messages)
 
-    def initSseListener(self, url):
+    def initSseListener(self, url: str):
         self.listeners.append(asyncio.create_task(self.sseListener(url)))
 
     def relayToSocket(self, messages: str):
-        # def parseMessages() -> list[tuple[tuple[str, int], object]]: # we might not need to include ip...
-        # we might not need to include ip...
-        def parseMessages() -> list[tuple[int, bytes]]:
+        def parseMessages() -> list[tuple[int, str, int, bytes]]:
             ''' 
             parse messages into a 
             list of [tuples of (tuples of local port, and data)]
             '''
-            literal: list[tuple[int, bytes]] = ast.literal_eval(messages)
-            if (
-                not isinstance(literal, list)
-                or len(literal) == 0
-                or not isinstance(literal[0], tuple)
-                or not isinstance(literal[0][0], tuple)
-                or not isinstance(literal[0][0][0], int)
-                or not isinstance(literal[0][0][1], bytes)
-            ):
-                return []
-            return literal
+            try:
+                literal: list[tuple[int, str, int, bytes]] = (
+                    ast.literal_eval(messages))
+                if isinstance(literal, list) and len(literal) > 0:
+                    return literal
+            except Exception as e:
+                print(f'unable to parse messages: {messages}, error: {e}')
+            return []
 
-        def parseMessage(msg) -> tuple[int, bytes]:
-            return msg[0], msg[1]
+        def parseMessage(msg) -> tuple[int, str, int, bytes]:
+            ''' localPort, remoteIp, remotePort, data '''
+            if (
+                    len(msg) == 4
+                    and isinstance(msg[0], int)
+                    and isinstance(msg[1], str)
+                    and isinstance(msg[2], int)
+                    and isinstance(msg[3], bytes)):
+                return msg[0], msg[1], msg[2], msg[3]
+            return None, None, None, None
 
         # print("SSE messages:", messages)
         for msg in parseMessages():
-            localPort, data = parseMessage(msg)
+            localPort, remoteIp, remotePort, data = parseMessage(msg)
             if localPort is None:
                 return
             sock = self.getSocketByLocalPort(localPort)
             if sock is None:
                 return
-            self.speak(sock=sock, data=data)
+            self.speak(sock, remoteIp, remotePort, data)
 
     def getSocketByLocalPort(self, localPort: int) -> socket.socket:
         for sock in self.socks():
@@ -81,31 +89,6 @@ class UDPRelay():
     @staticmethod
     def getLocalPort(sock: socket.socket) -> int:
         return sock.getsockname()[1]
-
-    def getRemotePort(self, sock: socket.socket) -> int:
-        if hasattr(sock, 'remotePort'):
-            return sock.remotePort
-        port = sock.getsockname()[1]
-        if port is None:
-            return -1
-        return self.getRemotePortByPort(port)
-
-    def getRemotePortByPort(self, port: int) -> int:
-        return self.getRemoteIpAndPortByPort(port)[1]
-
-    def getRemoteIp(self, sock: socket.socket) -> str:
-        if hasattr(sock, 'remoteIp'):
-            return sock.remoteIp
-        port = sock.getsockname()[1]
-        if port is None:
-            return ''
-        return self.getRemoteIpByPort(port)
-
-    def getRemoteIpByPort(self, port: int) -> str:
-        return self.getRemoteIpAndPortByPort(port)[0]
-
-    def getRemoteIpAndPortByPort(self, port: int) -> tuple[str, int]:
-        return self.ports.get(port, ('', -1))
 
     async def listenTo(self, sock: socket.socket):
         while True:
@@ -125,14 +108,16 @@ class UDPRelay():
             remoteIp: str,
             remotePort: int
         ) -> socket.socket:
-            sock.remoteIp = remoteIp
-            sock.remotePort = remotePort
+            # sock.remoteIp = remoteIp
+            # sock.remotePort = remotePort
             sock.sendto(b'punch', (remoteIp, remotePort))
             return sock
 
         def createAllSockets():
-            for k, v in self.ports:
-                self.socks.append(punch(bind(k), *v))
+            for localPort, remotes in self.ports:
+                sock = bind(localPort)
+                for remoteIp, remotePort in remotes:
+                    self.socks.append(punch(sock, remoteIp, remotePort))
 
         createAllSockets()
 
@@ -143,8 +128,14 @@ class UDPRelay():
             for sock in self.socks]
         return await asyncio.gather(*self.listeners)
 
-    def speak(self, sock: socket.socket, data: bytes):
-        sock.sendto(data, (self.getRemoteIp(sock), self.getRemotePort(sock)))
+    def speak(
+        self,
+        sock: socket.socket,
+        remoteIp: str,
+        remotePort: int,
+        data: bytes
+    ):
+        sock.sendto(data, (remoteIp, remotePort))
 
     async def shutdown(self):
         async def cancel():
@@ -186,7 +177,7 @@ async def main():
             microsecond=0)
         return (next_hour - now).total_seconds()
 
-    def getPorts() -> dict[int, tuple[str, int]]:
+    def getPorts() -> dict[int, list[tuple[str, int]]]:
         ''' gets ports from the flask server '''
         r = requests.get(f'{satoriUrl}/ports')
         if r.status_code == 200:

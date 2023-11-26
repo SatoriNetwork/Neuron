@@ -17,9 +17,9 @@ from satorilib.pubsub import SatoriPubSubConn
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
-# from satorilib.api.udp.rendezvous import UDPRendezvousConnection # todo: remove from lib
-# from satorineuron.rendezvous import rendezvous
-from satorineuron.retro import Retro
+from satorilib.api.udp.rendezvous import UDPRendezvousConnection  # todo: remove from lib
+from satorineuron.rendezvous import rendezvous
+# from satorineuron.retro import Retro
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 
 
@@ -43,8 +43,8 @@ class StartupDag(object):
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
         self.pubsub: SatoriPubSubConn = None
-        # self.peer: rendezvous.RendezvousEngine
-        self.retro: Retro = None
+        self.peer: rendezvous.RendezvousEngine
+        # self.retro: Retro = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
@@ -59,8 +59,8 @@ class StartupDag(object):
         self.pubsubConnect()
         self.startRelay()
         # TODO NEXT: get authentication working and everything else
-        # self.rendezvousConnect()
-        self.retroConnect()
+        self.rendezvousConnect()
+        # self.retroConnect()
         # self.downloadDatasets()
 
     def createRelayValidation(self):

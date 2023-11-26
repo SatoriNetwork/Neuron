@@ -791,21 +791,18 @@ def publsihMeta():
 def udpStream():
 
     def event_stream():
+        '''
+        here we gather all the messages from the rendezvous object
+        it will be a list of tuples (address, message)
+        then we have to organize it into a dictionary for the udp relay
+        then make it a string. will be interpretted this way:
+        literal: dict[str, object] = ast.literal_eval(message)
+        data = literal.get('data', None)
+        localPort = literal.get('localPort', None)
+        '''
         while True:
             time.sleep(1)
-            # here we gather all the messages from the rendezvous object
-            # it will be a list of tuples (address, message)
-            # then we have to organize it into a dictionary for the udp relay
-            # then make it a string. will be interpretted this way:
-            # literal: dict[str, object] = ast.literal_eval(message)
-            # data = literal.get('data', None)
-            # localPort = literal.get('localPort', None)
-            payload = [
-                (localPort, bytesPayload)
-                for localPort, bytesPayload in [(1, b'')]
-                # for localPort, bytesPayload in start.relay.rendezvous.messages
-            ]
-            yield f"data: {payload}\n\n"
+            yield str(start.peer.gatherMessages())
 
     return Response(
         stream_with_context(event_stream()),
@@ -834,7 +831,9 @@ def udpMessage():
 @app.route('/udp/ports', methods=['GET'])
 def udpPorts():
     ''' recieves data from udp relay '''
-    # return {localPort: (remoteIp, remotePort)}
+    # return {localPort: [(remoteIp, remotePort)]}
+    # list[tuple[str, int]]
+    start.peer.gatherChannels()
     return jsonify({})
 
 

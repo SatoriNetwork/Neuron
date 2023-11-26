@@ -1,7 +1,8 @@
-from typing import Union
-from time import sleep
+from typing import Union, Callable
+import time
 import datetime as dt
 import pandas as pd
+import threading
 from satorilib import logging
 from satorilib.api.disk import Disk
 from satorilib.api.time import now
@@ -13,36 +14,102 @@ from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.channel import Channel, Channels
 
 
-class Topic(BaseTopic):
+class Topic():
     ''' manages all our udp channels for a single topic '''
 
-    def __init__(self, signedStreamId: SignedStreamId, port: int = None):
+    def __init__(
+        self,
+        signedStreamId: SignedStreamId,
+        localPort: int = None,
+        outbox: Callable = None,
+    ):
         logging.debug('---TOPIC---', signedStreamId.stream, print='magenta')
         self.channels: Channels = Channels([])
-        self.port = None
-        super().__init__(name=signedStreamId.topic(), port=port)
+        self.localPort = localPort
+        self.outbox = outbox
+        # super().__init__(name=signedStreamId.topic(), port=localPort)
+        self.name = signedStreamId.topic()
         self.signedStreamId = signedStreamId
         self.disk = Disk(id=self.signedStreamId.streamId)
         self.rows = -1
+        # self.periodicPurge()
+
+    # don't need to perge because we don't save these messages anymore
+    # def periodicPurge(self):
+    #    self.purger = threading.Thread(target=self.purge, daemon=True)
+    #    self.purger.start()
+    #
+    # def purge(self):
+    #    while True:
+    #        then = now()
+    #        time.sleep(60*60*24)
+    #        with self.channels:
+    #            self.channels = [
+    #                channel for channel in self.channels
+    #                if len(channel.messagesAfter(time=then)) > 0]
+
+    # no need to set socket because thats moved outside.
+    # def setPort(self, port: int):
+    #    self.port = port
+    #    self.setSocket()
+    #
+    # def setSocket(self):
+    #    self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    #    self.sock.bind(('0.0.0.0', self.port))
+
+    def findChannel(self, remoteIp: str, remotePort: int):
+        for channel in self.channels:
+            if (
+                channel.remoteIp == remoteIp and
+                channel.remotePort == remotePort
+            ):
+                return channel
+        return None
+
+    def broadcast(self, cmd: str, msgs: list[str] = None):
+        for channel in self.channels:
+            channel.send(cmd, msgs)
+
+    def setLocalPort(self, localPort: int):
+        self.localPort = localPort
 
     # override
-    def create(self, ip: str, port: int, localPort: int):
-        logging.debug('in create', ip, port, localPort,
-                      self.port, print='blue')
-        if self.port is None:
-            logging.debug('port is none', print='magenta')
-            self.setPort(localPort)
-        if self.findChannel(ip, port, localPort) is None:
+    def create(self, remoteIp: str, remotePort: int):
+        logging.debug('in create', remoteIp, remotePort, print='blue')
+        if self.findChannel(remoteIp, remotePort) is None:
             logging.debug('find channel', print='magenta')
             with self.channels:
                 logging.debug('making channel', print='magenta')
                 self.channels.append(Channel(
                     streamId=self.signedStreamId.streamId,
-                    ip=ip,
-                    port=port,
-                    localPort=localPort,
+                    remoteIp=remoteIp,
+                    remotePort=remotePort,
                     topicSocket=self.sock,
                     parent=self))
+
+    def send(self, localPort: int, remoteIp: str, remotePort: int, cmd: str, msgs: list[str] = None):
+        # def makePayload(cmd: str, msgs: list[str] = None) -> Union[bytes, None]:
+        #     logging.debug('make payload cmd', cmd, print='red')
+        #     if not PeerProtocol.isValidCommand(cmd):
+        #         logging.error('command not valid', cmd, print=True)
+        #         return None
+        #     try:
+        #         return PeerProtocol.compile([
+        #             x for x in [cmd, *(msgs or [])]
+        #             if isinstance(x, int) or (x is not None and len(x) > 0)])
+        #     except Exception as e:
+        #         logging.warning('err w/ payload', e, cmd, msgs)
+
+        # def send(self, cmd: str, msg: PeerMessage = None):
+        #     # TODO: make this take a PeerMessage object and do that everywhere
+        #     payload = cmd
+        #     logging.debug('sent pyaload:', payload, print='magenta')
+        #     self.topicSocket.sendto(payload, (self.peerIp, self.port))
+        #     self.topicSocket.sendto(msg.asJsonStr.decode(),
+        #                             (self.peerIp, self.port))
+        # convert to bytes message
+        payload = b'payload'
+        self.outbox((localPort, remoteIp, remotePort, payload))
 
     def getOneObservation(self, time: dt.datetime) -> PeerMessage:
         # todo: giving an observation must include hash.

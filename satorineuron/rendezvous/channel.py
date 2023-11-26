@@ -18,10 +18,12 @@ class Channel:
     def __init__(
         self,
         streamId: StreamId,
-        ip: str,
-        port: int,
-        localPort: int,
-        topicSocket: socket.socket,
+        remoteIp: str,
+        remotePort: int,
+        # I actually don't think this local port is necessary. Connection used
+        # to use it, but I believe incorrectly, I don't think it needs it.
+        # and I think we should have one source of truth which is the partent.localPort
+        # localPort: int,
         parent: 'Topic',
         ping: bool = True,
     ):
@@ -29,15 +31,27 @@ class Channel:
         self.messages: PeerMessages = PeerMessages([])
         self.parent = parent
         self.topic = self.streamId.topic()
-        self.connection = Connection(
-            topicSocket=topicSocket,
-            peerIp=ip,
-            peerPort=port,
-            port=localPort,
-            onMessage=self.onMessage)
-        self.connection.establish()
+        self.setupConnection(remoteIp, remotePort)
         if ping:
             self.setupPing()
+
+    def setupConnection(
+        self,
+        remoteIp: str,
+        remotePort: int,
+        # localPort: int,
+    ):
+        # connection object is handled outside.
+        # self.connection = Connection(
+        #    topicSocket=topicSocket,
+        #    peerIp=ip,
+        #    peerPort=port,
+        #    port=localPort,
+        #    onMessage=self.onMessage)
+        # self.connection.establish()
+        # self.localPort = localPort
+        self.remoteIp = remoteIp
+        self.remotePort = remotePort
 
     def setupPing(self):
 
@@ -73,7 +87,14 @@ class Channel:
             self.messages.append(message)
 
     def send(self, cmd: str, msgs: list[str] = None):
-        self.connection.send(cmd, msgs)
+        # connection is outside...
+        # self.connection.send(cmd, msgs)
+        # so route messages back to parent:
+        self.parent.send(
+            self.remoteIp,
+            self.remotePort,
+            cmd,
+            msgs)
 
     def router(self, message: PeerMessage, **kwargs):
         ''' routes the message to the appropriate handler '''
