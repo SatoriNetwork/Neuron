@@ -28,15 +28,27 @@ class RendezvousEngine():
         gets the localPort of all the topics, get's the remoteIp and remotePort
         of all channels per topic 
         '''
-        # TODO.
         structure = {}
         for topic in self.peer.topics:
-            structure[topic.port] = []
+            structure[topic.localPort] = []
             for channel in topic.channels:
-                structure[topic.port].append(
-                    channel.localPort, channel.remoteIp, channel.remotePort)
+                structure[topic.localPort].append(
+                    channel.remoteIp,
+                    channel.remotePort)
+        return structure
+        # return {0: [('ip', 0)]}
 
-        return {0: [('ip', 0)]}
+    def passMessage(self, localPort: int, remoteIp: str, remotePort: int, message: bytes):
+        ''' passes a message down to the correct channel '''
+        # TODO: organize topics by localPort because that's the only way we
+        # filter them right? that's the way the outside knows them by.
+        topic = self.peer.findTopic(localPort)
+        if topic is None:
+            return
+        channel = topic.findChannel(remoteIp, remotePort)
+        if channel is None:
+            return
+        channel.onMessage(message=message, sent=False)
 
     def getHistoryOf(self, streamId: StreamId):
 
@@ -53,7 +65,7 @@ class RendezvousEngine():
                 model.inputsUpdated.on_next(True)
 
         def gatherUnknownHistory() -> list[PeerMessage]:
-            msg: PeerMessage = topic.getOneObservation(time=now())
+            msg: PeerMessage = topic.getOneObservation(datetime=now())
             msgsToSave = []
             hashes = topic.disk.read().hash.values
             while msg is not None and not msg.isNoneResponse():
@@ -62,7 +74,7 @@ class RendezvousEngine():
                 else:
                     msgsToSave.append(msg)
                 msg = topic.getOneObservation(
-                    time=datetimeFromString(msg.observationTime))
+                    datetime=datetimeFromString(msg.observationTime))
             return msgsToSave
 
         def findTopic():

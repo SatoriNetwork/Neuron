@@ -2,12 +2,10 @@ from typing import Union, Callable
 import time
 import datetime as dt
 import pandas as pd
-import threading
 from satorilib import logging
 from satorilib.api.disk import Disk
 from satorilib.api.time import now
 from satorirendezvous.lib.lock import LockableDict
-from satorirendezvous.peer.p2p.topic import Topic as BaseTopic
 from satorineuron.rendezvous.structs.message import PeerMessage
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.domain import SignedStreamId
@@ -24,7 +22,7 @@ class Topic():
         outbox: Callable = None,
     ):
         logging.debug('---TOPIC---', signedStreamId.stream, print='magenta')
-        self.channels: Channels = Channels([])
+        self.channels: Channels = Channels({})
         self.localPort = localPort
         self.outbox = outbox
         # super().__init__(name=signedStreamId.topic(), port=localPort)
@@ -57,14 +55,8 @@ class Topic():
     #    self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     #    self.sock.bind(('0.0.0.0', self.port))
 
-    def findChannel(self, remoteIp: str, remotePort: int):
-        for channel in self.channels:
-            if (
-                channel.remoteIp == remoteIp and
-                channel.remotePort == remotePort
-            ):
-                return channel
-        return None
+    def findChannel(self, remoteIp: str, remotePort: int) -> Union[Channel, None]:
+        return self.channels.get((remoteIp, remotePort), None)
 
     def broadcast(self, cmd: str, msgs: list[str] = None):
         for channel in self.channels:
@@ -80,14 +72,13 @@ class Topic():
             logging.debug('find channel', print='magenta')
             with self.channels:
                 logging.debug('making channel', print='magenta')
-                self.channels.append(Channel(
+                self.channels[(remoteIp, remotePort)] = Channel(
                     streamId=self.signedStreamId.streamId,
                     remoteIp=remoteIp,
                     remotePort=remotePort,
-                    topicSocket=self.sock,
-                    parent=self))
+                    parent=self)
 
-    def send(self, localPort: int, remoteIp: str, remotePort: int, cmd: str, msgs: list[str] = None):
+    def send(self, remoteIp: str, remotePort: int, cmd: str, msgs: list[str] = None):
         # def makePayload(cmd: str, msgs: list[str] = None) -> Union[bytes, None]:
         #     logging.debug('make payload cmd', cmd, print='red')
         #     if not PeerProtocol.isValidCommand(cmd):
@@ -109,17 +100,18 @@ class Topic():
         #                             (self.peerIp, self.port))
         # convert to bytes message
         payload = b'payload'
-        self.outbox((localPort, remoteIp, remotePort, payload))
+        self.outbox((self.localPort, remoteIp, remotePort, payload))
 
-    def getOneObservation(self, time: dt.datetime) -> PeerMessage:
+    def getOneObservation(self, datetime: dt.datetime) -> PeerMessage:
         # todo: giving an observation must include hash.
         ''' time is of the most recent observation '''
-        msg = PeerProtocol.request(time, subcmd=PeerProtocol.observationSub)
+        msg = PeerProtocol.request(
+            datetime, subcmd=PeerProtocol.observationSub)
         sentTime = now()
         with self.channels:
             for channel in self.channels:
                 channel.send(msg)
-        sleep(5)  # wait for responses, natural throttle
+        time.sleep(5)  # wait for responses, natural throttle
         with self.channels:
             responses: list[Union[PeerMessage, None]] = [
                 channel.mostRecentResponse(channel.responseAfter(sentTime))

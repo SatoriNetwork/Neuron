@@ -67,8 +67,9 @@ class RendezvousPeer():
             self.rendezvous.checkin()
 
     def createTopics(self):
-        self.topics: Topics = Topics({
-            s.topic(): Topic(s, outbox=self.toOutbox) for s in self.signedStreamIds})
+        with self.topics:
+            self.topics: Topics = Topics({
+                s.topic(): Topic(s, outbox=self.toOutbox) for s in self.signedStreamIds})
 
     def connect(self, rendezvousHost: str):
         self.rendezvous: RendezvousByRest = RendezvousByRest(
@@ -118,7 +119,16 @@ class RendezvousPeer():
             del (self.topics[topic])
 
     def topicFor(self, streamId: StreamId) -> Union[Topic, None]:
-        for name, topic in self.topics.items():
-            if name == streamId.topic():
+        # for name, topic in self.topics.items():
+        #    if name == streamId.topic():
+        #        return topic
+        # return None
+        return self.topics.get(streamId.topic(), None)
+
+    def findTopic(self, localPort: int) -> Union[Topic, None]:
+        ''' this should be the way we index them. '''
+        for topic in self.topics.values():
+            if topic.localPort == localPort:
                 return topic
         return None
+        # return self.topics.get(localPort, None)

@@ -812,20 +812,18 @@ def udpStream():
 @app.route('/udp/message', methods=['POST'])
 def udpMessage():
     ''' recieves data from udp relay '''
-    def validateJson() -> bool:
-        try:
-            json_data = json.loads(payload.get('data', ''))
-            return json_data
-        except json.JSONDecodeError:
-            # Handle non-JSON data or log it
-            print(
-                f'Invalid JSON received from {payload.get("address")}: {payload.get("data")}')
-        except Exception as e:
-            # General error handling
-            print(f'Error processing data from {payload.get("address")}: {e}')
     payload = request.json
-    data = validateJson()  # should data actually be json? is the protocol?
-    print(data)
+    localPort = payload.get('address', {}).get('local', {}).get('port', None)
+    remoteIp = payload.get('address', {}).get('remote', {}).get('ip', None)
+    remotePort = payload.get('address', {}).get('remote', {}).get('port', None)
+    data = payload.get('data', None)
+    if (
+        localPort is not None and
+        remoteIp is not None and
+        remotePort is not None and
+        data is not None
+    ):
+        start.peer.passMessage(localPort, remoteIp, remotePort, message=data)
 
 
 @app.route('/udp/ports', methods=['GET'])

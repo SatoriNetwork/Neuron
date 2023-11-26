@@ -7,8 +7,8 @@ from satorilib.concepts import StreamId
 from satorilib.api.time import datetimeToString, now
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
-from satorineuron.rendezvous.connect import Connection
-from satorirendezvous.lib.lock import LockableList
+#from satorineuron.rendezvous.connect import Connection
+from satorirendezvous.lib.lock import LockableDict
 # from satorineuron.rendezvous.topic import Topic # circular import
 
 
@@ -20,10 +20,6 @@ class Channel:
         streamId: StreamId,
         remoteIp: str,
         remotePort: int,
-        # I actually don't think this local port is necessary. Connection used
-        # to use it, but I believe incorrectly, I don't think it needs it.
-        # and I think we should have one source of truth which is the partent.localPort
-        # localPort: int,
         parent: 'Topic',
         ping: bool = True,
     ):
@@ -39,17 +35,15 @@ class Channel:
         self,
         remoteIp: str,
         remotePort: int,
-        # localPort: int,
     ):
         # connection object is handled outside.
         # self.connection = Connection(
-        #    topicSocket=topicSocket,
+        #    topicSocket=parent.sock,
         #    peerIp=ip,
         #    peerPort=port,
         #    port=localPort,
         #    onMessage=self.onMessage)
         # self.connection.establish()
-        # self.localPort = localPort
         self.remoteIp = remoteIp
         self.remotePort = remotePort
 
@@ -178,7 +172,7 @@ class Channel:
         return len(self.receivedAfter(time=dt.datetime.now() - dt.timedelta(minutes=28))) > 0
 
 
-class Channels(LockableList[Channel]):
+class Channels(LockableDict[tuple(str, int), Channel]):
     '''
     iterating over this list within a context manager is thread safe, example: 
         with channels:

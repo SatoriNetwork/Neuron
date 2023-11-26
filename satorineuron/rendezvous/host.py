@@ -161,10 +161,10 @@ class UDPRelay():
         requests.post(
             f'{satoriUrl}/message',
             json={
-                'data': data.decode(),
+                'data': data,
                 'address': {
-                    'listen': {'ip': addr[0], 'port': addr[1]},
-                    'speak': {'port': UDPRelay.getLocalPort(sock)}}})
+                    'remote': {'ip': addr[0], 'port': addr[1]},
+                    'local': {'port': UDPRelay.getLocalPort(sock)}}})
 
 
 async def main():
