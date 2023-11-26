@@ -7,7 +7,7 @@ from satorilib.concepts import StreamId
 from satorilib.api.time import datetimeToString, now
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
-#from satorineuron.rendezvous.connect import Connection
+# from satorineuron.rendezvous.connect import Connection
 from satorirendezvous.lib.lock import LockableDict
 # from satorineuron.rendezvous.topic import Topic # circular import
 
@@ -72,7 +72,8 @@ class Channel:
             return
         logging.debug('ON MESSAGE:', message, sent, time, print='magenta')
         message = PeerMessage(sent=sent, raw=message, time=time)
-        self.add(message=message)
+        # # we never references messages so don't save them for now
+        # self.add(message=message)
         self.router(message=message, **kwargs)
 
     # override

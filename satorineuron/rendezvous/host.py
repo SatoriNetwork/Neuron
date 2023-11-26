@@ -5,6 +5,12 @@ this host script is meant to run on the host machine.
 it will establish a sse connection with the flask server running inside
 the container. it will handle the UDP hole punching, passing data between the
 flask server and the remote peers.
+
+I think we discovered that how to solve UDP hole punching from withing docker
+containers and behind vpns and various NATs: instead of the rendezvous server
+assigning random ports, it should assign whatever ports they end up sending to 
+it during a test UDP connection. that way it can relay the random port they will
+give it to the other peer. I think that would do it. but I'll have to test.
 '''
 import ast
 import socket
@@ -108,16 +114,15 @@ class UDPRelay():
             remoteIp: str,
             remotePort: int
         ) -> socket.socket:
-            # sock.remoteIp = remoteIp
-            # sock.remotePort = remotePort
             sock.sendto(b'punch', (remoteIp, remotePort))
             return sock
 
         def createAllSockets():
             for localPort, remotes in self.ports:
                 sock = bind(localPort)
+                self.socks.append(sock)
                 for remoteIp, remotePort in remotes:
-                    self.socks.append(punch(sock, remoteIp, remotePort))
+                    punch(sock, remoteIp, remotePort)
 
         createAllSockets()
 

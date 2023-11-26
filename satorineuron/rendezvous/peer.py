@@ -112,7 +112,7 @@ class RendezvousPeer():
 
     def add(self, topic: str):
         with self.topics:
-            self.topics[topic] = Topic(topic)
+            self.topics[topic] = Topic(topic, outbox=self.toOutbox)
 
     def remove(self, topic: str):
         with self.topics:
