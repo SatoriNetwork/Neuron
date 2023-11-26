@@ -32,7 +32,10 @@ class Topic():
         self.rows = -1
         # self.periodicPurge()
 
-    # don't need to perge because we don't save these messages anymore
+    # # don't spin up a whole new thread for this,
+    # # just delete stale ones as you save them.
+    # # we don't need to clear the entire channel, we can just clear messages
+    # # because messages are what take up all the memory anyway.
     # def periodicPurge(self):
     #    self.purger = threading.Thread(target=self.purge, daemon=True)
     #    self.purger.start()

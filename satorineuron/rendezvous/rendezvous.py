@@ -16,12 +16,11 @@ class RendezvousEngine():
         self.start = start  # 'StartupDag'
         self.peer.parent = start
 
-    def gatherMessages(self) -> list[tuple[int, bytes]]:
+    def gatherMessages(self) -> list[tuple[int, str, int, bytes]]:
         ''' empties and returns whatever messages are in the queue '''
-        x = self.peer.outbox
+        messages = self.peer.outbox
         self.peer.outbox = []
-        return x
-        # return [(1, b'')]
+        return messages
 
     def gatherChannels(self) -> dict[int, list[tuple[str, int]]]:
         '''
@@ -33,10 +32,8 @@ class RendezvousEngine():
             structure[topic.localPort] = []
             for channel in topic.channels:
                 structure[topic.localPort].append(
-                    channel.remoteIp,
-                    channel.remotePort)
+                    (channel.remoteIp, channel.remotePort))
         return structure
-        # return {0: [('ip', 0)]}
 
     def passMessage(self, localPort: int, remoteIp: str, remotePort: int, message: bytes):
         ''' passes a message down to the correct channel '''

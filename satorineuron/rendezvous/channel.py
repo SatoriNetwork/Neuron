@@ -72,14 +72,26 @@ class Channel:
             return
         logging.debug('ON MESSAGE:', message, sent, time, print='magenta')
         message = PeerMessage(sent=sent, raw=message, time=time)
-        # # we never references messages so don't save them for now
-        # self.add(message=message)
+        self.clean(stale=now() - dt.timedelta(minutes=90))
+        self.add(message=message)
         self.router(message=message, **kwargs)
 
     # override
     def add(self, message: PeerMessage):
         with self.messages:
             self.messages.append(message)
+
+    def clean(self, stale: dt.datetime):
+        '''
+        since we're incrementally sharing entire history datasets, we need
+        to clean up these messages periodically. otherwise they'll eat up ram.
+        for now, it's called every time we get a new message. hopefully that's
+        sufficient.
+        '''
+        with self.messages:
+            for message in self.messages:
+                if message.time < stale:
+                    self.messages.remove(message)
 
     def send(self, cmd: str, msgs: list[str] = None):
         # connection is outside...

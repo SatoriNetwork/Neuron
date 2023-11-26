@@ -787,6 +787,12 @@ def publsihMeta():
 ###############################################################################
 
 
+@app.route('/udp/ports', methods=['GET'])
+def udpPorts():
+    ''' recieves data from udp relay '''
+    return jsonify(start.peer.gatherChannels())
+
+
 @app.route('/udp/stream')
 def udpStream():
 
@@ -802,7 +808,10 @@ def udpStream():
         '''
         while True:
             time.sleep(1)
-            yield str(start.peer.gatherMessages())
+            messages = start.peer.gatherMessages()
+            if len(messages) > 0:
+                yield 'data:' + str(messages) + '\n\n'
+            yield '\n'
 
     return Response(
         stream_with_context(event_stream()),
@@ -813,26 +822,13 @@ def udpStream():
 def udpMessage():
     ''' recieves data from udp relay '''
     payload = request.json
+    data = payload.get('data', None)
     localPort = payload.get('address', {}).get('local', {}).get('port', None)
     remoteIp = payload.get('address', {}).get('remote', {}).get('ip', None)
     remotePort = payload.get('address', {}).get('remote', {}).get('port', None)
-    data = payload.get('data', None)
-    if (
-        localPort is not None and
-        remoteIp is not None and
-        remotePort is not None and
-        data is not None
-    ):
-        start.peer.passMessage(localPort, remoteIp, remotePort, message=data)
-
-
-@app.route('/udp/ports', methods=['GET'])
-def udpPorts():
-    ''' recieves data from udp relay '''
-    # return {localPort: [(remoteIp, remotePort)]}
-    # list[tuple[str, int]]
-    start.peer.gatherChannels()
-    return jsonify({})
+    if any(v is None for v in [localPort, remoteIp, remotePort, data]):
+        return
+    start.peer.passMessage(localPort, remoteIp, remotePort, message=data)
 
 
 ###############################################################################
