@@ -219,28 +219,17 @@ async def main():
                 return {}
         return {}
 
-    newPorts = getPorts()
-    ports = newPorts
-    # print('ports', ports)
-    x = 0
     while True:
         try:
-            udpRelay = UDPRelay(ports)
+            udpRelay = UDPRelay(getPorts())
             await udpRelay.initSockets()
             try:
-                while newPorts == ports:
-                    # await asyncio.wait_for(udpRelay.listen(), seconds())
-                    await asyncio.wait_for(udpRelay.listen(), 10)
-                    await udpRelay.cancel()
-                    newPorts = getPorts()
-                ports = newPorts
+                await asyncio.wait_for(udpRelay.listen(), seconds())
             except asyncio.TimeoutError:
                 print('udpRelay cycling')
             await udpRelay.shutdown()
-            x += 1
-            if x > 6:
-                break
         except Exception as e:
+            await udpRelay.shutdown()
             print(f"An error occurred: {e}")
 
 
