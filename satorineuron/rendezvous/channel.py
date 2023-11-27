@@ -185,7 +185,7 @@ class Channel:
         return len(self.receivedAfter(time=dt.datetime.now() - dt.timedelta(minutes=28))) > 0
 
 
-class Channels(LockableDict[tuple(str, int), Channel]):
+class Channels(LockableDict[tuple[str, int], Channel]):
     '''
     iterating over this list within a context manager is thread safe, example: 
         with channels:

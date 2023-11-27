@@ -30,6 +30,7 @@ class UDPRelay():
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 async for line in response.content:
+                    # print('line:', line)
                     if line.startswith(b'data:'):
                         self.relayToSocket(line.decode('utf-8')[5:].strip())
 
@@ -69,13 +70,17 @@ class UDPRelay():
             localPort, remoteIp, remotePort, data = parseMessage(msg)
             if localPort is None:
                 return
+            # print('parsed:',
+            #      'localPort:', localPort, 'remoteIp:', remoteIp,
+            #      'remotePort', remotePort, 'data', data)
             sock = self.getSocketByLocalPort(localPort)
+            # print('socket found:', sock, sock.getsockname())
             if sock is None:
                 return
             UDPRelay.speak(sock, remoteIp, remotePort, data)
 
     def getSocketByLocalPort(self, localPort: int) -> socket.socket:
-        for sock in self.socks():
+        for sock in self.socks:
             if UDPRelay.getLocalPort(sock) == localPort:
                 return sock
         return None
@@ -90,26 +95,33 @@ class UDPRelay():
                 data, addr = await self.loop.sock_recvfrom(sock, 1024)
                 self.handle(sock, data, addr)
             except Exception as e:
-                print(e)
+                print('listenTo erorr:', e)
                 break
         # close?
 
     async def initSockets(self):
-        def bind(localPort: int) -> socket.socket:
+        def bind(localPort: int) -> socket.socket | None:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.bind(('0.0.0.0', localPort))
-            sock.setblocking(False)
-            return sock
+            try:
+                sock.bind(('0.0.0.0', localPort))
+                sock.setblocking(False)
+                return sock
+            except Exception as e:
+                print('unable to bind to port', localPort, e)
+            return None
 
         def punch(sock: socket.socket, remoteIp: str, remotePort: int):
             sock.sendto(b'punch', (remoteIp, remotePort))
 
         def createAllSockets():
-            for localPort, remotes in self.ports:
+            self.socks = []
+            for localPort, remotes in self.ports.items():
+                # print('creating socket for port', localPort)
                 sock = bind(localPort)
-                self.socks.append(sock)
-                for remoteIp, remotePort in remotes:
-                    punch(sock, remoteIp, remotePort)
+                if sock is not None:
+                    self.socks.append(sock)
+                    for remoteIp, remotePort in remotes:
+                        punch(sock, remoteIp, remotePort)
 
         createAllSockets()
 
@@ -127,6 +139,7 @@ class UDPRelay():
         remotePort: int,
         data: bytes
     ):
+        # print('speaking to', remoteIp, remotePort, data)
         sock.sendto(data, (remoteIp, remotePort))
 
     async def cancel(self):
@@ -173,23 +186,32 @@ async def main():
     def getPorts() -> dict[int, list[tuple[str, int]]]:
         ''' gets ports from the flask server '''
         r = requests.get(UDPRelay.satoriUrl('/ports'))
+        # print(r.status_code)
+        # print(r.text)
         if r.status_code == 200:
             try:
-                ports_data: dict = r.json()
+                ports: dict = ast.literal_eval(r.text)
                 validatedPorts = {}
-                for localPort, remotes in ports_data.items():
+                # print(ports)
+                # print('---')
+                for localPort, remotes in ports.items():
+                    # print(localPort, remotes)
                     if (
                         isinstance(localPort, int) and
                         isinstance(remotes, list)
                     ):
+                        # print('valid')
                         validatedPorts[localPort] = []
+                        # print(validatedPorts)
                         for remote in remotes:
+                            # print('remote', remote)
                             if (
                                 isinstance(remote, tuple) and
                                 len(remote) == 2 and
                                 isinstance(remote[0], str) and
                                 isinstance(remote[1], int)
                             ):
+                                # print('valid---')
                                 validatedPorts[localPort].append(remote)
                 return validatedPorts
             except (ValueError, TypeError):
@@ -199,19 +221,25 @@ async def main():
 
     newPorts = getPorts()
     ports = newPorts
+    # print('ports', ports)
+    x = 0
     while True:
         try:
             udpRelay = UDPRelay(ports)
             await udpRelay.initSockets()
             try:
                 while newPorts == ports:
-                    await asyncio.wait_for(udpRelay.listen(), seconds())
+                    # await asyncio.wait_for(udpRelay.listen(), seconds())
+                    await asyncio.wait_for(udpRelay.listen(), 10)
                     await udpRelay.cancel()
                     newPorts = getPorts()
                 ports = newPorts
             except asyncio.TimeoutError:
-                print('Listen period ended. Proceeding to shutdown.')
+                print('udpRelay cycling')
             await udpRelay.shutdown()
+            x += 1
+            if x > 6:
+                break
         except Exception as e:
             print(f"An error occurred: {e}")
 

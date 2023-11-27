@@ -790,7 +790,7 @@ def publsihMeta():
 @app.route('/udp/ports', methods=['GET'])
 def udpPorts():
     ''' recieves data from udp relay '''
-    return jsonify(start.peer.gatherChannels())
+    return str(start.peer.gatherChannels())
 
 
 @app.route('/udp/stream')
@@ -822,13 +822,15 @@ def udpStream():
 def udpMessage():
     ''' recieves data from udp relay '''
     payload = request.json
+    print('udpMessage', payload)
     data = payload.get('data', None)
     localPort = payload.get('address', {}).get('local', {}).get('port', None)
     remoteIp = payload.get('address', {}).get('remote', {}).get('ip', None)
     remotePort = payload.get('address', {}).get('remote', {}).get('port', None)
     if any(v is None for v in [localPort, remoteIp, remotePort, data]):
-        return
+        return 'fail'
     start.peer.passMessage(localPort, remoteIp, remotePort, message=data)
+    return 'ok'
 
 
 ###############################################################################
