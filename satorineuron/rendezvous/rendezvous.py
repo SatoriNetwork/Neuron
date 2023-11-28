@@ -3,7 +3,7 @@ import threading
 from satorilib import logging
 from satorilib.concepts import StreamId, Observation
 from satorilib.api.time import datetimeFromString, now
-from satorirendezvous.example.peer.structs.message import PeerMessage
+from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
 from satorirendezvous.server.rest.constants import rendezvousPort
 from satorineuron.rendezvous.peer import RendezvousPeer
 from satorineuron.rendezvous.structs.domain import SignedStreamId
@@ -14,7 +14,6 @@ class RendezvousEngine():
     def __init__(self, peer: RendezvousPeer, start):  # 'StartupDag'
         self.peer: RendezvousPeer = peer
         self.start = start  # 'StartupDag'
-        self.peer.parent = start
 
     def gatherMessages(self) -> list[tuple[int, str, int, bytes]]:
         ''' empties and returns whatever messages are in the queue '''
@@ -47,58 +46,41 @@ class RendezvousEngine():
             return
         channel.onMessage(message=message, sent=False)
 
-    def getHistoryOf(self, streamId: StreamId):
-
-        def tellModelsAboutNewHistory():
-            tellEm = False
-            for model in self.start.engine.models:
-                if model.variable == streamId:
-                    tellEm = True
-                else:
-                    for target in model.targets:
-                        if target == streamId:
-                            tellEm = True
-            if tellEm:
+    def tellModelsAboutNewHistory(self, streamId: StreamId):
+        ''' 
+        tells the models to go get their data again.
+        (this should probably be in model manager or engine or something)
+        '''
+        for model in self.start.engine.models:
+            if model.variable == streamId or streamId in model.targets:
                 model.inputsUpdated.on_next(True)
-
-        def gatherUnknownHistory() -> list[PeerMessage]:
-            msg: PeerMessage = topic.getOneObservation(datetime=now())
-            msgsToSave = []
-            hashes = topic.disk.read().hash.values
-            while msg is not None and not msg.isNoneResponse():
-                if msg.hash in hashes:
-                    break
-                else:
-                    msgsToSave.append(msg)
-                msg = topic.getOneObservation(
-                    datetime=datetimeFromString(msg.observationTime))
-            return msgsToSave
-
-        def findTopic():
-            return self.peer.topicFor(streamId)
-            # if topic is None: return False  # error?
-
-        topic = findTopic()
-        if topic:
-            msgs = gatherUnknownHistory()
-            if len(msgs) > 0:
-                topic.disk.append(msgsToDataframe(msgs))
-                tellModelsAboutNewHistory()
 
     def runForever(self, interval=60*60):
         relayStreamIds = [
-            stream.streamId for stream in self.start.relay.streams]
+            stream.streamId
+            for stream in self.start.relay.streams]
         while True:
-            for signedStreamId in self.peer.signedStreamIds:
-                if signedStreamId.streamId not in relayStreamIds:
+            for topic in self.peer.topics.values():
+                streamId = topic.signedStreamId.streamId
+                if streamId not in relayStreamIds:
                     time.sleep(interval)
-                    # TODO NEXT
-                    # actually we implemented hashed history. so new plan - we
-                    # ask the peers for the latest hash - if it doesn't match
-                    # our own we ask for history from the most recent to the
-                    # oldest. if at any point we find a match we stop asking.
-                    # if we reach the end stop asking. done.
-                    self.getHistoryOf(streamId=signedStreamId.streamId)
+                    newDataFound = topic.getHistory()
+                    if newDataFound:
+                        self.tellModelsAboutNewHistory(streamId)
+            # yes, we should move getHistory into Topic itself...
+            # we would have to give it self.start.engine.models so it can tell
+            # them to go get their data again. or it just returns True if there
+            # was new data and we tell the models here.
+            # for signedStreamId in self.peer.signedStreamIds:
+            #    if signedStreamId.streamId not in relayStreamIds:
+            #        time.sleep(interval)
+            #        # TODO NEXT
+            #        # actually we implemented hashed history. so new plan - we
+            #        # ask the peers for the latest hash - if it doesn't match
+            #        # our own we ask for history from the most recent to the
+            #        # oldest. if at any point we find a match we stop asking.
+            #        # if we reach the end stop asking. done.
+            #        self.getHistoryOf(streamId=signedStreamId.streamId)
 
     def run(self):
         self.thread = threading.Thread(target=self.runForever, daemon=True)
@@ -118,14 +100,6 @@ def generatePeer(
         rendezvousHost=f'https://satorinet.io:{rendezvousPort}/api/v0/raw/',
         signature=signature,
         signed=signed)
-
-
-def msgsToDataframe(messages: list[PeerMessage]):
-    import pandas as pd
-    return pd.DataFrame({
-        'observationTime': [message.observationTime for message in messages],
-        'data': [message.data for message in messages]
-    }).set_index('observationTime', inplace=True)
 
 
 class ObservationFromPeerMessage(Observation):

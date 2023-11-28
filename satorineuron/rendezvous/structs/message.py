@@ -1,11 +1,12 @@
-from satorirendezvous.server.structs.rest import ToClientRestProtocol as Protocol
-from satorilib import logging
 import json
+import pandas as pd
 import datetime as dt
 from typing import Union
+from satorilib import logging
 from satorilib.api.time import now
-from satorirendezvous.lib.lock import LockableList
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
+from satorirendezvous.lib.lock import LockableList
+from satorirendezvous.server.structs.rest import ToClientRestProtocol as Protocol
 from satorirendezvous.example.peer.structs.message import PeerMessage as Message
 
 
@@ -182,6 +183,13 @@ class PeerMessage(Message):
     def isNoneResponse(self, subcmd: bytes = None) -> bool:
         return PeerMessage._isNoneResponse(self.raw, subcmd=subcmd or self.subCommand)
 
+    @staticmethod
+    def msgsToDataframe(messages: list['PeerMessage']):
+        return pd.DataFrame({
+            'observationTime': [message.observationTime for message in messages],
+            'data': [message.data for message in messages]
+        }).set_index('observationTime', inplace=True)
+
 
 class PeerMessages(LockableList[PeerMessage]):
     '''
@@ -190,6 +198,12 @@ class PeerMessages(LockableList[PeerMessage]):
             for message in messages:
                 message.read()
     '''
+
+    def msgsToDataframe(self) -> pd.DataFrame:
+        return pd.DataFrame({
+            'observationTime': [message.observationTime for message in self],
+            'data': [message.data for message in self]
+        }).set_index('observationTime', inplace=True)
 
 
 class FromServerMessage():

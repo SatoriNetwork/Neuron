@@ -4,9 +4,9 @@ import datetime as dt
 import pandas as pd
 from satorilib import logging
 from satorilib.api.disk import Disk
-from satorilib.api.time import now
+from satorilib.api.time import datetimeFromString, now
 from satorirendezvous.lib.lock import LockableDict
-from satorineuron.rendezvous.structs.message import PeerMessage
+from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.channel import Channel, Channels
@@ -62,14 +62,14 @@ class Topic():
         return self.channels.get((remoteIp, remotePort), None)
 
     def broadcast(self, cmd: str, msgs: list[str] = None):
-        for channel in self.channels:
+        for channel in self.channels.values():
             channel.send(cmd, msgs)
 
     def setLocalPort(self, localPort: int):
         self.localPort = localPort
 
     # override
-    def create(self, remoteIp: str, remotePort: int):
+    def createChannel(self, remoteIp: str, remotePort: int):
         logging.debug('in create', remoteIp, remotePort, print='blue')
         if self.findChannel(remoteIp, remotePort) is None:
             logging.debug('find channel', print='magenta')
@@ -109,16 +109,17 @@ class Topic():
         # todo: giving an observation must include hash.
         ''' time is of the most recent observation '''
         msg = PeerProtocol.request(
-            datetime, subcmd=PeerProtocol.observationSub)
+            datetime,
+            subcmd=PeerProtocol.observationSub)
         sentTime = now()
         with self.channels:
-            for channel in self.channels:
+            for channel in self.channels.values():
                 channel.send(msg)
         time.sleep(5)  # wait for responses, natural throttle
         with self.channels:
             responses: list[Union[PeerMessage, None]] = [
                 channel.mostRecentResponse(channel.responseAfter(sentTime))
-                for channel in self.channels]
+                for channel in self.channels.values()]
         responses = [
             response for response in responses
             if response is not None]
@@ -188,6 +189,27 @@ class Topic():
                 return rows.shape[0]
             except IndexError as _:
                 return 0
+
+    def getHistory(self) -> bool:
+
+        def gatherUnknownHistory() -> PeerMessages:
+            msg: PeerMessage = self.getOneObservation(datetime=now())
+            msgsToSave = PeerMessages([])
+            hashes = self.disk.read().hash.values
+            while msg is not None and not msg.isNoneResponse():
+                if msg.hash in hashes:
+                    break
+                else:
+                    msgsToSave.append(msg)
+                msg = self.getOneObservation(
+                    datetime=datetimeFromString(msg.observationTime))
+            return msgsToSave
+
+        msgs = gatherUnknownHistory()
+        if len(msgs) > 0:
+            self.disk.append(msgs.msgsToDataframe())
+            return True
+        return False
 
 
 class Topics(LockableDict[str, Topic]):

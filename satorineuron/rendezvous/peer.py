@@ -16,7 +16,6 @@ our connection to the rendezvous server and to other peers has to work like this
         
 '''
 from typing import Union
-import json
 import time
 import threading
 from satorilib import logging
@@ -45,7 +44,6 @@ class RendezvousPeer():
         self.signature = signature
         self.signed = signed
         self.signedStreamIds = signedStreamIds
-        self.parent = None  # 'RendezvousEngine'
         # need a lock? don't think so
         self.outbox: list[tuple[int, str, int, bytes]] = []
         self.createTopics()
@@ -97,11 +95,8 @@ class RendezvousPeer():
                             topic = str(connection.get('topic'))
                             with self.topics:
                                 if topic in self.topics.keys():
-                                    self.topics[topic].setLocalPort(
-                                        localPort=localPort)
-                                    self.topics[topic].create(
-                                        ip=ip,
-                                        port=port)
+                                    self.topics[topic].setLocalPort(localPort)
+                                    self.topics[topic].createChannel(ip, port)
                                 else:
                                     logging.error(
                                         'topic not found', topic, print=True)
