@@ -22,28 +22,10 @@ from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString
 
 ###############################################################################
-## Helpers ####################################################################
-###############################################################################
-
-
-def spoofStreamer():
-    from satorineuron import spoof
-    thread = threading.Thread(target=spoof.Streamr(
-        sourceId='streamrSpoof',
-        streamId='simpleEURCleanedHL',
-    ).run, daemon=True)
-    thread.start()
-    thread = threading.Thread(target=spoof.Streamr(
-        sourceId='streamrSpoof',
-        streamId='simpleEURCleanedC',
-    ).run, daemon=True)
-    thread.start()
-
-###############################################################################
 ## Globals ####################################################################
 ###############################################################################
 
-
+logging.debug('0', print='teal')
 # development flags
 debug = True
 darkmode = False
@@ -51,6 +33,7 @@ badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updating = False
+logging.debug('1', print='teal')
 
 ###############################################################################
 ## Startup ####################################################################
@@ -71,14 +54,17 @@ while True:
                 'dockerdev': 'ws://192.168.0.10:3000',
             }[MODE])
         start.start()
+        logging.debug('2', print='teal')
         break
     except ConnectionError as e:
         # try again...
         time.sleep(30)
+        logging.error(f'3 {e}', print='red')
     # except RemoteDisconnected as e:
     except Exception as e:
         # try again...
         time.sleep(30)
+        logging.error(f'4 {e}', print='red')
 
 ###############################################################################
 ## Functions ##################################################################

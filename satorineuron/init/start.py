@@ -10,7 +10,7 @@ import satoriengine
 from satorilib.concepts.structs import StreamId, Stream
 from satorilib.api import disk
 from satorilib.api.wallet import Wallet
-from satorilib.api.ipfs import Ipfs
+# from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
@@ -38,7 +38,7 @@ class StartupDag(object):
         self.idKey: str
         self.subscriptionKeys: str
         self.publicationKeys: str
-        self.ipfs: Ipfs = Ipfs()
+        # self.ipfs: Ipfs = Ipfs()
         self.signedStreamIds: list[SignedStreamId]
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient

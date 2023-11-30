@@ -46,6 +46,7 @@ class RendezvousPeer():
         self.signedStreamIds = signedStreamIds
         # need a lock? don't think so
         self.outbox: list[tuple[int, str, int, bytes]] = []
+        self.topics: Topics = Topics()
         self.createTopics()
         self.connect(rendezvousHost)
         if handlePeriodicCheckin:

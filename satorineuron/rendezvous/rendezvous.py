@@ -27,9 +27,9 @@ class RendezvousEngine():
         of all channels per topic 
         '''
         structure = {}
-        for topic in self.peer.topics:
+        for topic in self.peer.topics.values():
             structure[topic.localPort] = []
-            for channel in topic.channels:
+            for channel in topic.channels.values():
                 structure[topic.localPort].append(
                     (channel.remoteIp, channel.remotePort))
         return structure

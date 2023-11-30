@@ -287,8 +287,8 @@ class ValidateRelayStream(object):
                 success = saver.saveAll(values)
             if not success and not saveOnce():
                 saveIncrementally()
-            path = saver.pathForDataset()
-            saver.report(path, pinAddress=saver.pin(path))
+            # no need to register pin at this time
+            # saver.report(path, pinAddress=saver.pin(saver.pathForDataset()))
             return True
         return None
 
@@ -373,19 +373,20 @@ class RelayStreamHistorySaver(object):
         report's the ipfs address to the satori server.
         ran once, when isDone is True
         '''
-        peer = self.start.ipfs.address()
-        payload = {
-            'author': {'pubkey': self.start.wallet.publicKey},
-            'stream': self.id.topic(asJson=False, authorAsPubkey=True),
-            'ipfs': pinAddress,
-            'disk': system.directorySize(path),
-            **({'peer': peer} if peer is not None else {}),
-            # 'ipns': not using ipns at the moment.
-            # 'count':  count of observations in this pin, we'd have to
-            #           go get the values by load the dataset, not worth
-            #           it at this time.
-        }
-        self.start.server.registerPin(pin=payload)
+        # no need to register pin at the time.
+        # peer = self.start.ipfs.address()
+        # payload = {
+        #    'author': {'pubkey': self.start.wallet.publicKey},
+        #    'stream': self.id.topic(asJson=False, authorAsPubkey=True),
+        #    'ipfs': pinAddress,
+        #    'disk': system.directorySize(path),
+        #    **({'peer': peer} if peer is not None else {}),
+        #    # 'ipns': not using ipns at the moment.
+        #    # 'count':  count of observations in this pin, we'd have to
+        #    #           go get the values by load the dataset, not worth
+        #    #           it at this time.
+        # }
+        # self.start.server.registerPin(pin=payload)
 
     def pathForDataset(self):
         return self.disk.path(aggregate=None)

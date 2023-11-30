@@ -215,22 +215,43 @@ async def main():
                                 validatedPorts[localPort].append(remote)
                 return validatedPorts
             except (ValueError, TypeError):
-                print("Invalid format of received data")
+                print('Invalid format of received data')
                 return {}
         return {}
+
+    async def waitForNeuron():
+        notified = False
+        while True:
+            try:
+                r = requests.get(UDPRelay.satoriUrl('/ports'))
+                if r.status_code == 200:
+                    if notified:
+                        print('established connection to Satori Neuron')
+                    return
+            except Exception as _:
+                if not notified:
+                    print('waiting for Satori Neuron to start')
+                    notified = True
+            await asyncio.sleep(1)
 
     while True:
         try:
             udpRelay = UDPRelay(getPorts())
             await udpRelay.initSockets()
             try:
-                await asyncio.wait_for(udpRelay.listen(), seconds())
+                secs = seconds()
+                print(secs)
+                await asyncio.wait_for(udpRelay.listen(), secs)
             except asyncio.TimeoutError:
                 print('udpRelay cycling')
             await udpRelay.shutdown()
         except Exception as e:
-            await udpRelay.shutdown()
-            print(f"An error occurred: {e}")
+            print(f'An error occurred: {e}')
+            await waitForNeuron()
+            try:
+                await udpRelay.shutdown()
+            except Exception as _:
+                pass
 
 
 asyncio.run(main())
