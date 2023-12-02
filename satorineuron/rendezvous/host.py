@@ -182,7 +182,7 @@ async def main():
         ''' calculate number of seconds until the start of the next hour'''
         now = dt.datetime.now()
         nextHour = (now + dt.timedelta(minutes=1)).replace(
-            minute=0,
+            # minute=0,
             second=0,
             microsecond=0)
         return (nextHour - now).total_seconds()
