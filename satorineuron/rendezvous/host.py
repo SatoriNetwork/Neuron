@@ -204,7 +204,7 @@ async def main():
     def seconds() -> float:
         ''' calculate number of seconds until the start of the next hour'''
         now = dt.datetime.now()
-        nextHour = (now + dt.timedelta(hour=1)).replace(
+        nextHour = (now + dt.timedelta(hours=1)).replace(
             minute=0,
             second=0,
             microsecond=0)
