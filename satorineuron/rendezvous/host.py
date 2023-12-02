@@ -198,8 +198,8 @@ class UDPRelay():
             headers={
                 'Content-Type': 'application/octet-stream',
                 'remoteIp': addr[0],
-                'remotePort': addr[1],
-                'localPort': UDPRelay.getLocalPort(sock),
+                'remotePort': str(addr[1]),
+                'localPort': str(UDPRelay.getLocalPort(sock)),
             })
         print('r.status_code:', r.status_code)
 

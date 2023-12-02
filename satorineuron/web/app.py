@@ -815,8 +815,8 @@ def udpMessage():
     # remotePort = payload.get('address', {}).get('remote', {}).get('port', None)
     data = request.data
     remoteIp = request.headers.get('remoteIp')
-    remotePort = request.headers.get('remotePort')
-    localPort = request.headers.get('localPort')
+    remotePort = int(request.headers.get('remotePort'))
+    localPort = int(request.headers.get('localPort'))
     print('udpMessage', data, 'from', remoteIp, remotePort, 'to', localPort)
     if any(v is None for v in [localPort, remoteIp, remotePort, data]):
         return 'fail'
