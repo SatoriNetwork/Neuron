@@ -72,11 +72,6 @@ class StartupDag(object):
     def checkin(self):
         logging.debug('checkin attempt...', print='teal')
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
-        details = self.server.checkin()
-        if details.startswith('unable to verify recent timestamp.'):
-            logging.debug('timestamp fail, try another way.',
-                          details, print='teal')
-
         self.details = CheckinDetails(self.server.checkin())
         self.key = self.details.key
         self.idKey = self.details.idKey
