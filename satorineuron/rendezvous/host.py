@@ -191,7 +191,9 @@ class UDPRelay():
         #    UDPRelay.satoriUrl('/message'),
         #    data=multipart_data,
         #    headers={'Content-Type': multipart_data.content_type})
-
+        if data in [b'punch', b'payload']:
+            print('skipping punch or payload')
+            return
         r = requests.post(
             UDPRelay.satoriUrl('/message'),
             data=data,
