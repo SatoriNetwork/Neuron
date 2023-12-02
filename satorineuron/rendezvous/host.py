@@ -49,10 +49,10 @@ class UDPRelay():
         return self.peerListeners + self.neuronListeners
 
     async def neuronListener(self, url: str):
-        # timeout = aiohttp.ClientTimeout(total=None, sock_read=None)
         # timeout = aiohttp.ClientTimeout(total=None, sock_read=3600)
-        # async with aiohttp.ClientSession(timeout=timeout) as session:
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=None, sock_read=None)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            # async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(url) as response:
                     async for line in response.content:
