@@ -164,13 +164,15 @@ class UDPRelay():
     def handle(self, sock: socket.socket, data: bytes, addr: tuple[str, int]):
         ''' send to flask server with identifying information '''
         # print(f"Received {data} from {addr} on {UDPRelay.getLocalPort(sock)}")
-        requests.post(
+        print('posting message to Satori Neuron:', data, addr)
+        r = requests.post(
             UDPRelay.satoriUrl('/message'),
             json={
                 'data': data,
                 'address': {
                     'remote': {'ip': addr[0], 'port': addr[1]},
                     'local': {'port': UDPRelay.getLocalPort(sock)}}})
+        print('r.status_code:', r.status_code)
 
 
 async def main():
