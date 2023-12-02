@@ -804,6 +804,12 @@ def udpStream():
         content_type='text/event-stream')
 
 
+@app.route('/udp/reconnect', methods=['GET'])
+def udpReconnect():
+    start.rendezvousConnect()
+    return 'ok', 200
+
+
 @app.route('/udp/message', methods=['POST'])
 def udpMessage():
     ''' recieves data from udp relay '''

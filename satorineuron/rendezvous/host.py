@@ -280,6 +280,12 @@ async def main():
                 return {}
         return {}
 
+    def triggerReconnect() -> None:
+        ''' tells neuron to reconnect to rendezvous (to refresh ports) '''
+        r = requests.get(UDPRelay.satoriUrl('/reconnect'))
+        if r.status_code == 200:
+            print('reconnected to rendezvous server')
+
     async def waitForNeuron():
         notified = False
         while True:
@@ -308,21 +314,19 @@ async def main():
                 print('udpRelay cycling')
             except SseTimeoutFailure:
                 print("...attempting to reconnect to neuron...")
-                udpRelay.cancelNeuronListener()
-                udpRelay.initNeuronListener(UDPRelay.satoriUrl('/stream'))
-            udpRelay.cancelNeuronListener()
-            await udpRelay.cancel()
-            await udpRelay.shutdown()
+                # udpRelay.cancelNeuronListener()
+                # udpRelay.initNeuronListener(UDPRelay.satoriUrl('/stream'))
         except Exception as e:
             traceback.print_exc()
             print(f'An error occurred: {e}')
             await waitForNeuron()
-            try:
-                udpRelay.cancelNeuronListener()
-                await udpRelay.cancel()
-                await udpRelay.shutdown()
-            except Exception as _:
-                pass
+        try:
+            triggerReconnect()
+            udpRelay.cancelNeuronListener()
+            await udpRelay.cancel()
+            await udpRelay.shutdown()
+        except Exception as _:
+            pass
 
 
 asyncio.run(main())
