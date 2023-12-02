@@ -304,6 +304,7 @@ async def main():
     while True:
         try:
             print('creating object!')
+            reconnect = True
             udpRelay = UDPRelay(getPorts())
             await udpRelay.initSockets()
             try:
@@ -316,12 +317,16 @@ async def main():
                 print("...attempting to reconnect to neuron...")
                 # udpRelay.cancelNeuronListener()
                 # udpRelay.initNeuronListener(UDPRelay.satoriUrl('/stream'))
-        except Exception as e:
-            traceback.print_exc()
+        except requests.exceptions.ConnectionError as e:
             print(f'An error occurred: {e}')
             await waitForNeuron()
+            reconnect = False
+        except Exception as e:
+            print(f'An error occurred: {e}')
+            traceback.print_exc()
         try:
-            triggerReconnect()
+            if reconnect:
+                triggerReconnect()
             udpRelay.cancelNeuronListener()
             await udpRelay.cancel()
             await udpRelay.shutdown()
