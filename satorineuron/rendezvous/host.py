@@ -263,6 +263,7 @@ async def main():
 
     while True:
         try:
+            print('creating object!')
             udpRelay = UDPRelay(getPorts())
             await udpRelay.initSockets()
             try:
