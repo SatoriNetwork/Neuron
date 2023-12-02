@@ -94,6 +94,7 @@ class UDPRelay():
         while True:
             try:
                 data, addr = await self.loop.sock_recvfrom(sock, 1024)
+                print('message received:', data, addr)
                 self.handle(sock, data, addr)
             except Exception as e:
                 print('listenTo erorr:', e)
