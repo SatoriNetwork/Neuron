@@ -13,6 +13,7 @@ import datetime as dt
 import aiohttp
 import requests
 import traceback
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 
 class UDPRelay():
@@ -167,13 +168,39 @@ class UDPRelay():
         ''' send to flask server with identifying information '''
         print(f"Received {data} from {addr} on {UDPRelay.getLocalPort(sock)}")
         print('posting message to Satori Neuron:', data, addr)
+        # # this isn't ideal because it converts data to a string automatically
+        # r = requests.post(
+        #    UDPRelay.satoriUrl('/message'),
+        #    json={
+        #        'data': data,
+        #        'address': {
+        #            'remote': {'ip': addr[0], 'port': addr[1]},
+        #            'local': {'port': UDPRelay.getLocalPort(sock)}}})
+
+        # # this is probably proper but requires an additional package
+        # # and we want this to be as light as possible
+        # multipart_data = MultipartEncoder(
+        #    fields={
+        #        # JSON part
+        #        'json_data': ('json_data', '{"address": {"remote": {"ip": "' + addr[0] + '", "port": ' + str(addr[1]) + '}, "local": {"port": ' + UDPRelay.getLocalPort(sock) + '}}}', 'application/json'),
+        #        # Byte data part
+        #        'byte_data': ('filename', data, 'application/octet-stream')
+        #    }
+        # )
+        # r = requests.post(
+        #    UDPRelay.satoriUrl('/message'),
+        #    data=multipart_data,
+        #    headers={'Content-Type': multipart_data.content_type})
+
         r = requests.post(
             UDPRelay.satoriUrl('/message'),
-            json={
-                'data': data,
-                'address': {
-                    'remote': {'ip': addr[0], 'port': addr[1]},
-                    'local': {'port': UDPRelay.getLocalPort(sock)}}})
+            data=data,
+            headers={
+                'Content-Type': 'application/octet-stream',
+                'remoteIp': addr[0],
+                'remotePort': addr[1],
+                'localPort': UDPRelay.getLocalPort(sock),
+            })
         print('r.status_code:', r.status_code)
 
 

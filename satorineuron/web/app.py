@@ -807,12 +807,17 @@ def udpStream():
 @app.route('/udp/message', methods=['POST'])
 def udpMessage():
     ''' recieves data from udp relay '''
-    payload = request.json
-    print('udpMessage', payload)
-    data = payload.get('data', None)
-    localPort = payload.get('address', {}).get('local', {}).get('port', None)
-    remoteIp = payload.get('address', {}).get('remote', {}).get('ip', None)
-    remotePort = payload.get('address', {}).get('remote', {}).get('port', None)
+    # payload = request.json
+    # print('udpMessage', payload)
+    # data = payload.get('data', None)
+    # localPort = payload.get('address', {}).get('local', {}).get('port', None)
+    # remoteIp = payload.get('address', {}).get('remote', {}).get('ip', None)
+    # remotePort = payload.get('address', {}).get('remote', {}).get('port', None)
+    data = request.data
+    remoteIp = request.headers.get('remoteIp')
+    remotePort = request.headers.get('remotePort')
+    localPort = request.headers.get('localPort')
+    print('udpMessage', data, 'from', remoteIp, remotePort, 'to', localPort)
     if any(v is None for v in [localPort, remoteIp, remotePort, data]):
         return 'fail'
     start.peer.passMessage(localPort, remoteIp, remotePort, message=data)
