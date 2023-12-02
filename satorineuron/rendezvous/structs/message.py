@@ -160,7 +160,7 @@ class PeerMessage(Message):
 
     @staticmethod
     def _isRequest(raw: bytes, subcmd: bytes = None) -> bool:
-        return raw.startswith(PeerProtocol.requestPrefix + b'|' + (subcmd if subcmd is not None else b''))@staticmethod
+        return raw.startswith(PeerProtocol.requestPrefix + b'|' + (subcmd if subcmd is not None else b''))
 
     @staticmethod
     def _isNoneResponse(raw: bytes, subcmd: bytes = None) -> bool:
@@ -178,7 +178,7 @@ class PeerMessage(Message):
         return PeerMessage._isResponse(self.raw, subcmd=subcmd or self.subCommand)
 
     def isRequest(self, subcmd: bytes = None) -> bool:
-        return PeerMessage.isRequest(self.raw, subcmd=subcmd or self.subCommand)
+        return PeerMessage._isRequest(self.raw, subcmd=subcmd or self.subCommand)
 
     def isNoneResponse(self, subcmd: bytes = None) -> bool:
         return PeerMessage._isNoneResponse(self.raw, subcmd=subcmd or self.subCommand)
