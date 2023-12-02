@@ -70,6 +70,7 @@ class StartupDag(object):
         self.wallet = Wallet(config.walletPath('wallet.yaml'))()
 
     def checkin(self):
+        logging.debug('checkin attempt...', print='teal')
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
         self.details = CheckinDetails(self.server.checkin())
         self.key = self.details.key
