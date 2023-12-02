@@ -6,6 +6,7 @@ it will establish a sse connection with the flask server running inside
 the container. it will handle the UDP hole punching, passing data between the
 flask server and the remote peers.
 '''
+import time
 import ast
 import socket
 import asyncio
@@ -16,29 +17,62 @@ import traceback
 # from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 
+class SseTimeoutFailure(Exception):
+    '''
+    sometimes we the connection to the neuron fails and we want to identify 
+    that failure easily with this custom exception so we can handle reconnect.
+    '''
+
+    def __init__(self, message='Sse timeout failure', extra_data=None):
+        super().__init__(message)
+        self.extra_data = extra_data
+
+    def __str__(self):
+        return f"{self.__class__.__name__}: {self.args[0]} (Extra Data: {self.extra_data})"
+
+
 class UDPRelay():
     def __init__(self, ports: dict[int, list[tuple[str, int]]]):
         ''' {localport: [(remoteIp, remotePort)]} '''
         self.ports: dict[int, list[tuple[str, int]]] = ports
         self.socks: list[socket.socket] = []
-        self.listeners = []
+        self.peerListeners = []
+        self.neuronListeners = []
         self.loop = asyncio.get_event_loop()
 
     @staticmethod
     def satoriUrl(endpoint='') -> str:
         return 'http://localhost:24601/udp' + endpoint
 
-    async def sseListener(self, url: str):
+    @property
+    def listeners(self) -> list:
+        return self.peerListeners + self.neuronListeners
+
+    async def neuronListener(self, url: str):
+        # timeout = aiohttp.ClientTimeout(total=None, sock_read=None)
+        # timeout = aiohttp.ClientTimeout(total=None, sock_read=3600)
+        # async with aiohttp.ClientSession(timeout=timeout) as session:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                async for line in response.content:
-                    if line.startswith(b'data:'):
-                        self.relayToSocket(line.decode('utf-8')[5:].strip())
+            try:
+                async with session.get(url) as response:
+                    async for line in response.content:
+                        if line.startswith(b'data:'):
+                            self.relayToPeer(line.decode('utf-8')[5:].strip())
+            except asyncio.TimeoutError:
+                print("SSE connection timed out...")
+                raise SseTimeoutFailure()
 
-    def initSseListener(self, url: str):
-        self.listeners.append(asyncio.create_task(self.sseListener(url)))
+    def cancelNeuronListener(self):
+        for listener in self.neuronListeners:
+            listener.cancel()
+        self.neuronListeners = []
 
-    def relayToSocket(self, messages: str):
+    def initNeuronListener(self, url: str):
+        if (len(self.neuronListeners) > 0):
+            self.cancelNeuronListener()
+        self.neuronListeners = [asyncio.create_task(self.neuronListener(url))]
+
+    def relayToPeer(self, messages: str):
         def parseMessages() -> list[tuple[int, str, int, bytes]]:
             ''' 
             parse messages into a 
@@ -124,8 +158,8 @@ class UDPRelay():
         createAllSockets()
 
     async def listen(self):
-        self.initSseListener(UDPRelay.satoriUrl('/stream'))
-        self.listeners += [
+        self.initNeuronListener(UDPRelay.satoriUrl('/stream'))
+        self.peerListeners += [
             asyncio.create_task(self.listenTo(sock))
             for sock in self.socks]
         return await asyncio.gather(*self.listeners)
@@ -142,12 +176,13 @@ class UDPRelay():
 
     async def cancel(self):
         ''' cancel all listen_to_socket tasks '''
-        for task in self.listeners:
+        for task in self.peerListeners:
             task.cancel()
             try:
                 await task
             except asyncio.CancelledError:
                 pass
+        self.peerListeners = []
 
     async def shutdown(self):
 
@@ -158,6 +193,7 @@ class UDPRelay():
 
         await self.cancel()
         close()
+        self.socks = []
 
     def handle(self, sock: socket.socket, data: bytes, addr: tuple[str, int]):
         ''' send to flask server with identifying information '''
@@ -188,16 +224,14 @@ class UDPRelay():
         if data in [b'punch', b'payload']:
             print('skipping punch or payload')
             return
-        r = requests.post(
+        requests.post(
             UDPRelay.satoriUrl('/message'),
             data=data,
             headers={
                 'Content-Type': 'application/octet-stream',
                 'remoteIp': addr[0],
                 'remotePort': str(addr[1]),
-                'localPort': str(UDPRelay.getLocalPort(sock)),
-            })
-        # print('r.status_code:', r.status_code)
+                'localPort': str(UDPRelay.getLocalPort(sock))})
 
 
 async def main():
@@ -272,12 +306,20 @@ async def main():
                 await asyncio.wait_for(udpRelay.listen(), secs)
             except asyncio.TimeoutError:
                 print('udpRelay cycling')
+            except SseTimeoutFailure:
+                print("...attempting to reconnect to neuron...")
+                udpRelay.cancelNeuronListener()
+                udpRelay.initNeuronListener(UDPRelay.satoriUrl('/stream'))
+            udpRelay.cancelNeuronListener()
+            await udpRelay.cancel()
             await udpRelay.shutdown()
         except Exception as e:
             traceback.print_exc()
             print(f'An error occurred: {e}')
             await waitForNeuron()
             try:
+                udpRelay.cancelNeuronListener()
+                await udpRelay.cancel()
                 await udpRelay.shutdown()
             except Exception as _:
                 pass
