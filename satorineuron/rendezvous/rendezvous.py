@@ -56,6 +56,9 @@ class RendezvousEngine():
                 model.inputsUpdated.on_next(True)
 
     def runForever(self, interval=60*60):
+        '''
+        for all of our streams (subscribe to (predict, subscribe but not 
+        predict), publish to (predict, relay)) we '''
         relayStreamIds = [
             stream.streamId
             for stream in self.start.relay.streams]

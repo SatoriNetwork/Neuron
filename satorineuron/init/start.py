@@ -58,8 +58,9 @@ class StartupDag(object):
         self.buildEngine()
         self.pubsubConnect()
         self.startRelay()
-        # TODO NEXT: get authentication working and everything else
         self.rendezvousConnect()
+        # TODO NEXT: get download of histories working
+        self.incrementallyDownloadDatasets()
         # self.retroConnect()
         # self.downloadDatasets()
 
@@ -264,22 +265,7 @@ class StartupDag(object):
                 threads[ipfsAddress].start()
 
     def incrementallyDownloadDatasets(self):
-        '''
-        download pins incrementally by using our p2p rendezvous network:
-        (pins must be signed by self and server for rendezvous to authenticate)
-        for each pin, within it's own thread trigger a download process,
-        during that process send every observation to the Data Manager via 
-        rx streams. the data manager will merge them in memory and write to disk
-        if necessary. beautiful.
-        '''
-        # todo: is a pin already signed, etc?
-        # we don't really need a pin do we? we need a signed stream. which we
-        # should have already received from the server and parsed into objects.
-        # we should make the peer prior to this elsewhere, like this:
-        # this is something we need to do on a periodic basis, and not right
-        # as soon as we start up. so like the engine, and the relay service,
-        # this should be run in a separate thread... which will cycle through
-        # our streamIds and gather history for each one periodically.
+        ''' download history incrementally by using Satori Rendezvous network'''
         self.peer.run()
 
     def pause(self, timeout: int = 60):

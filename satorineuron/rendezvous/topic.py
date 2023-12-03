@@ -109,6 +109,10 @@ class Topic():
     def getOneObservation(self, datetime: dt.datetime) -> PeerMessage:
         # todo: giving an observation must include hash.
         ''' time is of the most recent observation '''
+
+        # TODO: this is wrong. we need to fire and remember here, then simply
+        # let the listeners handle the processing of responses. but what about
+        # a timeout?... mmm
         msg = PeerProtocol.request(
             datetime,
             subcmd=PeerProtocol.observationSub)
