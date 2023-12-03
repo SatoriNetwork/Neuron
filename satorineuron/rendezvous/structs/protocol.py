@@ -19,7 +19,7 @@ class PeerProtocol(Protocol):
     pingSub: bytes = b'ping'
 
     @staticmethod
-    def respond(time: dt.datetime, data: str, hashId: str, subcmd: bytes = None) -> bytes:
+    def respond(time: dt.datetime, data: str, hashId: str, subcmd: bytes = None, msgId: int = -1) -> bytes:
         if isinstance(data, float):
             data = str(data)
         if isinstance(data, int):
@@ -38,11 +38,15 @@ class PeerProtocol(Protocol):
             subcmd = PeerProtocol.observationSub
         if isinstance(subcmd, str):
             subcmd = subcmd.encode()
-        return PeerProtocol.respondPrefix + b'|' + subcmd + b'|' + time + b'|' + data + b'|' + hashId
+        if isinstance(msgId, int):
+            msgId = str(msgId)
+        if isinstance(msgId, str):
+            msgId = msgId.encode()
+        return PeerProtocol.respondPrefix + b'|' + subcmd + b'|' + msgId + b'|' + time + b'|' + data + b'|' + hashId
 
     @staticmethod
     def respondNone(subcmd: bytes = None) -> bytes:
-        return PeerProtocol.respond(subcmd=subcmd, data=b'NONE', time=b'NONE', hashId=b'NONE')
+        return PeerProtocol.respond(subcmd=subcmd, data=b'NONE', time=b'NONE', hashId=b'NONE', msgId=b'-1')
 
     # not needed because a hash is included in every observation
     # hashSub: bytes = b'hash'

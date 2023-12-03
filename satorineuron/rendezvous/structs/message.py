@@ -103,7 +103,9 @@ class PeerMessage(Message):
     def interpret(self):
         try:
             parts = self.messageAsString.split('|')
-            if self.isRequest():
+            if self.isPing():
+                self.prefix = parts[0]
+            elif self.isRequest():
                 self.prefix = parts[0]
                 self.subCommand = parts[1]
                 self.msgId = parts[2]
@@ -155,12 +157,16 @@ class PeerMessage(Message):
         return raw.decode()
 
     @staticmethod
-    def _isResponse(raw: bytes, subcmd: bytes = None) -> bool:
-        return raw.startswith(PeerProtocol.respondPrefix + b'|' + (subcmd if subcmd is not None else b''))
+    def _isPing(raw: bytes) -> bool:
+        return raw.startswith(PeerProtocol.pingPrefix)
 
     @staticmethod
     def _isRequest(raw: bytes, subcmd: bytes = None) -> bool:
         return raw.startswith(PeerProtocol.requestPrefix + b'|' + (subcmd if subcmd is not None else b''))
+
+    @staticmethod
+    def _isResponse(raw: bytes, subcmd: bytes = None) -> bool:
+        return raw.startswith(PeerProtocol.respondPrefix + b'|' + (subcmd if subcmd is not None else b''))
 
     @staticmethod
     def _isNoneResponse(raw: bytes, subcmd: bytes = None) -> bool:
@@ -174,11 +180,14 @@ class PeerMessage(Message):
     def isPing(self):
         return self.subCommand == PeerProtocol.pingSub
 
-    def isResponse(self, subcmd: bytes = None) -> bool:
-        return PeerMessage._isResponse(self.raw, subcmd=subcmd or self.subCommand)
+    def isPing(self,) -> bool:
+        return PeerMessage._isPing(self.raw)
 
     def isRequest(self, subcmd: bytes = None) -> bool:
         return PeerMessage._isRequest(self.raw, subcmd=subcmd or self.subCommand)
+
+    def isResponse(self, subcmd: bytes = None) -> bool:
+        return PeerMessage._isResponse(self.raw, subcmd=subcmd or self.subCommand)
 
     def isNoneResponse(self, subcmd: bytes = None) -> bool:
         return PeerMessage._isNoneResponse(self.raw, subcmd=subcmd or self.subCommand)

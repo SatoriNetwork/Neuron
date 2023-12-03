@@ -27,6 +27,7 @@ class Channel:
         self.messages: PeerMessages = PeerMessages([])
         self.parent = parent
         self.topic = self.streamId.topic()
+        self.pingInterval = 28 # seconds
         self.setupConnection(remoteIp, remotePort)
         if ping:
             self.setupPing()
@@ -49,10 +50,11 @@ class Channel:
 
     def setupPing(self):
 
-        def pingForever(interval=28):
+        def pingForever(interval=self.pingInterval):
             while True:
                 time.sleep(interval)
                 self.send(
+                    # cmd=PeerProtocol.ping()
                     cmd=PeerProtocol.request(
                         time=datetimeToString(now()),
                         subcmd=PeerProtocol.pingSub))
@@ -72,9 +74,13 @@ class Channel:
             return
         logging.debug('ON MESSAGE:', message, sent, time, print='magenta')
         message = PeerMessage(sent=sent, raw=message, time=time)
+        logging.debug('ON MESSAGE0:', message, print='magenta')
         self.clean(stale=now() - dt.timedelta(minutes=90))
+        logging.debug('ON MESSAGE1:', print='magenta')
         self.add(message=message)
+        logging.debug('ON MESSAGE2:', print='magenta')
         self.router(message=message, **kwargs)
+        logging.debug('ON MESSAGE3:', print='magenta')
 
     # override
     def add(self, message: PeerMessage):
