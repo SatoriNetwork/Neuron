@@ -104,7 +104,7 @@ class Topic():
         # convert to bytes message
         print('in send', remoteIp, remotePort, cmd, msgs)
         payload = b'payload'
-        self.outbox((self.localPort, remoteIp, remotePort, payload))
+        self.outbox((self.localPort, remoteIp, remotePort, cmd))
 
     def getOneObservation(self, datetime: dt.datetime) -> PeerMessage:
         # todo: giving an observation must include hash.
