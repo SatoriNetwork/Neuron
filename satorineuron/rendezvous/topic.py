@@ -102,6 +102,7 @@ class Topic():
         #     self.topicSocket.sendto(msg.asJsonStr.decode(),
         #                             (self.peerIp, self.port))
         # convert to bytes message
+        print('in send', remoteIp, remotePort, cmd, msgs)
         payload = b'payload'
         self.outbox((self.localPort, remoteIp, remotePort, payload))
 
