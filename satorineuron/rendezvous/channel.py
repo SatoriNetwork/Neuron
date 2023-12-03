@@ -27,7 +27,7 @@ class Channel:
         self.messages: PeerMessages = PeerMessages([])
         self.parent = parent
         self.topic = self.streamId.topic()
-        self.pingInterval = 28 # seconds
+        self.pingInterval = 28  # seconds
         self.setupConnection(remoteIp, remotePort)
         if ping:
             self.setupPing()
@@ -54,10 +54,11 @@ class Channel:
             while True:
                 time.sleep(interval)
                 self.send(
-                    # cmd=PeerProtocol.ping()
-                    cmd=PeerProtocol.request(
-                        time=datetimeToString(now()),
-                        subcmd=PeerProtocol.pingSub))
+                    cmd=PeerProtocol.ping())
+                # a ping shouldn't be a request, I'm not requesting anything
+                # cmd=PeerProtocol.request(
+                #    time=datetimeToString(now()),
+                #    subcmd=PeerProtocol.pingSub))
 
         self.pingThread = threading.Thread(target=pingForever)
         self.pingThread.start()
