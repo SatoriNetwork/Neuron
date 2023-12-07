@@ -3,6 +3,7 @@ import time
 import datetime as dt
 import pandas as pd
 from satorilib import logging
+from satorilib.concepts import StreamId
 from satorilib.api.disk import Disk
 from satorilib.api.time import datetimeFromString, now
 from satorirendezvous.lib.lock import LockableDict
@@ -10,6 +11,100 @@ from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.channel import Channel, Channels
+from satorineuron.common import start
+
+
+class Gatherer():
+    '''
+    manages the the process of getting the history of this topic incrementally.
+    the process works like this: 
+        1. ask all channels for the observation
+        2. give every channel a call back once they get a messge
+        3. on the call back get the most popular message from all replies
+        4. have a timeout here which will force it to move on (using timer)
+        5. once it has the most popular reply it either:
+            if we don't have this observation yet:
+                saves it to disk, and repeats the process with new time
+            else: it tells the models data is updated, and cleans up.    
+    '''
+
+    # TODO: here we do logic on msgId a lot and I think we might be comparing
+    # str to int so we need to makes sure we're handling that correctly.
+    
+    def __init__(self, parent: 'Topic'):
+        self.parent = parent
+        self.refresh()
+
+    def refresh(self):
+        self.timeout = None
+        self.messages: dict[int, list[PeerMessage]] = {}
+        self.hashes = self.parent.disk.read().hash.values
+        self.messagesToSave = PeerMessages([])
+
+    def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
+        msgId = self.parent.nextBroadcastId()
+        self.timeout = start.asyncThread.delayedRun(
+            task=self.finish, delay=60, args=[msgId])
+        self.parent.requestOneObservation(
+            datetime=datetime or (
+                datetimeFromString(message.observationTime)
+                if message is not None else now()),
+            msgId=msgId)
+        self.messages[msgId]: list[PeerMessage] = []
+
+    def onResponse(self, message: PeerMessage):
+        msg = self.discoverPopularResponse(message)
+        if msg is not None:
+            self.handleMostPopular(msg)
+
+    def discoverPopularResponse(self, message: PeerMessage) -> Union[PeerMessage, None]:
+        # should this be messageResponseId?
+        self.messages[message.msgId].append(message)
+        messages = self.messages[message.msgId]
+        mostPopularResponse = max(
+            messages,
+            key=lambda message: len([
+                r for r in messages if r == message]))
+        mostPopularResponseCount = len(
+            [r for r in messages if r == mostPopularResponse])
+        if mostPopularResponseCount >= len(self.parent.channels) / 2:
+            return mostPopularResponse
+        return None
+
+    def handleMostPopular(self, message: PeerMessage):
+        '''
+        if we don't have this observation yet:
+            saves it to disk, and repeats the process with new time
+        else: it tells the models data is updated, and cleans up.
+        '''
+        if message.hash in self.hashes:
+            self.finishProcess()
+        else:
+            self.messagesToSave.append(message)
+            # start the loop over again.
+            self.request(message)
+
+    def finishProcess(self):
+        self.parent.disk.append(self.messagesToSave.msgsToDataframe())
+        self.parent.tellModelsAboutNewHistory()
+        self.cleanup()
+
+    def finish(self, msgId: int):
+        '''
+        if we haven't recieved enough responses by now, we just move on. 
+        '''
+        if (
+            len(self.messagesToSave) > 0 and
+            msgId not in [msg.msgId for msg in self.messagesToSave]
+        ):
+            self.finishProcess()
+
+    def cleanup(self):
+        ''' cleans up the gatherer '''
+        self.refresh()
+        # clear the messages on the clients?
+        # for channel in self.parent.channels.values():
+        #    channel.messages = []
 
 
 class Topic():
@@ -28,9 +123,17 @@ class Topic():
         # super().__init__(name=signedStreamId.topic(), port=localPort)
         self.name = signedStreamId.topic()
         self.signedStreamId = signedStreamId
-        self.disk = Disk(id=self.signedStreamId.streamId)
+        self.streamId = signedStreamId.streamId
+        self.disk = Disk(id=self.streamId)
         self.rows = -1
+        self.broadcastId = 0
+        self.gatherer = Gatherer()
+
         # self.periodicPurge()
+
+    def nextBroadcastId(self):
+        self.broadcastId += 1
+        return self.broadcastId
 
     # # don't spin up a whole new thread for this,
     # # just delete stale ones as you save them.
@@ -76,7 +179,7 @@ class Topic():
             with self.channels:
                 logging.debug('making channel', print='magenta')
                 self.channels[(remoteIp, remotePort)] = Channel(
-                    streamId=self.signedStreamId.streamId,
+                    streamId=self.streamId,
                     remoteIp=remoteIp,
                     remotePort=remotePort,
                     parent=self)
@@ -106,36 +209,17 @@ class Topic():
         payload = b'payload'
         self.outbox((self.localPort, remoteIp, remotePort, cmd))
 
-    def getOneObservation(self, datetime: dt.datetime) -> PeerMessage:
-        # todo: giving an observation must include hash.
-        ''' time is of the most recent observation '''
-
-        # TODO: this is wrong. we need to fire and remember here, then simply
-        # let the listeners handle the processing of responses. but what about
-        # a timeout?... mmm
+    def requestOneObservation(self, datetime: dt.datetime, msgId: int):
+        '''
+        ask all the channels for the latest observation before the datetime
+        '''
         msg = PeerProtocol.request(
             datetime,
-            subcmd=PeerProtocol.observationSub)
-        sentTime = now()
+            subcmd=PeerProtocol.observationSub,
+            msgId=msgId)
         with self.channels:
             for channel in self.channels.values():
                 channel.send(msg)
-        time.sleep(5)  # wait for responses, natural throttle
-        with self.channels:
-            responses: list[Union[PeerMessage, None]] = [
-                channel.mostRecentResponse(channel.responseAfter(sentTime))
-                for channel in self.channels.values()]
-        responses = [
-            response for response in responses
-            if response is not None]
-        mostPopularResponse = max(
-            responses,
-            key=lambda response: len([
-                r for r in responses if r == response]))
-        # here we could enforce a threshold, like super majority or something,
-        # by saying this message must make up at least 67% of the responses
-        # but I don't think it's necessary for now.
-        return mostPopularResponse
 
     def getLocalObservation(
         self, timestamp: str,
@@ -150,10 +234,10 @@ class Topic():
         ):
             return None
         # value, hash are the only columns in the dataframe now
-        # if self.signedStreamId.streamId.stream in self.data.columns:
-        #    column = self.signedStreamId.streamId.stream
-        # elif self.signedStreamId.streamId.target in self.data.columns:
-        #    column = self.signedStreamId.streamId.stream
+        # if self.streamId.stream in self.data.columns:
+        #    column = self.streamId.stream
+        # elif self.streamId.target in self.data.columns:
+        #    column = self.streamId.stream
         # else:
         #    column = self.data.columns[0]
         try:
@@ -195,26 +279,23 @@ class Topic():
             except IndexError as _:
                 return 0
 
-    def getHistory(self) -> bool:
+    def updateHistoryIncrementally(self):
+        ''' 
+        starts the process of getting the history of this topic incrementally.
+        '''
+        self.gatherer.request()
 
-        def gatherUnknownHistory() -> PeerMessages:
-            msg: PeerMessage = self.getOneObservation(datetime=now())
-            msgsToSave = PeerMessages([])
-            hashes = self.disk.read().hash.values
-            while msg is not None and not msg.isNoneResponse():
-                if msg.hash in hashes:
-                    break
-                else:
-                    msgsToSave.append(msg)
-                msg = self.getOneObservation(
-                    datetime=datetimeFromString(msg.observationTime))
-            return msgsToSave
-
-        msgs = gatherUnknownHistory()
-        if len(msgs) > 0:
-            self.disk.append(msgs.msgsToDataframe())
-            return True
-        return False
+    def tellModelsAboutNewHistory(self):
+        ''' 
+        tells the models to go get their data again.
+        (this should probably be in model manager or engine or something)
+        '''
+        for model in start.engine.models:
+            if (
+                model.variable == self.streamId or
+                self.streamId in model.targets
+            ):
+                model.inputsUpdated.on_next(True)
 
 
 class Topics(LockableDict[str, Topic]):

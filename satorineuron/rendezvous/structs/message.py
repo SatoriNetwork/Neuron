@@ -177,10 +177,10 @@ class PeerMessage(Message):
         return self.raw.decode()
 
     @property
-    def isPing(self):
+    def isPingSubCommand(self):
         return self.subCommand == PeerProtocol.pingSub
 
-    def isPing(self,) -> bool:
+    def isPing(self) -> bool:
         return PeerMessage._isPing(self.raw)
 
     def isRequest(self, subcmd: bytes = None) -> bool:

@@ -112,13 +112,18 @@ class Channel:
 
     def router(self, message: PeerMessage, **kwargs):
         ''' routes the message to the appropriate handler '''
-        # if message.isPing(): do nothing
-        if message.isRequest(subcmd=PeerProtocol.observationSub):
+        if message.isPing():
+            pass  # ignore pings
+        elif message.isRequest(subcmd=PeerProtocol.observationSub):
             self.giveOneObservation(timestamp=message.data)
-        if message.isRequest(subcmd=PeerProtocol.countSub):
+        elif message.isRequest(subcmd=PeerProtocol.countSub):
             self.giveCount(timestamp=message.data)
-        # elif message.isResponse():
-        #    self.handleResponse(message=message, **kwargs)
+        elif message.isResponse():
+            self.handleResponse(message=message)
+
+    def handleResponse(self, message: PeerMessage,):
+        ''' return message to topic so it can be analyzed with others '''
+        self.parent.gatherer.onResponse(message)
 
     def giveOneObservation(self, timestamp: str):
         ''' 

@@ -3,8 +3,6 @@ from typing import Union
 import json
 import time
 import threading
-
-from satorilib.utils import colored
 import satorineuron
 import satoriengine
 from satorilib.concepts.structs import StreamId, Stream
@@ -17,13 +15,15 @@ from satorilib.pubsub import SatoriPubSubConn
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
-from satorilib.api.udp.rendezvous import UDPRendezvousConnection  # todo: remove from lib
+# from satorilib.api.udp.rendezvous import UDPRendezvousConnection  # todo: remove from lib
 from satorineuron.rendezvous import rendezvous
 # from satorineuron.retro import Retro
 from satorineuron.rendezvous.structs.domain import SignedStreamId
+from satorilib.asynchronous import AsyncThread
+from satorineuron.structs.start import StartupDagStruct
 
 
-class StartupDag(object):
+class StartupDag(StartupDagStruct):
     ''' a DAG of startup tasks. '''
 
     def __init__(self, urlServer: str = None, urlPubsub: str = None, *args):
@@ -49,6 +49,7 @@ class StartupDag(object):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
+        self.asyncThread: AsyncThread = AsyncThread()
 
     def start(self):
         ''' start the satori engine. '''
@@ -65,7 +66,7 @@ class StartupDag(object):
         # self.downloadDatasets()
 
     def createRelayValidation(self):
-        self.relayValidation = ValidateRelayStream(start=self)
+        self.relayValidation = ValidateRelayStream()
 
     def openWallet(self):
         self.wallet = Wallet(config.walletPath('wallet.yaml'))()
@@ -124,10 +125,9 @@ class StartupDag(object):
             return [s for s in streams if s.predicting is not None]
 
         logging.debug('buildEngine 1', print='teal')
-        self.engine: satoriengine.Engine = satorineuron.init.getEngine(
+        self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
-            publications=predictionStreams(self.publications),
-            start=self)
+            publications=predictionStreams(self.publications))
         logging.debug('buildEngine 2', print='teal')
         self.engine.run()
         logging.debug('buildEngine 3', print='teal')
@@ -139,11 +139,10 @@ class StartupDag(object):
             self.pubsub = None
         if self.key:
             signature = self.wallet.sign(self.key)
-            self.pubsub = satorineuron.init.establishConnection(
+            self.pubsub = satorineuron.engine.establishConnection(
                 url=self.urlPubsub,
                 pubkey=self.wallet.publicKey,
-                key=signature.decode() + '|' + self.key,
-                start=self)
+                key=signature.decode() + '|' + self.key)
         else:
             raise Exception('no key provided by satori server')
 
@@ -156,8 +155,7 @@ class StartupDag(object):
                 peer=rendezvous.generatePeer(
                     signature=self.wallet.sign(self.key),
                     signed=self.key,
-                    signedStreamIds=self.signedStreamIds),
-                start=self)
+                    signedStreamIds=self.signedStreamIds))
         else:
             raise Exception('no key provided by satori server')
 
@@ -175,13 +173,12 @@ class StartupDag(object):
             self.retro = None
         if self.key:
             signature = self.wallet.sign(self.key)
-            self.retro = satorineuron.init.establishConnection(
+            self.retro = satorineuron.engine.establishConnection(
                 url=self.urlPubsub,
                 pubkey=self.wallet.publicKey,
                 key=signature.decode() + '|' + self.key,
                 subscriptions=subscriptions or (
-                    self.subscriptions + (extraSubscriptions or [])),
-                start=self)
+                    self.subscriptions + (extraSubscriptions or [])))
         else:
             raise Exception('no key provided by satori server')
 
@@ -202,8 +199,7 @@ class StartupDag(object):
 
         if self.relay is not None:
             self.relay.kill()
-        self.relay = RawStreamRelayEngine(
-            start=self, streams=append(self.publications))
+        self.relay = RawStreamRelayEngine(streams=append(self.publications))
         self.relay.run()
 
     def downloadDatasets(self):
