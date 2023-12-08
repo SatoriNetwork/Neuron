@@ -54,10 +54,10 @@ class RendezvousEngine():
             stream.streamId
             for stream in start.relay.streams]
         while True:
-            time.sleep(interval)
             for topic in self.peer.topics.values():
                 if topic.streamId not in relayStreamIds:
                     topic.updateHistoryIncrementally()
+            time.sleep(interval)
 
     def run(self):
         self.thread = threading.Thread(target=self.runForever, daemon=True)

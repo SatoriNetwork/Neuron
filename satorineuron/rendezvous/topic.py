@@ -10,9 +10,9 @@ from satorirendezvous.lib.lock import LockableDict
 from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.domain import SignedStreamId
+from satorineuron.rendezvous.structs.domain import SingleObservation
 from satorineuron.rendezvous.channel import Channel, Channels
 from satorineuron.common import start
-
 
 class Gatherer():
     '''
@@ -28,16 +28,13 @@ class Gatherer():
             else: it tells the models data is updated, and cleans up.    
     '''
 
-    # TODO: here we do logic on msgId a lot and I think we might be comparing
-    # str to int so we need to makes sure we're handling that correctly.
-    
     def __init__(self, parent: 'Topic'):
         self.parent = parent
         self.refresh()
 
     def refresh(self):
         self.timeout = None
-        self.messages: dict[int, list[PeerMessage]] = {}
+        self.messages: dict[str, list[PeerMessage]] = {}
         self.hashes = self.parent.disk.read().hash.values
         self.messagesToSave = PeerMessages([])
 
@@ -58,7 +55,6 @@ class Gatherer():
             self.handleMostPopular(msg)
 
     def discoverPopularResponse(self, message: PeerMessage) -> Union[PeerMessage, None]:
-        # should this be messageResponseId?
         self.messages[message.msgId].append(message)
         messages = self.messages[message.msgId]
         mostPopularResponse = max(
@@ -67,9 +63,12 @@ class Gatherer():
                 r for r in messages if r == message]))
         mostPopularResponseCount = len(
             [r for r in messages if r == mostPopularResponse])
-        if mostPopularResponseCount >= len(self.parent.channels) / 2:
-            return mostPopularResponse
-        return None
+        if (
+            mostPopularResponseCount < len(self.parent.channels) / 2 or
+            mostPopularResponse.data in [None, 'None', b'None']
+        ):
+            return None
+        return mostPopularResponse
 
     def handleMostPopular(self, message: PeerMessage):
         '''
@@ -81,7 +80,6 @@ class Gatherer():
             self.finishProcess()
         else:
             self.messagesToSave.append(message)
-            # start the loop over again.
             self.request(message)
 
     def finishProcess(self):
@@ -101,10 +99,8 @@ class Gatherer():
 
     def cleanup(self):
         ''' cleans up the gatherer '''
+        self.parent.cleanChannels([key for key in self.messages.keys()])
         self.refresh()
-        # clear the messages on the clients?
-        # for channel in self.parent.channels.values():
-        #    channel.messages = []
 
 
 class Topic():
@@ -131,26 +127,9 @@ class Topic():
 
         # self.periodicPurge()
 
-    def nextBroadcastId(self):
+    def nextBroadcastId(self) -> str:
         self.broadcastId += 1
-        return self.broadcastId
-
-    # # don't spin up a whole new thread for this,
-    # # just delete stale ones as you save them.
-    # # we don't need to clear the entire channel, we can just clear messages
-    # # because messages are what take up all the memory anyway.
-    # def periodicPurge(self):
-    #    self.purger = threading.Thread(target=self.purge, daemon=True)
-    #    self.purger.start()
-    #
-    # def purge(self):
-    #    while True:
-    #        then = now()
-    #        time.sleep(60*60*24)
-    #        with self.channels:
-    #            self.channels = [
-    #                channel for channel in self.channels
-    #                if len(channel.messagesAfter(time=then)) > 0]
+        return str(self.broadcastId)
 
     # no need to set socket because thats moved outside.
     # def setPort(self, port: int):
@@ -160,6 +139,10 @@ class Topic():
     # def setSocket(self):
     #    self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     #    self.sock.bind(('0.0.0.0', self.port))
+
+    def cleanChannels(self, msgIds: list[str]):
+        for channel in self.channels.values():
+            channel.cleanMessagesByIds(msgIds)
 
     def findChannel(self, remoteIp: str, remotePort: int) -> Union[Channel, None]:
         return self.channels.get((remoteIp, remotePort), None)
@@ -221,9 +204,7 @@ class Topic():
             for channel in self.channels.values():
                 channel.send(msg)
 
-    def getLocalObservation(
-        self, timestamp: str,
-    ) -> Union[tuple[Union[str, None], Union[str, None], Union[str, None]], None]:
+    def getLocalObservation(self, timestamp: str) -> SingleObservation:
         ''' returns the observation before the timestamp '''
         self.data = self.disk.getObservationBefore(timestamp)
         if (
@@ -232,7 +213,7 @@ class Topic():
             self.data is None or
             (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
-            return None
+            return SingleObservation(None, None, None)
         # value, hash are the only columns in the dataframe now
         # if self.streamId.stream in self.data.columns:
         #    column = self.streamId.stream
@@ -242,13 +223,13 @@ class Topic():
         #    column = self.data.columns[0]
         try:
             if (row.shape[0] == 0):
-                return (None, None, None)
+                return SingleObservation(None, None, None)
             if (row.shape[0] == 1):
-                return (row.index, row['value'].values[0], row['hash'].values[0])
+                return SingleObservation(row.index, row['value'].values[0], row['hash'].values[0])
             row = self.data.loc[self.data.index < timestamp].iloc[-1]
-            return (row.index, row['value'], row['hash'])
+            return SingleObservation(row.index, row['value'], row['hash'])
         except IndexError as _:
-            return (None, None, None)
+            return SingleObservation(None, None, None)
 
     def getLocalCount(self, timestamp: str) -> Union[int, None]:
         ''' returns the count of observations before the timestamp '''

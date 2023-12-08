@@ -192,13 +192,6 @@ class PeerMessage(Message):
     def isNoneResponse(self, subcmd: bytes = None) -> bool:
         return PeerMessage._isNoneResponse(self.raw, subcmd=subcmd or self.subCommand)
 
-    @staticmethod
-    def msgsToDataframe(messages: list['PeerMessage']):
-        return pd.DataFrame({
-            'observationTime': [message.observationTime for message in messages],
-            'data': [message.data for message in messages]
-        }).set_index('observationTime', inplace=True)
-
 
 class PeerMessages(LockableList[PeerMessage]):
     '''
@@ -211,7 +204,8 @@ class PeerMessages(LockableList[PeerMessage]):
     def msgsToDataframe(self) -> pd.DataFrame:
         return pd.DataFrame({
             'observationTime': [message.observationTime for message in self],
-            'data': [message.data for message in self]
+            'data': [message.data for message in self],
+            'hash': [message.hash for message in self]
         }).set_index('observationTime', inplace=True)
 
 

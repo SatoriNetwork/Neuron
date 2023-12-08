@@ -7,6 +7,7 @@ from satorilib.concepts import StreamId
 from satorilib.api.time import datetimeToString, now
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
+from satorineuron.rendezvous.structs.domain import SingleObservation
 # from satorineuron.rendezvous.connect import Connection
 from satorirendezvous.lib.lock import LockableDict
 # from satorineuron.rendezvous.topic import Topic # circular import
@@ -100,6 +101,12 @@ class Channel:
                 if message.time < stale:
                     self.messages.remove(message)
 
+    def cleanMessagesByIds(self, msgIds: list[str]):
+        with self.messages:
+            for message in self.messages:
+                if message.msgId in msgIds:
+                    self.messages.remove(message)
+
     def send(self, cmd: str, msgs: list[str] = None):
         # connection is outside...
         # self.connection.send(cmd, msgs)
@@ -115,39 +122,45 @@ class Channel:
         if message.isPing():
             pass  # ignore pings
         elif message.isRequest(subcmd=PeerProtocol.observationSub):
-            self.giveOneObservation(timestamp=message.data)
+            self.giveOneObservation(message)
         elif message.isRequest(subcmd=PeerProtocol.countSub):
-            self.giveCount(timestamp=message.data)
+            self.giveCount(message)
         elif message.isResponse():
             self.handleResponse(message=message)
 
-    def handleResponse(self, message: PeerMessage,):
+    def handleResponse(self, message: PeerMessage):
         ''' return message to topic so it can be analyzed with others '''
         self.parent.gatherer.onResponse(message)
 
-    def giveOneObservation(self, timestamp: str):
+    def giveOneObservation(self, message: PeerMessage):
         ''' 
         returns the observation prior to the time of the most recent observation
         '''
+        timestamp: str = message.data
         if isinstance(timestamp, dt.datetime):
             timestamp = datetimeToString(timestamp)
         # observation = self.disk.lastRowStringBefore(timestap=time)
-        observation = self.parent.getLocalObservation(timestap=timestamp)
-        if observation is None:
+        observation: SingleObservation = self.parent.getLocalObservation(
+            timestap=timestamp)
+        if observation.isNone:
             pass  # send nothing: we don't know.
         elif observation == (None, None):
             self.send(PeerProtocol.respondNone(
-                subcmd=PeerProtocol.observationSub))
+                subcmd=PeerProtocol.observationSub,
+                msgId=message.msgId))
         else:
             self.send(PeerProtocol.respond(
                 subcmd=PeerProtocol.observationSub,
-                time=observation[0],
-                data=observation[1]))
+                msgId=message.msgId,
+                time=observation.time,
+                data=observation.data,
+                hashId=observation.hash))
 
-    def giveCount(self, timestamp: str):
+    def giveCount(self, message: PeerMessage):
         ''' 
         returns the observation prior to the time of the most recent observation
         '''
+        timestamp: str = message.data
         if isinstance(timestamp, dt.datetime):
             timestamp = datetimeToString(timestamp)
         # observation = self.disk.lastRowStringBefore(timestap=time)
@@ -157,6 +170,7 @@ class Channel:
         else:
             self.send(PeerProtocol.respond(
                 subcmd=PeerProtocol.countSub,
+                msgId=message.msgId,
                 time=timestamp,
                 data=count))
 
