@@ -47,7 +47,7 @@ class Gatherer():
         from satorineuron.init.start import getStart
         msgId = self.parent.nextBroadcastId()
         self.timeout = getStart().asyncThread.delayedRun(
-            task=self.finish, delay=60, args=[msgId])
+            task=self.finish, delay=60, msgId=msgId)
         self.parent.requestOneObservation(
             datetime=datetime or (
                 datetimeFromString(message.observationTime)
