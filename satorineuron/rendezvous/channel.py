@@ -78,11 +78,11 @@ class Channel:
         message = PeerMessage(sent=sent, raw=message, time=time)
         logging.debug('ON MESSAGE0:', message, print='magenta')
         self.clean(stale=now() - dt.timedelta(minutes=90))
-        logging.debug('ON MESSAGE1:', print='magenta')
+        logging.debug('ON MESSAGE1', print='magenta')
         self.add(message=message)
-        logging.debug('ON MESSAGE2:', print='magenta')
+        logging.debug('ON MESSAGE2', print='magenta')
         self.router(message=message, **kwargs)
-        logging.debug('ON MESSAGE3:', print='magenta')
+        logging.debug('ON MESSAGE3', print='magenta')
 
     # override
     def add(self, message: PeerMessage):
@@ -136,7 +136,7 @@ class Channel:
         ''' 
         returns the observation prior to the time of the most recent observation
         '''
-        timestamp: str = message.data
+        timestamp: str = message.observationTime
         if isinstance(timestamp, dt.datetime):
             timestamp = datetimeToString(timestamp)
         # observation = self.disk.lastRowStringBefore(timestap=time)
