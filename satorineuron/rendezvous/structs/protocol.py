@@ -42,6 +42,7 @@ class PeerProtocol(Protocol):
             msgId = str(msgId)
         if isinstance(msgId, str):
             msgId = msgId.encode()
+        logging.debug(f'PeerProtocol.respond:: time:{time}{type(time)}, data:{data}{type(data)}, hashId:{hashId}{type(hashId)}, subcmd:{subcmd}{type(subcmd)}, msgId:{msgId}{type(msgId)}', print='blue')
         return PeerProtocol.respondPrefix + b'|' + subcmd + b'|' + msgId + b'|' + time + b'|' + data + b'|' + hashId
 
     @staticmethod
