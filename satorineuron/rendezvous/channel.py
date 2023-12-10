@@ -140,8 +140,8 @@ class Channel:
         if isinstance(timestamp, dt.datetime):
             timestamp = datetimeToString(timestamp)
         # observation = self.disk.lastRowStringBefore(timestap=time)
-        observation: SingleObservation = self.parent.getLocalObservation(
-            timestap=timestamp)
+        observation: SingleObservation = (
+            self.parent.getLocalObservation(timestamp))
         if observation.isNone:
             pass  # send nothing: we don't know.
         elif observation == (None, None):
