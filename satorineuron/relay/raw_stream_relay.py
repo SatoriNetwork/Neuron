@@ -13,7 +13,7 @@ import requests
 from functools import partial
 from satorilib.concepts.structs import Stream
 from satorilib import logging
-from satorineuron.common import start
+
 
 def postRequestHookForNone(r: requests.Response):
     # logging.debug('postRequestHook default method')
@@ -106,12 +106,13 @@ class RawStreamRelayEngine:
 
     def relay(self, stream: Stream, data: str = None):
         ''' relays data to pubsub '''
+        from satorineuron.init.start import getStart
         # if stream.streamId.source == 'satori':
         #    start.pubsub.publish(topic: stream.streamId.target, data: data)
         # else:
         #    send to streamr or something
         self.latest[stream.streamId.topic()] = data
-        start.pubsub.publish(topic=stream.streamId.topic(), data=data)
+        getStart().pubsub.publish(topic=stream.streamId.topic(), data=data)
 
     def callRelay(self, streams: list[Stream]):
         ''' calls API and relays data to pubsub '''

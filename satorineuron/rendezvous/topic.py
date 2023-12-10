@@ -1,9 +1,7 @@
 from typing import Union, Callable
-import time
 import datetime as dt
 import pandas as pd
 from satorilib import logging
-from satorilib.concepts import StreamId
 from satorilib.api.disk import Disk
 from satorilib.api.time import datetimeFromString, now
 from satorirendezvous.lib.lock import LockableDict
@@ -12,7 +10,7 @@ from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.structs.domain import SingleObservation
 from satorineuron.rendezvous.channel import Channel, Channels
-from satorineuron.common import start
+
 
 class Gatherer():
     '''
@@ -35,12 +33,20 @@ class Gatherer():
     def refresh(self):
         self.timeout = None
         self.messages: dict[str, list[PeerMessage]] = {}
-        self.hashes = self.parent.disk.read().hash.values
         self.messagesToSave = PeerMessages([])
+        self.getHashes()
+
+    def getHashes(self):
+        self.data = self.parent.disk.read()
+        if self.data is not None:
+            self.hashes = self.data.hash.values
+        else:
+            self.hashes = []
 
     def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
+        from satorineuron.init.start import getStart
         msgId = self.parent.nextBroadcastId()
-        self.timeout = start.asyncThread.delayedRun(
+        self.timeout = getStart().asyncThread.delayedRun(
             task=self.finish, delay=60, args=[msgId])
         self.parent.requestOneObservation(
             datetime=datetime or (
@@ -123,7 +129,7 @@ class Topic():
         self.disk = Disk(id=self.streamId)
         self.rows = -1
         self.broadcastId = 0
-        self.gatherer = Gatherer()
+        self.gatherer = Gatherer(self)
 
         # self.periodicPurge()
 
@@ -271,7 +277,8 @@ class Topic():
         tells the models to go get their data again.
         (this should probably be in model manager or engine or something)
         '''
-        for model in start.engine.models:
+        from satorineuron.init.start import getStart
+        for model in getStart().engine.models:
             if (
                 model.variable == self.streamId or
                 self.streamId in model.targets

@@ -1,21 +1,15 @@
-# todo create config if no config present, use config if config present
-from itertools import product
-from functools import partial
-import pandas as pd
 from satorilib.api import memory
-from satorilib.concepts import Observation, Stream, StreamId
+from satorilib.concepts import Observation, Stream
 from satorilib.pubsub import SatoriPubSubConn
 from satoriengine.concepts import HyperParameter
 from satoriengine.model import metrics
 from satoriengine import ModelManager, Engine, DataManager
 from satorineuron import config
-from satorineuron import logging
-from satorineuron.init.start import StartupDag
-from satorineuron.common import start
 
 
 def establishConnection(pubkey: str, key: str, url: str = None):
     ''' establishes a connection to the satori server, returns connection object '''
+    from satorineuron.init.start import getStart
 
     def router(response: str):
         ''' TODO: may need to conform response to the observation format first. '''
@@ -24,7 +18,7 @@ def establishConnection(pubkey: str, key: str, url: str = None):
         # manager seems like a extra thread that isn't necessary, a middle man.
         if response != 'failure: error, a minimum 10 seconds between publications per topic.':
             if response.startswith('{"topic":') or response.startswith('{"data":'):
-                start.engine.data.newData.on_next(Observation.parse(response))
+                getStart().engine.data.newData.on_next(Observation.parse(response))
         # furthermore, shouldn't we do more than route it to the correct models?
         # like, shouldn't we save it to disk, compress if necessary, pin, and
         # report the pin to the satori server? like so:
@@ -59,6 +53,7 @@ def getEngine(
     publications: list[Stream],
 ) -> Engine:
     ''' starts the Engine. returns Engine. '''
+    from satorineuron.init.start import getStart
 
     def generateModelManager():
         ''' generate a set of Model(s) for Engine '''
@@ -178,8 +173,8 @@ def getEngine(
     ModelManager.setConfig(config)
     DataManager.setConfig(config)
     modelManager = generateModelManager()
-    dataMananger = DataManager(start=start)
+    dataMananger = DataManager(getStart=getStart())
     return Engine(
-        start=start,
+        getStart=getStart,
         data=dataMananger,
         models=modelManager)

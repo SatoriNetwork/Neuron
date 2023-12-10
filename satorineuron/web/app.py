@@ -19,7 +19,6 @@ from satorineuron import logging
 from satorineuron.web import forms
 from satorilib.concepts.structs import Observation, StreamId, StreamsOverview
 from satorineuron.init.start import StartupDag
-from satorineuron.common import setStart
 from satorineuron.web.utils import deduceCadenceString
 
 ###############################################################################
@@ -55,7 +54,6 @@ while True:
                 'dockerdev': 'ws://192.168.0.10:3000',
             }[MODE])
         start.start()
-        setStart(start)
         logging.debug('2', print='teal')
         break
     except ConnectionError as e:

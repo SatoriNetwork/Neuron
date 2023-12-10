@@ -12,6 +12,7 @@ from satorilib.api.wallet import Wallet
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
+from satorilib.asynchronous import AsyncThread
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
@@ -19,11 +20,25 @@ from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.rendezvous import rendezvous
 # from satorineuron.retro import Retro
 from satorineuron.rendezvous.structs.domain import SignedStreamId
-from satorilib.asynchronous import AsyncThread
 from satorineuron.structs.start import StartupDagStruct
 
 
-class StartupDag(StartupDagStruct):
+def getStart():
+    return StartupDag()
+# engine_start = StartupDag()
+
+
+class SingletonMeta(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(
+                SingletonMeta, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ''' a DAG of startup tasks. '''
 
     def __init__(self, urlServer: str = None, urlPubsub: str = None, *args):
@@ -53,15 +68,24 @@ class StartupDag(StartupDagStruct):
 
     def start(self):
         ''' start the satori engine. '''
+        logging.debug('A', print='teal')
         self.createRelayValidation()
+        logging.debug('B', print='teal')
         self.openWallet()
+        logging.debug('C', print='teal')
         self.checkin()
+        logging.debug('D', print='teal')
         self.buildEngine()
+        logging.debug('E', print='teal')
         self.pubsubConnect()
+        logging.debug('F', print='teal')
         self.startRelay()
+        logging.debug('G', print='teal')
         self.rendezvousConnect()
+        logging.debug('H', print='teal')
         # TODO NEXT: get download of histories working
         self.incrementallyDownloadDatasets()
+        logging.debug('I', print='teal')
         # self.retroConnect()
         # self.downloadDatasets()
 

@@ -6,4 +6,4 @@ start: StartupDagStruct = None
 
 def setStart(variable):
     global start
-    start: StartupDagStruct = variable
+    start = variable

@@ -5,14 +5,11 @@ import pandas as pd
 import datetime as dt
 from functools import partial
 from satorilib.api.disk import Disk
-from satorilib.api import system
-from satorilib.api.wallet import Wallet
 from satorilib.concepts.structs import Observation, StreamId
 from satorilib.api import hash
 from satorineuron import config
 from satorineuron import logging
 from satorineuron.relay.history import GetHistory
-from satorineuron.common import start
 
 
 def postRequestHookForNone(r: requests.Response):
@@ -26,6 +23,7 @@ def postRequestHook(r: requests.Response):
 
 
 class ValidateRelayStream(object):
+
     def __init__(self, *args):
         super(ValidateRelayStream, self).__init__(*args)
         self.claimed = set()
@@ -39,18 +37,19 @@ class ValidateRelayStream(object):
             r"(?P<query>\?.*)?$")
 
     def stream_claimed(self, name: str, source: str = 'satori', target: str = None):
+        from satorineuron.init.start import getStart
         streamId = StreamId(
             source=source,
-            author=start.wallet.publicKey,
+            author=getStart().wallet.publicKey,
             stream=name,
             target=target)
         if streamId in self.claimed:
             return True
         if name is None:
             return {}
-        r = start.server.getStreams(stream={
+        r = getStart().server.getStreams(stream={
             'source': source,
-            'pubkey': start.wallet.publicKey,
+            'pubkey': getStart().wallet.publicKey,
             'stream': name,
             **({'target': target} if target is not None else {})})
         if r.text == 'no streams found':
@@ -59,9 +58,10 @@ class ValidateRelayStream(object):
         return True
 
     def register_stream(self, data: dict):
+        from satorineuron.init.start import getStart
         streamId = StreamId(
             source=data.get('source', 'satori'),
-            author=start.wallet.publicKey,
+            author=getStart().wallet.publicKey,
             stream=data.get('name'),
             target=data.get('target'))
         if streamId in self.claimed:
@@ -74,7 +74,7 @@ class ValidateRelayStream(object):
         # logging.debug('REGISTER STREAM')
         # logging.debug({
         #    'source': data.get('source', 'satori'),
-        #    'pubkey': start.wallet.publicKey,
+        #    'pubkey': getStart().wallet.publicKey,
         #    'stream': data.get('name'),
         #    'target': data.get('target', ''),
         #    'cadence': data.get('cadence'),
@@ -84,9 +84,9 @@ class ValidateRelayStream(object):
         #    'tags': data.get('tags'),
         #    'description': data.get('description'),
         # })
-        r = start.server.registerStream(stream={
+        r = getStart().server.registerStream(stream={
             'source': data.get('source', 'satori'),
-            'pubkey': start.wallet.publicKey,
+            'pubkey': getStart().wallet.publicKey,
             'stream': data.get('name'),
             'target': data.get('target', ''),
             'cadence': data.get('cadence'),
@@ -109,11 +109,12 @@ class ValidateRelayStream(object):
         data management for relay streams only. so, we typically subscribe to
         our own datastream, specifying, explicitly no other stream as the reason
         '''
-        r = start.server.registerSubscription(subscription={
-            'author': {'pubkey': start.wallet.publicKey, },
+        from satorineuron.init.start import getStart
+        r = getStart().server.registerSubscription(subscription={
+            'author': {'pubkey': getStart().wallet.publicKey, },
             'stream': {
                 'source': data.get('source', 'satori'),
-                'pubkey': start.wallet.publicKey,
+                'pubkey': getStart().wallet.publicKey,
                 'stream': data.get('name'),
                 'target': data.get('target', ''),
                 'cadence': data.get('cadence'),
@@ -131,9 +132,10 @@ class ValidateRelayStream(object):
         return False
 
     def save_local(self, data: dict):
+        from satorineuron.init.start import getStart
         streamId = StreamId(
             source=data.get('source', 'satori'),
-            author=start.wallet.publicKey,
+            author=getStart().wallet.publicKey,
             stream=data.get('name'),
             target=data.get('target'))
         config.put(
@@ -246,6 +248,8 @@ class ValidateRelayStream(object):
         this is called only once, during the save new relay stream process.
         pass errors up so we can tell user if they want to try again.
         '''
+        from satorineuron.init.start import getStart
+
         def saveOnce():
 
             def generator():
@@ -275,10 +279,9 @@ class ValidateRelayStream(object):
             exec(data.get('history'), globals())
             historyInstance = GetHistory()
             saver = RelayStreamHistorySaver(
-                start,
                 id=StreamId(
                     source=data.get('source', 'satori'),
-                    author=start.wallet.publicKey,
+                    author=getStart().wallet.publicKey,
                     stream=data.get('name'),
                     target=data.get('target')))
             values = historyInstance.getAll()
@@ -304,9 +307,8 @@ class ValidateRelayStream(object):
 class RelayStreamHistorySaver(object):
     ''' history save to disk '''
 
-    def __init__(self, start: 'StartupDag', id: StreamId, *args):
+    def __init__(self, id: StreamId, *args):
         super(RelayStreamHistorySaver, self).__init__(*args)
-        start = start
         self.id: StreamId = id
         self.disk = Disk(id=id)
 
@@ -364,7 +366,8 @@ class RelayStreamHistorySaver(object):
 
     def pin(self, path: str = None):
         ''' pins the data to ipfs, returns pin address '''
-        return start.ipfs.addAndPinDirectory(
+        from satorineuron.init.start import getStart
+        return getStart().ipfs.addAndPinDirectory(
             path,
             name=hash.generatePathId(streamId=self.id))
 
@@ -374,9 +377,9 @@ class RelayStreamHistorySaver(object):
         ran once, when isDone is True
         '''
         # no need to register pin at the time.
-        # peer = start.ipfs.address()
+        # peer = getStart().ipfs.address()
         # payload = {
-        #    'author': {'pubkey': start.wallet.publicKey},
+        #    'author': {'pubkey': getStart().wallet.publicKey},
         #    'stream': self.id.topic(asJson=False, authorAsPubkey=True),
         #    'ipfs': pinAddress,
         #    'disk': system.directorySize(path),
@@ -386,7 +389,7 @@ class RelayStreamHistorySaver(object):
         #    #           go get the values by load the dataset, not worth
         #    #           it at this time.
         # }
-        # start.server.registerPin(pin=payload)
+        # getStart().server.registerPin(pin=payload)
 
     def pathForDataset(self):
         return self.disk.path(aggregate=None)

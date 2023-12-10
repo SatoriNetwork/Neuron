@@ -1,14 +1,11 @@
 import time
 import threading
 from satorilib import logging
-from satorilib.concepts import StreamId, Observation
-from satorilib.api.time import datetimeFromString, now
-from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
+from satorilib.concepts import Observation
+from satorineuron.rendezvous.structs.message import PeerMessage
 from satorirendezvous.server.rest.constants import rendezvousPort
 from satorineuron.rendezvous.peer import RendezvousPeer
 from satorineuron.rendezvous.structs.domain import SignedStreamId
-# from satorineuron.init.start import StartupDag # circular import...
-from satorineuron.common import start
 
 
 class RendezvousEngine():
@@ -50,9 +47,10 @@ class RendezvousEngine():
         '''
         for all of our streams (subscribe to (predict, subscribe but not 
         predict), publish to (predict, relay)) we '''
+        from satorineuron.init.start import getStart
         relayStreamIds = [
             stream.streamId
-            for stream in start.relay.streams]
+            for stream in getStart().relay.streams]
         while True:
             for topic in self.peer.topics.values():
                 if topic.streamId not in relayStreamIds:
