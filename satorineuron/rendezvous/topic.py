@@ -101,6 +101,7 @@ class Gatherer():
             len(self.messagesToSave) > 0 and
             msgId not in [msg.msgId for msg in self.messagesToSave]
         ):
+            logging.debug('FINISHING', msgId, print='red')
             self.finishProcess()
 
     def cleanup(self):
