@@ -173,6 +173,16 @@ class PeerMessage(Message):
         return raw.endswith(b'NONE|NONE') and PeerMessage._isResponse(subcmd=subcmd)
 
     @property
+    def subCommandAsBytes(self) -> str:
+        if self.subCommand is None:
+            return b''
+        if isinstance(self.subCommand, str):
+            return self.subCommand.encode()
+        if isinstance(self.subCommand, bytes):
+            return self.subCommand
+        return str(self.subCommand).encode()
+
+    @property
     def messageAsString(self) -> str:
         return self.raw.decode()
 
@@ -184,13 +194,13 @@ class PeerMessage(Message):
         return PeerMessage._isPing(self.raw)
 
     def isRequest(self, subcmd: bytes = None) -> bool:
-        return PeerMessage._isRequest(self.raw, subcmd=subcmd or self.subCommand)
+        return PeerMessage._isRequest(self.raw, subcmd=subcmd or self.subCommandAsBytes)
 
     def isResponse(self, subcmd: bytes = None) -> bool:
-        return PeerMessage._isResponse(self.raw, subcmd=subcmd or self.subCommand)
+        return PeerMessage._isResponse(self.raw, subcmd=subcmd or self.subCommandAsBytes)
 
     def isNoneResponse(self, subcmd: bytes = None) -> bool:
-        return PeerMessage._isNoneResponse(self.raw, subcmd=subcmd or self.subCommand)
+        return PeerMessage._isNoneResponse(self.raw, subcmd=subcmd or self.subCommandAsBytes)
 
 
 class PeerMessages(LockableList[PeerMessage]):
