@@ -209,6 +209,13 @@ class Topic():
 
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
         ''' returns the observation before the timestamp '''
+        # this should insdead get one from the engine. or if that fails,
+        # pull it directly from disk without a caching mechanism
+        # the reason we have a caching mechanism in the disk is to know where
+        # to pull (what chunk) rather than reading in the whole file each time
+        # we want one row. so we should get that working first, then point to
+        # the engine data manager, if we want.
+
         self.data = self.disk.getObservationBefore(timestamp)
         if (
             not hasattr(self, 'data') or
