@@ -41,7 +41,6 @@ class PeerMessage(Message):
 
     @staticmethod
     def fromJson(data: str, sent: bool = False) -> Union['PeerMessage', None]:
-        logging.debug('fromStr---: ', data, print='teal')
         if isinstance(data, dict):
             msg = PeerMessage(**data)
         if isinstance(data, str):
@@ -244,7 +243,6 @@ class FromServerMessage():
 
     @staticmethod
     def fromJson(data: str):
-        logging.debug('fromStr---: ', data, print='teal')
         if isinstance(data, dict):
             return FromServerMessage(**data)
         if isinstance(data, str):

@@ -13,12 +13,12 @@ from satorineuron.relay.history import GetHistory
 
 
 def postRequestHookForNone(r: requests.Response):
-    # logging.debug('postRequestHook default method')
+    # logging.info('postRequestHook default method')
     return r.text
 
 
 def postRequestHook(r: requests.Response):
-    # logging.debug('postRequestHook default method')
+    # logging.info('postRequestHook default method')
     return r.text
 
 
@@ -126,7 +126,7 @@ class ValidateRelayStream(object):
             },
             'reason': {},
         })
-        # logging.debug(f'trying to subscribe to my own datastream: {r.text}')
+        # logging.info(f'trying to subscribe to my own datastream: {r.text}')
         if (r.status_code == 200 and r.text not in ['', None]):
             return r.text
         return False

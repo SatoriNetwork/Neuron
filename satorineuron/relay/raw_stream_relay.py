@@ -16,12 +16,12 @@ from satorilib import logging
 
 
 def postRequestHookForNone(r: requests.Response):
-    # logging.debug('postRequestHook default method')
+    # logging.info('postRequestHook default method')
     return r.text
 
 
 def postRequestHook(r: requests.Response):
-    # logging.debug('postRequestHook default method')
+    # logging.info('postRequestHook default method')
     return r.text
 
 

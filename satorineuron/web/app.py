@@ -25,7 +25,6 @@ from satorineuron.web.utils import deduceCadenceString
 ## Globals ####################################################################
 ###############################################################################
 
-logging.debug('0', print='teal')
 # development flags
 debug = True
 darkmode = False
@@ -33,7 +32,6 @@ badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updating = False
-logging.debug('1', print='teal')
 
 ###############################################################################
 ## Startup ####################################################################
@@ -54,17 +52,16 @@ while True:
                 'dockerdev': 'ws://192.168.0.10:3000',
             }[MODE])
         start.start()
-        logging.debug('2', print='teal')
         break
     except ConnectionError as e:
         # try again...
         time.sleep(30)
-        logging.error(f'3 {e}', print='red')
+        logging.error(f'ConnectionError in app startup: {e}', print='red')
     # except RemoteDisconnected as e:
     except Exception as e:
         # try again...
         time.sleep(30)
-        logging.error(f'4 {e}', print='red')
+        logging.error(f'Exception in app startup: {e}', print='red')
 
 ###############################################################################
 ## Functions ##################################################################

@@ -37,28 +37,28 @@ class Connection:
     def establish(self):
 
         def punchAHole():
-            logging.debug('---actaully punching a hole---',
-                          self.peerIp, self.peerPort, print='magenta')
+            # logging.debug('---actaully punching a hole---',
+            #              self.peerIp, self.peerPort, print='magenta')
             self.topicSocket.sendto(b'0', (self.peerIp, self.peerPort))
 
         def listen():
             while True:
                 data, addr = self.topicSocket.recvfrom(1024)
-                logging.debug('---channel message recieved---',
-                              data, addr, print='magenta')
+                # logging.debug('---channel message recieved---',
+                #              data, addr, print='magenta')
                 self.onMessage(PeerMessage.fromJson(data.decode(), sent=False))
 
-        logging.debug('establishing connection', print='magenta')
+        # logging.debug('establishing connection', print='magenta')
         punchAHole()
         # self.topicSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # self.topicSocket.bind(('0.0.0.0', self.peerPort))
         listener = threading.Thread(target=listen, daemon=True)
         listener.start()
-        logging.debug('ready to exchange messages\n', print='magenta')
+        # logging.debug('ready to exchange messages\n', print='magenta')
         # todo:  add a heart beat ping if needed
 
     def makePayload(self, cmd: str, msgs: list[str] = None) -> Union[bytes, None]:
-        logging.debug('make payload cmd', cmd, print='red')
+        # logging.debug('make payload cmd', cmd, print='red')
         if not PeerProtocol.isValidCommand(cmd):
             logging.error('command not valid', cmd, print=True)
             return None

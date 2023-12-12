@@ -119,7 +119,6 @@ class Topic():
         localPort: int = None,
         outbox: Callable = None,
     ):
-        logging.debug('---TOPIC---', signedStreamId.stream, print='magenta')
         self.channels: Channels = Channels({})
         self.localPort = localPort
         self.outbox = outbox
@@ -163,11 +162,8 @@ class Topic():
 
     # override
     def createChannel(self, remoteIp: str, remotePort: int):
-        logging.debug('in create', remoteIp, remotePort, print='blue')
         if self.findChannel(remoteIp, remotePort) is None:
-            logging.debug('find channel', print='magenta')
             with self.channels:
-                logging.debug('making channel', print='magenta')
                 self.channels[(remoteIp, remotePort)] = Channel(
                     streamId=self.streamId,
                     remoteIp=remoteIp,
@@ -214,7 +210,6 @@ class Topic():
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
         ''' returns the observation before the timestamp '''
         self.data = self.disk.getObservationBefore(timestamp)
-        logging.debug('DATA!!!!', self.data, print='blue')
         if (
             not hasattr(self, 'data') or
             # not hasattr(self, 'hash') or

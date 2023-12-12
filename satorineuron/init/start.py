@@ -68,24 +68,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def start(self):
         ''' start the satori engine. '''
-        logging.debug('A', print='teal')
         self.createRelayValidation()
-        logging.debug('B', print='teal')
         self.openWallet()
-        logging.debug('C', print='teal')
         self.checkin()
-        logging.debug('D', print='teal')
         self.buildEngine()
-        logging.debug('E', print='teal')
         self.pubsubConnect()
-        logging.debug('F', print='teal')
         self.startRelay()
-        logging.debug('G', print='teal')
         self.rendezvousConnect()
-        logging.debug('H', print='teal')
         # TODO NEXT: get download of histories working
         self.incrementallyDownloadDatasets()
-        logging.debug('I', print='teal')
         # self.retroConnect()
         # self.downloadDatasets()
 
@@ -96,26 +87,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.wallet = Wallet(config.walletPath('wallet.yaml'))()
 
     def checkin(self):
-        logging.debug('checkin attempt...', print='teal')
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
         self.details = CheckinDetails(self.server.checkin())
-        logging.debug('checked in', print='teal')
         self.key = self.details.key
-        logging.debug('checkin 1', print='teal')
         self.idKey = self.details.idKey
-        logging.debug('checkin 2', print='teal')
         self.subscriptionKeys = self.details.subscriptionKeys
-        logging.debug('checkin 3', print='teal')
         self.publicationKeys = self.details.publicationKeys
-        logging.debug('checkin 4', print='teal')
         self.subscriptions = [
             Stream.fromMap(x)
             for x in json.loads(self.details.subscriptions)]
-        logging.debug('checkin 5', print='teal')
         self.publications = [
             Stream.fromMap(x)
             for x in json.loads(self.details.publications)]
-        logging.debug('checkin 6', print='teal')
         self.signedStreamIds = [
             SignedStreamId(
                 source=s.id.source,
@@ -140,7 +123,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 signed=self.wallet.sign(sig)) for p, sig in zip(
                     self.publications,
                     self.publicationKeys)]
-        logging.debug('checkin 7', print='teal')
 
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
@@ -148,13 +130,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             ''' filter down to prediciton publications '''
             return [s for s in streams if s.predicting is not None]
 
-        logging.debug('buildEngine 1', print='teal')
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
             publications=predictionStreams(self.publications))
-        logging.debug('buildEngine 2', print='teal')
         self.engine.run()
-        logging.debug('buildEngine 3', print='teal')
 
     def pubsubConnect(self):
         ''' establish a pubsub connection. '''
