@@ -233,6 +233,10 @@ class PeerMessages(LockableList[PeerMessage]):
         sorted_messages = sorted(self, key=lambda message: message.time)
         return sorted_messages[-1].time if sorted_messages else None
 
+    @property
+    def hashes(self) -> list[str]:
+        return [message.hash for message in self]
+
 
 class FromServerMessage():
     ''' a strcuture describing a message from the server '''

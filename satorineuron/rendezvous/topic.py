@@ -34,25 +34,39 @@ class Gatherer():
         self.timeout = None
         self.messages: dict[str, list[PeerMessage]] = {}
         self.messagesToSave = PeerMessages([])
-        self.getHashes()
+        self.getData()
 
-    def getHashes(self):
+    def getData(self):
         self.data = self.parent.disk.read()
-        if self.data is not None:
-            self.hashes = self.data.hash.values
-        else:
-            self.hashes = []
 
-    def makeTimeout(self, msgId: str):
-        ''' handles cancel the existing timeout task before reassigning '''
-        from satorineuron.init.start import getStart
-        asyncThread = getStart().asyncThread
-        if hasattr(self, 'timeout') and self.timeout is not None:
-            asyncThread.cancelTask(self.timeout)
-        self.timeout = asyncThread.delayedRun(
-            task=self.finish,
-            delay=60,
-            msgId=msgId)
+    @property
+    def hashes(self):
+        if self.data is not None:
+            return self.data.hash.values  # + self.messagesToSave.hashes
+        return []
+
+    def initiate(self):
+
+        def askForLatestData():
+            return self.request()
+
+        if self.data is None or self.data.empty:
+            return askForLatestData()
+        success, row = self.parent.disk.validateAllHashes(self.data)
+        if success:
+            return askForLatestData()
+        return self.request(datetime=datetimeFromString(row.index[0]))
+
+    # def makeTimeout(self, msgId: str):
+    #    ''' handles cancel the existing timeout task before reassigning '''
+    #    from satorineuron.init.start import getStart
+    #    asyncThread = getStart().asyncThread
+    #    if hasattr(self, 'timeout') and self.timeout is not None:
+    #        asyncThread.cancelTask(self.timeout)
+    #    self.timeout = asyncThread.delayedRun(
+    #        task=self.finish,
+    #        delay=60,
+    #        msgId=msgId)
 
     def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
         msgId = self.parent.nextBroadcastId()
@@ -91,45 +105,37 @@ class Gatherer():
             saves it to disk, and repeats the process with new time
         else: it tells the models data is updated, and cleans up.
         '''
-        if message.hash is None or message.hash in self.hashes:
-            self.finishProcess()
-        else:
-            self.parent.disk.append(message.asDataFrame)
-            self.parent.tellModelsAboutNewHistory()
-            self.request(message)
-
-    def handleMostPopularTimeOutPattern(self, message: PeerMessage):
-        '''
-        if we don't have this observation yet:
-            saves it to disk, and repeats the process with new time
-        else: it tells the models data is updated, and cleans up.
-        '''
-        if message.hash in self.hashes:
-            self.finishProcess()
-        else:
-            self.messagesToSave.append(message)
-            self.request(message)
+        if (
+            message.hash is None or
+            message.hash in self.hashes
+        ):
+            return self.finishProcess()
+        self.parent.disk.append(message.asDataFrame)
+        self.getData()
+        # self.messagesToSave.append(message)
+        # self.parent.tellModelsAboutNewHistory()
+        self.request(message)
 
     def finishProcess(self):
         self.cleanup()
 
-    def finishProcessTimeoutPattern(self):
-        logging.debug('df to save is ',
-                      self.messagesToSave.msgsToDataframe(), print='green')
-        self.parent.disk.append(self.messagesToSave.msgsToDataframe())
-        self.parent.tellModelsAboutNewHistory()
-        self.cleanup()
+    # def finishProcessTimeoutPattern(self):
+    #    logging.debug('df to save is ',
+    #                  self.messagesToSave.msgsToDataframe(), print='green')
+    #    self.parent.disk.append(self.messagesToSave.msgsToDataframe())
+    #    self.parent.tellModelsAboutNewHistory()
+    #    self.cleanup()
 
-    def finish(self, msgId: int):
-        '''
-        if we haven't recieved enough responses by now, we just move on. 
-        '''
-        if (
-            len(self.messagesToSave) > 0 and
-            msgId not in [msg.msgId for msg in self.messagesToSave]
-        ):
-            logging.debug('FINISHING', msgId, print='red')
-            self.finishProcess()
+    # def finish(self, msgId: int):
+    #    '''
+    #    if we haven't recieved enough responses by now, we just move on.
+    #    '''
+    #    if (
+    #        len(self.messagesToSave) > 0 and
+    #        msgId not in [msg.msgId for msg in self.messagesToSave]
+    #    ):
+    #        logging.debug('FINISHING', msgId, print='red')
+    #        self.finishProcess()
 
     def cleanup(self):
         ''' cleans up the gatherer '''
@@ -303,7 +309,7 @@ class Topic():
         ''' 
         starts the process of getting the history of this topic incrementally.
         '''
-        self.gatherer.request()
+        self.gatherer.initiate()
 
     def tellModelsAboutNewHistory(self):
         ''' 
