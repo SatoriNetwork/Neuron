@@ -223,7 +223,6 @@ class Topic():
             self.data is None or
             (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
-            logging.debug('ret1', self.data, print='blue')
             return SingleObservation(None, None, None)
         # value, hash are the only columns in the dataframe now
         # if self.streamId.stream in self.data.columns:
@@ -236,16 +235,12 @@ class Topic():
             # row = self.data.loc[self.data.index < timestamp].iloc[-1]
             row = self.data.loc[self.data.index < timestamp].tail(1)
             if (row.shape[0] == 0):
-                logging.debug('ret2', self.data, print='blue')
                 return SingleObservation(None, None, None)
             if (row.shape[0] == 1):
-                logging.debug('ret3', self.data, print='blue')
                 return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
-            logging.debug('ret4', self.data, print='blue')
             # only send 1 row?
             return SingleObservation(row.index[-1], row['value'].values[-1], row['hash'].values[-1])
         except IndexError as _:
-            logging.debug('ret5', self.data, print='blue')
             return SingleObservation(None, None, None)
 
     def getLocalCount(self, timestamp: str) -> Union[int, None]:

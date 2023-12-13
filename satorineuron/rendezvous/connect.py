@@ -72,7 +72,7 @@ class Connection:
     def send(self, cmd: str, msg: PeerMessage = None):
         # TODO: make this take a PeerMessage object and do that everywhere
         payload = cmd
-        logging.debug('sent pyaload:', payload, print='magenta')
+        logging.debug('send pyaload:', payload, print='magenta')
         # shouldn't this be peerPort, not localport??
         self.topicSocket.sendto(payload, (self.peerIp, self.port))
         self.topicSocket.sendto(msg.asJsonStr.decode(),
