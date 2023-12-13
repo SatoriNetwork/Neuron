@@ -94,7 +94,7 @@ class Gatherer():
         if message.hash is None or message.hash in self.hashes:
             self.finishProcess()
         else:
-            self.parent.disk.append(message.asDataframe)
+            self.parent.disk.append(message.asDataFrame)
             self.parent.tellModelsAboutNewHistory()
             self.request(message)
 
