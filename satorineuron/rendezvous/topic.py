@@ -56,7 +56,7 @@ class Gatherer():
 
     def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
         msgId = self.parent.nextBroadcastId()
-        self.makeTimeout(msgId)
+        # self.makeTimeout(msgId) # timeout pattern unreliable
         self.parent.requestOneObservation(
             datetime=datetime or (
                 datetimeFromString(message.observationTime)
@@ -91,6 +91,19 @@ class Gatherer():
             saves it to disk, and repeats the process with new time
         else: it tells the models data is updated, and cleans up.
         '''
+        if message.hash is None or message.hash in self.hashes:
+            self.finishProcess()
+        else:
+            self.parent.disk.append(message.asDataframe)
+            self.parent.tellModelsAboutNewHistory()
+            self.request(message)
+
+    def handleMostPopularTimeOutPattern(self, message: PeerMessage):
+        '''
+        if we don't have this observation yet:
+            saves it to disk, and repeats the process with new time
+        else: it tells the models data is updated, and cleans up.
+        '''
         if message.hash in self.hashes:
             self.finishProcess()
         else:
@@ -98,6 +111,9 @@ class Gatherer():
             self.request(message)
 
     def finishProcess(self):
+        self.cleanup()
+
+    def finishProcessTimeoutPattern(self):
         logging.debug('df to save is ',
                       self.messagesToSave.msgsToDataframe(), print='green')
         self.parent.disk.append(self.messagesToSave.msgsToDataframe())

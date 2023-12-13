@@ -57,6 +57,16 @@ class PeerMessage(Message):
         return None
 
     @property
+    def asDataFrame(self) -> pd.DataFrame:
+        df = pd.DataFrame({
+            'observationTime': [self.observationTime],
+            'data': [self.data],
+            'hash': [self.hash]
+        })
+        df.set_index('observationTime', inplace=True)
+        return df
+
+    @property
     def asJsonStr(self) -> str:
         return json.dumps(self.asJson)
 
