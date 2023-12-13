@@ -211,11 +211,17 @@ class PeerMessages(LockableList[PeerMessage]):
     '''
 
     def msgsToDataframe(self) -> pd.DataFrame:
-        return pd.DataFrame({
+        df = pd.DataFrame({
             'observationTime': [message.observationTime for message in self],
             'data': [message.data for message in self],
             'hash': [message.hash for message in self]
-        }).set_index('observationTime', inplace=True)
+        })
+        df.set_index('observationTime', inplace=True)
+        return df
+
+    def latestMessageTime(self) -> Union[str, None]:
+        sorted_messages = sorted(self, key=lambda message: message.time)
+        return sorted_messages[-1].time if sorted_messages else None
 
 
 class FromServerMessage():

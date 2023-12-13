@@ -43,11 +43,20 @@ class Gatherer():
         else:
             self.hashes = []
 
-    def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
+    def makeTimeout(self, msgId: str):
+        ''' handles cancel the existing timeout task before reassigning '''
         from satorineuron.init.start import getStart
+        asyncThread = getStart().asyncThread
+        if hasattr(self, 'timeout') and self.timeout is not None:
+            asyncThread.cancelTask(self.timeout)
+        self.timeout = asyncThread.delayedRun(
+            task=self.finish,
+            delay=60,
+            msgId=msgId)
+
+    def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
         msgId = self.parent.nextBroadcastId()
-        self.timeout = getStart().asyncThread.delayedRun(
-            task=self.finish, delay=60, msgId=msgId)
+        self.makeTimeout(msgId)
         self.parent.requestOneObservation(
             datetime=datetime or (
                 datetimeFromString(message.observationTime)
@@ -89,6 +98,8 @@ class Gatherer():
             self.request(message)
 
     def finishProcess(self):
+        logging.debug('df to save is ',
+                      self.messagesToSave.msgsToDataframe(), print='green')
         self.parent.disk.append(self.messagesToSave.msgsToDataframe())
         self.parent.tellModelsAboutNewHistory()
         self.cleanup()
