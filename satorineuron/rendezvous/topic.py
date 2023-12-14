@@ -45,10 +45,10 @@ class Gatherer():
             return self.data.hash.values  # + self.messagesToSave.hashes
         return []
 
-    def initiate(self):
+    def initiate(self, message: PeerMessage = None):
 
         def askForLatestData():
-            return self.request()
+            return self.request(message)
 
         if self.data is None or self.data.empty:
             return askForLatestData()
@@ -114,9 +114,11 @@ class Gatherer():
         self.getData()
         # self.messagesToSave.append(message)
         # self.parent.tellModelsAboutNewHistory()
-        self.request(message)
+        # self.request(message)
+        self.initiate(message)
 
     def finishProcess(self):
+        logging.debug('FINISHING PROCESS', print='red')
         self.cleanup()
 
     # def finishProcessTimeoutPattern(self):
@@ -140,7 +142,7 @@ class Gatherer():
     def cleanup(self):
         ''' cleans up the gatherer '''
         self.parent.cleanChannels([key for key in self.messages.keys()])
-        self.refresh()
+        #self.refresh()
 
 
 class Topic():
