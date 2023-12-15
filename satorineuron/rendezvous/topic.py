@@ -141,8 +141,16 @@ class Gatherer():
 
     def cleanup(self):
         ''' cleans up the gatherer '''
+        # clean up messages
         self.parent.cleanChannels([key for key in self.messages.keys()])
-        #self.refresh()
+        # clean up dataset
+        success, df = self.parent.disk.cleanByHashes()
+        logging.debug('CLEANING BY HASH -- success df',
+                      success, df.head(), print='red')
+        if success and df is not None:
+            logging.debug('writing', print='red')
+            self.parent.disk.write(df)
+        # self.refresh()
 
 
 class Topic():
