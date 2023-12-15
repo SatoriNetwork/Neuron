@@ -149,7 +149,7 @@ class Gatherer():
                       success, df.head(), print='red')
         if success and df is not None:
             logging.debug('writing', print='red')
-            self.parent.disk.write(df)
+            # self.parent.disk.write(df)
         # self.refresh()
 
 
