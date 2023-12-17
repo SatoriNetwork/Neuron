@@ -78,10 +78,13 @@ class Gatherer():
 
         if self.data is None or self.data.empty:
             return askForLatestData()
-        success, row = self.parent.disk.validateAllHashes(self.data)
-        if success:
-            return askForLatestData()
-        return self.request(datetime=datetimeFromString(row.index[0]))
+        hasRoot = self.parents.disk.hasRoot(self.data)
+        if not hasRoot:
+            success, row = self.parent.disk.validateAllHashes(self.data)
+            if success:
+                return askForLatestData()
+            return self.request(datetime=datetimeFromString(row.index[0]))
+        return askForLatestData()
 
     # def makeTimeout(self, msgId: str):
     #    ''' handles cancel the existing timeout task before reassigning '''
@@ -135,7 +138,8 @@ class Gatherer():
         if self.parent.streamId.stream == 'coinbaseADA-USD':
             logging.debug('handleMostPopular 1:',
                           message.hash is None,
-                          message.hash in self.hashes, (
+                          message.hash in self.hashes,
+                          hasattr(self, 'root'), (
                               hasattr(self, 'root') and
                               isinstance(self.root, pd.DataFrame) and
                               self.data.sort_index().iloc[[0]].equals(self.root)),
@@ -167,8 +171,13 @@ class Gatherer():
                               df, localDf=self.data),
                           print='teal')
         if self.parent.disk.isARoot(df):
+            if self.parent.streamId.stream == 'coinbaseADA-USD':
+                logging.debug('handleMostPopular 5:',
+                              'setting root', df, print='red')
             self.root = df
-            if not self.parent.disk.matchesRoot(df, localDf=self.data):
+            if self.parent.disk.matchesRoot(df, localDf=self.data):
+                self.finishProcess()
+            else:
                 self.parent.disk.removeItAndBeforeIt(df.index[0])
         self.parent.disk.append(df)
         self.getData()
