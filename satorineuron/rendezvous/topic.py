@@ -38,7 +38,7 @@ class Gatherer():
         self.getData()
 
     def getData(self):
-        self.data = self.parent.disk.read()
+        self.data = self.parent.disk.read().sort_index()
 
     @property
     def hashes(self):
@@ -147,29 +147,27 @@ class Gatherer():
             hasattr(self, 'root') and
             isinstance(self.root, pd.DataFrame) and
             self.data.sort_index().iloc[[0]].equals(self.root) and
-            self.parent.disk.validateAllHashes()
+            self.parent.disk.validateAllHashes(self.data)
         ):
             return self.finishProcess()
         df = message.asDataFrame
-        valueDf = df
-        valueDf.columns = ['value', 'hash']
+        df.columns = ['value', 'hash']
         if self.parent.streamId.stream == 'coinbaseADA-USD':
             logging.debug('handleMostPopular 2:',
                           df,
-                          valueDf,
                           self.data,
                           print='teal')
         if self.parent.streamId.stream == 'coinbaseADA-USD':
             logging.debug('handleMostPopular 3:',
-                          self.parent.disk.isARoot(valueDf),
+                          self.parent.disk.isARoot(df),
                           print='teal')
         if self.parent.streamId.stream == 'coinbaseADA-USD':
             logging.debug('handleMostPopular 4:',
                           not self.parent.disk.matchesRoot(
                               df, localDf=self.data),
                           print='teal')
-        if self.parent.disk.isARoot(valueDf):
-            self.root = valueDf
+        if self.parent.disk.isARoot(df):
+            self.root = df
             if not self.parent.disk.matchesRoot(df, localDf=self.data):
                 self.parent.disk.removeItAndBeforeIt(df.index[0])
         self.parent.disk.append(df)
