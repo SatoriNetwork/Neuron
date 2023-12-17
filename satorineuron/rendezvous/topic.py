@@ -113,14 +113,17 @@ class Gatherer():
         else: it tells the models data is updated, and cleans up.
         '''
         if (
-            message.hash is None or
-            message.hash in self.hashes
+            (message.hash is None or
+             message.hash in self.hashes) and
+            self.data.sort_index().iloc[[0]].equals(self.root)
+            and self.parent.disk.validateAllHashes()
         ):
             return self.finishProcess()
         df = message.asDataFrame
         valueDf = df
         valueDf.columns = ['value', 'hash']
         if self.parent.disk.isARoot(valueDf):
+            self.root = valueDf
             if not self.parent.disk.matchesRoot(df, localDf=self.data):
                 self.parent.disk.removeItAndBeforeIt(df.index[0])
         self.parent.disk.append(df)
