@@ -78,7 +78,7 @@ class Gatherer():
 
         if self.data is None or self.data.empty:
             return askForLatestData()
-        hasRoot = self.parents.disk.hasRoot(self.data)
+        hasRoot = self.parent.disk.hasRoot(self.data)
         if not hasRoot:
             success, row = self.parent.disk.validateAllHashes(self.data)
             if success:
