@@ -158,6 +158,7 @@ class Gatherer():
         self.parent.cleanChannels([key for key in self.messages.keys()])
         # clean up dataset
         success, df = self.parent.disk.cleanByHashes()
+        logging.debug('strema:', self.parent.streamId, print='red')
         logging.debug('CLEANING BY HASH -- success df',
                       success, df.head(), print='red')
         if success and df is not None:
