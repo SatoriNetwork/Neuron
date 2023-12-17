@@ -138,16 +138,16 @@ class Gatherer():
             saves it to disk, and repeats the process with new time
         else: it tells the models data is updated, and cleans up.
         '''
-        if self.parent.streamId.stream == 'coinbaseADA-USD':
-            logging.debug('handleMostPopular 1:',
-                          message.hash is None,
-                          message.hash in self.hashes,
-                          hasattr(self, 'root'), (
-                              hasattr(self, 'root') and
-                              isinstance(self.root, pd.DataFrame) and
-                              self.data.sort_index().iloc[[0]].equals(self.root)),
-                          self.parent.disk.validateAllHashes(),
-                          print='teal')
+        # if self.parent.streamId.stream == 'coinbaseADA-USD':
+        #    logging.debug('handleMostPopular 1:',
+        #                  message.hash is None,
+        #                  message.hash in self.hashes,
+        #                  hasattr(self, 'root'), (
+        #                      hasattr(self, 'root') and
+        #                      isinstance(self.root, pd.DataFrame) and
+        #                      self.data.sort_index().iloc[[0]].equals(self.root)),
+        #                  self.parent.disk.validateAllHashes(),
+        #                  print='teal')
         if (
             (message.hash is None or
              message.hash in self.hashes) and
@@ -159,30 +159,14 @@ class Gatherer():
             return self.finishProcess()
         df = message.asDataFrame
         df.columns = ['value', 'hash']
-        if self.parent.streamId.stream == 'coinbaseADA-USD':
-            logging.debug('handleMostPopular 2:',
-                          df,
-                          self.data,
-                          print='teal')
-        if self.parent.streamId.stream == 'coinbaseADA-USD':
-            logging.debug('handleMostPopular 3:',
-                          self.parent.disk.isARoot(df),
-                          print='teal')
-        if self.parent.streamId.stream == 'coinbaseADA-USD':
-            logging.debug('handleMostPopular 4:',
-                          not self.parent.disk.matchesRoot(
-                              df, localDf=self.data),
-                          print='teal')
         if self.parent.disk.isARoot(df):
-            if self.parent.streamId.stream == 'coinbaseADA-USD':
-                logging.debug('handleMostPopular 5:',
-                              'setting root', df, print='red')
             self.root = df
             if self.parent.disk.matchesRoot(df, localDf=self.data):
                 self.finishProcess()
             else:
                 self.parent.disk.removeItAndBeforeIt(df.index[0])
-        self.parent.disk.append(df)
+        if message.hash not in self.hashes:
+            self.parent.disk.append(df)
         self.getData()
         # self.messagesToSave.append(message)
         # self.parent.tellModelsAboutNewHistory()
