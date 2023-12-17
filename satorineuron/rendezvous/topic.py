@@ -38,7 +38,7 @@ class Gatherer():
         self.getData()
 
     def getData(self):
-        self.data = self.parent.disk.read().sort_index()
+        self.data = self.parent.disk.read()
 
     @property
     def hashes(self):
@@ -50,7 +50,7 @@ class Gatherer():
         ''' we verify that our first row (the root) matches the consensus '''
         if self.data is None or self.data.empty:
             return self.request()
-        trunk = self.data.sort_index().iloc[[1]]
+        trunk = self.data.iloc[[1]]
         logging.debug('in prepare', trunk, print='blue')
         self.request(datetime=datetimeFromString(trunk.index[0]))
         self.startSupervisor()
