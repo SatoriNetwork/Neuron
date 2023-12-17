@@ -47,7 +47,9 @@ class Gatherer():
 
     def prepare(self):
         ''' we verify that our first row (the root) matches the consensus '''
-        trunk = self.data.sort_index().iloc[1]
+        if self.data is None or self.data.empty:
+            return self.request()
+        trunk = self.data.sort_index().iloc[[1]]
         logging.debug('truncate', trunk, print='red')
         self.request(datetime=datetimeFromString(trunk.index[0]))
 
