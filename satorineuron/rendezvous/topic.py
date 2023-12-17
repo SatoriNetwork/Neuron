@@ -51,6 +51,7 @@ class Gatherer():
         if self.data is None or self.data.empty:
             return self.request()
         trunk = self.data.sort_index().iloc[[1]]
+        logging.debug('in prepare', trunk, print='blue')
         self.request(datetime=datetimeFromString(trunk.index[0]))
         self.startSupervisor()
 
@@ -65,7 +66,9 @@ class Gatherer():
             interval=60)
 
     def initiateIfIdle(self):
-        if self.lastHeard < time.time() - 60:
+        if hasattr(self, 'lastHeard') and self.lastHeard < time.time() - 60:
+            logging.debug('inititating from idle', self.lastHeard,
+                          time.time() - 60, print='blue')
             self.initiate()
 
     def initiate(self, message: PeerMessage = None):
