@@ -1,4 +1,5 @@
 from typing import Union, Callable
+import time
 import datetime as dt
 import pandas as pd
 from satorilib import logging
@@ -51,6 +52,21 @@ class Gatherer():
             return self.request()
         trunk = self.data.sort_index().iloc[[1]]
         self.request(datetime=datetimeFromString(trunk.index[0]))
+        self.startSupervisor()
+
+    def startSupervisor(self):
+        ''' incase we lose connection, try again in 60 seconds '''
+        from satorineuron.init.start import getStart
+        asyncThread = getStart().asyncThread
+        if hasattr(self, 'supervisor') and self.supervisor is not None:
+            asyncThread.cancelTask(self.supervisor)
+        self.supervisor = asyncThread.repeatRun(
+            task=self.initiateIfIdle,
+            interval=60)
+
+    def initiateIfIdle(self):
+        if self.lastHeard < time.time() - 60:
+            self.initiate()
 
     def initiate(self, message: PeerMessage = None):
 
@@ -86,6 +102,7 @@ class Gatherer():
         self.messages[msgId]: list[PeerMessage] = []
 
     def onResponse(self, message: PeerMessage):
+        self.lastHeard = time.time()
         msg = self.discoverPopularResponse(message)
         if msg is not None:
             self.handleMostPopular(msg)
