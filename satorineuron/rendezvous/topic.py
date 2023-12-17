@@ -115,6 +115,8 @@ class Gatherer():
         if (
             (message.hash is None or
              message.hash in self.hashes) and
+            hasattr(self, 'root') and
+            isinstance(self.root, pd.DataFrame) and
             self.data.sort_index().iloc[[0]].equals(self.root)
             and self.parent.disk.validateAllHashes()
         ):
