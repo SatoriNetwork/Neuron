@@ -45,6 +45,11 @@ class Gatherer():
             return self.data.hash.values  # + self.messagesToSave.hashes
         return []
 
+    def prepare(self):
+        ''' we verify that our first row (the root) matches the consensus '''
+        trunk = self.data.sort_index().iloc[1]
+        self.request(datetime=datetimeFromString(trunk.index[0]))
+
     def initiate(self, message: PeerMessage = None):
 
         def askForLatestData():
@@ -110,7 +115,12 @@ class Gatherer():
             message.hash in self.hashes
         ):
             return self.finishProcess()
-        self.parent.disk.append(message.asDataFrame)
+        df = message.asDataFrame
+        if self.parent.disk.isARoot(df):
+            if not self.parent.disk.matchesRoot(df, localDf=self.data):
+                self.parent.disk.removeItAndBeforeIt(df.index[0])
+                self.parent.disk.append(df)
+        self.parent.disk.append(df)
         self.getData()
         # self.messagesToSave.append(message)
         # self.parent.tellModelsAboutNewHistory()
@@ -319,7 +329,7 @@ class Topic():
         ''' 
         starts the process of getting the history of this topic incrementally.
         '''
-        self.gatherer.initiate()
+        self.gatherer.prepare()
 
     def tellModelsAboutNewHistory(self):
         ''' 
