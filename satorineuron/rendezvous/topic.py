@@ -118,10 +118,11 @@ class Gatherer():
         ):
             return self.finishProcess()
         df = message.asDataFrame
-        if self.parent.disk.isARoot(df):
+        valueDf = df
+        valueDf.columns = ['value', 'hash']
+        if self.parent.disk.isARoot(valueDf):
             if not self.parent.disk.matchesRoot(df, localDf=self.data):
                 self.parent.disk.removeItAndBeforeIt(df.index[0])
-                self.parent.disk.append(df)
         self.parent.disk.append(df)
         self.getData()
         # self.messagesToSave.append(message)
