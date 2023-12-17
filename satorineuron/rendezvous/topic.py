@@ -50,7 +50,6 @@ class Gatherer():
         if self.data is None or self.data.empty:
             return self.request()
         trunk = self.data.sort_index().iloc[[1]]
-        logging.debug('truncate', trunk, print='red')
         self.request(datetime=datetimeFromString(trunk.index[0]))
 
     def initiate(self, message: PeerMessage = None):
