@@ -50,9 +50,12 @@ class Gatherer():
         ''' we verify that our first row (the root) matches the consensus '''
         if self.data is None or self.data.empty:
             return self.request()
-        trunk = self.data.iloc[[1]]
-        logging.debug('in prepare', trunk, print='blue')
-        self.request(datetime=datetimeFromString(trunk.index[0]))
+        if self.data.shape[0] > 1:
+            trunk = self.data.iloc[[1]]
+            logging.debug('in prepare', trunk, print='blue')
+            self.request(datetime=datetimeFromString(trunk.index[0]))
+        else:
+            self.request()
         self.startSupervisor()
 
     def startSupervisor(self):
@@ -216,7 +219,9 @@ class Gatherer():
         success, df = self.parent.disk.cleanByHashes()
         logging.debug('strema:', self.parent.streamId, print='red')
         logging.debug('CLEANING BY HASH -- success df',
-                      success, df.head(), print='red')
+                      success,
+                      df.head() if isinstance(df, pd.DataFrame) else 'None',
+                      print='red')
         if success and df is not None:
             logging.debug('writing', print='red')
             self.parent.disk.write(df)
