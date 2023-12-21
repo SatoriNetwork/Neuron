@@ -82,7 +82,6 @@ class Gatherer():
             return self.request(message)
 
         if self.data is None or self.data.empty:
-            logging.debug('NONE or EMPTY???', print='magenta')
             return askForNextData()
         if (
             isinstance(self.root, pd.DataFrame) and
@@ -90,15 +89,11 @@ class Gatherer():
         ):
             success, row = self.parent.disk.validateAllHashes(self.data)
             if not success:
-                logging.debug('NOT SUCCESS - Row', row, print='magenta')
                 return self.request(datetime=datetimeFromString(row.index[0]))
             lastTimeStamp = datetimeFromString(self.data.index[-1])
-            logging.debug('lastTimeStamp ?= self.lastAsk', lastTimeStamp,
-                          '==' if lastTimeStamp == self.lastAsk else '!=', self.lastAsk, print='red')
             if lastTimeStamp != self.lastAsk:
                 return self.request(datetime=lastTimeStamp)
             return self.finishProcess()
-        logging.debug('BAD ROOT???', print='magenta')
         return askForNextData()
 
     # def makeTimeout(self, msgId: str):
@@ -154,17 +149,6 @@ class Gatherer():
         '''
         df = message.asDataFrame
         df.columns = ['value', 'hash']
-        if self.parent.streamId.stream == 'coinbaseADA-USD':
-            logging.debug('handleMostPopular 1:',
-                          df,
-                          self.parent.disk.isARoot(df),
-                          hasattr(self, 'root'), (
-                              hasattr(self, 'root') and
-                              isinstance(self.root, pd.DataFrame) and
-                              self.data.sort_index().iloc[[0]].equals(self.root)),
-                          self.parent.disk.matchesRoot(df, localDf=self.data),
-                          self.parent.disk.validateAllHashes(),
-                          print='teal')
         if self.parent.disk.isARoot(df):
             self.root = df
             if not self.parent.disk.matchesRoot(self.root, localDf=self.data):
@@ -177,7 +161,6 @@ class Gatherer():
         self.initiate(message)
 
     def finishProcess(self):
-        logging.debug('FINISHING PROCESS', print='red')
         self.cleanup()
 
     def cleanup(self):
@@ -303,20 +286,15 @@ class Topic():
         # access it, and the engine can access it. it should be the source of
         # truth.
         self.getData()
-        logging.debug('getLocalObservation', self.data,
-                      timestamp, print='magenta')
         if (
             not hasattr(self, 'data') or
             self.data is None or
             (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
-            logging.debug('getLocalObservation1', print='magenta')
             return SingleObservation(None, None, None)
         df = self.data[self.data.index > timestamp]
         if df.empty:
-            logging.debug('getLocalObservation2', print='magenta')
             return SingleObservation(None, None, None)
-        logging.debug('getLocalObservation3', print='magenta')
         return SingleObservation(df.index[0], df['value'].values[0], df['hash'].values[0])
 
     def getLocalObservationBefore(self, timestamp: str) -> SingleObservation:
