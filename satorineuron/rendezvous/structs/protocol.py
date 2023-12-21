@@ -57,6 +57,7 @@ class PeerProtocol(Protocol):
     def subCommands():
         return [
             PeerProtocol.observationSub,
+            PeerProtocol.observationBeforeSub,
             # PeerProtocol.countSub,  # unused
             # PeerProtocol.hashSub,
         ]

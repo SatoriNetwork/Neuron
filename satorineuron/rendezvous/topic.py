@@ -4,7 +4,7 @@ import datetime as dt
 import pandas as pd
 from satorilib import logging
 from satorilib.api.disk import Disk
-from satorilib.api.time import datetimeFromString, now
+from satorilib.api.time import datetimeFromString, now, earliestDate
 from satorirendezvous.lib.lock import LockableDict
 from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
@@ -17,14 +17,10 @@ class Gatherer():
     '''
     manages the the process of getting the history of this topic incrementally.
     the process works like this: 
-        1. ask all channels for the observation
-        2. give every channel a call back once they get a messge
-        3. on the call back get the most popular message from all replies
-        4. have a timeout here which will force it to move on (using timer)
-        5. once it has the most popular reply it either:
-            if we don't have this observation yet:
-                saves it to disk, and repeats the process with new time
-            else: it tells the models data is updated, and cleans up.    
+        0. this process can be restarted by a supervisor here or above
+        1. ask all channels for the root observation
+        2. get last datapoint tied to the root, delete what's not in chain
+        3. repeat 2 until we never get an answer
     '''
 
     def __init__(self, parent: 'Topic'):
@@ -34,7 +30,6 @@ class Gatherer():
     def refresh(self):
         self.timeout = None
         self.messages: dict[str, list[PeerMessage]] = {}
-        self.messagesToSave = PeerMessages([])
         self.getData()
 
     def getData(self):
@@ -43,19 +38,19 @@ class Gatherer():
     @property
     def hashes(self):
         if self.data is not None:
-            return self.data.hash.values  # + self.messagesToSave.hashes
+            return self.data.hash.values
         return []
 
     def prepare(self):
         ''' we verify that our first row (the root) matches the consensus '''
-        if self.data is None or self.data.empty:
-            return self.request()
-        if self.data.shape[0] > 1:
-            trunk = self.data.iloc[[1]]
-            logging.debug('in prepare', trunk, print='blue')
-            self.request(datetime=datetimeFromString(trunk.index[0]))
-        else:
-            self.request()
+        self.request(datetime=earliestDate())
+        # if self.data is None or self.data.empty:
+        # if self.data.shape[0] > 1:
+        #    trunk = self.data.iloc[[1]]
+        #    logging.debug('in prepare', trunk, print='blue')
+        #    self.request(datetime=earliestDate())
+        # else:
+        #    self.request(datetime=earliestDate())
         self.startSupervisor()
 
     def startSupervisor(self):
@@ -72,6 +67,7 @@ class Gatherer():
         if hasattr(self, 'lastHeard') and self.lastHeard < time.time() - 60:
             logging.debug('inititating from idle', self.lastHeard,
                           time.time() - 60, print='blue')
+            self.cleanup()
             self.initiate()
 
     def initiate(self, message: PeerMessage = None):
@@ -81,8 +77,7 @@ class Gatherer():
 
         if self.data is None or self.data.empty:
             return askForLatestData()
-        hasRoot = self.parent.disk.hasRoot(self.data)
-        if not hasRoot:
+        if not self.parent.disk.hasRoot(self.data):
             success, row = self.parent.disk.validateAllHashes(self.data)
             if success:
                 return askForLatestData()
@@ -148,52 +143,22 @@ class Gatherer():
         #                      self.data.sort_index().iloc[[0]].equals(self.root)),
         #                  self.parent.disk.validateAllHashes(),
         #                  print='teal')
-        if (
-            (message.hash is None or
-             message.hash in self.hashes) and
-            hasattr(self, 'root') and
-            isinstance(self.root, pd.DataFrame) and
-            self.data.sort_index().iloc[[0]].equals(self.root) and
-            self.parent.disk.validateAllHashes(self.data)
-        ):
-            return self.finishProcess()
         df = message.asDataFrame
         df.columns = ['value', 'hash']
         if self.parent.disk.isARoot(df):
             self.root = df
-            if self.parent.disk.matchesRoot(df, localDf=self.data):
-                self.finishProcess()
-            else:
-                self.parent.disk.removeItAndBeforeIt(df.index[0])
+            if not self.parent.disk.matchesRoot(df, localDf=self.data):
+                self.parent.disk.write(df)
         if message.hash not in self.hashes:
             self.parent.disk.append(df)
         self.getData()
         # self.messagesToSave.append(message)
         # self.parent.tellModelsAboutNewHistory()
-        # self.request(message)
         self.initiate(message)
 
     def finishProcess(self):
         logging.debug('FINISHING PROCESS', print='red')
         self.cleanup()
-
-    # def finishProcessTimeoutPattern(self):
-    #    logging.debug('df to save is ',
-    #                  self.messagesToSave.msgsToDataframe(), print='green')
-    #    self.parent.disk.append(self.messagesToSave.msgsToDataframe())
-    #    self.parent.tellModelsAboutNewHistory()
-    #    self.cleanup()
-
-    # def finish(self, msgId: int):
-    #    '''
-    #    if we haven't recieved enough responses by now, we just move on.
-    #    '''
-    #    if (
-    #        len(self.messagesToSave) > 0 and
-    #        msgId not in [msg.msgId for msg in self.messagesToSave]
-    #    ):
-    #        logging.debug('FINISHING', msgId, print='red')
-    #        self.finishProcess()
 
     def cleanup(self):
         ''' cleans up the gatherer '''
@@ -294,7 +259,6 @@ class Topic():
         #                             (self.peerIp, self.port))
         # convert to bytes message
         print('in send', remoteIp, remotePort, cmd, msgs)
-        payload = b'payload'
         self.outbox((self.localPort, remoteIp, remotePort, cmd))
 
     def requestOneObservation(self, datetime: dt.datetime, msgId: int):
@@ -310,6 +274,42 @@ class Topic():
                 channel.send(msg)
 
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
+        ''' returns the observation after the timestamp '''
+        # this should insdead get one from the engine. or if that fails,
+        # pull it directly from disk without a caching mechanism
+        # the reason we have a caching mechanism in the disk is to know where
+        # to pull (what chunk) rather than reading in the whole file each time
+        # we want one row. so we should get that working first, then point to
+        # the engine data manager, if we want.
+
+        self.data = self.disk.getObservationAfter(timestamp)
+        if (
+            not hasattr(self, 'data') or
+            # not hasattr(self, 'hash') or
+            self.data is None or
+            (isinstance(self.data, pd.DataFrame) and self.data.empty)
+        ):
+            return SingleObservation(None, None, None)
+        # value, hash are the only columns in the dataframe now
+        # if self.streamId.stream in self.data.columns:
+        #    column = self.streamId.stream
+        # elif self.streamId.target in self.data.columns:
+        #    column = self.streamId.stream
+        # else:
+        #    column = self.data.columns[0]
+        try:
+            # row = self.data.loc[self.data.index > timestamp].iloc[-1]
+            row = self.data.loc[self.data.index > timestamp].tail(1)
+            if (row.shape[0] == 0):
+                return SingleObservation(None, None, None)
+            if (row.shape[0] == 1):
+                return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
+            # only send 1 row?
+            return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
+        except IndexError as _:
+            return SingleObservation(None, None, None)
+
+    def getLocalObservationBefore(self, timestamp: str) -> SingleObservation:
         ''' returns the observation before the timestamp '''
         # this should insdead get one from the engine. or if that fails,
         # pull it directly from disk without a caching mechanism
