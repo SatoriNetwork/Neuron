@@ -82,6 +82,7 @@ class Gatherer():
             return self.request(message)
 
         if self.data is None or self.data.empty:
+            logging.debug('NONE or EMPTY???', print='magenta')
             return askForNextData()
         if (
             isinstance(self.root, pd.DataFrame) and
@@ -89,6 +90,7 @@ class Gatherer():
         ):
             success, row = self.parent.disk.validateAllHashes(self.data)
             if not success:
+                logging.debug('NOT SUCCESS', print='magenta')
                 return self.request(datetime=datetimeFromString(row.index[0]))
             lastTimeStamp = datetimeFromString(self.data.index[-1])
             logging.debug('lastTimeStamp ?= self.lastAsk', lastTimeStamp,
@@ -96,6 +98,7 @@ class Gatherer():
             if lastTimeStamp != self.lastAsk:
                 return self.request(datetime=lastTimeStamp)
             return self.finishProcess()
+        logging.debug('BAD ROOT???', print='magenta')
         return askForNextData()
 
     # def makeTimeout(self, msgId: str):
