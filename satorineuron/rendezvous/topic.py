@@ -33,7 +33,11 @@ class Gatherer():
         self.getData()
 
     def getData(self):
-        self.data = self.parent.disk.read()
+        self.parent.getData()
+
+    @property
+    def data(self):
+        return self.parent.data
 
     @property
     def hashes(self):
@@ -72,17 +76,20 @@ class Gatherer():
 
     def initiate(self, message: PeerMessage = None):
 
-        def askForLatestData():
+        def askForNextData():
             return self.request(message)
 
         if self.data is None or self.data.empty:
-            return askForLatestData()
-        if not self.parent.disk.hasRoot(self.data):
+            return askForNextData()
+        if (
+            isinstance(self.root, pd.DataFrame) and
+            self.parent.disk.matchesRoot(self.root, localDf=self.data)
+        ):
             success, row = self.parent.disk.validateAllHashes(self.data)
-            if success:
-                return askForLatestData()
-            return self.request(datetime=datetimeFromString(row.index[0]))
-        return askForLatestData()
+            if not success:
+                return self.request(datetime=datetimeFromString(row.index[0]))
+            return self.request(datetime=datetimeFromString(self.data.index[-1]))
+        return askForNextData()
 
     # def makeTimeout(self, msgId: str):
     #    ''' handles cancel the existing timeout task before reassigning '''
@@ -148,8 +155,8 @@ class Gatherer():
                           print='teal')
         if self.parent.disk.isARoot(df):
             self.root = df
-            if not self.parent.disk.matchesRoot(df, localDf=self.data):
-                self.parent.disk.write(df)
+            if not self.parent.disk.matchesRoot(self.root, localDf=self.data):
+                self.parent.disk.write(self.root)
         if message.hash not in self.hashes:
             self.parent.disk.append(df)
         self.getData()
@@ -198,8 +205,11 @@ class Topic():
         self.rows = -1
         self.broadcastId = 0
         self.gatherer = Gatherer(self)
-
+        self.getData()
         # self.periodicPurge()
+
+    def getData(self):
+        self.data = self.disk.read()
 
     def nextBroadcastId(self) -> str:
         self.broadcastId += 1
@@ -276,46 +286,26 @@ class Topic():
 
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
         ''' returns the observation after the timestamp '''
-        # this should insdead get one from the engine. or if that fails,
-        # pull it directly from disk without a caching mechanism
-        # the reason we have a caching mechanism in the disk is to know where
-        # to pull (what chunk) rather than reading in the whole file each time
-        # we want one row. so we should get that working first, then point to
-        # the engine data manager, if we want.
-        self.data = self.disk.getObservationAfter(timestamp)
+        # TODO: instead of getting the data all the time we should have a cache
+        # that is the middle layer between the code and hte disk, in ram. We can
+        # access it, and the engine can access it. it should be the source of
+        # truth.
+        self.getData()
         logging.debug('getLocalObservation', self.data,
                       timestamp, print='magenta')
         if (
             not hasattr(self, 'data') or
-            # not hasattr(self, 'hash') or
             self.data is None or
             (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
             logging.debug('getLocalObservation1', print='magenta')
             return SingleObservation(None, None, None)
-        # value, hash are the only columns in the dataframe now
-        # if self.streamId.stream in self.data.columns:
-        #    column = self.streamId.stream
-        # elif self.streamId.target in self.data.columns:
-        #    column = self.streamId.stream
-        # else:
-        #    column = self.data.columns[0]
-        try:
-            # row = self.data.loc[self.data.index > timestamp].iloc[-1]
-
-            row = self.data.loc[self.data.index > timestamp].head(1)
-            if (row.shape[0] == 0):
-                logging.debug('getLocalObservation2', print='magenta')
-                return SingleObservation(None, None, None)
-            if (row.shape[0] == 1):
-                logging.debug('getLocalObservation3', print='magenta')
-                return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
-            # only send 1 row?
-            logging.debug('getLocalObservation4', print='magenta')
-            return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
-        except IndexError as _:
-            logging.debug('getLocalObservation5', print='magenta')
+        df = self.data[self.data.index > timestamp]
+        if df.empty:
+            logging.debug('getLocalObservation2', print='magenta')
             return SingleObservation(None, None, None)
+        logging.debug('getLocalObservation3', print='magenta')
+        return SingleObservation(df.index[0], df['value'].values[0], df['hash'].values[0])
 
     def getLocalObservationBefore(self, timestamp: str) -> SingleObservation:
         ''' returns the observation before the timestamp '''
