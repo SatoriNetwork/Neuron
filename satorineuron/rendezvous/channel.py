@@ -133,12 +133,15 @@ class Channel:
         ''' 
         returns the observation prior to the time of the most recent observation
         '''
+        logging.debug('giveOneObservation', message, print='magenta')
         timestamp: str = message.observationTime
         if isinstance(timestamp, dt.datetime):
             timestamp = datetimeToString(timestamp)
         # observation = self.disk.lastRowStringBefore(timestap=time)
         observation: SingleObservation = (
             self.parent.getLocalObservation(timestamp))
+        logging.debug('giveOneObservation1', observation,
+                      observation.isNone, print='magenta')
         if observation.isNone:
             pass  # send nothing: we don't know.
         elif observation == (None, None):

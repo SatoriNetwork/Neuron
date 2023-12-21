@@ -133,18 +133,19 @@ class Gatherer():
             saves it to disk, and repeats the process with new time
         else: it tells the models data is updated, and cleans up.
         '''
-        # if self.parent.streamId.stream == 'coinbaseADA-USD':
-        #    logging.debug('handleMostPopular 1:',
-        #                  message.hash is None,
-        #                  message.hash in self.hashes,
-        #                  hasattr(self, 'root'), (
-        #                      hasattr(self, 'root') and
-        #                      isinstance(self.root, pd.DataFrame) and
-        #                      self.data.sort_index().iloc[[0]].equals(self.root)),
-        #                  self.parent.disk.validateAllHashes(),
-        #                  print='teal')
         df = message.asDataFrame
         df.columns = ['value', 'hash']
+        if self.parent.streamId.stream == 'coinbaseADA-USD':
+            logging.debug('handleMostPopular 1:',
+                          df,
+                          self.parent.disk.isARoot(df),
+                          hasattr(self, 'root'), (
+                              hasattr(self, 'root') and
+                              isinstance(self.root, pd.DataFrame) and
+                              self.data.sort_index().iloc[[0]].equals(self.root)),
+                          self.parent.disk.matchesRoot(df, localDf=self.data),
+                          self.parent.disk.validateAllHashes(),
+                          print='teal')
         if self.parent.disk.isARoot(df):
             self.root = df
             if not self.parent.disk.matchesRoot(df, localDf=self.data):
@@ -281,14 +282,16 @@ class Topic():
         # to pull (what chunk) rather than reading in the whole file each time
         # we want one row. so we should get that working first, then point to
         # the engine data manager, if we want.
-
         self.data = self.disk.getObservationAfter(timestamp)
+        logging.debug('getLocalObservation', self.data,
+                      timestamp, print='magenta')
         if (
             not hasattr(self, 'data') or
             # not hasattr(self, 'hash') or
             self.data is None or
             (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
+            logging.debug('getLocalObservation1', print='magenta')
             return SingleObservation(None, None, None)
         # value, hash are the only columns in the dataframe now
         # if self.streamId.stream in self.data.columns:
@@ -299,14 +302,19 @@ class Topic():
         #    column = self.data.columns[0]
         try:
             # row = self.data.loc[self.data.index > timestamp].iloc[-1]
-            row = self.data.loc[self.data.index > timestamp].tail(1)
+
+            row = self.data.loc[self.data.index > timestamp].head(1)
             if (row.shape[0] == 0):
+                logging.debug('getLocalObservation2', print='magenta')
                 return SingleObservation(None, None, None)
             if (row.shape[0] == 1):
+                logging.debug('getLocalObservation3', print='magenta')
                 return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
             # only send 1 row?
+            logging.debug('getLocalObservation4', print='magenta')
             return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
         except IndexError as _:
+            logging.debug('getLocalObservation5', print='magenta')
             return SingleObservation(None, None, None)
 
     def getLocalObservationBefore(self, timestamp: str) -> SingleObservation:
