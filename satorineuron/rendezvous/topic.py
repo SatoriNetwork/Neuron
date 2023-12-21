@@ -28,6 +28,8 @@ class Gatherer():
         self.refresh()
 
     def refresh(self):
+        self.lastAsk = None
+        # self.lastHeard = None
         self.timeout = None
         self.messages: dict[str, list[PeerMessage]] = {}
         self.getData()
@@ -88,7 +90,10 @@ class Gatherer():
             success, row = self.parent.disk.validateAllHashes(self.data)
             if not success:
                 return self.request(datetime=datetimeFromString(row.index[0]))
-            return self.request(datetime=datetimeFromString(self.data.index[-1]))
+            lastTimeStamp = datetimeFromString(self.data.index[-1])
+            if lastTimeStamp != self.lastAsk:
+                return self.request(datetime=lastTimeStamp)
+            return self.finishProcess()
         return askForNextData()
 
     # def makeTimeout(self, msgId: str):
@@ -103,12 +108,14 @@ class Gatherer():
     #        msgId=msgId)
 
     def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
+        datetime = datetime or (
+            datetimeFromString(message.observationTime)
+            if message is not None else now())
+        self.lastAsk = datetime
         msgId = self.parent.nextBroadcastId()
         # self.makeTimeout(msgId) # timeout pattern unreliable
         self.parent.requestOneObservation(
-            datetime=datetime or (
-                datetimeFromString(message.observationTime)
-                if message is not None else now()),
+            datetime=datetime,
             msgId=msgId)
         self.messages[msgId]: list[PeerMessage] = []
 
