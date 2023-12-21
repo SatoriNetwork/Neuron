@@ -90,7 +90,7 @@ class Gatherer():
         ):
             success, row = self.parent.disk.validateAllHashes(self.data)
             if not success:
-                logging.debug('NOT SUCCESS', print='magenta')
+                logging.debug('NOT SUCCESS - Row', row, print='magenta')
                 return self.request(datetime=datetimeFromString(row.index[0]))
             lastTimeStamp = datetimeFromString(self.data.index[-1])
             logging.debug('lastTimeStamp ?= self.lastAsk', lastTimeStamp,
