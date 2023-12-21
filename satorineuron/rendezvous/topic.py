@@ -222,12 +222,6 @@ class Topic():
 
     def getData(self):
         self.data = self.disk.read()
-        self.verifyData()
-
-    def verifyData(self):
-        if not self.disk.validateAllHashes(self.data):
-            if self.disk.write(self.disk.hashDataFrame(self.data)):
-                self.getData()
 
     def nextBroadcastId(self) -> str:
         self.broadcastId += 1
