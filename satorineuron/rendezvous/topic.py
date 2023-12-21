@@ -91,6 +91,8 @@ class Gatherer():
             if not success:
                 return self.request(datetime=datetimeFromString(row.index[0]))
             lastTimeStamp = datetimeFromString(self.data.index[-1])
+            logging.debug('lastTimeStamp ?= self.lastAsk', lastTimeStamp,
+                          '==' if lastTimeStamp == self.lastAsk else '!=', self.lastAsk, print='red')
             if lastTimeStamp != self.lastAsk:
                 return self.request(datetime=lastTimeStamp)
             return self.finishProcess()
