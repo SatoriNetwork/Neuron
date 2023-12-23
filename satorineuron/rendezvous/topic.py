@@ -46,6 +46,7 @@ class Gatherer():
 
     def prepare(self):
         ''' we verify that our first row (the root) matches the consensus '''
+        self.cleanup()
         self.request(datetime=earliestDate())
         # if self.data is None or self.data.empty:
         # if self.data.shape[0] > 1:
@@ -60,7 +61,7 @@ class Gatherer():
         ''' incase we lose connection, try again in 60 seconds '''
         from satorineuron.init.start import getStart
         asyncThread = getStart().asyncThread
-        #if hasattr(self, 'supervisor') and self.supervisor is not None:
+        # if hasattr(self, 'supervisor') and self.supervisor is not None:
         #    asyncThread.cancelTask(self.supervisor)
         self.supervisor = asyncThread.repeatRun(
             task=self.initiateIfIdle,
