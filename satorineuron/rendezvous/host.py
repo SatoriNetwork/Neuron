@@ -1,12 +1,11 @@
 ''' 
 we discovered that udp hole punching inside docker containers is not always 
-possible. we thought it was.
+possible because of the way the docker nat works. we thought it was.
 this host script is meant to run on the host machine. 
 it will establish a sse connection with the flask server running inside
 the container. it will handle the UDP hole punching, passing data between the
 flask server and the remote peers.
 '''
-import time
 import ast
 import socket
 import asyncio
@@ -15,6 +14,14 @@ import aiohttp
 import requests
 import traceback
 # from requests_toolbelt.multipart.encoder import MultipartEncoder
+
+
+def greyPrint(msg: str):
+    return print(
+        "\033[90m"  # grey
+        + msg +
+        "\033[0m"  # reset
+    )
 
 
 class SseTimeoutFailure(Exception):
@@ -59,7 +66,7 @@ class UDPRelay():
                         if line.startswith(b'data:'):
                             self.relayToPeer(line.decode('utf-8')[5:].strip())
             except asyncio.TimeoutError:
-                print("SSE connection timed out...")
+                greyPrint("SSE connection timed out...")
                 raise SseTimeoutFailure()
 
     def cancelNeuronListener(self):
@@ -84,7 +91,7 @@ class UDPRelay():
                 if isinstance(literal, list) and len(literal) > 0:
                     return literal
             except Exception as e:
-                print(f'unable to parse messages: {messages}, error: {e}')
+                greyPrint(f'unable to parse messages: {messages}, error: {e}')
             return []
 
         def parseMessage(msg) -> tuple[int, str, int, bytes]:
@@ -104,9 +111,9 @@ class UDPRelay():
             localPort, remoteIp, remotePort, data = parseMessage(msg)
             if localPort is None:
                 return
-            print('parsed:',
-                  'localPort:', localPort, 'remoteIp:', remoteIp,
-                  'remotePort', remotePort, 'data', data)
+            # greyPrint('parsed:',
+            #      'localPort:', localPort, 'remoteIp:', remoteIp,
+            #      'remotePort', remotePort, 'data', data)
             sock = self.getSocketByLocalPort(localPort)
             if sock is None:
                 return
@@ -128,7 +135,7 @@ class UDPRelay():
                 data, addr = await self.loop.sock_recvfrom(sock, 1024)
                 self.handle(sock, data, addr)
             except Exception as e:
-                print('listenTo erorr:', e)
+                greyPrint('listenTo erorr:', e)
                 break
         # close?
 
@@ -140,7 +147,7 @@ class UDPRelay():
                 sock.setblocking(False)
                 return sock
             except Exception as e:
-                print('unable to bind to port', localPort, e)
+                greyPrint('unable to bind to port', localPort, e)
             return None
 
         def punch(sock: socket.socket, remoteIp: str, remotePort: int):
@@ -171,7 +178,7 @@ class UDPRelay():
         remotePort: int,
         data: bytes
     ):
-        print('speaking to', remoteIp, remotePort, data)
+        greyPrint('sending to', remoteIp, remotePort, data)
         sock.sendto(data, (remoteIp, remotePort))
 
     async def cancel(self):
@@ -197,7 +204,8 @@ class UDPRelay():
 
     def handle(self, sock: socket.socket, data: bytes, addr: tuple[str, int]):
         ''' send to flask server with identifying information '''
-        print(f"Received {data} from {addr} on {UDPRelay.getLocalPort(sock)}")
+        greyPrint(
+            f"Received {data} from {addr} on {UDPRelay.getLocalPort(sock)}")
         # # this isn't ideal because it converts data to a string automatically
         # r = requests.post(
         #    UDPRelay.satoriUrl('/message'),
@@ -222,7 +230,7 @@ class UDPRelay():
         #    data=multipart_data,
         #    headers={'Content-Type': multipart_data.content_type})
         if data in [b'punch', b'payload']:
-            print('skipping punch or payload')
+            greyPrint('skipping punch or payload')
             return
         requests.post(
             UDPRelay.satoriUrl('/message'),
@@ -247,36 +255,36 @@ async def main():
     def getPorts() -> dict[int, list[tuple[str, int]]]:
         ''' gets ports from the flask server '''
         r = requests.get(UDPRelay.satoriUrl('/ports'))
-        # print(r.status_code)
-        # print(r.text)
+        # greyPrint(r.status_code)
+        # greyPrint(r.text)
         if r.status_code == 200:
             try:
                 ports: dict = ast.literal_eval(r.text)
                 validatedPorts = {}
-                # print(ports)
-                # print('---')
+                # greyPrint(ports)
+                # greyPrint('---')
                 for localPort, remotes in ports.items():
-                    # print(localPort, remotes)
+                    # greyPrint(localPort, remotes)
                     if (
                         isinstance(localPort, int) and
                         isinstance(remotes, list)
                     ):
-                        # print('valid')
+                        # greyPrint('valid')
                         validatedPorts[localPort] = []
-                        # print(validatedPorts)
+                        # greyPrint(validatedPorts)
                         for remote in remotes:
-                            # print('remote', remote)
+                            # greyPrint('remote', remote)
                             if (
                                 isinstance(remote, tuple) and
                                 len(remote) == 2 and
                                 isinstance(remote[0], str) and
                                 isinstance(remote[1], int)
                             ):
-                                # print('valid---')
+                                # greyPrint('valid---')
                                 validatedPorts[localPort].append(remote)
                 return validatedPorts
             except (ValueError, TypeError):
-                print('Invalid format of received data')
+                greyPrint('Invalid format of received data')
                 return {}
         return {}
 
@@ -284,7 +292,7 @@ async def main():
         ''' tells neuron to reconnect to rendezvous (to refresh ports) '''
         r = requests.get(UDPRelay.satoriUrl('/reconnect'))
         if r.status_code == 200:
-            print('reconnected to rendezvous server')
+            greyPrint('reconnected to rendezvous server')
 
     async def waitForNeuron():
         notified = False
@@ -293,36 +301,34 @@ async def main():
                 r = requests.get(UDPRelay.satoriUrl('/ports'))
                 if r.status_code == 200:
                     if notified:
-                        print('established connection to Satori Neuron')
+                        greyPrint('established connection to Satori Neuron')
                     return
             except Exception as _:
                 if not notified:
-                    print('waiting for Satori Neuron to start')
+                    greyPrint('waiting for Satori Neuron to start')
                     notified = True
             await asyncio.sleep(1)
 
     while True:
         try:
-            print('creating object!')
             reconnect = True
             udpRelay = UDPRelay(getPorts())
             await udpRelay.initSockets()
             try:
                 secs = seconds()
-                print(secs)
                 await asyncio.wait_for(udpRelay.listen(), secs)
             except asyncio.TimeoutError:
-                print('udpRelay cycling')
+                greyPrint('udpRelay cycling')
             except SseTimeoutFailure:
-                print("...attempting to reconnect to neuron...")
+                greyPrint("...attempting to reconnect to neuron...")
                 # udpRelay.cancelNeuronListener()
                 # udpRelay.initNeuronListener(UDPRelay.satoriUrl('/stream'))
         except requests.exceptions.ConnectionError as e:
-            print(f'An error occurred: {e}')
+            # greyPrint(f'An error occurred: {e}')
             await waitForNeuron()
             reconnect = False
         except Exception as e:
-            print(f'An error occurred: {e}')
+            greyPrint(f'An error occurred: {e}')
             traceback.print_exc()
         try:
             if reconnect:

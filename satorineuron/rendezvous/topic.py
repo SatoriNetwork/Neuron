@@ -259,7 +259,8 @@ class Topic(Cached):
         #     self.topicSocket.sendto(msg.asJsonStr.decode(),
         #                             (self.peerIp, self.port))
         # convert to bytes message
-        print('in send', remoteIp, remotePort, cmd, msgs)
+
+        # print('in send', remoteIp, remotePort, cmd, msgs)
         self.outbox((self.localPort, remoteIp, remotePort, cmd))
 
     def requestOneObservation(self, datetime: dt.datetime, msgId: int):

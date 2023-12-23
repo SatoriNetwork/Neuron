@@ -127,7 +127,7 @@ class PeerMessage(Message):
                 self.data = parts[4]
                 self.hash = parts[5]
         except Exception as e:
-            print(e)
+            logging.error(e, print=True)
 
     @staticmethod
     def parse(raw: Union[str, bytes], sent: bool, time: dt.datetime = None) -> 'PeerMessage':
@@ -156,7 +156,7 @@ class PeerMessage(Message):
                     data=parts[4],
                     hash=parts[5])
         except Exception as e:
-            print(e)
+            logging.error(e, print=True)
 
     def __eq__(self, __value: object) -> bool:
         return self.raw == __value.raw

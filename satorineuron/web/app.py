@@ -820,7 +820,7 @@ def udpMessage():
     remoteIp = request.headers.get('remoteIp')
     remotePort = int(request.headers.get('remotePort'))
     localPort = int(request.headers.get('localPort'))
-    print('udpMessage', data, 'from', remoteIp, remotePort, 'to', localPort)
+    # print('udpMessage', data, 'from', remoteIp, remotePort, 'to', localPort)
     if any(v is None for v in [localPort, remoteIp, remotePort, data]):
         return 'fail'
     start.peer.passMessage(localPort, remoteIp, remotePort, message=data)

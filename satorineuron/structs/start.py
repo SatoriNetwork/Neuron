@@ -29,7 +29,6 @@ class StartupDagStruct(object):
         self.server: SatoriServerClient = None
         self.pubsub: SatoriPubSubConn = None
         self.peer: 'rendezvous.RendezvousEngine' = None
-        # self.retro: Retro = None
         self.relay: 'RawStreamRelayEngine' = None
         self.engine: 'satoriengine.Engine' = None
         self.publications: list[Stream] = None
@@ -59,17 +58,6 @@ class StartupDagStruct(object):
 
     def rendezvousConnect(self):
         ''' establish a rendezvous connection. '''
-        pass
-
-    def retroConnect(
-        self,
-        subscriptions: Union[list, None] = None,
-        extraSubscriptions: Union[list, None] = None,
-    ):
-        '''
-        establish a retro connection. we can subscribe to anything in retro 
-        so allow override or additional subscriptions here.
-        '''
         pass
 
     def startRelay(self):

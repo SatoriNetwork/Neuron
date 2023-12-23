@@ -41,8 +41,6 @@ class RendezvousByRest():
                 logging.error('command not valid', cmd, print=True)
                 return
             try:
-                print('msgs', msgs)
-                print('type(msgs)', type(msgs))
                 payload = ToServerProtocol.compile(cmd, *[
                     x for x in [str(self.msgId), *(msgs or [])]
                     if isinstance(x, int) or (x is not None and len(x) > 0)])

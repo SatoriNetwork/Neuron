@@ -18,7 +18,6 @@ from satorineuron import config
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 # from satorilib.api.udp.rendezvous import UDPRendezvousConnection  # todo: remove from lib
 from satorineuron.rendezvous import rendezvous
-# from satorineuron.retro import Retro
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.structs.start import StartupDagStruct
 
@@ -61,7 +60,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.server: SatoriServerClient
         self.pubsub: SatoriPubSubConn = None
         self.peer: rendezvous.RendezvousEngine
-        # self.retro: Retro = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
@@ -83,7 +81,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.rendezvousConnect()
         # TODO NEXT: get download of histories working
         self.incrementallyDownloadDatasets()
-        # self.retroConnect()
         # self.downloadDatasets()
 
     def createRelayValidation(self):
@@ -168,29 +165,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     signature=self.wallet.sign(self.key),
                     signed=self.key,
                     signedStreamIds=self.signedStreamIds))
-        else:
-            raise Exception('no key provided by satori server')
-
-    def retroConnect(
-        self,
-        subscriptions: Union[list, None] = None,
-        extraSubscriptions: Union[list, None] = None,
-    ):
-        '''
-        establish a retro connection. we can subscribe to anything in retro 
-        so allow override or additional subscriptions here.
-        '''
-        if self.retro is not None:
-            self.retro.disconnect()
-            self.retro = None
-        if self.key:
-            signature = self.wallet.sign(self.key)
-            self.retro = satorineuron.engine.establishConnection(
-                url=self.urlPubsub,
-                pubkey=self.wallet.publicKey,
-                key=signature.decode() + '|' + self.key,
-                subscriptions=subscriptions or (
-                    self.subscriptions + (extraSubscriptions or [])))
         else:
             raise Exception('no key provided by satori server')
 

@@ -51,7 +51,6 @@ class GathererBefore():
             return self.request()
         if self.data.shape[0] > 1:
             trunk = self.data.iloc[[1]]
-            logging.debug('in prepare', trunk, print='blue')
             self.request(datetime=datetimeFromString(trunk.index[0]))
         else:
             self.request()
