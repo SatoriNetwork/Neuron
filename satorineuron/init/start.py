@@ -24,6 +24,7 @@ from satorineuron.structs.start import StartupDagStruct
 
 
 def getStart():
+    ''' returns StartupDag singleton '''
     return StartupDag()
 # engine_start = StartupDag()
 
@@ -55,6 +56,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publicationKeys: str
         # self.ipfs: Ipfs = Ipfs()
         self.signedStreamIds: list[SignedStreamId]
+        self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
         self.pubsub: SatoriPubSubConn = None
@@ -65,6 +67,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.asyncThread: AsyncThread = AsyncThread()
+
+    def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
+        ''' returns the reference to the cache of a stream '''
+        return self.caches.get(streamId)
 
     def start(self):
         ''' start the satori engine. '''
@@ -99,6 +105,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications = [
             Stream.fromMap(x)
             for x in json.loads(self.details.publications)]
+        self.caches = {
+            x.streamId: disk.Cache(id=x.streamId)
+            for x in set(self.subscriptions + self.publications)}
         self.signedStreamIds = [
             SignedStreamId(
                 source=s.id.source,

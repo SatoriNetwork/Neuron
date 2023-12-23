@@ -3,10 +3,11 @@ import time
 import datetime as dt
 import pandas as pd
 from satorilib import logging
-from satorilib.api.disk import Disk
+from satorilib.concepts import StreamId
+from satorilib.api.disk import Cached
 from satorilib.api.time import datetimeFromString, now, earliestDate
 from satorirendezvous.lib.lock import LockableDict
-from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
+from satorineuron.rendezvous.structs.message import PeerMessage
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.rendezvous.structs.domain import SingleObservation
@@ -32,10 +33,6 @@ class Gatherer():
         # self.lastHeard = None
         self.timeout = None
         self.messages: dict[str, list[PeerMessage]] = {}
-        self.getData()
-
-    def getData(self):
-        self.parent.getData()
 
     @property
     def data(self):
@@ -155,7 +152,6 @@ class Gatherer():
                 self.parent.disk.write(self.root)
         if message.hash not in self.hashes:
             self.parent.disk.append(df)
-        self.getData()
         # self.messagesToSave.append(message)
         # self.parent.tellModelsAboutNewHistory()
         self.initiate(message)
@@ -180,7 +176,7 @@ class Gatherer():
         # self.refresh()
 
 
-class Topic():
+class Topic(Cached):
     ''' manages all our udp channels for a single topic '''
 
     def __init__(
@@ -195,16 +191,15 @@ class Topic():
         # super().__init__(name=signedStreamId.topic(), port=localPort)
         self.name = signedStreamId.topic()
         self.signedStreamId = signedStreamId
-        self.streamId = signedStreamId.streamId
-        self.disk = Disk(id=self.streamId)
+        # this should be moved to the start... but we have to do it for every topic... perhaps the start should just profice reference these... for engine...
         self.rows = -1
         self.broadcastId = 0
         self.gatherer = Gatherer(self)
-        self.getData()
         # self.periodicPurge()
 
-    def getData(self):
-        self.data = self.disk.read()
+    @property
+    def streamId(self) -> StreamId:
+        return self.signedStreamId.streamId
 
     def nextBroadcastId(self) -> str:
         self.broadcastId += 1
@@ -281,13 +276,7 @@ class Topic():
 
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
         ''' returns the observation after the timestamp '''
-        # TODO: instead of getting the data all the time we should have a cache
-        # that is the middle layer between the code and hte disk, in ram. We can
-        # access it, and the engine can access it. it should be the source of
-        # truth.
-        self.getData()
         if (
-            not hasattr(self, 'data') or
             self.data is None or
             (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
@@ -306,24 +295,22 @@ class Topic():
         # we want one row. so we should get that working first, then point to
         # the engine data manager, if we want.
 
-        self.data = self.disk.getObservationBefore(timestamp)
+        before = self.disk.getObservationBefore(timestamp)
         if (
-            not hasattr(self, 'data') or
-            # not hasattr(self, 'hash') or
-            self.data is None or
-            (isinstance(self.data, pd.DataFrame) and self.data.empty)
+            before is None or
+            (isinstance(before, pd.DataFrame) and before.empty)
         ):
             return SingleObservation(None, None, None)
         # value, hash are the only columns in the dataframe now
-        # if self.streamId.stream in self.data.columns:
+        # if self.streamId.stream in before.columns:
         #    column = self.streamId.stream
-        # elif self.streamId.target in self.data.columns:
+        # elif self.streamId.target in before.columns:
         #    column = self.streamId.stream
         # else:
-        #    column = self.data.columns[0]
+        #    column = before.columns[0]
         try:
-            # row = self.data.loc[self.data.index < timestamp].iloc[-1]
-            row = self.data.loc[self.data.index < timestamp].tail(1)
+            # row = before.loc[before.index < timestamp].iloc[-1]
+            row = before.loc[before.index < timestamp].tail(1)
             if (row.shape[0] == 0):
                 return SingleObservation(None, None, None)
             if (row.shape[0] == 1):
@@ -335,12 +322,8 @@ class Topic():
 
     def getLocalCount(self, timestamp: str) -> Union[int, None]:
         ''' returns the count of observations before the timestamp '''
-        if self.disk.exists() and self.disk.getRowCounts() > self.rows:
-            self.data = self.disk.read()
-        if not hasattr(self, 'data') or self.data is None or (
-            isinstance(self.data, pd.DataFrame) and self.data.empty
-        ):
-            return None
+        if timestamp is None:
+            return self.disk.getRowCounts()
         try:
             rows = self.data.loc[self.data.index < timestamp]
             return rows.shape[0]
@@ -352,7 +335,7 @@ class Topic():
         if self.disk.exists():
             self.disk.getHashBefore(timestamp)
         else:
-            if not hasattr(self, 'data') or self.data is None or (
+            if self.data is None or (
                 isinstance(self.data, pd.DataFrame) and self.data.empty
             ):
                 return None

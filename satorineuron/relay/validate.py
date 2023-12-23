@@ -4,9 +4,9 @@ import json
 import pandas as pd
 import datetime as dt
 from functools import partial
-from satorilib.api.disk import Disk
 from satorilib.concepts.structs import Observation, StreamId
 from satorilib.api import hash
+from satorilib.api.disk import Cached
 from satorineuron import config
 from satorineuron import logging
 from satorineuron.relay.history import GetHistory
@@ -264,15 +264,8 @@ class ValidateRelayStream(object):
                 return False
 
         def saveIncrementally():
-            itts = 0
             while not historyInstance.isDone():
-                # save to disk
                 saver.saveIncremental(historyInstance.getNext())
-                itts += 1
-                if itts > 10000:
-                    saver.compress()
-                    itts = 0
-            saver.compress()
 
         historyInstance = None
         if data.get('history') is not None:
@@ -304,13 +297,16 @@ class ValidateRelayStream(object):
 # hook: "def postRequestHook(r: str): return json.loads(r).get('current_weather', {}).get('temperature')"
 
 
-class RelayStreamHistorySaver(object):
+class RelayStreamHistorySaver(Cached):
     ''' history save to disk '''
 
     def __init__(self, id: StreamId, *args):
         super(RelayStreamHistorySaver, self).__init__(*args)
         self.id: StreamId = id
-        self.disk = Disk(id=id)
+
+    @property
+    def streamId(self) -> StreamId:
+        return self.id
 
     def saveAll(self, values: list):
         ''' save this observation to the right parquet file on disk '''
@@ -356,13 +352,6 @@ class RelayStreamHistorySaver(object):
             'topic': self.id.topic(),
             'data': value
         }).df.copy())
-
-    def compress(self):
-        ''' compress incrementals to permanent on disk '''
-        try:
-            self.disk.compress()
-        except Exception as e:
-            logging.error('ERROR: unable to compress:', e)
 
     def pin(self, path: str = None):
         ''' pins the data to ipfs, returns pin address '''
