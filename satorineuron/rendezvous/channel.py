@@ -51,18 +51,20 @@ class Channel:
 
     def setupPing(self):
 
-        def pingForever(interval=self.pingInterval):
-            while True:
-                time.sleep(interval)
-                self.send(
-                    cmd=PeerProtocol.ping())
-                # a ping shouldn't be a request, I'm not requesting anything
-                # cmd=PeerProtocol.request(
-                #    time=datetimeToString(now()),
-                #    subcmd=PeerProtocol.pingSub))
-
-        self.pingThread = threading.Thread(target=pingForever)
-        self.pingThread.start()
+        def pingForever():
+            self.send(cmd=PeerProtocol.ping())
+            # a ping shouldn't be a request, I'm not requesting anything
+            # cmd=PeerProtocol.request(
+            #    time=datetimeToString(now()),
+            #    subcmd=PeerProtocol.pingSub))
+        from satorineuron.init.start import getStart
+        self.pingThread = getStart().asyncThread.repeatRun(
+            task=pingForever,
+            interval=self.pingInterval)
+        # we could gradually increase the interval as we continue to hear from
+        # them, but it would have to be a response system because we wouldn't
+        # know otherwise if they're hearing us. right now it's not, it's just a
+        # push system. so we'll just keep it at 28 seconds for now.
 
     # override
     def onMessage(

@@ -132,6 +132,11 @@ class RawStreamRelayEngine:
                 'result is None, something is wrong, maybe the API is down?')
 
     def runForever(self):
+        # though I would like to use the asyncThread for this, as it would be
+        # simpler to reason about, I'm not sure how I would reduce the number
+        # of api calls as we are doing here (see uri logic) for streams that all
+        # call the same api. so we're leaving it as is.
+
         def cadence(stream: Stream):
             ''' returns cadence in seconds, engine does not allow < 60 '''
             return max(stream.cadence or 60, 60)

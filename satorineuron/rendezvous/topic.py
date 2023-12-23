@@ -60,8 +60,8 @@ class Gatherer():
         ''' incase we lose connection, try again in 60 seconds '''
         from satorineuron.init.start import getStart
         asyncThread = getStart().asyncThread
-        if hasattr(self, 'supervisor') and self.supervisor is not None:
-            asyncThread.cancelTask(self.supervisor)
+        #if hasattr(self, 'supervisor') and self.supervisor is not None:
+        #    asyncThread.cancelTask(self.supervisor)
         self.supervisor = asyncThread.repeatRun(
             task=self.initiateIfIdle,
             interval=60)
@@ -191,7 +191,6 @@ class Topic(Cached):
         # super().__init__(name=signedStreamId.topic(), port=localPort)
         self.name = signedStreamId.topic()
         self.signedStreamId = signedStreamId
-        # this should be moved to the start... but we have to do it for every topic... perhaps the start should just profice reference these... for engine...
         self.rows = -1
         self.broadcastId = 0
         self.gatherer = Gatherer(self)

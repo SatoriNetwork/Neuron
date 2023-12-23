@@ -43,7 +43,7 @@ class RendezvousEngine():
             return
         channel.onMessage(message=message, sent=False)
 
-    def runForever(self, interval=60*60):
+    def runForever(self):
         '''
         for all of our streams (subscribe to (predict, subscribe but not 
         predict), publish to (predict, relay)) we '''
@@ -51,15 +51,15 @@ class RendezvousEngine():
         relayStreamIds = [
             stream.streamId
             for stream in getStart().relay.streams]
-        while True:
-            for topic in self.peer.topics.values():
-                if topic.streamId not in relayStreamIds:
-                    topic.updateHistoryIncrementally()
-            time.sleep(interval)
+        for topic in self.peer.topics.values():
+            if topic.streamId not in relayStreamIds:
+                topic.updateHistoryIncrementally()
 
     def run(self):
-        self.thread = threading.Thread(target=self.runForever, daemon=True)
-        self.thread.start()
+        from satorineuron.init.start import getStart
+        self.thread = getStart().asyncThread.repeatRun(
+            task=self.runForever,
+            interval=60*60)
 
 
 def generatePeer(

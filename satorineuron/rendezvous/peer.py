@@ -51,19 +51,33 @@ class RendezvousPeer():
         self.connect(rendezvousHost)
         if handlePeriodicCheckin:
             self.periodicCheckinSeconds = periodicCheckinSeconds
-            self.periodicCheckin()
+            # does this work from the init, 
+            # or do we have to call it after setting up the object?
+            self.periodicCheckin() 
 
     def toOutbox(self, message: tuple[int, str, int, bytes]):
         self.outbox.append(message)
 
-    def periodicCheckin(self):
+    def periodicCheckinUsingThreading(self):
+        ''' this is the old way of doing it '''
         self.checker = threading.Thread(target=self.checkin, daemon=True)
         self.checker.start()
 
-    def checkin(self):
+    def checkinUsingThreading(self):
         while True:
             time.sleep(self.periodicCheckinSeconds)
             self.rendezvous.checkin()
+
+    def periodicCheckin(self):
+        ''' this is the new way of doing it '''
+        from satorineuron.init.start import getStart
+        asyncThread = getStart().asyncThread
+        self.checker = asyncThread.repeatRun(
+            task=self.checkin,
+            interval=self.periodicCheckinSeconds)
+
+    def checkin(self):
+        self.rendezvous.checkin()
 
     def createTopics(self):
         with self.topics:

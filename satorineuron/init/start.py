@@ -278,17 +278,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def pause(self, timeout: int = 60):
         ''' pause the engine. '''
-        def pauseEngineFor():
-            # self.engine.pause()
-            self.paused = True
-            time.sleep(timeout)
-            # self.engine.unpause()
+        def unpause():
             self.paused = False
+            self.asyncThread.cancelTask(self.pauseThread)
             self.pauseThread = None
 
-        thread = threading.Thread(target=pauseEngineFor, daemon=True)
-        thread.start()
-        self.pauseThread = thread
+        self.paused = True
+        # self.engine.pause()
+        self.pauseThread = self.asyncThread.delayedRun(
+            task=unpause,
+            delay=timeout)
 
     def unpause(self):
         ''' pause the engine. '''
