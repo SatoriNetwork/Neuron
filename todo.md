@@ -17,5 +17,5 @@ DONE 7. rebuild the docker containers
 12. release alpha Jan 1
 13. research solution on avalanche
 14. fix installer - must make sure to pull the latest version explicitly
-15. fix installer - windows doesn't recognize it as safe
+DONE 15. fix installer - windows doesn't recognize it as safe
 16. fix installer - on one computer windows defender flagged it as a "bearfoos" virus, so we have to figure that out.
