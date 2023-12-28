@@ -75,6 +75,7 @@ class Gatherer():
             self.initiate()
 
     def initiate(self, message: PeerMessage = None):
+        ''' here we decide what to ask for '''
 
         def askForNextData():
             return self.request(message)
@@ -82,6 +83,7 @@ class Gatherer():
         if self.data is None or self.data.empty:
             return askForNextData()
         if (
+            hasattr(self, 'root') and
             isinstance(self.root, pd.DataFrame) and
             self.parent.disk.matchesRoot(self.root, localDf=self.data)
         ):
@@ -118,12 +120,30 @@ class Gatherer():
         self.messages[msgId]: list[PeerMessage] = []
 
     def onResponse(self, message: PeerMessage):
+        # we're running in to a problem, we're not always connected to everyone
+        # in the group. so what we need to do instead is take the first response
+        # and if there's a problem with this, we'll make it so the publisher of
+        # the stream can sign every observation or something, just as we has the
+        # chain of observations. So for now we're removing the popular method,
+        # and we'll just trust the first person to respond.
         self.lastHeard = time.time()
-        msg = self.discoverPopularResponse(message)
+        msg = self.inspectResponse(message)
         if msg is not None:
             self.handleMostPopular(msg)
 
+    def inspectResponse(self, message: PeerMessage) -> Union[PeerMessage, None]:
+        ''' if seen a response to this already, we discard, otherwise return '''
+        if message.msgId in self.messages.keys():
+            return None
+        self.messages[message.msgId].append(message)
+        return message
+
     def discoverPopularResponse(self, message: PeerMessage) -> Union[PeerMessage, None]:
+        ''' 
+        dep. superceded by inspectResponse.
+        here we used to accumulate all responses and take the most popular
+        but we're not using this anymore. 
+        '''
         self.messages[message.msgId].append(message)
         messages = self.messages[message.msgId]
         mostPopularResponse = max(
