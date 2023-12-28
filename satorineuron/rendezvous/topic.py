@@ -187,6 +187,7 @@ class Gatherer():
                 self.parent.disk.write(self.root)
         if message.hash not in self.hashes:
             logging.debug('hash not present', print='teal')
+            logging.debug('df:', df, df.dtypes, print='teal')
             self.parent.disk.append(df)
         # self.messagesToSave.append(message)
         # self.parent.tellModelsAboutNewHistory()
