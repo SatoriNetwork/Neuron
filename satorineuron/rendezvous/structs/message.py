@@ -63,6 +63,7 @@ class PeerMessage(Message):
             'data': [self.data],
             'hash': [self.hash]
         })
+        df = df.astype('object')
         df.set_index('observationTime', inplace=True)
         return df
 
@@ -226,6 +227,7 @@ class PeerMessages(LockableList[PeerMessage]):
             'data': [message.data for message in self],
             'hash': [message.hash for message in self]
         })
+        df = df.astype('object')
         df.set_index('observationTime', inplace=True)
         return df
 
