@@ -78,9 +78,13 @@ class Gatherer():
         ''' here we decide what to ask for '''
 
         def askForNextData():
+            logging.debug('askForNextData', print='teal')
             return self.request(message)
 
+        logging.debug('in initiate', message, print='teal')
         if self.data is None or self.data.empty:
+            logging.debug('data none or empty',
+                          self.data is None, print='teal')
             return askForNextData()
         if (
             hasattr(self, 'root') and
@@ -89,11 +93,15 @@ class Gatherer():
         ):
             success, row = self.parent.disk.validateAllHashes(self.data)
             if not success:
+                logging.debug('first', print='teal')
                 return self.request(datetime=datetimeFromString(row.index[0]))
             lastTimeStamp = datetimeFromString(self.data.index[-1])
             if lastTimeStamp != self.lastAsk:
+                logging.debug('second', print='teal')
                 return self.request(datetime=lastTimeStamp)
+            logging.debug('third', print='teal')
             return self.finishProcess()
+        logging.debug('fourth', print='teal')
         return askForNextData()
 
     # def makeTimeout(self, msgId: str):
@@ -108,11 +116,14 @@ class Gatherer():
     #        msgId=msgId)
 
     def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
+        logging.debug('in request', print='magenta')
         datetime = datetime or (
             datetimeFromString(message.observationTime)
             if message is not None else now())
+        logging.debug('datetime', datetime, print='magenta')
         self.lastAsk = datetime
         msgId = self.parent.nextBroadcastId()
+        logging.debug('msgId', msgId, print='magenta')
         # self.makeTimeout(msgId) # timeout pattern unreliable
         self.parent.requestOneObservation(
             datetime=datetime,
@@ -133,7 +144,7 @@ class Gatherer():
 
     def inspectResponse(self, message: PeerMessage) -> Union[PeerMessage, None]:
         ''' if seen a response to this already, we discard, otherwise return '''
-        if message.msgId in self.messages.keys():
+        if len(self.messages.get(message.msgId, [])) > 0:
             return None
         self.messages[message.msgId].append(message)
         return message
@@ -165,13 +176,17 @@ class Gatherer():
             saves it to disk, and repeats the process with new time
         else: it tells the models data is updated, and cleans up.
         '''
+        logging.debug('handling message:', message, print='teal')
         df = message.asDataFrame
         df.columns = ['value', 'hash']
         if self.parent.disk.isARoot(df):
+            logging.debug('is root', print='teal')
             self.root = df
             if not self.parent.disk.matchesRoot(self.root, localDf=self.data):
+                logging.debug('discovered root', print='teal')
                 self.parent.disk.write(self.root)
         if message.hash not in self.hashes:
+            logging.debug('hash not present', print='teal')
             self.parent.disk.append(df)
         # self.messagesToSave.append(message)
         # self.parent.tellModelsAboutNewHistory()
