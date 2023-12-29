@@ -188,6 +188,8 @@ class Gatherer():
         if message.hash not in self.hashes:
             logging.debug('hash not present', print='teal')
             logging.debug('df:', df, df.dtypes, print='teal')
+            logging.debug('stream:', self.parent.streamId,
+                          'df:', df, print='yellow')
             self.parent.disk.append(df)
         # self.messagesToSave.append(message)
         # self.parent.tellModelsAboutNewHistory()

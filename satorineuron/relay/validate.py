@@ -348,6 +348,7 @@ class RelayStreamHistorySaver(Cached):
 
     def saveIncremental(self, value):
         ''' save this observation to the right parquet file on disk '''
+        self.streamId = self.id  # required by Cache
         self.disk.append(Observation.parse({
             'topic': self.id.topic(),
             'data': value
