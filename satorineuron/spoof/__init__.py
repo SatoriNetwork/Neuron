@@ -47,9 +47,6 @@ class Streamr():
         return index, json.dumps(d[index])
 
     def provideIncrementalWithId(self):
-        # todo: in the real stream, if the observationId is obviously
-        #       a datetime in UTC, we could use that as the observed
-        #       time, otherwise, we'll just use our own on update.
         key, content = self.provideObservation()
         return (
             '{'

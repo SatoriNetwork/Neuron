@@ -12,6 +12,7 @@ import json
 import requests
 from functools import partial
 from satorilib.concepts.structs import Stream
+from satorilib.api.disk import Cached
 from satorilib import logging
 
 
@@ -25,7 +26,7 @@ def postRequestHook(r: requests.Response):
     return r.text
 
 
-class RawStreamRelayEngine:
+class RawStreamRelayEngine(Cached):
     def __init__(
         self,
         streams: list[Stream] = None,
@@ -104,15 +105,26 @@ class RawStreamRelayEngine:
             return None  # ret could return boolean, so return None if failure
         return text
 
-    def relay(self, stream: Stream, data: str = None):
+    def relay(
+        self,
+        stream: Stream, data: str = None,
+        timestamp: str = None, observationHash: str = None
+    ):
         ''' relays data to pubsub '''
         from satorineuron.init.start import getStart
-        # if stream.streamId.source == 'satori':
-        #    start.pubsub.publish(topic: stream.streamId.target, data: data)
-        # else:
-        #    send to streamr or something
+        getStart().pubsub.publish(
+            topic=stream.streamId.topic(),
+            data=data,
+            time=timestamp,
+            hash=observationHash)
+
+    def save(self, stream: Stream, data: str = None):
+        self.streamId = stream.streamId  # required by Cache
         self.latest[stream.streamId.topic()] = data
-        getStart().pubsub.publish(topic=stream.streamId.topic(), data=data)
+        success, timestamp, observationHash = self.disk.appendByAttributes(
+            timestamp=timestamp,
+            value=data)
+        return success, timestamp, observationHash
 
     def callRelay(self, streams: list[Stream]):
         ''' calls API and relays data to pubsub '''
@@ -121,7 +133,17 @@ class RawStreamRelayEngine:
             for stream in streams:
                 hookResult = RawStreamRelayEngine.callHook(stream, result)
                 if hookResult is not None:
-                    self.relay(stream, data=hookResult)
+                    (
+                        success,
+                        timestamp,
+                        observationHash,
+                    ) = self.save(stream, data=hookResult)
+                    if success:
+                        self.relay(
+                            stream,
+                            data=hookResult,
+                            timestamp=timestamp,
+                            observationHash=observationHash)
                 else:
                     # log or flash message or something...
                     logging.error(

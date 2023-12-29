@@ -23,3 +23,5 @@ FINE 16. fix installer - on one computer windows defender flagged it as a "bearf
 12. release alpha Jan 1
 17. fix pause functionality - it's reversed, paused by default I think?
 20. I noticed histories aren't downloading automatically. explore...
+21. fix issue where we can miss some of the raw data stream and we'd never know, except we would because when we ask and it doesn't match our hash we know it's no goood. so we have to ask for the history backwards until we find the missing data. the best solution is to broadcast the hash in the pubsub. then if it looks like the hash is invalid, we know that we missed something. at that point what should we do? when it looks like our dataset is missing something we should? ask for the middle hash, then see if it matches, so on and so forth until we identify the missing one? not sure.
+    

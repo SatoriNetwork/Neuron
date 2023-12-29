@@ -208,6 +208,15 @@ class Gatherer():
                       df.head() if isinstance(df, pd.DataFrame) else 'None',
                       print='red')
         if success and df is not None:
+            # in order to have eventual consistency, we need to make sure that
+            # if we have discovered a problem in our dataset we wipe the last
+            # clean row this is because we may have a row missing in our dataset
+            # that causes our dataset to look like it has good hashes, but it
+            # actually doesn't. so we erase the last row, and if it was bad, we
+            # will eventaully get to the point where we have a good row, common
+            # to everyone, and move forwards from there. Not efficient but it
+            # works for now.
+            df = df.iloc[:-1]
             logging.debug('writing', print='red')
             self.parent.disk.write(df)
         # self.refresh()
