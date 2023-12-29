@@ -122,7 +122,6 @@ class RawStreamRelayEngine(Cached):
         self.streamId = stream.streamId  # required by Cache
         self.latest[stream.streamId.topic()] = data
         success, timestamp, observationHash = self.disk.appendByAttributes(
-            timestamp=timestamp,
             value=data)
         return success, timestamp, observationHash
 
