@@ -320,10 +320,10 @@ class Topic(Cached):
             subcmd=PeerProtocol.observationSub,
             msgId=msgId)
         logging.debug('requesting one observation', msg, print='magenta')
-        with self.channels:
-            for channel in self.channels.values():
-                logging.debug('got channel', channel, print='magenta')
-                channel.send(msg)
+        # with self.channels:
+        for channel in self.channels.values():
+            logging.debug('got channel', channel, print='magenta')
+            channel.send(msg)
 
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
         ''' returns the observation after the timestamp '''

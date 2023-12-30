@@ -22,7 +22,7 @@ class Channel:
         remoteIp: str,
         remotePort: int,
         parent: 'Topic',
-        ping: bool = True,
+        ping: bool = False,
     ):
         self.streamId = streamId
         self.messages: PeerMessages = PeerMessages([])
