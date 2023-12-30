@@ -55,13 +55,13 @@ while True:
         break
     except ConnectionError as e:
         # try again...
-        time.sleep(30)
         logging.error(f'ConnectionError in app startup: {e}', print='red')
+        time.sleep(30)
     # except RemoteDisconnected as e:
     except Exception as e:
         # try again...
-        time.sleep(30)
         logging.error(f'Exception in app startup: {e}', print='red')
+        time.sleep(30)
 
 ###############################################################################
 ## Functions ##################################################################

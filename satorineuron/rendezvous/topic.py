@@ -73,6 +73,7 @@ class Gatherer():
                           time.time() - 60, print='blue')
             self.cleanup()
             self.initiate()
+            self.lastAsk = ''
 
     def initiate(self, message: PeerMessage = None):
         ''' here we decide what to ask for '''
