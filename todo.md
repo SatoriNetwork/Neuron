@@ -26,3 +26,4 @@ DONE 23. not saving observations
 9. test
 10. seed with datastreams with histories
 12. release alpha Jan 1
+13. still have a connection annoyance, but it connects eventually on startup.
