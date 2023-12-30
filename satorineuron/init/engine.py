@@ -18,7 +18,7 @@ def establishConnection(pubkey: str, key: str, url: str = None):
         # data to the data manager, just to route it to the models only? data
         # manager seems like a extra thread that isn't necessary, a middle man.
 
-        # logging.debug(f'response: {response}', print='green')
+        # logging.debug(f'response: {response}', color='green')
         # {"topic": "{\"source\": \"satori\", \"author\": \"021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb\", \"stream\": \"coinbaseALGO-USD\", \"target\": \"data.rates.ALGO\"}", "data": "0.23114999999999997"}
 
         if response != 'failure: error, a minimum 10 seconds between publications per topic.':

@@ -76,9 +76,9 @@ class Channel:
     ):
         if (message is None):
             return
-        # logging.debug('ON MESSAGE:', message, sent, time, print='magenta')
+        # logging.debug('ON MESSAGE:', message, sent, time, color='magenta')
         message = PeerMessage(sent=sent, raw=message, time=time)
-        # logging.debug('ON MESSAGE0:', message, print='magenta')
+        # logging.debug('ON MESSAGE0:', message, color='magenta')
         self.clean(stale=now() - dt.timedelta(minutes=90))
         self.add(message=message)
         self.router(message=message, **kwargs)

@@ -36,7 +36,6 @@ updating = False
 ###############################################################################
 ## Startup ####################################################################
 ###############################################################################
-
 MODE = os.environ.get('SATORI_RUN_MODE', 'dev')
 while True:
     try:
@@ -52,15 +51,17 @@ while True:
                 'dockerdev': 'ws://192.168.0.10:3000',
             }[MODE])
         start.start()
+        logging.info('Satori Neuron started!', color='green')
+        logging.info('Satori Neuron started!', color='yellow')
         break
     except ConnectionError as e:
         # try again...
-        logging.error(f'ConnectionError in app startup: {e}', print='red')
+        logging.error(f'ConnectionError in app startup: {e}', color='red')
         time.sleep(30)
     # except RemoteDisconnected as e:
     except Exception as e:
         # try again...
-        logging.error(f'Exception in app startup: {e}', print='red')
+        logging.error(f'Exception in app startup: {e}', color='red')
         time.sleep(30)
 
 ###############################################################################
