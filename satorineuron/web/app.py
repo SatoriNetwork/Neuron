@@ -52,7 +52,6 @@ while True:
             }[MODE])
         start.start()
         logging.info('Satori Neuron started!', color='green')
-        logging.info('Satori Neuron started!', color='yellow')
         break
     except ConnectionError as e:
         # try again...
