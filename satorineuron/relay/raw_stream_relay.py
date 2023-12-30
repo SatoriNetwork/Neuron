@@ -121,8 +121,6 @@ class RawStreamRelayEngine(Cached):
     def save(self, stream: Stream, data: str = None):
         self.latest[stream.streamId.topic()] = data
         self.streamId = stream.streamId  # required by Cache
-        logging.debug('stream:', self.streamId,
-                      'relay data:', data, print='yellow')
         success, timestamp, observationHash = self.disk.appendByAttributes(
             value=data)
         return success, timestamp, observationHash

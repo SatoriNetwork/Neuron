@@ -48,13 +48,6 @@ class Gatherer():
         ''' we verify that our first row (the root) matches the consensus '''
         self.cleanup()
         self.request(datetime=earliestDate())
-        # if self.data is None or self.data.empty:
-        # if self.data.shape[0] > 1:
-        #    trunk = self.data.iloc[[1]]
-        #    logging.debug('in prepare', trunk, print='blue')
-        #    self.request(datetime=earliestDate())
-        # else:
-        #    self.request(datetime=earliestDate())
         self.startSupervisor()
 
     def startSupervisor(self):
@@ -69,8 +62,6 @@ class Gatherer():
 
     def initiateIfIdle(self):
         if hasattr(self, 'lastHeard') and self.lastHeard < time.time() - 60:
-            logging.debug('inititating from idle', self.lastHeard,
-                          time.time() - 60, print='blue')
             self.cleanup()
             self.initiate()
             self.lastAsk = ''
@@ -79,13 +70,9 @@ class Gatherer():
         ''' here we decide what to ask for '''
 
         def askForNextData():
-            logging.debug('askForNextData', print='teal')
             return self.request(message)
 
-        logging.debug('in initiate', message, print='teal')
         if self.data is None or self.data.empty:
-            logging.debug('data none or empty',
-                          self.data is None, print='teal')
             return askForNextData()
         if (
             hasattr(self, 'root') and
@@ -94,15 +81,11 @@ class Gatherer():
         ):
             success, row = self.parent.disk.validateAllHashes(self.data)
             if not success:
-                logging.debug('first', print='teal')
                 return self.request(datetime=datetimeFromString(row.index[0]))
             lastTimeStamp = datetimeFromString(self.data.index[-1])
             if lastTimeStamp != self.lastAsk:
-                logging.debug('second', print='teal')
                 return self.request(datetime=lastTimeStamp)
-            logging.debug('third', print='teal')
             return self.finishProcess()
-        logging.debug('fourth', print='teal')
         return askForNextData()
 
     # def makeTimeout(self, msgId: str):
@@ -117,14 +100,11 @@ class Gatherer():
     #        msgId=msgId)
 
     def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
-        logging.debug('in request', print='magenta')
         datetime = datetime or (
             datetimeFromString(message.observationTime)
             if message is not None else now())
-        logging.debug('datetime', datetime, print='magenta')
         self.lastAsk = datetime
         msgId = self.parent.nextBroadcastId()
-        logging.debug('msgId', msgId, print='magenta')
         # self.makeTimeout(msgId) # timeout pattern unreliable
         self.parent.requestOneObservation(
             datetime=datetime,
@@ -177,20 +157,13 @@ class Gatherer():
             saves it to disk, and repeats the process with new time
         else: it tells the models data is updated, and cleans up.
         '''
-        logging.debug('handling message:', message, print='teal')
         df = message.asDataFrame
         df.columns = ['value', 'hash']
         if self.parent.disk.isARoot(df):
-            logging.debug('is root', print='teal')
             self.root = df
             if not self.parent.disk.matchesRoot(self.root, localDf=self.data):
-                logging.debug('discovered root', print='teal')
                 self.parent.disk.write(self.root)
         if message.hash not in self.hashes:
-            logging.debug('hash not present', print='teal')
-            logging.debug('df:', df, df.dtypes, print='teal')
-            logging.debug('stream:', self.parent.streamId,
-                          'df:', df, print='yellow')
             self.parent.disk.append(df)
         # self.messagesToSave.append(message)
         # self.parent.tellModelsAboutNewHistory()
@@ -205,11 +178,6 @@ class Gatherer():
         self.parent.cleanChannels([key for key in self.messages.keys()])
         # clean up dataset
         success, df = self.parent.disk.cleanByHashes()
-        logging.debug('strema:', self.parent.streamId, print='red')
-        logging.debug('CLEANING BY HASH -- success df',
-                      success,
-                      df.head() if isinstance(df, pd.DataFrame) else 'None',
-                      print='red')
         if success and df is not None:
             # in order to have eventual consistency, we need to make sure that
             # if we have discovered a problem in our dataset we wipe the last
@@ -220,7 +188,6 @@ class Gatherer():
             # to everyone, and move forwards from there. Not efficient but it
             # works for now.
             df = df.iloc[:-1]
-            logging.debug('writing', print='red')
             self.parent.disk.write(df)
         # self.refresh()
 
@@ -288,7 +255,6 @@ class Topic(Cached):
 
     def send(self, remoteIp: str, remotePort: int, cmd: str, msgs: list[str] = None):
         # def makePayload(cmd: str, msgs: list[str] = None) -> Union[bytes, None]:
-        #     logging.debug('make payload cmd', cmd, print='red')
         #     if not PeerProtocol.isValidCommand(cmd):
         #         logging.error('command not valid', cmd, print=True)
         #         return None
@@ -302,7 +268,6 @@ class Topic(Cached):
         # def send(self, cmd: str, msg: PeerMessage = None):
         #     # TODO: make this take a PeerMessage object and do that everywhere
         #     payload = cmd
-        #     logging.debug('sent pyaload:', payload, print='magenta')
         #     self.topicSocket.sendto(payload, (self.peerIp, self.port))
         #     self.topicSocket.sendto(msg.asJsonStr.decode(),
         #                             (self.peerIp, self.port))
@@ -319,10 +284,8 @@ class Topic(Cached):
             datetime,
             subcmd=PeerProtocol.observationSub,
             msgId=msgId)
-        logging.debug('requesting one observation', msg, print='magenta')
         # with self.channels:
         for channel in self.channels.values():
-            logging.debug('got channel', channel, print='magenta')
             channel.send(msg)
 
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
