@@ -31,3 +31,5 @@ DONE 15. rendezvous - early worker timeout
 9. test
 10. seed with datastreams with histories
 12. release alpha Jan 1
+13. ping solution
+14. we should show predictions on the dashboard

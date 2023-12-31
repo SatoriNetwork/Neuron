@@ -30,7 +30,7 @@ class Gatherer():
 
     def refresh(self):
         self.lastAsk = None
-        # self.lastHeard = None
+        # self.lastTime = None
         self.timeout = None
         self.messages: dict[str, list[PeerMessage]] = {}
 
@@ -61,7 +61,7 @@ class Gatherer():
             interval=60)
 
     def initiateIfIdle(self):
-        if hasattr(self, 'lastHeard') and self.lastHeard < time.time() - 60:
+        if hasattr(self, 'lastTime') and self.lastTime < time.time() - 28:
             logging.debug('initiating from idle', color='blue')
             self.cleanup()
             self.initiate()
@@ -111,6 +111,7 @@ class Gatherer():
             datetime=datetime,
             msgId=msgId)
         self.messages[msgId]: list[PeerMessage] = []
+        self.lastTime = time.time()
 
     def onResponse(self, message: PeerMessage):
         # we're running in to a problem, we're not always connected to everyone
@@ -119,7 +120,6 @@ class Gatherer():
         # the stream can sign every observation or something, just as we has the
         # chain of observations. So for now we're removing the popular method,
         # and we'll just trust the first person to respond.
-        self.lastHeard = time.time()
         msg = self.inspectResponse(message)
         if msg is not None:
             self.handleMostPopular(msg)
