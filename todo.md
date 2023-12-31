@@ -25,9 +25,9 @@ DONE 22. when we broadcast a prediction we need to include time and observationH
 DONE 23. not saving observations
 DONE 16. assign a stream a random time... key it off the name... make the rendezvous connection happen at that time every day
 DONE 14. remove ping
-13. still have a connection annoyance,with moontree and checkin and maybe pubsub? but it connects eventually on startup.
-15. rendezvous - early worker timeout
-15. rendezvous - logging?
+DONE 13. still have a connection annoyance,with moontree and checkin and maybe pubsub? but it connects eventually on startup.
+DONE 15. rendezvous - early worker timeout
+15. rendezvous, anything behind gunicorn not logging right.
 9. test
 10. seed with datastreams with histories
 12. release alpha Jan 1

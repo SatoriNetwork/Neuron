@@ -52,6 +52,8 @@ class RendezvousByRest():
         def sendPayload(payload: str = None):
             self.msgId += 1
             self.outbox[self.msgId] = payload
+            logging.debug('sending to rendezvous server',
+                          payload, color='teal')
             response = requests.post(self.rendezvousServer, data=payload)
             if response.status_code != 200 or not response.text.startswith('{"response": '):
                 logging.warning('bad response', response, payload)
@@ -65,7 +67,7 @@ class RendezvousByRest():
             #    self.inbox.append(message)
             #    self.onMessage(message)
             msg = response.json()['response']
-            logging.debug('rendezvous checkin response', msg, color='teal')
+            logging.debug('rendezvous response', msg, color='teal')
             message = FromServerMessage.fromJson(msg)
             self.inbox.append(message)  # todo: does this ever get cleaned?
             self.onMessage(message)
