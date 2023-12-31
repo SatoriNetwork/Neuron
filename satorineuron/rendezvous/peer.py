@@ -20,6 +20,7 @@ import time
 import threading
 from satorilib import logging
 from satorilib.concepts import StreamId
+from satorilib.api.hash import generateCheckinTime
 from satorirendezvous.client.structs.rest.message import FromServerMessage
 from satorineuron.rendezvous.topic import Topic, Topics
 from satorineuron.rendezvous.structs.domain import SignedStreamId
@@ -38,8 +39,9 @@ class RendezvousPeer():
         rendezvousHost: str,
         signature: str,
         signed: str,
-        handlePeriodicCheckin: bool = True,
-        periodicCheckinSeconds: int = 60*60*1,
+        handleCheckin: bool = True,
+        # handlePeriodicCheckin: bool = True,
+        # periodicCheckinSeconds: int = 60*60*1,
     ):
         self.signature = signature
         self.signed = signed
@@ -49,11 +51,13 @@ class RendezvousPeer():
         self.topics: Topics = Topics()
         self.createTopics()
         self.connect(rendezvousHost)
-        if handlePeriodicCheckin:
-            self.periodicCheckinSeconds = periodicCheckinSeconds
-            # does this work from the init, 
-            # or do we have to call it after setting up the object?
-            self.periodicCheckin() 
+        # if handlePeriodicCheckin:
+        #    self.periodicCheckinSeconds = periodicCheckinSeconds
+        # does this work from the init,
+        # or do we have to call it after setting up the object?
+        #    self.periodicCheckin()
+        if handleCheckin:
+            self.streamTimesCheckin()
 
     def toOutbox(self, message: tuple[int, str, int, bytes]):
         self.outbox.append(message)
@@ -69,12 +73,20 @@ class RendezvousPeer():
             self.rendezvous.checkin()
 
     def periodicCheckin(self):
-        ''' this is the new way of doing it '''
+        ''' this is the newer old way of doing it '''
         from satorineuron.init.start import getStart
         asyncThread = getStart().asyncThread
         self.checker = asyncThread.repeatRun(
             task=self.checkin,
             interval=self.periodicCheckinSeconds)
+
+    def streamTimesCheckin(self):
+        ''' checking according to which streams we have '''
+        from satorineuron.init.start import getStart
+        asyncThread = getStart().asyncThread
+        self.checker = asyncThread.dailyRun(
+            task=self.checkin,
+            times=[generateCheckinTime(s.streamId) for s in self.signedStreamIds])
 
     def checkin(self):
         self.rendezvous.checkin()

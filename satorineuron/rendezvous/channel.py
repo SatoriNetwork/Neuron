@@ -138,6 +138,7 @@ class Channel:
         if isinstance(timestamp, dt.datetime):
             timestamp = datetimeToString(timestamp)
         # observation = self.disk.lastRowStringBefore(timestap=time)
+        logging.debug('giveOneObservation', color='magenta')
         observation: SingleObservation = (
             self.parent.getLocalObservation(timestamp))
         if observation.isNone:
