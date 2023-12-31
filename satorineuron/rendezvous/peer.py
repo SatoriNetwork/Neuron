@@ -87,6 +87,8 @@ class RendezvousPeer():
         self.checker = asyncThread.dailyRun(
             task=self.checkin,
             times=[generateCheckinTime(s.streamId) for s in self.signedStreamIds])
+        # also checkin right now
+        self.checkin()
 
     def checkin(self):
         self.rendezvous.checkin()
