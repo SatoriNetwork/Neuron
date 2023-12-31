@@ -85,9 +85,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
+        logging.info('started relay validation engine', color='green')
 
     def openWallet(self):
         self.wallet = Wallet(config.walletPath('wallet.yaml'))()
+        logging.info('opened wallet', color='green')
 
     def checkin(self):
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
@@ -129,6 +131,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 signed=self.wallet.sign(sig)) for p, sig in zip(
                     self.publications,
                     self.publicationKeys)]
+        logging.info('checked in with Satori', color='green')
 
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
@@ -140,6 +143,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             subscriptions=self.subscriptions,
             publications=predictionStreams(self.publications))
         self.engine.run()
+        logging.info('started AI Engine', color='green')
 
     def pubsubConnect(self):
         ''' establish a pubsub connection. '''
@@ -152,6 +156,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 url=self.urlPubsub,
                 pubkey=self.wallet.publicKey,
                 key=signature.decode() + '|' + self.key)
+            logging.info('connected to Satori pubsub network', color='green')
         else:
             raise Exception('no key provided by satori server')
 
@@ -165,6 +170,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     signature=self.wallet.sign(self.key),
                     signed=self.key,
                     signedStreamIds=self.signedStreamIds))
+            logging.info('connected to Satori p2p network', color='green')
         else:
             raise Exception('no key provided by satori server')
 
@@ -187,6 +193,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.relay.kill()
         self.relay = RawStreamRelayEngine(streams=append(self.publications))
         self.relay.run()
+        logging.info('started relay engine', color='green')
 
     def downloadDatasets(self):
         '''
@@ -245,10 +252,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     args=[ipfsAddress, ipfsStream, ipfsPeer, diskApi],
                     daemon=True)
                 threads[ipfsAddress].start()
+        logging.info('downloaded datasets via ipfs', color='green')
 
     def incrementallyDownloadDatasets(self):
         ''' download history incrementally by using Satori Rendezvous network'''
         self.peer.run()
+        logging.info('downloading datasets via p2p network', color='green')
 
     def pause(self, timeout: int = 60):
         ''' pause the engine. '''
@@ -257,6 +266,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.pauseThread = self.asyncThread.delayedRun(
             task=self.unpause,
             delay=timeout)
+        logging.info('AI engine paused', color='green')
 
     def unpause(self):
         ''' pause the engine. '''
@@ -265,3 +275,4 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.pauseThread is not None:
             self.asyncThread.cancelTask(self.pauseThread)
         self.pauseThread = None
+        logging.info('AI engine unpaused', color='green')

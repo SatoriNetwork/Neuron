@@ -62,6 +62,7 @@ class Gatherer():
 
     def initiateIfIdle(self):
         if hasattr(self, 'lastHeard') and self.lastHeard < time.time() - 60:
+            logging.debug('initiating from idle', color='blue')
             self.cleanup()
             self.initiate()
             self.lastAsk = ''
@@ -274,6 +275,8 @@ class Topic(Cached):
         # convert to bytes message
 
         # print('in send', remoteIp, remotePort, cmd, msgs)
+        logging.debug('message in outbox', (self.localPort,
+                      remoteIp, remotePort, cmd), color='blue')
         self.outbox((self.localPort, remoteIp, remotePort, cmd))
 
     def requestOneObservation(self, datetime: dt.datetime, msgId: int):
