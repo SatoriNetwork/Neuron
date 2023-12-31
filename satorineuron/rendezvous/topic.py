@@ -293,14 +293,18 @@ class Topic(Cached):
 
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
         ''' returns the observation after the timestamp '''
+        logging.debug('getLocalObservation', color='magenta')
         if (
             self.data is None or
             (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
+            logging.debug('getLocalObservation ret 1', color='magenta')
             return SingleObservation(None, None, None)
         df = self.data[self.data.index > timestamp]
         if df.empty:
+            logging.debug('getLocalObservation ret 2', color='magenta')
             return SingleObservation(None, None, None)
+        logging.debug('getLocalObservation ret 3', color='magenta')
         return SingleObservation(df.index[0], df['value'].values[0], df['hash'].values[0])
 
     def getLocalObservationBefore(self, timestamp: str) -> SingleObservation:
