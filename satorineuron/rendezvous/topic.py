@@ -307,6 +307,13 @@ class Topic(Cached):
             logging.debug('getLocalObservation ret 2', color='magenta')
             return SingleObservation(None, None, None)
         logging.debug('getLocalObservation ret 3', color='magenta')
+        success, _ = self.disk.validateAllHashes(self.data)
+        if not success:
+            # if I publish this dataset just rehashit, and don't answer, they'll
+            # ask again.
+            if self.signedStreamId.publish:
+                self.disk.write(self.disk.hashDataFrame(self.data))
+            return SingleObservation(None, None, None)
         return SingleObservation(df.index[0], df['value'].values[0], df['hash'].values[0])
 
     def getLocalObservationBefore(self, timestamp: str) -> SingleObservation:
