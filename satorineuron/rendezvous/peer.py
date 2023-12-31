@@ -40,8 +40,6 @@ class RendezvousPeer():
         signature: str,
         signed: str,
         handleCheckin: bool = True,
-        # handlePeriodicCheckin: bool = True,
-        # periodicCheckinSeconds: int = 60*60*1,
     ):
         self.signature = signature
         self.signed = signed
@@ -51,11 +49,6 @@ class RendezvousPeer():
         self.topics: Topics = Topics()
         self.createTopics()
         self.connect(rendezvousHost)
-        # if handlePeriodicCheckin:
-        #    self.periodicCheckinSeconds = periodicCheckinSeconds
-        # does this work from the init,
-        # or do we have to call it after setting up the object?
-        #    self.periodicCheckin()
         if handleCheckin:
             self.streamTimesCheckin()
 
@@ -87,10 +80,10 @@ class RendezvousPeer():
         self.checker = asyncThread.dailyRun(
             task=self.checkin,
             times=[generateCheckinTime(s.streamId) for s in self.signedStreamIds])
-        # also checkin right now
         self.checkin()
 
     def checkin(self):
+        logging.debug('rendezvous checkin', color='teal')
         self.rendezvous.checkin()
 
     def createTopics(self):
