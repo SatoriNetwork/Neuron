@@ -65,7 +65,7 @@ class RendezvousByRest():
             #    self.inbox.append(message)
             #    self.onMessage(message)
             msg = response.json()['response']
-
+            logging.debug('rendezvous checkin response', msg, color='teal')
             message = FromServerMessage.fromJson(msg)
             self.inbox.append(message)  # todo: does this ever get cleaned?
             self.onMessage(message)

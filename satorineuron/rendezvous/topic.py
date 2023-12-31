@@ -301,7 +301,9 @@ class Topic(Cached):
             logging.debug('getLocalObservation ret 1', color='magenta')
             return SingleObservation(None, None, None)
         df = self.data[self.data.index > timestamp]
+
         if df.empty:
+            logging.debug('self.data', self.data, color='magenta')
             logging.debug('getLocalObservation ret 2', color='magenta')
             return SingleObservation(None, None, None)
         logging.debug('getLocalObservation ret 3', color='magenta')
