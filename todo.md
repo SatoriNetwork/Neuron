@@ -38,7 +38,7 @@ DONE release alpha Jan 1
 ---
 DONE have it make a prediction and broadcast it on startup
 DONE show the latest prediction on the UI
-loop in runner
+DONE loop in runner
 test
 seed with datastreams with histories
 rendezvous, pubsub, server: anything behind gunicorn not logging right.
