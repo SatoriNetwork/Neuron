@@ -35,9 +35,11 @@ DONE something broke in responding to requests?
 DONE follow newData: save, trigger prediction, save that prediction, publish
 DONE we should show predictions on the dashboard
 DONE release alpha Jan 1
+---
+DONE have it make a prediction and broadcast it on startup
+DONE show the latest prediction on the UI
+loop in runner
 test
 seed with datastreams with histories
 rendezvous, pubsub, server: anything behind gunicorn not logging right.
 make an installer for linux
-have it make a prediction and broadcast it on startup
-show the latest prediction on the UI

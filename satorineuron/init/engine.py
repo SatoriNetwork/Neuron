@@ -23,7 +23,8 @@ def establishConnection(pubkey: str, key: str, url: str = None):
 
         if response != 'failure: error, a minimum 10 seconds between publications per topic.':
             if response.startswith('{"topic":') or response.startswith('{"data":'):
-                logging.info('incoming realtime message:', response, print=True)
+                logging.info('incoming realtime message:',
+                             response, print=True)
                 getStart().engine.data.newData.on_next(Observation.parse(response))
         # furthermore, shouldn't we do more than route it to the correct models?
         # like, shouldn't we save it to disk, compress if necessary, pin, and
@@ -177,9 +178,9 @@ def getEngine(
         }
 
     ModelManager.setConfig(config)
-    DataManager.setConfig(config)
+    # DataManager.setConfig(config)
     modelManager = generateModelManager()
-    dataMananger = DataManager(getStart=getStart())
+    dataMananger = DataManager(getStart=getStart)
     return Engine(
         getStart=getStart,
         data=dataMananger,

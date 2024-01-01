@@ -41,7 +41,7 @@ class SingletonMeta(type):
 class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ''' a DAG of startup tasks. '''
 
-    def __init__(self, urlServer: str = None, urlPubsub: str = None, *args):
+    def __init__(self, *args, urlServer: str = None, urlPubsub: str = None):
         super(StartupDag, self).__init__(*args)
         self.urlServer: str = urlServer
         self.urlPubsub: str = urlPubsub
@@ -75,11 +75,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.openWallet()
         self.checkin()
-        self.buildEngine()
         self.pubsubConnect()
         self.startRelay()
+        self.buildEngine()
         self.rendezvousConnect()
-        # TODO NEXT: get download of histories working
         self.incrementallyDownloadDatasets()
         # self.downloadDatasets()
 
