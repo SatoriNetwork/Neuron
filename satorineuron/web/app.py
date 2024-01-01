@@ -701,48 +701,49 @@ def wallet():
 ## Routes - subscription ######################################################
 ###############################################################################
 
-
-@app.route('/subscription/update/', methods=['POST'])
-def update():
-    """
-    returns nothing
-    ---
-    post:
-      operationId: score
-      requestBody:
-        content:
-          application/json:
-            {
-            "source-id": id,
-            "stream-id": id,
-            "observation-id": id,
-            "content": {
-                key: value
-            }}
-      responses:
-        '200':
-          json
-    """
-    ''' from streamr - datastream has a new observation
-    upon a new observation of a datastream, the nodejs app will send this
-    python flask app a message on this route. The flask app will then pass the
-    message to the data manager, specifically the scholar (and subscriber)
-    threads by adding it to the appropriate subject. (the scholar, will add it
-    to the correct table in the database history, notifying the subscriber who
-    will, if used by any current best models, notify that model's predictor
-    thread via a subject that a new observation is available by providing the
-    observation directly in the subject).
-
-    This app needs to create the DataManager, ModelManagers, and Learner in
-    in order to have access to those objects. Specifically the DataManager,
-    we need to be able to access it's BehaviorSubjects at data.newData
-    so we can call .on_next() here to pass along the update got here from the
-    Streamr LightClient, and trigger a new prediction.
-    '''
-    x = Observation.parse(request.json)
-    start.engine.data.newData.on_next(x)
-
-    return request.json
+# unused - we're not using any other networks yet, but when we do we can pass
+# their values to this and have it diseminate
+# @app.route('/subscription/update/', methods=['POST'])
+# def update():
+#    """
+#    returns nothing
+#    ---
+#    post:
+#      operationId: score
+#      requestBody:
+#        content:
+#          application/json:
+#            {
+#            "source-id": id,
+#            "stream-id": id,
+#            "observation-id": id,
+#            "content": {
+#                key: value
+#            }}
+#      responses:
+#        '200':
+#          json
+#    """
+#    ''' from streamr - datastream has a new observation
+#    upon a new observation of a datastream, the nodejs app will send this
+#    python flask app a message on this route. The flask app will then pass the
+#    message to the data manager, specifically the scholar (and subscriber)
+#    threads by adding it to the appropriate subject. (the scholar, will add it
+#    to the correct table in the database history, notifying the subscriber who
+#    will, if used by any current best models, notify that model's predictor
+#    thread via a subject that a new observation is available by providing the
+#    observation directly in the subject).
+#
+#    This app needs to create the DataManager, ModelManagers, and Learner in
+#    in order to have access to those objects. Specifically the DataManager,
+#    we need to be able to access it's BehaviorSubjects at data.newData
+#    so we can call .on_next() here to pass along the update got here from the
+#    Streamr LightClient, and trigger a new prediction.
+#    '''
+#    x = Observation.parse(request.json)
+#    start.engine.data.newData.on_next(x)
+#
+#    return request.json
 
 ###############################################################################
 ## Routes - history ###########################################################
