@@ -538,11 +538,9 @@ def dashboard():
         (access to all predictions and the truth)
     '''
     if start.engine is None:
-        logging.debug('default', color='yellow')
         streamsOverview = [{'source': 'Streamr', 'stream': 'DATAUSD/binance/ticker', 'target': 'Close', 'subscribers': '3',
                             'accuracy': '97.062 %', 'prediction': '3621.00', 'value': '3548.00', 'predictions': [2, 3, 1]}]
     else:
-        logging.debug('else', color='yellow')
         streamsOverview = [model.overview() for model in start.engine.models]
 
     import importlib
