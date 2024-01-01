@@ -308,6 +308,7 @@ class Topic(Cached):
         if df.empty:
             return SingleObservation(None, None, None)
         success, _ = self.disk.validateAllHashes(self.data)
+        logging.debug('getLocalObservation', success, print=True)
         if not success:
             if self.signedStreamId.publish:
                 self.disk.write(self.disk.hashDataFrame(self.data))

@@ -31,6 +31,7 @@ DONE add something that fixes data - like when we send a check that verifies the
 DONE fix logging - remove debugs 
 DONE fix logging - add add info about all coming and going
 DONE start over if we've never established the root
+something broke in responding to requests?
 follow newData: save, trigger prediction, save that prediction, publish
 we should show predictions on the dashboard
 rendezvous, pubsub, server: anything behind gunicorn not logging right.
