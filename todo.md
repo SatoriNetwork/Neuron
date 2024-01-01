@@ -28,9 +28,9 @@ DONE still have a connection annoyance,with moontree and checkin and maybe pubsu
 DONE rendezvous - early worker timeout
 DONE ping solution
 DONE add something that fixes data - like when we send a check that verifies the hashes before we send
-
 DONE fix logging - remove debugs 
-fix logging - add add info about all coming and going
+DONE fix logging - add add info about all coming and going
+DONE start over if we've never established the root
 we should show predictions on the dashboard
 rendezvous, pubsub, server: anything behind gunicorn not logging right.
 test

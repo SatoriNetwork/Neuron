@@ -44,11 +44,12 @@ class Gatherer():
             return self.data.hash.values
         return []
 
-    def prepare(self):
+    def prepare(self, withSupervisor: bool = True):
         ''' we verify that our first row (the root) matches the consensus '''
         self.cleanup()
         self.request(datetime=earliestDate())
-        self.startSupervisor()
+        if withSupervisor:
+            self.startSupervisor()
 
     def startSupervisor(self):
         ''' incase we lose connection, try again in 60 seconds '''
@@ -62,9 +63,12 @@ class Gatherer():
 
     def initiateIfIdle(self):
         if hasattr(self, 'lastTime') and self.lastTime < time.time() - 28:
-            self.cleanup()
-            self.initiate()
-            self.lastAsk = ''
+            if hasattr(self, 'root') and self.root is not None:
+                self.cleanup()
+                self.initiate()
+                self.lastAsk = ''
+            else:
+                self.prepare(withSupervisor=False)
 
     def initiate(self, message: PeerMessage = None):
         ''' here we decide what to ask for '''
