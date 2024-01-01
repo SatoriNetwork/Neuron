@@ -112,6 +112,9 @@ class RawStreamRelayEngine(Cached):
     ):
         ''' relays data to pubsub '''
         from satorineuron.init.start import getStart
+        logging.info(
+            'outgoing realtime relay:',
+            stream.streamId.idString, data, timestamp, print=True)
         getStart().pubsub.publish(
             topic=stream.streamId.topic(),
             data=data,

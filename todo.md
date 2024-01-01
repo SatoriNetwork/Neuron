@@ -27,11 +27,12 @@ DONE remove ping
 DONE still have a connection annoyance,with moontree and checkin and maybe pubsub? but it connects eventually on startup.
 DONE rendezvous - early worker timeout
 DONE ping solution
+DONE add something that fixes data - like when we send a check that verifies the hashes before we send
 
+DONE fix logging - remove debugs 
+fix logging - add add info about all coming and going
 we should show predictions on the dashboard
-fix logging - remove debugs and add add info about all coming and going
-add something that fixes data - like when we send a check that verifies the hashes before we send
-rendezvous, anything behind gunicorn not logging right.
+rendezvous, pubsub, server: anything behind gunicorn not logging right.
 test
 seed with datastreams with histories
 release alpha Jan 1

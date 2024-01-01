@@ -542,8 +542,6 @@ def dashboard():
                             'accuracy': '97.062 %', 'prediction': '3621.00', 'value': '3548.00', 'predictions': [2, 3, 1]}]
     else:
         streamsOverview = [model.overview() for model in start.engine.models]
-    # logging.debug('streamsOverview')
-    # logging.debug(streamsOverview)
 
     import importlib
     global forms

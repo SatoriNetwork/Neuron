@@ -73,8 +73,8 @@ class Channel:
     ):
         if (message is None):
             return
+        logging.info('incoming peer message:', message, print=True)
         message = PeerMessage(sent=sent, raw=message, time=time)
-        logging.debug('ON MESSAGE:', message, color='magenta')
         self.clean(stale=now() - dt.timedelta(minutes=90))
         self.add(message=message)
         self.router(message=message, **kwargs)
@@ -135,7 +135,6 @@ class Channel:
         if isinstance(timestamp, dt.datetime):
             timestamp = datetimeToString(timestamp)
         # observation = self.disk.lastRowStringBefore(timestap=time)
-        logging.debug('giveOneObservation', color='magenta')
         observation: SingleObservation = (
             self.parent.getLocalObservation(timestamp))
         if observation.isNone:

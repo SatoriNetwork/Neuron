@@ -83,7 +83,6 @@ class RendezvousPeer():
         # self.checkin()
 
     def checkin(self):
-        logging.debug('rendezvous checkin', color='teal')
         self.rendezvous.checkin()
 
     def createTopics(self):

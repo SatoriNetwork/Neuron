@@ -52,8 +52,7 @@ class RendezvousByRest():
         def sendPayload(payload: str = None):
             self.msgId += 1
             self.outbox[self.msgId] = payload
-            logging.debug('sending to rendezvous server',
-                          payload, color='teal')
+            logging.info('outgoing rendezvous message', payload, print=True)
             response = requests.post(self.rendezvousServer, data=payload)
             if response.status_code != 200 or not response.text.startswith('{"response": '):
                 logging.warning('bad response', response, payload)
@@ -62,12 +61,11 @@ class RendezvousByRest():
 
             # why do we expect multiple messages here?
             # for msg in response.json()['response']:
-            #    logging.debug('good response msg:', msg)
             #    message = FromServerMessage(msg)
             #    self.inbox.append(message)
             #    self.onMessage(message)
             msg = response.json()['response']
-            logging.debug('rendezvous response', msg, color='teal')
+            logging.info('incoming rendezvous response', msg, print=True)
             message = FromServerMessage.fromJson(msg)
             self.inbox.append(message)  # todo: does this ever get cleaned?
             self.onMessage(message)

@@ -71,19 +71,7 @@ class ValidateRelayStream(object):
         #    # heuristic, there's a possibility, if something went wrong,
         #    # that the stream is saved locally but not registered on server...
         #    return True
-        # logging.debug('REGISTER STREAM')
-        # logging.debug({
-        #    'source': data.get('source', 'satori'),
-        #    'pubkey': getStart().wallet.publicKey,
-        #    'stream': data.get('name'),
-        #    'target': data.get('target', ''),
-        #    'cadence': data.get('cadence'),
-        #    'offset': data.get('offset'),
-        #    'datatype': data.get('datatype'),
-        #    'url': data.get('url'),
-        #    'tags': data.get('tags'),
-        #    'description': data.get('description'),
-        # })
+
         r = getStart().server.registerStream(stream={
             'source': data.get('source', 'satori'),
             'pubkey': getStart().wallet.publicKey,

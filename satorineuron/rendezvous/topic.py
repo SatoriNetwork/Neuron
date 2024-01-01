@@ -62,7 +62,6 @@ class Gatherer():
 
     def initiateIfIdle(self):
         if hasattr(self, 'lastTime') and self.lastTime < time.time() - 28:
-            logging.debug('initiating from idle', color='blue')
             self.cleanup()
             self.initiate()
             self.lastAsk = ''
@@ -275,8 +274,10 @@ class Topic(Cached):
         # convert to bytes message
 
         # print('in send', remoteIp, remotePort, cmd, msgs)
-        logging.debug('message in outbox', (self.localPort,
-                      remoteIp, remotePort, cmd), color='blue')
+        logging.info(
+            'outgoing peer message',
+            (self.localPort, remoteIp, remotePort, cmd),
+            print=True)
         self.outbox((self.localPort, remoteIp, remotePort, cmd))
 
     def requestOneObservation(self, datetime: dt.datetime, msgId: int):
@@ -293,24 +294,17 @@ class Topic(Cached):
 
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
         ''' returns the observation after the timestamp '''
-        logging.debug('getLocalObservation', color='magenta')
         if (
             self.data is None or
             (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
-            logging.debug('getLocalObservation ret 1', color='magenta')
             return SingleObservation(None, None, None)
         df = self.data[self.data.index > timestamp]
 
         if df.empty:
-            logging.debug('self.data', self.data, color='magenta')
-            logging.debug('getLocalObservation ret 2', color='magenta')
             return SingleObservation(None, None, None)
-        logging.debug('getLocalObservation ret 3', color='magenta')
         success, _ = self.disk.validateAllHashes(self.data)
         if not success:
-            # if I publish this dataset just rehashit, and don't answer, they'll
-            # ask again.
             if self.signedStreamId.publish:
                 self.disk.write(self.disk.hashDataFrame(self.data))
             return SingleObservation(None, None, None)
