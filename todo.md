@@ -38,3 +38,4 @@ release alpha Jan 1
 test
 seed with datastreams with histories
 rendezvous, pubsub, server: anything behind gunicorn not logging right.
+make an installer for linux
