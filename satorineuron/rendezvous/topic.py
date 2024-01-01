@@ -298,21 +298,30 @@ class Topic(Cached):
 
     def getLocalObservation(self, timestamp: str) -> SingleObservation:
         ''' returns the observation after the timestamp '''
+        logging.debug('getLocalObservation', print=True)
         if (
             self.data is None or
             (isinstance(self.data, pd.DataFrame) and self.data.empty)
         ):
+            logging.debug('getLocalObservation ret 1', print=True)
             return SingleObservation(None, None, None)
         df = self.data[self.data.index > timestamp]
+        logging.debug('getLocalObservation df', df, print=True)
 
         if df.empty:
+            logging.debug('getLocalObservation ret 2',
+                          self.streamId, print=True)
             return SingleObservation(None, None, None)
         success, _ = self.disk.validateAllHashes(self.data)
         logging.debug('getLocalObservation', success, print=True)
         if not success:
+            logging.debug('getLocalObservation self.signedStreamId',
+                          self.signedStreamId, print=True)
             if self.signedStreamId.publish:
                 self.disk.write(self.disk.hashDataFrame(self.data))
+            logging.debug('getLocalObservation ret 3 ', print=True)
             return SingleObservation(None, None, None)
+        logging.debug('getLocalObservation ret 4 ', print=True)
         return SingleObservation(df.index[0], df['value'].values[0], df['hash'].values[0])
 
     def getLocalObservationBefore(self, timestamp: str) -> SingleObservation:
