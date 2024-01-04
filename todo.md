@@ -39,7 +39,21 @@ DONE release alpha Jan 1
 DONE have it make a prediction and broadcast it on startup
 DONE show the latest prediction on the UI
 DONE loop in runner
+DONE central - remove sanction all endpoint
+DONE central - only sanctioned streams show up on website
+DONE central - create scheduling singleton
+DONE central - add payout query logic to server (no competition yet)
+central - add call to payout logic to server
+central - add view tables to the database manually
+central - automated desanction
+central - automated resanction (needs to be sanctioned first)
+central - automated straight up removal of inactive nodes (1 month)
+central - make sure server is saving history of observations
+central - purge history more than 8 days old
+central - add issuance logic to server
+central - show when the predicton is implicitly targeting, instead of created
 test
 seed with datastreams with histories
+set up home nodes
 rendezvous, pubsub, server: anything behind gunicorn not logging right.
 make an installer for linux
