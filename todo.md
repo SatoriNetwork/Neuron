@@ -42,12 +42,19 @@ DONE loop in runner
 DONE central - remove sanction all endpoint
 DONE central - only sanctioned streams show up on website
 DONE central - create scheduling singleton
-DONE central - add payout query logic to server (no competition yet)
-central - add call to payout logic to server
-central - add view tables to the database manually
+DONE central - add payout query logic (no competition yet)
+DONE central - add call to payout logic
+DONE central - automated straight up removal of inactive nodes (1 month)
+DONE central - test straight up removal of inactive neurons (that it only deletes them)
+DONE central - test the mining queries
+DONE central - make an average cadence query
+central - make a history table and test the history table
+central - test the average cadence query
+# central - make it a soft delete
+# central - modify queries to respect soft delete.
 central - automated desanction
 central - automated resanction (needs to be sanctioned first)
-central - automated straight up removal of inactive nodes (1 month)
+central - add view tables to the database manually
 central - make sure server is saving history of observations
 central - purge history more than 8 days old
 central - add issuance logic to server
