@@ -48,19 +48,26 @@ DONE central - automated straight up removal of inactive nodes (1 month)
 DONE central - test straight up removal of inactive neurons (that it only deletes them)
 DONE central - test the mining queries
 DONE central - make an average cadence query
-central - make a history table and test the history table
-central - test the average cadence query
-# central - make it a soft delete
-# central - modify queries to respect soft delete.
-central - automated desanction
-central - automated resanction (needs to be sanctioned first)
-central - add view tables to the database manually
-central - make sure server is saving history of observations
-central - purge history more than 8 days old
+DONE central - automated desanction
+DONE central - automated resanction (needs to be sanctioned first)
+DONE central - add view tables to the database manually
+DONE central - show when the predicton is implicitly targeting, instead of created
+DONE central - add prediction target time formatting, human readable and client timezone
+central - test prediction target time formatting
+central - fix search pulling predictions too far in past
 central - add issuance logic to server
-central - show when the predicton is implicitly targeting, instead of created
+setup 3 more neurons
+add csv upload for datastreams to nueron
+setup datastreams
+
 test
 seed with datastreams with histories
 set up home nodes
 rendezvous, pubsub, server: anything behind gunicorn not logging right.
 make an installer for linux
+central - make a history table and test the history table
+central - make sure server is saving history of observations
+central - purge history more than 8 days old
+central - test the average cadence query
+central - make it a soft delete - one reason we need it is streams can be published by others
+central - modify queries to respect soft delete.

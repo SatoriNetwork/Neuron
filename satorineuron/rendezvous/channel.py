@@ -1,7 +1,7 @@
 import datetime as dt
 from satorilib import logging
 from satorilib.concepts import StreamId
-from satorilib.api.time import datetimeToString, now
+from satorilib.api.time import datetimeToTimestamp, now
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
 from satorineuron.rendezvous.structs.message import PeerMessage, PeerMessages
 from satorineuron.rendezvous.structs.domain import SingleObservation
@@ -52,7 +52,7 @@ class Channel:
             self.send(cmd=PeerProtocol.ping())
             # a ping shouldn't be a request, I'm not requesting anything
             # cmd=PeerProtocol.request(
-            #    time=datetimeToString(now()),
+            #    time=datetimeToTimestamp(now()),
             #    subcmd=PeerProtocol.pingSub))
         from satorineuron.init.start import getStart
         self.pingThread = getStart().asyncThread.repeatRun(
@@ -133,7 +133,7 @@ class Channel:
         '''
         timestamp: str = message.observationTime
         if isinstance(timestamp, dt.datetime):
-            timestamp = datetimeToString(timestamp)
+            timestamp = datetimeToTimestamp(timestamp)
         # observation = self.disk.lastRowStringBefore(timestap=time)
         observation: SingleObservation = (
             self.parent.getLocalObservation(timestamp))
@@ -157,7 +157,7 @@ class Channel:
         '''
         timestamp: str = message.data
         if isinstance(timestamp, dt.datetime):
-            timestamp = datetimeToString(timestamp)
+            timestamp = datetimeToTimestamp(timestamp)
         # observation = self.disk.lastRowStringBefore(timestap=time)
         count = self.parent.getLocalCount(timestamp=timestamp)
         if count is None:

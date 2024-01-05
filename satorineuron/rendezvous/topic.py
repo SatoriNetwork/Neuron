@@ -5,7 +5,7 @@ import pandas as pd
 from satorilib import logging
 from satorilib.concepts import StreamId
 from satorilib.api.disk import Cached
-from satorilib.api.time import datetimeFromString, now, earliestDate
+from satorilib.api.time import timestampToDatetime, now, earliestDate
 from satorirendezvous.lib.lock import LockableDict
 from satorineuron.rendezvous.structs.message import PeerMessage
 from satorineuron.rendezvous.structs.protocol import PeerProtocol
@@ -85,8 +85,8 @@ class Gatherer():
         ):
             success, row = self.parent.disk.validateAllHashes(self.data)
             if not success:
-                return self.request(datetime=datetimeFromString(row.index[0]))
-            lastTimeStamp = datetimeFromString(self.data.index[-1])
+                return self.request(datetime=timestampToDatetime(row.index[0]))
+            lastTimeStamp = timestampToDatetime(self.data.index[-1])
             if lastTimeStamp != self.lastAsk:
                 return self.request(datetime=lastTimeStamp)
             return self.finishProcess()
@@ -105,7 +105,7 @@ class Gatherer():
 
     def request(self, message: PeerMessage = None, datetime: dt.datetime = None):
         datetime = datetime or (
-            datetimeFromString(message.observationTime)
+            timestampToDatetime(message.observationTime)
             if message is not None else now())
         self.lastAsk = datetime
         msgId = self.parent.nextBroadcastId()
