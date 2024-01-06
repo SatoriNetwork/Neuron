@@ -53,18 +53,14 @@ DONE central - automated resanction (needs to be sanctioned first)
 DONE central - add view tables to the database manually
 DONE central - show when the predicton is implicitly targeting, instead of created
 DONE central - add prediction target time formatting, human readable and client timezone
-central - test prediction target time formatting
-central - fix search pulling predictions too far in past
+DONE central - test prediction target time formatting
+GOOD central - fix search pulling predictions too far in past
+installer - make an installer for linux
+neuron - add csv upload for datastreams to nueron
+neuron - setup 3 more neurons
+neuron - seed with datastreams with histories
 central - add issuance logic to server
-setup 3 more neurons
-add csv upload for datastreams to nueron
-setup datastreams
-
-test
-seed with datastreams with histories
-set up home nodes
-rendezvous, pubsub, server: anything behind gunicorn not logging right.
-make an installer for linux
+central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
 central - make sure server is saving history of observations
 central - purge history more than 8 days old
