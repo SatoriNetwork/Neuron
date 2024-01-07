@@ -56,14 +56,19 @@ DONE central - add prediction target time formatting, human readable and client 
 DONE central - test prediction target time formatting
 GOOD central - fix search pulling predictions too far in past
 DONE installer - make an installer for linux
+DONE installer - test linux installer
+DONE neuron - take out ipfs calls 
+DONE neuron - take out ipfs startup
+DONE neuron - take out ipfs env var from run command, put in image
 DONE neuron - add csv upload for datastreams visual to nueron ui
 neuron - add csv upload accept to nueron server
 neuron - process csv upload
 neuron - give user feedback on processing
 neuron - add export csv of existing datastreams
-installer - test linux installer
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
+neuron - what happens if we add data to history without hash? does it hash it, throw it away? throw everything after it away?
+neuron - allow history to be added without hashes and have it automatically hash it.
 central - add issuance logic to server
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
