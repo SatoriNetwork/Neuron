@@ -6,6 +6,7 @@ it will establish a sse connection with the flask server running inside
 the container. it will handle the UDP hole punching, passing data between the
 flask server and the remote peers.
 '''
+from typing import Dict, List, Tuple  # Python3.7 compatible
 import ast
 import socket
 import asyncio
@@ -39,10 +40,10 @@ class SseTimeoutFailure(Exception):
 
 
 class UDPRelay():
-    def __init__(self, ports: dict[int, list[tuple[str, int]]]):
+    def __init__(self, ports: Dict[int, List[Tuple[str, int]]]):
         ''' {localport: [(remoteIp, remotePort)]} '''
-        self.ports: dict[int, list[tuple[str, int]]] = ports
-        self.socks: list[socket.socket] = []
+        self.ports: Dict[int, List[Tuple[str, int]]] = ports
+        self.socks: List[socket.socket] = []
         self.peerListeners = []
         self.neuronListeners = []
         self.loop = asyncio.get_event_loop()
@@ -80,13 +81,13 @@ class UDPRelay():
         self.neuronListeners = [asyncio.create_task(self.neuronListener(url))]
 
     def relayToPeer(self, messages: str):
-        def parseMessages() -> list[tuple[int, str, int, bytes]]:
+        def parseMessages() -> List[Tuple[int, str, int, bytes]]:
             ''' 
             parse messages into a 
             list of [tuples of (tuples of local port, and data)]
             '''
             try:
-                literal: list[tuple[int, str, int, bytes]] = (
+                literal: List[Tuple[int, str, int, bytes]] = (
                     ast.literal_eval(messages))
                 if isinstance(literal, list) and len(literal) > 0:
                     return literal
@@ -94,7 +95,7 @@ class UDPRelay():
                 greyPrint(f'unable to parse messages: {messages}, error: {e}')
             return []
 
-        def parseMessage(msg) -> tuple[int, str, int, bytes]:
+        def parseMessage(msg) -> Tuple[int, str, int, bytes]:
             ''' localPort, remoteIp, remotePort, data '''
             if (
                 isinstance(msg, tuple) and
@@ -202,7 +203,7 @@ class UDPRelay():
         close()
         self.socks = []
 
-    def handle(self, sock: socket.socket, data: bytes, addr: tuple[str, int]):
+    def handle(self, sock: socket.socket, data: bytes, addr: Tuple[str, int]):
         ''' send to flask server with identifying information '''
         greyPrint(
             f"Received {data} from {addr} on {UDPRelay.getLocalPort(sock)}")
@@ -252,7 +253,7 @@ async def main():
             microsecond=0)
         return (nextHour - now).total_seconds()
 
-    def getPorts() -> dict[int, list[tuple[str, int]]]:
+    def getPorts() -> Dict[int, List[Tuple[str, int]]]:
         ''' gets ports from the flask server '''
         r = requests.get(UDPRelay.satoriUrl('/ports'))
         # greyPrint(r.status_code)

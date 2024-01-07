@@ -60,6 +60,7 @@ DONE neuron - add csv upload for datastreams visual to nueron ui
 neuron - add csv upload accept to nueron server
 neuron - process csv upload
 neuron - give user feedback on processing
+neuron - add export csv of existing datastreams
 installer - test linux installer
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
