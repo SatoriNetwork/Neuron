@@ -6,7 +6,7 @@ it will establish a sse connection with the flask server running inside
 the container. it will handle the UDP hole punching, passing data between the
 flask server and the remote peers.
 '''
-from typing import Dict, List, Tuple  # Python3.7 compatible
+from typing import Union, Dict, List, Tuple  # Python3.7 compatible
 import ast
 import socket
 import asyncio
@@ -141,7 +141,7 @@ class UDPRelay():
         # close?
 
     async def initSockets(self):
-        def bind(localPort: int) -> socket.socket | None:
+        def bind(localPort: int) -> Union[socket.socket, None]:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
                 sock.bind(('0.0.0.0', localPort))
