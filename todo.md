@@ -65,11 +65,12 @@ neuron - add csv upload accept to nueron server
 neuron - process csv upload
 neuron - give user feedback on processing
 neuron - add export csv of existing datastreams
-neuron - setup 3 more neurons
-neuron - seed with datastreams with histories
 neuron - what happens if we add data to history without hash? does it hash it, throw it away? throw everything after it away?
 neuron - allow history to be added without hashes and have it automatically hash it.
+neuron - setup 3 more neurons
+neuron - seed with datastreams with histories
 central - add issuance logic to server
+-- BETA (test coin) -- 
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
 central - make sure server is saving history of observations
@@ -77,3 +78,4 @@ central - purge history more than 8 days old
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
 central - modify queries to respect soft delete.
+-- Launch -- 
