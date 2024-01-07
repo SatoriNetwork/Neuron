@@ -504,3 +504,10 @@ td:last-child {
   letter-spacing: 0px;
   font-family: "Roboto", Helvetica, Arial, sans-serif;
 }
+
+.row-container {
+  display: flex;
+  align-items: start; /* Vertically center the items */
+  justify-content: flex-end; /* Align items to the end (right side) */
+  gap: 10px; /* Spacing between items */
+}

@@ -434,10 +434,32 @@
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
         <div class="row">
           <div class="col-lg-12 col-12">
-            <h6 class="{% if darkmode %}dark-colors{% endif %}">Create Data Stream</h6>
-            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
-              Fill out the form to published a new primary data stream to the Satori Network
-            </p>
+            <div class="row">
+              <div class="col-lg-10 col-10">
+                <h6 class="{% if darkmode %}dark-colors{% endif %}">Create Data Stream</h6>
+                <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
+                  Fill out the form to published a new primary data stream to the Satori Network
+                </p>
+              </div>
+              <div class="col-lg-2 col-2">
+                <div class="row-container">
+                  <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align: end;/* border-bottom: inset; */font-weight: 600;">
+                    CSV: 
+                  </p>
+                  <a href="{{ url_for('static', filename='download/satori_datastream_form.csv') }}" target="_blank">
+                    <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                      <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>
+                    </button>
+                  </a>
+                  <form action="/upload_csv" method="post" enctype="multipart/form-data">
+                    <input id="file-upload" type="file" name="file" accept=".csv" style="display:none;">
+                    <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" type="submit">
+                      <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_upload</i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
             <div class="pt-3 px-3" style="height:100px;">
               <p id="ErrorArea" class="mb-0 text-sm">
                 {% if newRelayStream.errors %}

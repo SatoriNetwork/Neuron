@@ -55,8 +55,12 @@ DONE central - show when the predicton is implicitly targeting, instead of creat
 DONE central - add prediction target time formatting, human readable and client timezone
 DONE central - test prediction target time formatting
 GOOD central - fix search pulling predictions too far in past
-installer - make an installer for linux
-neuron - add csv upload for datastreams to nueron
+DONE installer - make an installer for linux
+DONE neuron - add csv upload for datastreams visual to nueron ui
+neuron - add csv upload accept to nueron server
+neuron - process csv upload
+neuron - give user feedback on processing
+installer - test linux installer
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
 central - add issuance logic to server
