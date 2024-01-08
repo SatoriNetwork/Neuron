@@ -17,6 +17,7 @@ from flask import session, request, render_template
 from flask import Response, stream_with_context
 from satorineuron import config
 from satorineuron import logging
+from satorineuron.relay import acceptRelaySubmission, processRelayCsv
 from satorineuron.web import forms
 from satorilib.concepts.structs import Observation, StreamId, StreamsOverview
 from satorineuron.init.start import StartupDag
@@ -94,7 +95,7 @@ def not_found(e):
 ###############################################################################
 
 
-@app.route('/favicon.ico/')
+@app.route('/favicon.ico')
 def favicon():
     return send_from_directory(
         os.path.join(app.root_path, 'static/img/favicon'),
@@ -102,17 +103,17 @@ def favicon():
         mimetype='image/vnd.microsoft.icon')
 
 
-@app.route('/static/<path:path>/')
+@app.route('/static/<path:path>')
 def send_static(path):
     return send_from_directory('static', path)
 
 
-@app.route('/generated/<path:path>/')
+@app.route('/generated/<path:path>')
 def send_generated(path):
     return send_from_directory('generated', path)
 
 
-@app.route('/upload/', methods=['POST'])
+@app.route('/upload', methods=['POST'])
 def upload_csv():
     if 'file' not in request.files:
         return 'No file uploaded', 400
@@ -127,7 +128,25 @@ def upload_csv():
         return 'Invalid file format. Only CSV files are allowed', 400
 
 
-@app.route('/test/')
+@app.route('/upload_datastream_csv', methods=['POST'])
+def upload_datastream_csv():
+
+    if 'file' not in request.files:
+        return 'No file uploaded', 400
+    f = request.files['file']
+    if f.filename == '':
+        return 'No selected file', 400
+    if f and f.filename.endswith('.csv'):
+        f.save('/Satori/Neuron/uploaded/datastreams.csv')
+        # redirect('/dashboard')  # url_for('dashboard')
+        processRelayCsv(start)
+        # todo: handle yeild in loop until return, send yeild to messages
+        return 'Successful upload.', 200
+    else:
+        return 'Invalid file format. Only CSV files are allowed', 400
+
+
+@app.route('/test')
 def test():
     logging.info(request.MOBILE)
     return render_template('test.html')
@@ -281,32 +300,30 @@ def relay():
     }
     '''
 
-    def accept_submittion(data: dict):
-        if not start.relayValidation.valid_relay(data):
-            return 'Invalid payload. here is an example: {"source": "satori", "name": "nameOfSomeAPI", "target": "optional", "data": 420}', 400
-        if not start.relayValidation.stream_claimed(
-            name=data.get('name'),
-            target=data.get('target')
-        ):
-            save = start.relayValidation.register_stream(
-                data=data)
-            if save == False:
-                return 'Unable to register stream with server', 500
-            # get pubkey, recreate connection...
-            start.checkin()
-            start.pubsubConnect()
-        # ...pass data onto pubsub
-        start.pubsub.publish(
-            topic=StreamId(
-                source=data.get('source', 'satori'),
-                author=start.wallet.publicKey,
-                stream=data.get('name'),
-                target=data.get('target')).topic(),
-            data=data.get('data'))
-        return 'Success: ', 200
-
-    payload = json.loads(request.get_json())
-    return accept_submittion(payload)
+    # def accept_submittion(data: dict):
+    #    if not start.relayValidation.valid_relay(data):
+    #        return 'Invalid payload. here is an example: {"source": "satori", "name": "nameOfSomeAPI", "target": "optional", "data": 420}', 400
+    #    if not start.relayValidation.stream_claimed(
+    #        name=data.get('name'),
+    #        target=data.get('target')
+    #    ):
+    #        save = start.relayValidation.register_stream(
+    #            data=data)
+    #        if save == False:
+    #            return 'Unable to register stream with server', 500
+    #        # get pubkey, recreate connection...
+    #        start.checkin()
+    #        start.pubsubConnect()
+    #    # ...pass data onto pubsub
+    #    start.pubsub.publish(
+    #        topic=StreamId(
+    #            source=data.get('source', 'satori'),
+    #            author=start.wallet.publicKey,
+    #            stream=data.get('name'),
+    #            target=data.get('target')).topic(),
+    #        data=data.get('data'))
+    #    return 'Success: ', 200
+    return acceptRelaySubmission(start, json.loads(request.get_json()))
 
 
 @app.route('/register_stream/', methods=['POST'])
