@@ -259,11 +259,23 @@
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
         <div class="row">
-          <div class="col-lg-6 col-7">
+          <div class="col-lg-10 col-10">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">Data Streams</h6>
             <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
             Primary data streams published by this Satori Neuron 
             </p>
+          </div>
+          <div class="col-lg-2 col-2">
+            <div class="row-container">
+              <!--<p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align: end;/* border-bottom: inset; */font-weight: 600;">
+                CSV: 
+              </p>-->
+              <a href="{{ url_for('relay_csv', filename='download/satori_relay_datastreams_export.csv') }}" target="_blank">
+                <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                  <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>
+                </button>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -443,9 +455,9 @@
               </div>
               <div class="col-lg-2 col-2">
                 <div class="row-container">
-                  <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align: end;/* border-bottom: inset; */font-weight: 600;">
+                  <!--<p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align: end;/* border-bottom: inset; */font-weight: 600;">
                     CSV: 
-                  </p>
+                  </p>-->
                   <a href="{{ url_for('static', filename='download/satori_datastream_form.csv') }}" target="_blank">
                     <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
                       <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>

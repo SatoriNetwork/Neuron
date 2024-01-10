@@ -63,13 +63,14 @@ DONE neuron - take out ipfs env var from run command, put in image
 DONE neuron - add csv upload for datastreams visual to nueron ui
 DONE neuron - add csv upload accept to nueron server
 DONE neuron - process csv upload
-neuron - test csv upload process
-neuron - give user feedback on processing
-neuron - add export csv of existing datastreams
+DONE neuron - test csv upload process
+DONE neuron - give user feedback on processing
+DONE neuron - add export csv of existing datastreams
 neuron - what happens if we add data to history without hash? does it hash it, throw it away? throw everything after it away?
 neuron - allow history to be added without hashes and have it automatically hash it.
 all - convert rvn wallet to evr wallet
 all - setup electrumx server for evr
+neuron - test seeding datastreams with csv
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
 central - add issuance logic to server
@@ -82,3 +83,10 @@ central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
 central - modify queries to respect soft delete.
 -- Launch -- 
+
+
+
+
+
+-- Nice -- 
+neuron - add export csv of history - just grab the file from data
