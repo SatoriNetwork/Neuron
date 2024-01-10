@@ -8,8 +8,8 @@ def processRelayCsv(start: 'StartupDag'):
     df = pd.read_csv('/Satori/Neuron/uploaded/datastreams.csv')
     statuses = []
     for _, row in df.iterrows():
-        msg, status = _acceptRelaySubmissionMock(start, data=row.to_dict())
-        # msg, status = acceptRelaySubmission(start, data=row.to_dict())
+        # msg, status = _acceptRelaySubmissionMock(start, data=row.to_dict())
+        msg, status = acceptRelaySubmission(start, data=row.to_dict())
         statuses.append(status)
         start.workingUpdates.on_next(
             f"{row['stream']}{row['target']} - {'success' if status == 200 else msg}")
