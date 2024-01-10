@@ -3,6 +3,7 @@ from typing import Union
 import json
 import time
 import threading
+from reactivex.subject import BehaviorSubject
 import satorineuron
 import satoriengine
 from satorilib.concepts.structs import StreamId, Stream
@@ -43,6 +44,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def __init__(self, *args, urlServer: str = None, urlPubsub: str = None):
         super(StartupDag, self).__init__(*args)
+        self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
         self.urlServer: str = urlServer
         self.urlPubsub: str = urlPubsub
         self.paused: bool = False

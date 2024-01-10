@@ -3,20 +3,28 @@ import pandas as pd
 
 
 def processRelayCsv(start: 'StartupDag'):
+    # from satorineuron.init.start import getStart
+    # start = getStart()
     df = pd.read_csv('/Satori/Neuron/uploaded/datastreams.csv')
     statuses = []
     for _, row in df.iterrows():
-        msg, status = acceptSubmission(start, data=row.to_dict())
+        msg, status = _acceptRelaySubmissionMock(start, data=row.to_dict())
+        # msg, status = acceptRelaySubmission(start, data=row.to_dict())
         statuses.append(status)
-        # yeild this
-        print(row['stream'] + row['target'], msg, status)
-    # return summary
+        start.workingUpdates.on_next(
+            f"{row['stream']}{row['target']} - {'success' if status == 200 else msg}")
     failures = [str(i) for i, s in enumerate(statuses) if s != 200]
     if len(failures) == 0:
         return 'all succeeded', 200
     elif len(failures) == len(statuses):
         return 'all failed', 500
     return f'rows {",".join(failures)} failed', 200
+
+
+def _acceptRelaySubmissionMock(start: 'StartupDag', data: dict):
+    import time
+    time.sleep(5)
+    return 'Success: ', 200
 
 
 def acceptRelaySubmission(start: 'StartupDag', data: dict):

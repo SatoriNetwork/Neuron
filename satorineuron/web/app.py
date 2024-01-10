@@ -130,7 +130,6 @@ def upload_csv():
 
 @app.route('/upload_datastream_csv', methods=['POST'])
 def upload_datastream_csv():
-
     if 'file' not in request.files:
         return 'No file uploaded', 400
     f = request.files['file']
@@ -692,6 +691,35 @@ def modelUpdates():
 
     import time
     return Response(update(), mimetype='text/event-stream')
+
+
+@app.route('/working_updates')
+def working_updates():
+    def update():
+        try:
+            yield 'data: \n\n'
+            messages = []
+            listeners = []
+            listeners.append(start.workingUpdates.subscribe(
+                lambda x: messages.append(x) if x is not None else None))
+            while True:
+                time.sleep(1)
+                if len(messages) > 0:
+                    msg = messages.pop(0)
+                    if msg == 'working_updates_end':
+                        break
+                    yield "data: " + str(msg).replace("'", '"') + "\n\n"
+        except Exception as e:
+            logging.error('working_updates error:', e, print=True)
+
+    import time
+    return Response(update(), mimetype='text/event-stream')
+
+
+@app.route('/working_updates_end')
+def working_updates_end():
+    start.workingUpdates.on_next('working_updates_end')
+    return 'ok', 200
 
 
 @app.route('/wallet/')

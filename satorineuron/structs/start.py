@@ -1,5 +1,6 @@
 from typing import Union
 import threading
+from reactivex.subject import BehaviorSubject
 from satorilib.concepts.structs import Stream
 from satorilib.api.wallet import Wallet
 # from satorilib.api.ipfs import Ipfs
@@ -13,6 +14,7 @@ class StartupDagStruct(object):
 
     def __init__(self, urlServer: str = None, urlPubsub: str = None, *args):
         super(StartupDagStruct, self).__init__(*args)
+        self.workingUpdates: BehaviorSubject = None
         self.urlServer: str = None
         self.urlPubsub: str = None
         self.paused: bool = None

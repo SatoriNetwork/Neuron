@@ -23,9 +23,10 @@
   <body class="g-sidenav-show {% if darkmode %}bg-gray-900{% else %}bg-gray-200{% endif %}">
 	<div id="working" class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="display: none;">
 		<div class="container-for-center vertical-center" style="padding-left: 0px;">
-		{% if darkmode %}<img src="{{ url_for('static', filename='img/loading_dark.gif') }}" class="loadingThingy">{% else %}<img src="{{ url_for('static', filename='img/loading_light.gif') }}" class="loadingThingy">{% endif %}	
-		</div>
-	  </div>
+		  {% if darkmode %}<img src="{{ url_for('static', filename='img/loading_dark.gif') }}" class="loadingThingy">{% else %}<img src="{{ url_for('static', filename='img/loading_light.gif') }}" class="loadingThingy">{% endif %}	
+    </div>
+    <div id="working_messages" class="container-for-center vertical-center" style="padding-left: 0px;position: relative;margin-left: 12%;margin-top: 20%;"><p id="working_message"></p></div>
+	</div>
     <!--{ % include 'loader.html' %}-->
     <!--{ % include 'header.html' % }-->
     {% include 'nav-side.html' %}
