@@ -1,6 +1,6 @@
 
 import click
-from satoriwallet.lib import verify as satori_verify
+from satoriwallet import evrmore
 from satoriwallet.lib import connection
 from satorilib.api.wallet import Wallet
 
@@ -22,7 +22,7 @@ def help():
 @click.argument('pubkey', type=str, required=True)
 def verify(message: str, signature: str, pubkey: str):
     '''verifies a message and signature and public key'''
-    print(satori_verify(
+    print(evrmore.verify(
         message=message,
         signature=signature,
         publicKey=pubkey
@@ -35,7 +35,7 @@ def verify(message: str, signature: str, pubkey: str):
 @click.argument('address', type=str, required=True)
 def verify_by_address(message: str, signature: str, address: str):
     '''verifies a message and signature and address'''
-    print(satori_verify(
+    print(evrmore.verify(
         message=message,
         signature=signature,
         address=address
