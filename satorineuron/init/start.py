@@ -1,14 +1,13 @@
 # todo create config if no config present, use config if config present
 from typing import Union
 import json
-import time
 import threading
 from reactivex.subject import BehaviorSubject
 import satorineuron
 import satoriengine
 from satorilib.concepts.structs import StreamId, Stream
 from satorilib.api import disk
-from satorilib.api.wallet import Wallet
+from satorilib.api.wallet import RavencoinWallet
 # from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
@@ -49,7 +48,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.urlPubsub: str = urlPubsub
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
-        self.wallet: Wallet
+        self.wallet: RavencoinWallet
         self.details: dict
         self.key: str
         self.idKey: str
@@ -90,7 +89,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info('started relay validation engine', color='green')
 
     def openWallet(self):
-        self.wallet = Wallet(config.walletPath('wallet.yaml'))()
+        self.wallet = RavencoinWallet(config.walletPath('wallet.yaml'))()
         logging.info('opened wallet', color='green')
 
     def checkin(self):

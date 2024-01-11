@@ -2,7 +2,7 @@ from typing import Union
 import threading
 from reactivex.subject import BehaviorSubject
 from satorilib.concepts.structs import Stream
-from satorilib.api.wallet import Wallet
+from satorilib.api.wallet import RavencoinWallet
 # from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.pubsub import SatoriPubSubConn
@@ -19,7 +19,7 @@ class StartupDagStruct(object):
         self.urlPubsub: str = None
         self.paused: bool = None
         self.pauseThread: Union[threading.Thread, None] = None
-        self.wallet: Wallet = None
+        self.wallet: RavencoinWallet = None
         self.details: dict = None
         self.key: str = None
         self.idKey: str = None

@@ -69,7 +69,9 @@ DONE neuron - allow history to be added without hashes and have it automatically
 DONE neuron - add ability to upload updates to history on relay streams
 DONE neuron - add export csv of history - just grab the file from data
 DONE neuron - add placeholder for voting
-
+DONE wallet - convert ravencoin wallet to evrmore wallet
+DONE lib - use new evrmore stuff as wallet
+neuron - point everything at evrmore wallet instead of ravencoin wallet and test
 all - convert rvn wallet to evr wallet
 all - setup electrumx server for evr
 neuron - test seeding datastreams with csv

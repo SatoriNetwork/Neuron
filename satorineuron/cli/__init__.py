@@ -2,7 +2,7 @@
 import click
 from satoriwallet import evrmore
 from satoriwallet.lib import connection
-from satorilib.api.wallet import Wallet
+from satorilib.api.wallet import EvrmoreWallet
 
 
 @click.group()
@@ -45,7 +45,7 @@ def verify_by_address(message: str, signature: str, address: str):
 @main.command()
 def create_wallet_auth_payload():
     '''uses existing saved wallet to sign a message for authentication'''
-    w = Wallet(temporary=True)
+    w = EvrmoreWallet(temporary=True)
     w.init()
     print(connection.authPayload(w))
 
@@ -53,6 +53,6 @@ def create_wallet_auth_payload():
 @main.command()
 def create_test_wallet_auth_payload():
     '''generates a new wallet and signs a message for authentication'''
-    w = Wallet(temporary=True)
+    w = EvrmoreWallet(temporary=True)
     w.generate()
     print(connection.authPayload(w))

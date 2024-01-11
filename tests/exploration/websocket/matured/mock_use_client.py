@@ -1,6 +1,6 @@
 # imports changed.
 # import json
-# from satorilib.api.wallet import Wallet
+# from satorilib.api.wallet import RavencoinWallet
 # .client import ClientConnection
 #
 # def establishConnection(wallet: Wallet):
@@ -20,7 +20,7 @@
 #        )
 #
 # if __name__ == '__main__':
-#    randomWallet = Wallet(temporary=True)()
+#    randomWallet = RavencoinWallet(temporary=True)()
 #    connection = establishConnection(randomWallet)
 #    while True:
 #        connection.send(input('what should the client say to the server? '))
