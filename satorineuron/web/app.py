@@ -4,6 +4,7 @@
 # run with:
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
 
+from typing import Union
 import os
 import json
 import threading
@@ -11,6 +12,7 @@ import secrets
 import webbrowser
 import time
 import traceback
+import pandas as pd
 from waitress import serve
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
@@ -81,6 +83,21 @@ def returnNone():
 def get_user_id():
     return session.get('user_id', '0')
 
+
+def getFile(ext: str = '.csv') -> tuple[str, int, Union[None, 'FileStorage']]:
+    if 'file' not in request.files:
+        return 'No file uploaded', 400, None
+    f = request.files['file']
+    if f.filename == '':
+        return 'No selected file', 400, None
+    if f:
+        if ext is None:
+            return 'success', 200, f
+        elif isinstance(ext, str) and f.filename.endswith(ext):
+            return 'success', 200, f
+        else:
+            return 'Invalid file format. Only CSV files are allowed', 400, None
+    return 'unknown error getting file', 500, None
 ###############################################################################
 ## Errors #####################################################################
 ###############################################################################
@@ -104,45 +121,37 @@ def favicon():
 
 
 @app.route('/static/<path:path>')
-def send_static(path):
+def sendStatic(path):
     return send_from_directory('static', path)
 
 
 @app.route('/generated/<path:path>')
-def send_generated(path):
+def generated(path):
     return send_from_directory('generated', path)
 
 
-@app.route('/upload', methods=['POST'])
-def upload_csv():
-    if 'file' not in request.files:
-        return 'No file uploaded', 400
-    f = request.files['file']
-    if f.filename == '':
-        return 'No selected file', 400
-    if f and f.filename.endswith('.csv'):
+@app.route('/upload_history_csv', methods=['POST'])
+def uploadHistoryCsv():
+    msg, status, f = getFile('.csv')
+    if f is not None:
         f.save('/Satori/Neuron/uploaded/history.csv')
-        # redirect('/dashboard')  # url_for('dashboard')
         return 'Successful upload.', 200
     else:
-        return 'Invalid file format. Only CSV files are allowed', 400
+        flash(msg, 'success' if status == 200 else 'error')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/upload_datastream_csv', methods=['POST'])
-def upload_datastream_csv():
-    if 'file' not in request.files:
-        return 'No file uploaded', 400
-    f = request.files['file']
-    if f.filename == '':
-        return 'No selected file', 400
-    if f and f.filename.endswith('.csv'):
-        f.save('/Satori/Neuron/uploaded/datastreams.csv')
-        # redirect('/dashboard')  # url_for('dashboard')
-        processRelayCsv(start)
-        # todo: handle yeild in loop until return, send yeild to messages
-        return 'Successful upload.', 200
+def uploadDatastreamCsv():
+    msg, status, f = getFile('.csv')
+    if f is not None:
+        df = pd.read_csv(f)
+        processRelayCsv(start, df)
+        logging.info('Successful upload', 200, print=True)
     else:
-        return 'Invalid file format. Only CSV files are allowed', 400
+        logging.error(msg, status, print=True)
+        flash(msg, 'success' if status == 200 else 'error')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/test')
@@ -206,7 +215,7 @@ def modeDark():
 
 
 @app.route('/configuration', methods=['GET', 'POST'])
-def edit_configuration():
+def editConfiguration():
     import importlib
     global forms
     forms = importlib.reload(forms)
@@ -286,32 +295,6 @@ def hook(target: str = 'Close'):
         return float(response.json(){generateDrill()})
     return None
 """, 200
-
-
-@app.route('/relay_csv', methods=['GET'])
-def relay_csv():
-    '''
-    returns a csv file of the current relay streams 
-    '''
-    import pandas as pd
-    return (
-        pd.DataFrame([{
-            **{'source': stream.streamId.source},
-            **{'author': stream.streamId.author},
-            **{'stream': stream.streamId.stream},
-            **{'target': stream.streamId.target},
-            **stream.asMap(noneToBlank=True),
-            **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
-            **{'cadenceStr': deduceCadenceString(stream.cadence)},
-            **{'offsetStr': deduceCadenceString(stream.offset)}}
-            for stream in start.relay.streams]
-            if start.relay is not None else []).to_csv(index=False),
-        200,
-        {
-            'Content-Type': 'text/csv',
-            'Content-Disposition': 'attachment; filename=relay_streams.csv'
-        }
-    )
 
 
 @app.route('/relay', methods=['POST'])
@@ -720,7 +703,7 @@ def modelUpdates():
 
 
 @app.route('/working_updates')
-def working_updates():
+def workingUpdates():
     def update():
         try:
             yield 'data: \n\n'
@@ -743,7 +726,7 @@ def working_updates():
 
 
 @app.route('/working_updates_end')
-def working_updates_end():
+def workingUpdatesEnd():
     start.workingUpdates.on_next('working_updates_end')
     return 'ok', 200
 
@@ -768,6 +751,92 @@ def wallet():
         'image': img_tag,
         'wallet': start.wallet}
     return render_template('wallet.html', **resp)
+
+
+@app.route('/voting')
+def voting():
+    resp = {'darkmode': darkmode, 'title': 'Voting'}
+    return render_template('voting.html', **resp)
+
+
+@app.route('/relay_csv', methods=['GET'])
+def relayCsv():
+    ''' returns a csv file of the current relay streams '''
+    import pandas as pd
+    return (
+        pd.DataFrame([{
+            **{'source': stream.streamId.source},
+            **{'author': stream.streamId.author},
+            **{'stream': stream.streamId.stream},
+            **{'target': stream.streamId.target},
+            **stream.asMap(noneToBlank=True),
+            **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+            **{'cadenceStr': deduceCadenceString(stream.cadence)},
+            **{'offsetStr': deduceCadenceString(stream.offset)}}
+            for stream in start.relay.streams]
+            if start.relay is not None else []).to_csv(index=False),
+        200,
+        {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': 'attachment; filename=relay_streams.csv'
+        }
+    )
+
+
+@app.route('/relay_history_csv/<topic>', methods=['GET'])
+def relayHistoryCsv(topic: str = None):
+    ''' returns a csv file of the history of the relay stream '''
+    cache = start.cacheOf(StreamId.fromTopic(topic))
+    return (
+        (
+            cache.df.drop(columns=['hash'])
+            if cache is not None and cache.df is not None
+            else pd.DataFrame({'failure': [
+                f'no history found for stream with stream id of {topic}']}
+            )
+        ).to_csv(),
+        200,
+        {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': f'attachment; filename={cache.id.stream}.{cache.id.target}.csv'
+        })
+
+
+@app.route('/merge_history_csv/<topic>', methods=['POST'])
+def mergeHistoryCsv(topic: str = None):
+    ''' merge history uploaded  '''
+    cache = start.cacheOf(StreamId.fromTopic(topic))
+    if cache is not None:
+        msg, status, f = getFile('.csv')
+        if f is not None:
+            df = pd.read_csv(f)
+            print('df', df)
+            cache.merge(df)
+            success, _ = cache.validateAllHashes()
+            if success:
+                flash('history merged successfully!', 'success')
+            else:
+                cache.saveHashes()
+                success, _ = cache.validateAllHashes()
+                if success:
+                    flash('history merged successfully!', 'success')
+        else:
+            flash(msg, 'success' if status == 200 else 'error')
+    else:
+        flash('history data not found', 'error')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/remove_history_csv/<topic>', methods=['GET'])
+def removeHistoryCsv(topic: str = None):
+    ''' removes history '''
+    cache = start.cacheOf(StreamId.fromTopic(topic))
+    if cache is not None and cache.df is not None:
+        cache.remove()
+        flash('history cleared successfully', 'success')
+    else:
+        flash('history not found', 'error')
+    return redirect(url_for('dashboard'))
 
 ###############################################################################
 ## Routes - subscription ######################################################

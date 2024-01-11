@@ -2,10 +2,9 @@ from satorilib.concepts import StreamId
 import pandas as pd
 
 
-def processRelayCsv(start: 'StartupDag'):
+def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
     # from satorineuron.init.start import getStart
     # start = getStart()
-    df = pd.read_csv('/Satori/Neuron/uploaded/datastreams.csv')
     statuses = []
     for _, row in df.iterrows():
         # msg, status = _acceptRelaySubmissionMock(start, data=row.to_dict())

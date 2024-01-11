@@ -1,5 +1,3 @@
-issues:
-
 DONE remove row number cache design from disk, add in regular old cache design.
 DONE move scheduler up to the engine level, cycle through all datasets.
 DONE make sure we clear out any bad data at all times.
@@ -57,7 +55,7 @@ DONE central - test prediction target time formatting
 GOOD central - fix search pulling predictions too far in past
 DONE installer - make an installer for linux
 DONE installer - test linux installer
-DONE neuron - take out ipfs calls 
+DONE neuron - take out ipfs calls
 DONE neuron - take out ipfs startup
 DONE neuron - take out ipfs env var from run command, put in image
 DONE neuron - add csv upload for datastreams visual to nueron ui
@@ -66,15 +64,20 @@ DONE neuron - process csv upload
 DONE neuron - test csv upload process
 DONE neuron - give user feedback on processing
 DONE neuron - add export csv of existing datastreams
-neuron - what happens if we add data to history without hash? does it hash it, throw it away? throw everything after it away?
-neuron - allow history to be added without hashes and have it automatically hash it.
+DONE neuron - what happens if we add data to history without hash? does it hash it, throw it away? throw everything after it away?
+DONE neuron - allow history to be added without hashes and have it automatically hash it.
+DONE neuron - add ability to upload updates to history on relay streams
+DONE neuron - add export csv of history - just grab the file from data
+DONE neuron - add placeholder for voting
+
 all - convert rvn wallet to evr wallet
 all - setup electrumx server for evr
 neuron - test seeding datastreams with csv
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
 central - add issuance logic to server
--- BETA (test coin) -- 
+
+-- BETA (test coin) --
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
 central - make sure server is saving history of observations
@@ -82,11 +85,7 @@ central - purge history more than 8 days old
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
 central - modify queries to respect soft delete.
--- Launch -- 
 
+-- Launch --
 
-
-
-
--- Nice -- 
-neuron - add export csv of history - just grab the file from data
+-- Nice --

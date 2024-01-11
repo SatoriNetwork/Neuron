@@ -77,6 +77,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.openWallet()
         self.checkin()
+        self.verifyCaches()
         self.pubsubConnect()
         self.startRelay()
         self.buildEngine()
@@ -133,6 +134,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     self.publications,
                     self.publicationKeys)]
         logging.info('checked in with Satori', color='green')
+
+    def verifyCaches(self) -> bool:
+        ''' rehashes my published hashes '''
+        for stream in set(self.publications):
+            cache = self.cacheOf(stream.id)
+            success, details = cache.validateAllHashes()
+            if not success:
+                cache.saveHashes()
+        return True
 
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
