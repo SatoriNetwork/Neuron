@@ -11,10 +11,14 @@ RUN apt-get install -y build-essential
 RUN apt-get install -y wget
 RUN apt-get install -y git 
 RUN apt-get install -y vim
+# for making python-evrmorelib
+RUN apt-get install -y cmake
 
-RUN wget https://dist.ipfs.tech/kubo/v0.21.0/kubo_v0.21.0_linux-amd64.tar.gz
-RUN tar -xvzf kubo_v0.21.0_linux-amd64.tar.gz
-RUN cd kubo && bash install.sh
+# ipfs - unused
+#RUN wget https://dist.ipfs.tech/kubo/v0.21.0/kubo_v0.21.0_linux-amd64.tar.gz
+#RUN tar -xvzf kubo_v0.21.0_linux-amd64.tar.gz
+#RUN cd kubo && bash install.sh
+
 # has no effect, we put it in the run command
 #RUN echo "IPFS_PATH=/Satori/Neuron/config/ipfs" >> /etc/environment
 #RUN echo "source /etc/environment" >> ~/.bashrc 
