@@ -71,15 +71,21 @@ DONE neuron - add export csv of history - just grab the file from data
 DONE neuron - add placeholder for voting
 DONE wallet - convert ravencoin wallet to evrmore wallet
 DONE lib - use new evrmore stuff as wallet
+DONE neuron - change wallet yaml to include both
+DONE neuron - create transaction functioanlity
+neuron - test transaction create code
+neuron - clean up the wallet code it is horrendous
 neuron - point everything at evrmore wallet instead of ravencoin wallet and test
+neuron - finish wallet UI for creating a transaction
+neuron - finish wallet UI for history of transactions
 all - convert rvn wallet to evr wallet
-all - setup electrumx server for evr
+
+central - add issuance logic to server
+central - test issuance logic to server with test token
 neuron - test seeding datastreams with csv
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
-central - add issuance logic to server
-
--- BETA (test coin) --
+-- BETA (test coin) target: march 3rd --
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
 central - make sure server is saving history of observations
@@ -92,3 +98,10 @@ central - modify queries to respect soft delete.
 
 -- Nice --
 
+central - setup electrumx server for evr
+
+Wallet Encryption:
+    neuron - we really should at least give the option to encrypt the wallet yaml
+    neuron - so on the wallet page add a card for encryption
+    neuron - and ask for their password when showing the secret
+    neuron - the only problem is in order to sign anything to verify your identity you need to use the private key... so the user would have to provide their password everytime satori starts... This is a problem for later... when they can authorize from their phone...
