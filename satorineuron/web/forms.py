@@ -76,3 +76,15 @@ class RelayStreamForm(FlaskForm):
         'History',
         validators=[])
     submit = SubmitField('Save')
+
+
+class SendSatoriTransaction(FlaskForm):
+    # str
+    address = StringField(
+        'Address',
+        validators=[InputRequired(), Length(min=34, max=34)])
+    # number of seconds between api hits, not None
+    amount = IntegerField(
+        'Amount',
+        validators=[InputRequired(), NumberRange(min=1, max=None, message='You must send at least 1')])
+    submit = SubmitField('Send')

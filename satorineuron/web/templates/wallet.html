@@ -13,12 +13,12 @@
           </div>
           <div class="text-center pt-1">
             <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.showBalance() }}</h4>
-            <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATS</p>
+            <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
           </div>
         </div>
         <hr class="dark horizontal my-0">
         <div class="card-footer p-1">
-          <p class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align:center;"><span class="text-success text-sm font-weight-bolder">{{ wallet.showBalance(True) }} </span>Ravencoin</p>
+          <p class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align:center;"><span class="text-success text-sm font-weight-bolder">{{ wallet.showBalance(True) }} </span>{{ wallet.chain }}</p>
         </div>
         <hr class="dark horizontal my-0">
         <center>
@@ -47,16 +47,54 @@
           <i class="material-icons opacity-10">send</i>
         </div>
         <div class="text-end pt-1">
-          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Send</h4>
+          <!--<h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Send</h4>-->
         </div>
-        <div class="text-center pt-1" style="padding-top: 12rem !important;padding-bottom: 10rem !important;">
-          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">coming soon</h4>
-          <p class="text-sm mb-0 "></p>
+        <div class="text-center pt-1" style="padding-top: 4.24rem !important;padding-bottom: 2.64rem !important;">
+          
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom: 2rem !important;">Send Satori</h4>
+            <div style="padding: 1.25rem;">
+              <form action="/send_satori_transaction" method="POST">
+                {{ sendSatoriTransaction.hidden_tag() }}
+                {{ sendSatoriTransaction.csrf_token }}
+                <div class="tight text-format-table-header" style="text-align: left;">
+                  {% if darkmode %}{{ sendSatoriTransaction.address.label(class="dark-colors tight-label") }}
+                  {% else %}{{ sendSatoriTransaction.address.label(class="tight-label") }}
+                  {% endif %}
+                </div>
+                <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ sendSatoriTransaction.address(size=32, class_="tight form-control dark-colors", placeholder="EVRMmvn1ktZwqdXmsPwjxCKFuyY7AYFXLK") }}
+                    {% else %}{{ sendSatoriTransaction.address(size=32, class_="tight form-control", placeholder="EVRMmvn1ktZwqdXmsPwjxCKFuyY7AYFXLK") }}
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="tight text-format-table-header" style="text-align: left;">
+                  {% if darkmode %}{{ sendSatoriTransaction.amount.label(class="dark-colors tight-label") }}
+                  {% else %}{{ sendSatoriTransaction.amount.label(class="tight-label") }}
+                  {% endif %}
+                </div>
+                <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 4rem;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder="3") }}
+                    {% else %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control", placeholder="3") }}
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
+                  <div class="input-group input-group-outline" onclick="">
+                    {% if darkmode %}{{ sendSatoriTransaction.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateJs()) showWorking();") }}
+                    {% else %}{{ sendSatoriTransaction.submit(size=32, class_="tight form-control", onclick="if(validateJs()) showWorking();") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </form>
+            </div>
         </div>
       </div>
       <hr class="dark horizontal my-0">
       <div class="card-footer p-1">
-        <center><p class="mb-1 {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>In the meantime, to send Satori tokens, please download and import your private key into a <a href='https://ravencoin.org/wallet/' target='_blank'>Ravencoin wallet</a> such as <a href='https://moontree.com/'>Moontree</a></p></center>
+        <center><p class="mb-1 {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>
+          Transaction fees will be added during the send process. For more details and control download and import your private key into a full featured wallet such as <a href='https://moontree.com/'>Moontree</a></p></center>
       </div>
     </div>
   </div>
@@ -67,10 +105,10 @@
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
         <div class="row">
           <div class="col-lg-6 col-7">
-            <h6 class="{% if darkmode %}dark-colors{% endif %}">Transactions</h6>
-            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Transaction History</h6>
+            <!--<p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
               Transaction history for this wallet
-            </p>
+            </p>-->
           </div>
         </div>
       </div>
@@ -79,10 +117,31 @@
           <table class="table align-items-center mb-0">
             <thead>
               <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Transaction Id</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for transaction in wallet.transactionHistory %}
+              <tr class='yellow-hover'>
+                <td>
+                  <a href="https://rvn.cryptoscope.io/tx/?txid={{ transaction.tx_hash }}", target='_blank'>
+                    <div class="d-flex px-3 py-1">
+                      <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ transaction.tx_hash }}</h6>
+                    </div>
+                  </a>
+                </td>
+              </tr> 
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!--<table class="table align-items-center mb-0">
+            <thead>
+              <tr>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Id</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Confirmations</th>
-              <!--<th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Sent</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Received</th>-->
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Sent</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Received</th>
               </tr>
             </thead>
             <tbody>
@@ -102,7 +161,7 @@
                     </div>
                   </a>
                 </td>
-              <!--    <td>
+              <td>
                     {% for name, value in transaction.received.items() %}
                     <div class="d-flex px-3 py-1">
                       <h6 class="mb-0 text-sm">{{ name }}: {{ value }}</h6>
@@ -115,11 +174,11 @@
                       <h6 class="mb-0 text-sm">{{ name }}: {{ value }}</h6>
                     </div>
                     {% endfor %}
-                  </td>-->
+                  </td>
                 </tr> 
               {% endfor %}
             </tbody>
-          </table>
+          </table>-->
         </div>
       </div>
     </div>
@@ -133,13 +192,13 @@
           <div class="col-lg-12 col-12">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">About Satori Token</h6>
             <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
-              Satori Tokens are currently an asset on the Ravencoin network. Once Satori is fully decentralized the existing tokens on the Ravencoin network will be fully converted to the native Satori chain. Below are stats about Satori pulled from the Ravencoin blockchain:
+              Satori Tokens are an asset on a public blockchain. Below are stats about Satori according to the blockchain:
             </p>
           </div>
         </div>
       </div>
       <div class="card-body px-0 pb-2">
-        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}" style='padding: 1.5rem;'>
+        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}">
           <pre>{{ wallet.showStats() }}</pre>
         </p>
       </div>
@@ -154,13 +213,13 @@
           <div class="col-lg-12 col-12">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">About Electrumx</h6>
             <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
-              Ravencoin blockchain data is retrieved through Electrumx. Below is information about the specific Electrumx server used to retrieve wallet information:
+              {{ wallet.chain }} blockchain data is retrieved through Electrumx. Below is information about the specific Electrumx server used to retrieve wallet information:
             </p>
           </div>
         </div>
       </div>
       <div class="card-body px-0 pb-2">
-        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}"  style='padding: 1.5rem;'>
+        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}"  style='padding-left: 1.5rem; padding-bottom: 1.5rem;'>
           <code>
           {{ wallet.banner }}
           </code>
@@ -169,7 +228,14 @@
     </div>
   </div>
 </div>
-
+<script>
+	function validateJs() {
+		return (
+			document.getElementById("address").value != "" && 
+			document.getElementById("amount").value > 0
+      );
+	}
+</script>
 {% endblock %}
 
 

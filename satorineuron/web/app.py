@@ -334,6 +334,29 @@ def relay():
     return acceptRelaySubmission(start, json.loads(request.get_json()))
 
 
+@app.route('/send_satori_transaction', methods=['POST'])
+def sendSatoriTransaction():
+    import importlib
+    global forms
+    global badForm
+    forms = importlib.reload(forms)
+
+    def accept_submittion(sendSatoriForm):
+        data = {
+            **({'address': sendSatoriForm.address.data} if sendSatoriForm.address.data not in ['', None] else {}),
+            **({'amount': sendSatoriForm.amount.data} if sendSatoriForm.amount.data not in ['', None] else {}),
+        }
+        # do more validation here.
+        result = start.wallet.satoriTransaction(
+            amount=data.get('amount', 0), 
+            address=data.get('address', ''))
+        flash('Transaction result: ' + str(result))
+        return redirect('/wallet')
+
+    sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
+    return accept_submittion(sendSatoriForm)
+
+
 @app.route('/register_stream', methods=['POST'])
 def registerStream():
     import importlib
@@ -745,11 +768,28 @@ def wallet():
     # return send_file(buf, mimetype='image/jpeg')
     img = b64encode(buf.getvalue()).decode('ascii')
     img_tag = f'<img src="data:image/jpg;base64,{img}" class="img-fluid"/>'
+
+    import importlib
+    global forms
+    forms = importlib.reload(forms)
+
+    def present_tx_form():
+        '''
+        this function could be used to fill a form with the current
+        configuration for a stream in order to edit it.
+        '''
+        sendSatoriTransaction = forms.SendSatoriTransaction(
+            formdata=request.form)
+        sendSatoriTransaction.address.data = ''
+        sendSatoriTransaction.amount.data = ''
+        return sendSatoriTransaction
+
     resp = {
         'darkmode': darkmode,
         'title': 'Wallet',
         'image': img_tag,
-        'wallet': start.wallet}
+        'wallet': start.wallet,
+        'sendSatoriTransaction': present_tx_form()}
     return render_template('wallet.html', **resp)
 
 

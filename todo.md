@@ -73,12 +73,10 @@ DONE wallet - convert ravencoin wallet to evrmore wallet
 DONE lib - use new evrmore stuff as wallet
 DONE neuron - change wallet yaml to include both
 DONE neuron - create transaction functioanlity
-neuron - test transaction create code
-neuron - clean up the wallet code it is horrendous
-neuron - point everything at evrmore wallet instead of ravencoin wallet and test
-neuron - finish wallet UI for creating a transaction
-neuron - finish wallet UI for history of transactions
-all - convert rvn wallet to evr wallet
+DONE neuron - clean up the wallet code it is horrendous
+DONE neuron - finish wallet UI for creating a transaction
+DONE neuron - finish wallet UI for history of transactions
+neuron - test transaction create code (address correct?)
 
 central - add issuance logic to server
 central - test issuance logic to server with test token
@@ -93,6 +91,8 @@ central - purge history more than 8 days old
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
 central - modify queries to respect soft delete.
+neuron - point everything at evrmore wallet instead of ravencoin wallet and test
+all - convert rvn wallet to evr wallet
 
 -- Launch --
 

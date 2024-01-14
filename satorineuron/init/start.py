@@ -82,7 +82,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.buildEngine()
         self.rendezvousConnect()
         self.incrementallyDownloadDatasets()
-        # self.downloadDatasets()
+        # # self.downloadDatasets()
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
