@@ -22,6 +22,7 @@ from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv
 from satorineuron.web import forms
 from satorilib.concepts.structs import Observation, StreamId, StreamsOverview
+from satorilib.api.wallet.wallet import TransactionFailure
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString
 
@@ -342,15 +343,21 @@ def sendSatoriTransaction():
     forms = importlib.reload(forms)
 
     def accept_submittion(sendSatoriForm):
-        data = {
-            **({'address': sendSatoriForm.address.data} if sendSatoriForm.address.data not in ['', None] else {}),
-            **({'amount': sendSatoriForm.amount.data} if sendSatoriForm.amount.data not in ['', None] else {}),
-        }
-        # do more validation here.
-        result = start.wallet.satoriTransaction(
-            amount=data.get('amount', 0), 
-            address=data.get('address', ''))
-        flash('Transaction result: ' + str(result))
+        if sendSatoriForm.sweep.data == True:
+            try:
+                result = start.wallet.sendAllTransaction(
+                    sendSatoriForm.address.data or '')
+                flash('Transaction result: ' + str(result))
+            except TransactionFailure as e:
+                flash(f'Send Failed: {e}')
+        else:
+            try:
+                result = start.wallet.satoriTransaction(
+                    amount=sendSatoriForm.amount.data or 0,
+                    address=sendSatoriForm.address.data or '')
+                flash('Transaction result: ' + str(result))
+            except TransactionFailure as e:
+                flash(f'Send Failed: {e}')
         return redirect('/wallet')
 
     sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)

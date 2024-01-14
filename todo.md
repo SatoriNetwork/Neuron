@@ -76,7 +76,11 @@ DONE neuron - create transaction functioanlity
 DONE neuron - clean up the wallet code it is horrendous
 DONE neuron - finish wallet UI for creating a transaction
 DONE neuron - finish wallet UI for history of transactions
+DONE neuron - flash feedback from trasnaction attempt
+DONE neuron - create send all
+DONE neuron - correct address in transaction create code
 neuron - test transaction create code (address correct?)
+neuron - create send all checkbox on UI
 
 central - add issuance logic to server
 central - test issuance logic to server with test token

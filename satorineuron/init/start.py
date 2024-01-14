@@ -75,13 +75,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' start the satori engine. '''
         self.createRelayValidation()
         self.openWallet()
-        self.checkin()
-        self.verifyCaches()
-        self.pubsubConnect()
-        self.startRelay()
-        self.buildEngine()
-        self.rendezvousConnect()
-        self.incrementallyDownloadDatasets()
+        # self.checkin()
+        # self.verifyCaches()
+        # self.pubsubConnect()
+        # self.startRelay()
+        # self.buildEngine()
+        # self.rendezvousConnect()
+        # self.incrementallyDownloadDatasets()
         # # self.downloadDatasets()
 
     def createRelayValidation(self):
@@ -89,7 +89,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info('started relay validation engine', color='green')
 
     def openWallet(self):
-        self.wallet = RavencoinWallet(config.walletPath('wallet.yaml'))()
+        self.wallet = RavencoinWallet(
+            config.walletPath('wallet.yaml'), reserve=0.01)()
         logging.info('opened wallet', color='green')
 
     def checkin(self):

@@ -12,22 +12,24 @@
             <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Wallet</h4>
           </div>
           <div class="text-center pt-1">
-            <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.showBalance() }}</h4>
+            <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.balanceAmount }}</h4>
             <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
           </div>
         </div>
         <hr class="dark horizontal my-0">
         <div class="card-footer p-1">
-          <p class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align:center;"><span class="text-success text-sm font-weight-bolder">{{ wallet.showBalance(True) }} </span>{{ wallet.chain }}</p>
+          <p class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align:center;"><span class="font-weight-normal">{{ wallet.currencyAmount }} </span>{{ wallet.chain }}</p>
         </div>
         <hr class="dark horizontal my-0">
         <center>
           {{image|safe}}
-          <br/>
-          {{ wallet.address }}
-          <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">wallet address</p>
         </center>
       </a>
+      <center>
+        <br/>
+        {{ wallet.address }}
+        <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">wallet address</p>
+      </center>
       <hr class="dark horizontal my-3">
       <center>
         <p id="show" class="danger text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('sensitive').style.display='block';document.getElementById('show').style.display='none';">
@@ -63,21 +65,39 @@
                 </div>
                 <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ sendSatoriTransaction.address(size=32, class_="tight form-control dark-colors", placeholder="EVRMmvn1ktZwqdXmsPwjxCKFuyY7AYFXLK") }}
-                    {% else %}{{ sendSatoriTransaction.address(size=32, class_="tight form-control", placeholder="EVRMmvn1ktZwqdXmsPwjxCKFuyY7AYFXLK") }}
+                    {% if darkmode %}{{ sendSatoriTransaction.address(size=32, class_="tight form-control dark-colors", placeholder=wallet.address) }}
+                    {% else %}{{ sendSatoriTransaction.address(size=32, class_="tight form-control", placeholder=wallet.address) }}
                     {% endif %}
                   </div>
                 </div>
-                <div class="tight text-format-table-header" style="text-align: left;">
-                  {% if darkmode %}{{ sendSatoriTransaction.amount.label(class="dark-colors tight-label") }}
-                  {% else %}{{ sendSatoriTransaction.amount.label(class="tight-label") }}
-                  {% endif %}
-                </div>
-                <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 4rem;">
-                  <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder="3") }}
-                    {% else %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control", placeholder="3") }}
-                    {% endif %}
+                <div class="row">
+                  <div class="col-xl-6 col-sm-6">
+                    <div class="tight text-format-table-header" style="text-align: left;">
+                      {% if darkmode %}{{ sendSatoriTransaction.amount.label(class="dark-colors tight-label") }}
+                      {% else %}{{ sendSatoriTransaction.amount.label(class="tight-label") }}
+                      {% endif %}
+                    </div>
+                    <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 4rem;">
+                      <div class="input-group input-group-outline">
+                        {% if darkmode %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balanceAmount) }}
+                        {% else %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control", placeholder=wallet.balanceAmount) }}
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-xl-6 col-sm-6 ">
+                    <div class="tight text-format-table-header" style="text-align: left;">
+                      {% if darkmode %}{{ sendSatoriTransaction.sweep.label(class="dark-colors tight-label") }}
+                      {% else %}{{ sendSatoriTransaction.sweep.label(class="tight-label") }}
+                      {% endif %}
+                    </div>
+                    <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 4rem;">
+                      <div class="input-group input-group-outline">
+                        {% if darkmode %}{{ sendSatoriTransaction.sweep(size=32, class_="tight dark-colors", style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;", onClick="sweepEverything();") }}
+                        {% else %}{{ sendSatoriTransaction.sweep(size=32, class_="tight", style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;", onClick="sweepEverything();") }}
+                        {% endif %}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
@@ -93,8 +113,8 @@
       </div>
       <hr class="dark horizontal my-0">
       <div class="card-footer p-1">
-        <center><p class="mb-1 {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>
-          Transaction fees will be added during the send process. For more details and control download and import your private key into a full featured wallet such as <a href='https://moontree.com/'>Moontree</a></p></center>
+        <center><p class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:1rem; margin-right:1rem;"><span class="text-success text-sm font-weight-bolder"></span>
+          Transaction fees will be added during the send process. For more details and control download and import your private key into a full-featured wallet such as <a href='https://moontree.com/'>Moontree</a></p></center>
       </div>
     </div>
   </div>
@@ -234,6 +254,13 @@
 			document.getElementById("address").value != "" && 
 			document.getElementById("amount").value > 0
       );
+	}
+  function sweepEverything() {
+    if (document.getElementById('sweep').checked) {
+      document.getElementById('amount').style.display = 'none';
+    } else {
+      document.getElementById('amount').style.display = '';
+    }
 	}
 </script>
 {% endblock %}

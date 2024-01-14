@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, IntegerField, SelectField, TextAreaField
+from wtforms import StringField, SubmitField, IntegerField, SelectField, TextAreaField, BooleanField
 from wtforms.validators import InputRequired, Length, URL, NumberRange, ValidationError
 from satorineuron import config
 
@@ -87,4 +87,9 @@ class SendSatoriTransaction(FlaskForm):
     amount = IntegerField(
         'Amount',
         validators=[InputRequired(), NumberRange(min=1, max=None, message='You must send at least 1')])
+    sweep = BooleanField(
+        'Send Everything',
+        description='Sends everything in the wallet (including SATORI tokens and currency) to the address specified.',
+        default=False,
+        validators=[])
     submit = SubmitField('Send')
