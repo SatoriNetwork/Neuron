@@ -77,13 +77,16 @@ DONE neuron - clean up the wallet code it is horrendous
 DONE neuron - finish wallet UI for creating a transaction
 DONE neuron - finish wallet UI for history of transactions
 DONE neuron - flash feedback from trasnaction attempt
-DONE neuron - create send all
 DONE neuron - correct address in transaction create code
-neuron - test transaction create code (address correct?)
-neuron - create send all checkbox on UI
+DONE neuron - test transaction create code (address correct?)
+DONE neuron - create send all
+DONE neuron - create send all checkbox on UI
+DONE neuron - test send all
+DONE wallet - add op_return memos for tracking payment types
+DONE central - add python-evrmorelib to the image
+DONE central - add issuance logic to server
+DONE central - test issuance logic to server with test token
 
-central - add issuance logic to server
-central - test issuance logic to server with test token
 neuron - test seeding datastreams with csv
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
@@ -97,6 +100,10 @@ central - make it a soft delete - one reason we need it is streams can be publis
 central - modify queries to respect soft delete.
 neuron - point everything at evrmore wallet instead of ravencoin wallet and test
 all - convert rvn wallet to evr wallet
+all - all test evr manually since electrum servers are newer versions for evr
+central - update website (images)
+central - update website (copy)
+central - update website (yellowpaper)
 
 -- Launch --
 
