@@ -86,7 +86,7 @@ class SendSatoriTransaction(FlaskForm):
     # number of seconds between api hits, not None
     amount = IntegerField(
         'Amount',
-        validators=[InputRequired(), NumberRange(min=1, max=None, message='You must send at least 1')])
+        validators=[NumberRange(min=1, max=None, message='You must send at least 1')])
     sweep = BooleanField(
         'Send Everything',
         description='Sends everything in the wallet (including SATORI tokens and currency) to the address specified.',

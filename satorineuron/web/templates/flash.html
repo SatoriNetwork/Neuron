@@ -6,20 +6,29 @@
   <article class="flashes">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <ul style="display: inline-block;">
-          {% for message in messages %}
-		  <li onclick=deleteThis(this) style='padding-bottom: 1rem; list-style-type: disc;'>
-			<!-- would love to have this x as the list-style-type <i class="small material-icons right">close</i>-->
-			<div class="card {% if darkmode %}dark-colors{% endif %}">
-			<a title="remove">
-				<p style="margin: 15px; color: {% if darkmode %}snow{% else %}darkslategray{% endif %}; cursor: pointer;">
-				{{message}}
-				</p>
-			</a>
-			</div>
-          </li>
-		
-          {% endfor %}
+        <ul style="padding-left: 0;">
+              {% for message in messages %}
+          <li onclick=deleteThis(this) style='padding-bottom: 1rem; list-style-type: none;'>
+          <!-- would love to have this x as the list-style-type <i class="small material-icons right">close</i>-->
+          <div class="card {% if darkmode %}dark-colors dark-text{% endif %}" style="{% if not darkmode %}background: linear-gradient(90deg, rgb(246, 176, 66, .5) 0%, rgb(249, 237, 78, .5) 100%);{% endif %}">
+          <a title="remove" style="color:{% if darkmode %}snow{% else %}darkslategray{% endif %};">
+            <p style="margin: 15px; color: {% if darkmode %}snow{% else %}darkslategray{% endif %}; cursor: pointer;">
+              {% if message|length == 64 %}
+                {% if ' ' not in message %}
+                <a href="https://rvn.cryptoscope.io/tx/?txid={{message}}" target="_blank" style="color:{% if darkmode %}snow{% else %}darkslategray{% endif %};">
+                {% endif %}
+              {% endif %}
+              {{message}}
+              {% if message|length == 64 %}
+                {% if ' ' not in message %}
+                  </a>
+                {% endif %}
+              {% endif %}
+            </p>
+          </a>
+          </div>
+              </li>
+              {% endfor %}
         </ul>
       {% endif %}
     {% endwith %}

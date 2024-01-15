@@ -347,7 +347,10 @@ def sendSatoriTransaction():
             try:
                 result = start.wallet.sendAllTransaction(
                     sendSatoriForm.address.data or '')
-                flash('Transaction result: ' + str(result))
+                if result is None:
+                    flash('Send Failed: try again in a few minutes.')
+                else:
+                    flash(str(result))
             except TransactionFailure as e:
                 flash(f'Send Failed: {e}')
         else:
@@ -355,7 +358,10 @@ def sendSatoriTransaction():
                 result = start.wallet.satoriTransaction(
                     amount=sendSatoriForm.amount.data or 0,
                     address=sendSatoriForm.address.data or '')
-                flash('Transaction result: ' + str(result))
+                if result is None:
+                    flash('Send Failed: try again in a few minutes.')
+                else:
+                    flash(str(result))
             except TransactionFailure as e:
                 flash(f'Send Failed: {e}')
         return redirect('/wallet')
