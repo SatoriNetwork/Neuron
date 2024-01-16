@@ -62,6 +62,7 @@ DONE neuron - add csv upload for datastreams visual to nueron ui
 DONE neuron - add csv upload accept to nueron server
 DONE neuron - process csv upload
 DONE neuron - test csv upload process
+DONE neuron - test seeding datastreams with csv
 DONE neuron - give user feedback on processing
 DONE neuron - add export csv of existing datastreams
 DONE neuron - what happens if we add data to history without hash? does it hash it, throw it away? throw everything after it away?
@@ -87,7 +88,6 @@ DONE central - add python-evrmorelib to the image
 DONE central - add issuance logic to server
 DONE central - test issuance logic to server with test token
 
-neuron - test seeding datastreams with csv
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
 -- BETA (test coin) target: march 3rd --
