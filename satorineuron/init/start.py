@@ -75,14 +75,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' start the satori engine. '''
         self.createRelayValidation()
         self.openWallet()
-        # self.checkin()
-        # self.verifyCaches()
-        # self.pubsubConnect()
-        # self.startRelay()
-        # self.buildEngine()
-        # self.rendezvousConnect()
-        # self.incrementallyDownloadDatasets()
-        # # self.downloadDatasets()
+        self.checkin()
+        self.verifyCaches()
+        self.pubsubConnect()
+        self.startRelay()
+        self.buildEngine()
+        self.rendezvousConnect()
+        self.incrementallyDownloadDatasets()
+        # self.downloadDatasets()
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
