@@ -219,3 +219,77 @@
   hook: null
   payload: null
   uri: http://something.com
+? '{"source": "satori", "author": "039d1557e0d9f88034cc51c4806ee548c663ae9ba2baad68d3f66d5dd9e16bde40",
+  "stream": "coinbaseADA-USD", "target": "data.rates.ADA"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"ADA\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=USD
+? '{"source": "satori", "author": "039d1557e0d9f88034cc51c4806ee548c663ae9ba2baad68d3f66d5dd9e16bde40",
+  "stream": "coinbaseADA-USD-10Min", "target": "data.rates.ADA"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \r\n    '''\r\n    called\
+    \ and given the response each time\r\n    the endpoint for this data stream is\
+    \ hit.\r\n    returns the value of the observaiton \r\n    as a string, integer\
+    \ or double.\r\n    if empty string is returned the observation\r\n    is not\
+    \ relayed to the network.\r\n    '''                    \r\n    if response.text\
+    \ != '':\r\n        return float(response.json().get(\"data\", {}).get(\"rates\"\
+    , {}).get(\"ADA\", None))\r\n    return None\r\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=USD
+? '{"source": "satori", "author": "039d1557e0d9f88034cc51c4806ee548c663ae9ba2baad68d3f66d5dd9e16bde40",
+  "stream": "coinbaseUSD-1INC", "target": "data.rates.1INCH"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \n    '''\n    called\
+    \ and given the response each time\n    the endpoint for this data stream is hit.\n\
+    \    returns the value of the observaiton \n    as a string, integer or double.\n\
+    \    if empty string is returned the observation\n    is not relayed to the network.\n\
+    \    '''                    \n    if response.text != '':\n        return float(response.json().get(\"\
+    data\", {}).get(\"rates\", {}).get(\"1INCH\", None))\n    return None\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=USD
+? '{"source": "satori", "author": "039d1557e0d9f88034cc51c4806ee548c663ae9ba2baad68d3f66d5dd9e16bde40",
+  "stream": "coinbaseUSD-1INCH", "target": "data.rates.1INCH"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \n    '''\n    called\
+    \ and given the response each time\n    the endpoint for this data stream is hit.\n\
+    \    returns the value of the observaiton \n    as a string, integer or double.\n\
+    \    if empty string is returned the observation\n    is not relayed to the network.\n\
+    \    '''                    \n    if response.text != '':\n        return float(response.json().get(\"\
+    data\", {}).get(\"rates\", {}).get(\"1INCH\", None))\n    return None\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=USD
+? '{"source": "satori", "author": "039d1557e0d9f88034cc51c4806ee548c663ae9ba2baad68d3f66d5dd9e16bde40",
+  "stream": "coinbaseUSD-AAVE", "target": "data.rates.AAVE"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \n    '''\n    called\
+    \ and given the response each time\n    the endpoint for this data stream is hit.\n\
+    \    returns the value of the observaiton \n    as a string, integer or double.\n\
+    \    if empty string is returned the observation\n    is not relayed to the network.\n\
+    \    '''                    \n    if response.text != '':\n        return float(response.json().get(\"\
+    data\", {}).get(\"rates\", {}).get(\"AAVE\", None))\n    return None\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=USD
+? '{"source": "satori", "author": "039d1557e0d9f88034cc51c4806ee548c663ae9ba2baad68d3f66d5dd9e16bde40",
+  "stream": "coinbaseUSD-ABT", "target": "data.rates.ABT"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \n    '''\n    called\
+    \ and given the response each time\n    the endpoint for this data stream is hit.\n\
+    \    returns the value of the observaiton \n    as a string, integer or double.\n\
+    \    if empty string is returned the observation\n    is not relayed to the network.\n\
+    \    '''                    \n    if response.text != '':\n        return float(response.json().get(\"\
+    data\", {}).get(\"rates\", {}).get(\"ABT\", None))\n    return None\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=USD

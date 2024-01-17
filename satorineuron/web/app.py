@@ -19,7 +19,7 @@ from flask import session, request, render_template
 from flask import Response, stream_with_context
 from satorineuron import config
 from satorineuron import logging
-from satorineuron.relay import acceptRelaySubmission, processRelayCsv
+from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
 from satorilib.concepts.structs import Observation, StreamId, StreamsOverview
 from satorilib.api.wallet.wallet import TransactionFailure
@@ -270,32 +270,14 @@ def editConfiguration():
 @app.route('/hook/<target>', methods=['GET'])
 def hook(target: str = 'Close'):
     ''' generates a hook for the given target '''
-    def replaceLastOccurrence(input_str, old_substring, new_substring):
-        parts = input_str.rsplit(old_substring, 1)
-        if len(parts) > 1:
-            return parts[0] + new_substring + parts[1]
-        else:
-            return input_str
+    return generateHookFromTarget(target)
 
-    def generateDrill():
-        parts = target.split('.')
-        return replaceLastOccurrence(''.join([
-            '.get("' + part + '", {})' for part in parts]), ', {})', ', None)')
 
-    target = target if target != '' else 'Close'
-    return f"""def postRequestHook(response: 'requests.Response'): 
-    '''
-    called and given the response each time
-    the endpoint for this data stream is hit.
-    returns the value of the observaiton 
-    as a string, integer or double.
-    if empty string is returned the observation
-    is not relayed to the network.
-    '''                    
-    if response.text != '':
-        return float(response.json(){generateDrill()})
-    return None
-""", 200
+@app.route('/hook/', methods=['GET'])
+def hookEmptyTarget():
+    ''' generates a hook for the given target '''
+    # in the case target is empty string
+    return generateHookFromTarget('Close')
 
 
 @app.route('/relay', methods=['POST'])
@@ -398,95 +380,11 @@ def registerStream():
             **({'hook': newRelayStream.hook.data} if newRelayStream.hook.data not in ['', None] else {}),
             **({'history': newRelayStream.history.data} if newRelayStream.history.data not in ['', None] else {}),
         }
-        if data.get('uri') is None:
-            data['uri'] = data.get('url')
-        if data.get('target') is None:
-            data['target'] = ''
-        if start.relayValidation.invalid_url(data.get('url')):
+        msgs, status = registerDataStream(start, data)
+        if status == 400:
             badForm = data
-            flash('Url is an invalid URL')
-            return redirect('/dashboard')
-        if start.relayValidation.invalid_url(data.get('uri')):
-            badForm = data
-            flash('Uri is an invalid URI')
-            return redirect('/dashboard')
-        if start.relayValidation.invalid_hook(data.get('hook')):
-            badForm = data
-            flash('Invalid hook. Start with "def postRequestHook(r):"')
-            return redirect('/dashboard')
-        if data.get('history') is not None and start.relayValidation.invalid_url(data.get('history')):
-            flash(
-                'Warning: unable to validate History field as a valid URL. Saving anyway.')
-        # if start.relayValidation.stream_claimed(name=data.get('name'), target=data.get('target')):
-        #    badForm = data
-        #    flash('You have already created a stream by this name.')
-        #    return redirect('/dashboard')
-        result = start.relayValidation.test_call(data)
-        if result == False:
-            badForm = data
-            flash('Unable to call uri. Check your uri and headers.')
-            return redirect('/dashboard')
-        hookResult = None
-        if data.get('hook') is not None and data.get('hook').lstrip().startswith('def postRequestHook('):
-            hookResult = start.relayValidation.test_hook(data, result)
-            if hookResult == None:
-                badForm = data
-                flash('Invalid hook. Unable to execute.')
-                return redirect('/dashboard')
-        hasHistory = data.get('history') is not None and data.get(
-            'history').lstrip().startswith('class GetHistory(')
-        if hasHistory:
-            historyResult = start.relayValidation.test_history(data)
-            if historyResult == False:
-                badForm = data
-                flash('Invalid history. Unable to execute.')
-                return redirect('/dashboard')
-        # if already exists, remove it
-        thisStream = StreamId(
-            source=data.get('source', 'satori'),
-            author=start.wallet.publicKey,
-            stream=data.get('name'),
-            target=data.get('target'))
-        if thisStream in [s.streamId for s in start.relay.streams]:
-            try:
-                # do not actually delete on the server, we will modify when save
-                # removeStreamLogic(
-                #     thisStream,
-                #     doRedirect=False)
-                # delete on client
-                start.relayValidation.claimed.remove(thisStream)
-            except Exception as e:
-                logging.error(e)
-
-        # attempt to save to server.
-        save = start.relayValidation.register_stream(data=data)
-        # subscribe to save ipfs automatically
-        subscribed = start.relayValidation.subscribe_to_stream(data=data)
-        start.relayValidation.save_local(data)
-        if hasHistory:
-            try:
-                # this can take a very long time - will flask/browser timeout?
-                start.relayValidation.save_history(data)
-            except Exception as e:
-                logging.error(e)
-                badForm = data
-                flash(
-                    'Unable to save stream because saving history process '
-                    f'errored. Fix or remove history text. Error: {e}')
-                return redirect('/dashboard')
-        # get pubkey, recreate connection, restart relay engine
-        start.checkin()
-        start.pubsubConnect()
-        start.startRelay()
-        if save == False:
-            badForm = data
-            flash('Unable to save stream.')
-            return redirect('/dashboard')
-        if subscribed == False:
-            flash('FYI: Unable to subscribe stream.')
-        badForm = {}
-        flash('Stream saved. Test call result: ' +
-              (str(hookResult) if hookResult is not None else str(result.text)))
+        for msg in msgs:
+            flash(msg)
         return redirect('/dashboard')
 
     newRelayStream = forms.RelayStreamForm(formdata=request.form)

@@ -35,6 +35,7 @@ class RawStreamRelayEngine(Cached):
         self.thread = None
         self.killed = False
         self.latest = {}
+        self.active = 0  # the thread that should be active
 
     def status(self):
         if self.killed:
@@ -135,6 +136,7 @@ class RawStreamRelayEngine(Cached):
         if result is not None:
             for stream in streams:
                 hookResult = RawStreamRelayEngine.callHook(stream, result)
+                logging.info('relaying ', stream.streamId.stream)
                 if hookResult is not None:
                     (
                         success,
@@ -156,7 +158,7 @@ class RawStreamRelayEngine(Cached):
             logging.error(
                 'result is None, something is wrong, maybe the API is down?')
 
-    def runForever(self):
+    def runForever(self, active: int):
         # though I would like to use the asyncThread for this, as it would be
         # simpler to reason about, I'm not sure how I would reduce the number
         # of api calls as we are doing here (see uri logic) for streams that all
@@ -167,7 +169,7 @@ class RawStreamRelayEngine(Cached):
             return max(stream.cadence or 60, 60)
 
         start = int(time.time())
-        while not self.killed:
+        while self.active == active:
             now = int(time.time())
             streams: list[Stream] = []
             for stream in self.streams:
@@ -188,14 +190,21 @@ class RawStreamRelayEngine(Cached):
             newNow = time.time()
             if int(newNow) == now:
                 # wait till the next second
-                sleep = (int(newNow)+1)-newNow
-                time.sleep(sleep)
+                # time.sleep((int(newNow)+1)-newNow)
+                # wait till the next stream
+                time.sleep(min([
+                    cadence(stream) - ((newNow - start) % cadence(stream))
+                    for stream in streams]))
 
     def run(self):
-        self.thread = threading.Thread(target=self.runForever, daemon=True)
+        self.thread = threading.Thread(
+            target=self.runForever,
+            args=(self.active,),
+            daemon=True)
         self.thread.start()
 
     def kill(self):
+        self.active += 1
         self.killed = True
         time.sleep(3)
         self.thread = None

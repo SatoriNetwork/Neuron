@@ -1,4 +1,5 @@
 from satorilib.concepts import StreamId
+from satorilib import logging
 import pandas as pd
 
 
@@ -7,20 +8,42 @@ def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
     # start = getStart()
     statuses = []
     for _, row in df.iterrows():
-        # msg, status = _acceptRelaySubmissionMock(start, data=row.to_dict())
-        msg, status = acceptRelaySubmission(start, data=row.to_dict())
+        logging.debug('\n processing row', row, color='yellow')
+        # data = row.to_dict(na_action='ignore')
+        data = {col: None if pd.isna(val) else val for col, val in row.items()}
+        if data.get('stream') is None or data.get('stream') == '':
+            logging.debug('\n no stream', data, color='yellow')
+            continue
+        data['name'] = data.get('stream', '')
+        data['source'] = data.get('source', 'satori')
+        logging.debug('\n data1', data, color='yellow')
+        logging.debug('\n data1.1', data.get('hook', '') == '', color='yellow')
+        if data.get('hook') is None or data.get('hook') == '':
+            msg, status = generateHookFromTarget(data.get('target', ''))
+            if status == 200:
+                data['hook'] = msg
+        logging.debug('\n data2', data, color='yellow')
+        # msg, status = _registerDataStreamMock(start, data=data)
+        msg, status = registerDataStream(start, data=data)
+        logging.debug('\n msg status', msg, status, color='yellow')
         statuses.append(status)
         start.workingUpdates.on_next(
-            f"{row['stream']}{row['target']} - {'success' if status == 200 else msg}")
+            f"{data['stream']}{data['target']} - {'success' if status == 200 else msg}")
     failures = [str(i) for i, s in enumerate(statuses) if s != 200]
+    logging.debug('\n failures', failures, color='yellow')
     if len(failures) == 0:
+        logging.debug('\n len(failures)', len(
+            failures), 'all good', color='yellow')
         return 'all succeeded', 200
     elif len(failures) == len(statuses):
+        logging.debug('\n all bad', color='yellow')
         return 'all failed', 500
+    logging.debug('\n mix', color='yellow')
     return f'rows {",".join(failures)} failed', 200
 
 
-def _acceptRelaySubmissionMock(start: 'StartupDag', data: dict):
+def _registerDataStreamMock(start: 'StartupDag', data: dict):
+    ''' for testing front end UI of please wait updates '''
     import time
     time.sleep(5)
     return 'Success: ', 200
@@ -49,3 +72,116 @@ def acceptRelaySubmission(start: 'StartupDag', data: dict):
             target=data.get('target')).topic(),
         data=data.get('data'))
     return 'Success: ', 200
+
+
+def registerDataStream(start: 'StartupDag', data: dict):
+    if data.get('uri') is None:
+        data['uri'] = data.get('url')
+    if data.get('target') is None:
+        data['target'] = ''
+    if start.relayValidation.invalid_url(data.get('url')):
+        return ['Url is an invalid URL'], 400
+    if start.relayValidation.invalid_url(data.get('uri')):
+        return ['Url is an invalid URI'], 400
+    if start.relayValidation.invalid_hook(data.get('hook')):
+        return ['Invalid hook. Start with "def postRequestHook(r):"'], 400
+    msgs = []
+    if data.get('history') is not None and start.relayValidation.invalid_url(data.get('history')):
+        msgs.append(
+            'Warning: unable to validate History field as a valid URL. Saving anyway.')
+    # if start.relayValidation.stream_claimed(name=data.get('name'), target=data.get('target')):
+    #    badForm = data
+    #    flash('You have already created a stream by this name.')
+    #    return redirect('/dashboard')
+    result = start.relayValidation.test_call(data)
+    if result == False:
+        msgs.append('Unable to call uri. Check your uri and headers.')
+        return msgs, 400
+    hookResult = None
+    if data.get('hook') is not None and data.get('hook').lstrip().startswith('def postRequestHook('):
+        hookResult = start.relayValidation.test_hook(data, result)
+        if hookResult == None:
+            msgs.append('Invalid hook. Unable to execute.')
+            return msgs, 400
+    hasHistory = data.get('history') is not None and data.get(
+        'history').lstrip().startswith('class GetHistory(')
+    if hasHistory:
+        historyResult = start.relayValidation.test_history(data)
+        if historyResult == False:
+            msgs.append('Invalid history. Unable to execute.')
+            return msgs, 400
+    # if already exists, remove it
+    thisStream = StreamId(
+        source=data.get('source', 'satori'),
+        author=start.wallet.publicKey,
+        stream=data.get('name'),
+        target=data.get('target'))
+    if thisStream in [s.streamId for s in start.relay.streams]:
+        try:
+            # do not actually delete on the server, we will modify when save
+            # removeStreamLogic(
+            #     thisStream,
+            #     doRedirect=False)
+            # delete on client
+            start.relayValidation.claimed.remove(thisStream)
+        except Exception as e:
+            logging.error(e)
+
+    # attempt to save to server.
+    save = start.relayValidation.register_stream(data=data)
+    # subscribe to save ipfs automatically
+    subscribed = start.relayValidation.subscribe_to_stream(data=data)
+    start.relayValidation.save_local(data)
+    if hasHistory:
+        try:
+            # this can take a very long time - will flask/browser timeout?
+            start.relayValidation.save_history(data)
+        except Exception as e:
+            logging.error(e)
+            msgs.append(
+                'Unable to save stream because saving history process '
+                f'errored. Fix or remove history text. Error: {e}')
+            return msgs, 400
+    # get pubkey, recreate connection, restart relay engine
+    start.checkin()
+    start.pubsubConnect()
+    start.startRelay()
+    if save == False:
+        msgs.append('Unable to save stream.')
+        return msgs, 500
+    if subscribed == False:
+        msgs.append('FYI: Unable to subscribe stream.')
+        return msgs, 500
+    msgs.append('Stream saved. Test call result: ' +
+                (str(hookResult) if hookResult is not None else str(result.text)))
+    return msgs, 200
+
+
+def generateHookFromTarget(target: str = ''):
+    '''creates a function that drills down into a json object accoring a path'''
+    def replaceLastOccurrence(input_str, old_substring, new_substring):
+        parts = input_str.rsplit(old_substring, 1)
+        if len(parts) > 1:
+            return parts[0] + new_substring + parts[1]
+        else:
+            return input_str
+
+    def generateDrill():
+        parts = target.split('.')
+        return replaceLastOccurrence(''.join([
+            '.get("' + part + '", {})' for part in parts]), ', {})', ', None)')
+
+    target = target if target != '' else 'Close'
+    return f"""def postRequestHook(response: 'requests.Response'): 
+    '''
+    called and given the response each time
+    the endpoint for this data stream is hit.
+    returns the value of the observaiton 
+    as a string, integer or double.
+    if empty string is returned the observation
+    is not relayed to the network.
+    '''                    
+    if response.text != '':
+        return float(response.json(){generateDrill()})
+    return None
+""", 200
