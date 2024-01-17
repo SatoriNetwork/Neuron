@@ -380,6 +380,10 @@ def registerStream():
             **({'hook': newRelayStream.hook.data} if newRelayStream.hook.data not in ['', None] else {}),
             **({'history': newRelayStream.history.data} if newRelayStream.history.data not in ['', None] else {}),
         }
+        if data.get('hook') in ['', None, {}]:
+            hook, status = generateHookFromTarget(data.get('target', ''))
+            if status == 200:
+                data['hook'] = hook
         msgs, status = registerDataStream(start, data)
         if status == 400:
             badForm = data

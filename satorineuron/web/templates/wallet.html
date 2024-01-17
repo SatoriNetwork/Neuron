@@ -1,5 +1,6 @@
 {% extends "basic.html" %}
 {% block content %}
+<div id='walletDivisibility' style='display:none;'>{{ wallet.divisibility }}</div>
 <div class="row mb-4">
   <div class="col-xl-6 col-sm-6 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
@@ -27,7 +28,7 @@
       </a>
       <center>
         <br/>
-        {{ wallet.address }}
+        <div id='walletAddress'>{{ wallet.address }}</div>
         <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">wallet address</p>
       </center>
       <hr class="dark horizontal my-3">
@@ -79,8 +80,8 @@
                     </div>
                     <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 4rem;">
                       <div class="input-group input-group-outline">
-                        {% if darkmode %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balanceAmount) }}
-                        {% else %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control", placeholder=wallet.balanceAmount) }}
+                        {% if darkmode %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;", oninput="enforceDivisibility();") }}
+                        {% else %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;", oninput="enforceDivisibility();") }}
                         {% endif %}
                       </div>
                     </div>
@@ -252,8 +253,9 @@
 	function validateJs() {
 		return (
 			document.getElementById("address").value != "" && 
-			document.getElementById("amount").value > 0
-      );
+      document.getElementById("address").value.startsWith(document.getElementById("walletAddress").innerHTML[0]) && 
+      document.getElementById("address").value.length == document.getElementById("walletAddress").innerHTML.length && 
+			(document.getElementById("amount").value > 0 || document.getElementById("sweep").checked));
 	}
   function sweepEverything() {
     if (document.getElementById('sweep').checked) {
@@ -262,6 +264,30 @@
       document.getElementById('amount').style.display = '';
     }
 	}
+  function enforceDivisibility() {
+    const inputElement = document.getElementById("amount");
+    const divisibility = Number(document.getElementById("walletDivisibility").innerHTML);
+    if (divisibility > 0 && inputElement.value.indexOf('.') > -1){
+      inputElement.value = truncateNumber(inputElement.value, divisibility);
+      var newCursorPosition = inputElement.value.length;
+      inputElement.type = 'text';
+      inputElement.setSelectionRange(newCursorPosition, newCursorPosition);
+      inputElement.type = 'number';
+    }
+	}
+  function truncateNumber(value, decimalPlaces) {
+    const valueAsString = value.toString();
+    const pointIndex = valueAsString.indexOf('.');
+    if (pointIndex === -1) {
+        return Number(valueAsString); // No decimal point
+    }
+    if (decimalPlaces <= 0 && pointIndex === 0) {
+        return Number(valueAsString.slice(0, pointIndex)); // Truncate all decimal places
+    }
+    const truncationIndex = pointIndex + 1 + decimalPlaces;
+    const truncatedValue = valueAsString.slice(0, truncationIndex);
+    return Number(truncatedValue);
+}
 </script>
 {% endblock %}
 

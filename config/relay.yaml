@@ -293,3 +293,15 @@
     data\", {}).get(\"rates\", {}).get(\"ABT\", None))\n    return None\n"
   payload: null
   uri: https://api.coinbase.com/v2/exchange-rates?currency=USD
+? '{"source": "satori", "author": "039d1557e0d9f88034cc51c4806ee548c663ae9ba2baad68d3f66d5dd9e16bde40",
+  "stream": "coinbaseUSD-BCH", "target": "data.rates.BCH"}'
+: headers: null
+  history: null
+  hook: "def postRequestHook(response: 'requests.Response'): \n    '''\n    called\
+    \ and given the response each time\n    the endpoint for this data stream is hit.\n\
+    \    returns the value of the observaiton \n    as a string, integer or double.\n\
+    \    if empty string is returned the observation\n    is not relayed to the network.\n\
+    \    '''                    \n    if response.text != '':\n        return float(response.json().get(\"\
+    data\", {}).get(\"rates\", {}).get(\"BCH\", None))\n    return None\n"
+  payload: null
+  uri: https://api.coinbase.com/v2/exchange-rates?currency=USD
