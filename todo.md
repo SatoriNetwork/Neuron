@@ -90,6 +90,7 @@ DONE central - test issuance logic to server with test token
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
+neuron - build an are you sure alert for any delete activity, and why not, send all activity too.
 -- BETA (test coin) target: march 3rd --
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
@@ -104,6 +105,11 @@ all - all test evr manually since electrum servers are newer versions for evr
 central - update website (images)
 central - update website (copy)
 central - update website (yellowpaper)
+neuron - build in a "vault"
+vault - creation process with encrypting with a password of their own
+vault - creation process with saving words
+vault - add vault page
+vault - allow for automatic send of tokens to their vault
 
 -- Launch --
 
