@@ -189,12 +189,15 @@ class RawStreamRelayEngine(Cached):
                         args=[ss]).start()
             newNow = time.time()
             if int(newNow) == now:
-                # wait till the next second
-                # time.sleep((int(newNow)+1)-newNow)
-                # wait till the next stream
-                time.sleep(min([
-                    cadence(stream) - ((newNow - start) % cadence(stream))
-                    for stream in streams]))
+                try:
+                    # wait till the next stream
+                    seconds = min([
+                        cadence(stream) - ((newNow - start) % cadence(stream))
+                        for stream in streams])
+                except Exception as _:
+                    # wait till the next second
+                    seconds = (int(newNow)+1)-newNow
+                time.sleep(seconds)
 
     def run(self):
         self.thread = threading.Thread(
