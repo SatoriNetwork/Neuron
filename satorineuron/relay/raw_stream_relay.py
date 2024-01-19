@@ -164,16 +164,15 @@ class RawStreamRelayEngine(Cached):
         # of api calls as we are doing here (see uri logic) for streams that all
         # call the same api. so we're leaving it as is.
 
-        def cadence(stream: Stream):
+        def cadence(stream: Stream) -> int:
             ''' returns cadence in seconds, engine does not allow < 60 '''
-            return max(stream.cadence or 60, 60)
+            return int(max(stream.cadence or 60, 60))
 
-        start = int(time.time())
         while self.active == active:
             now = int(time.time())
             streams: list[Stream] = []
             for stream in self.streams:
-                if (now - start) % cadence(stream) == 0:
+                if now % cadence(stream) == 0:
                     streams.append(stream)
             if len(streams) > 0:
                 segmentedStreams: dict[str, list[Stream]] = {}
@@ -192,7 +191,7 @@ class RawStreamRelayEngine(Cached):
                 try:
                     # wait till the next stream
                     seconds = min([
-                        cadence(stream) - ((newNow - start) % cadence(stream))
+                        cadence(stream) - (int(newNow) % cadence(stream))
                         for stream in streams])
                 except Exception as _:
                     # wait till the next second

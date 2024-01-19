@@ -90,13 +90,12 @@ DONE central - test issuance logic to server with test token
 DONE neuron - build an are you sure alert for any delete activity.
 DONE neuron - does not always ask for server time first. (lib/server/server.py register_stream)
 DONE neuron - fix the upload streams - shouldn't restart entire service.
+DONE neuron - make the relay stream smarter about when it relays the next data on startup: relay at the next interval of the specified cadence per stream.
+DONE neuron - make relay streams just relative to unix epoc time. simple.
+
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
 -- BETA (test coin) target: march 3rd --
-central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
-central - make a history table and test the history table
-central - make sure server is saving history of observations
-central - purge history more than 8 days old
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
 central - modify queries to respect soft delete.
@@ -106,11 +105,17 @@ all - all test evr manually since electrum servers are newer versions for evr
 central - update website (images)
 central - update website (copy)
 central - update website (yellowpaper)
+
 neuron - build in a "vault"
 vault - creation process with encrypting with a password of their own
 vault - creation process with saving words
 vault - add vault page
 vault - allow for automatic send of tokens to their vault
+
+central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
+central - make a history table and test the history table
+central - make sure server is saving history of observations
+central - purge history more than 8 days old
 
 -- Launch --
 
