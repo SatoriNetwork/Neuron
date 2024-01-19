@@ -24,7 +24,7 @@ def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
                 data['hook'] = msg
         logging.debug('\n data2', data, color='yellow')
         # msg, status = _registerDataStreamMock(start, data=data)
-        msg, status = registerDataStream(start, data=data)
+        msg, status = registerDataStream(start, data=data, restart=False)
         logging.debug('\n msg status', msg, status, color='yellow')
         statuses.append(status)
         start.workingUpdates.on_next(
@@ -34,10 +34,16 @@ def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
     if len(failures) == 0:
         logging.debug('\n len(failures)', len(
             failures), 'all good', color='yellow')
+        start.checkin()
+        start.pubsubConnect()
+        start.startRelay()
         return 'all succeeded', 200
     elif len(failures) == len(statuses):
         logging.debug('\n all bad', color='yellow')
         return 'all failed', 500
+    start.checkin()
+    start.pubsubConnect()
+    start.startRelay()
     logging.debug('\n mix', color='yellow')
     return f'rows {",".join(failures)} failed', 200
 
@@ -74,7 +80,7 @@ def acceptRelaySubmission(start: 'StartupDag', data: dict):
     return 'Success: ', 200
 
 
-def registerDataStream(start: 'StartupDag', data: dict):
+def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
     if data.get('uri') is None:
         data['uri'] = data.get('url')
     if data.get('target') is None:
@@ -143,9 +149,10 @@ def registerDataStream(start: 'StartupDag', data: dict):
                 f'errored. Fix or remove history text. Error: {e}')
             return msgs, 400
     # get pubkey, recreate connection, restart relay engine
-    start.checkin()
-    start.pubsubConnect()
-    start.startRelay()
+    if restart:
+        start.checkin()
+        start.pubsubConnect()
+        start.startRelay()
     if save == False:
         msgs.append('Unable to save stream.')
         return msgs, 500

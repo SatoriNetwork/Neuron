@@ -89,7 +89,7 @@ DONE central - add issuance logic to server
 DONE central - test issuance logic to server with test token
 DONE neuron - build an are you sure alert for any delete activity.
 DONE neuron - does not always ask for server time first. (lib/server/server.py register_stream)
-
+neuron - fix the upload streams - shouldn't restart entire service.
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
 -- BETA (test coin) target: march 3rd --
