@@ -96,6 +96,8 @@ DONE neuron - cadence messed up if you put in 0
 DONE neuron - relay data stream on demand pull button since now we do it on the correct cadence.
 DONE neuron - relay data stream fix
 DONE neuron - limit relay streams? port limitations, threads, etc. 100? 50? 25? 25 for now
+DONE neuron - relay data stream indicator of not working or working
+DONE neuron - relay data stream indicator could be red if the history is longer in the past than cadence should allow? or yellow if that's the case but you just started the neuron. otherwise green.
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
@@ -112,8 +114,6 @@ vault - creation process with saving words
 vault - add vault page
 vault - allow for automatic send of tokens to their vault
 
-neuron - relay data stream indicator of not working or working
-neuron - relay data stream indicator could be red if the history is longer in the past than cadence should allow? or yellow if that's the case but you just started the neuron. otherwise green.
 
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
