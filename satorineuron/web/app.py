@@ -23,6 +23,7 @@ from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateH
 from satorineuron.web import forms
 from satorilib.concepts.structs import Observation, StreamId, StreamsOverview
 from satorilib.api.wallet.wallet import TransactionFailure
+from satorilib.api.time import timestampToSeconds
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString
 
@@ -560,6 +561,7 @@ def dashboard():
             {
                 **stream.asMap(noneToBlank=True),
                 **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+                **{'late': start.relay.late(stream.streamId, timestampToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
                 **{'cadenceStr': deduceCadenceString(stream.cadence)},
                 **{'offsetStr': deduceCadenceString(stream.offset)}}
             for stream in start.relay.streams]
@@ -792,6 +794,16 @@ def removeHistoryCsv(topic: str = None):
         flash('history cleared successfully', 'success')
     else:
         flash('history not found', 'error')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/trigger_relay/<topic>', methods=['GET'])
+def triggerRelay(topic: str = None):
+    ''' triggers relay stream to happen '''
+    if start.relay.triggerManually(StreamId.fromTopic(topic)):
+        flash('relayed successfully', 'success')
+    else:
+        flash('failed to relay', 'error')
     return redirect(url_for('dashboard'))
 
 ###############################################################################

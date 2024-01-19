@@ -92,10 +92,16 @@ DONE neuron - does not always ask for server time first. (lib/server/server.py r
 DONE neuron - fix the upload streams - shouldn't restart entire service.
 DONE neuron - make the relay stream smarter about when it relays the next data on startup: relay at the next interval of the specified cadence per stream.
 DONE neuron - make relay streams just relative to unix epoc time. simple.
+DONE neuron - cadence messed up if you put in 0
+DONE neuron - relay data stream on demand pull button since now we do it on the correct cadence.
+DONE neuron - relay data stream fix
+DONE neuron - limit relay streams? port limitations, threads, etc. 100? 50? 25? 25 for now
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
+
 -- BETA (test coin) target: march 3rd --
+
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
 central - modify queries to respect soft delete.
@@ -105,6 +111,9 @@ vault - creation process with encrypting with a password of their own
 vault - creation process with saving words
 vault - add vault page
 vault - allow for automatic send of tokens to their vault
+
+neuron - relay data stream indicator of not working or working
+neuron - relay data stream indicator could be red if the history is longer in the past than cadence should allow? or yellow if that's the case but you just started the neuron. otherwise green.
 
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
@@ -123,6 +132,8 @@ central - update website (yellowpaper)
 -- Nice --
 
 central - setup electrumx server for evr
+
+all - include different languages in neuron and on website, etc.
 
 Wallet Encryption:
     neuron - we really should at least give the option to encrypt the wallet yaml

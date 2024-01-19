@@ -6,12 +6,13 @@ if we subscribe to this we'll do that automatically. if we don't subscribe to it
 maybe someone else will, and they'll pin it. if nobody subscribes to it we don't
 need it's history. maybe we should subscribe to our own relay streams by defult.
 '''
+from typing import Union
 import threading
 import time
 import json
 import requests
 from functools import partial
-from satorilib.concepts.structs import Stream
+from satorilib.concepts.structs import Stream, StreamId
 from satorilib.api.disk import Cached
 from satorilib import logging
 
@@ -46,6 +47,18 @@ class RawStreamRelayEngine(Cached):
             return 'running'
         # should we restart the thread if it dies? we shouldn't see this:
         return 'unknown'
+
+    def late(self, streamId: StreamId, mostRecentTSinSeconds: float) -> bool:
+        ''' 
+        returns false if the mostRecentTSinSeconds falls within the recent 
+        past according to the cadence and true if it's older than the cadence
+        should allow
+        '''
+        stream = self._getStreamFor(streamId)
+        if stream is not None:
+            # return mostRecentTSinSeconds < (int(time.time()) - self._cadence(stream)) # more intuitive I think
+            return int(time.time()) > (mostRecentTSinSeconds + self._cadence(stream))
+        return True
 
     @staticmethod
     def call(stream: Stream):
@@ -130,13 +143,21 @@ class RawStreamRelayEngine(Cached):
             value=data)
         return success, timestamp, observationHash
 
-    def callRelay(self, streams: list[Stream]):
-        ''' calls API and relays data to pubsub '''
+    def callRelay(self, streams: list[Stream]) -> bool:
+        '''
+        calls API and relays data to pubsub
+        the list of streams should all have the same URI and cadence and headers
+        and payload. Then we can only make 1 call and parse it out according to
+        the details of each stream.
+        '''
+        logging.debug('\n streams ', streams, color='green')
         result = RawStreamRelayEngine.call(streams[0])
+        successes = []
         if result is not None:
             for stream in streams:
                 hookResult = RawStreamRelayEngine.callHook(stream, result)
-                logging.info('relaying ', stream.streamId.stream)
+                logging.debug(
+                    '\n stream ', stream.streamId.stream, color='green')
                 if hookResult is not None:
                     (
                         success,
@@ -144,19 +165,54 @@ class RawStreamRelayEngine(Cached):
                         observationHash,
                     ) = self.save(stream, data=hookResult)
                     if success:
+                        logging.debug('\n relaying ',
+                                      stream.streamId.stream, color='green')
                         self.relay(
                             stream,
                             data=hookResult,
                             timestamp=timestamp,
                             observationHash=observationHash)
+                        successes.append(True)
+                    else:
+                        # log or flash message or something...
+                        successes.append(False)
+                        logging.error(
+                            'Unable to save data for stream: ',
+                            f'{stream.streamId.stream}.{stream.streamId.target}',
+                            print=True)
                 else:
                     # log or flash message or something...
                     logging.error(
-                        'result is None, hook failed?')
+                        'Unable to interpret information for stream: ',
+                        f'{stream.streamId.stream}.{stream.streamId.target}',
+                        print=True)
         else:
             # log or flash message or something...
             logging.error(
-                'result is None, something is wrong, maybe the API is down?')
+                'Call for stream failed, API is down? ',
+                f'{streams[0].streamId.stream}.{streams[0].streamId.target}',
+                print=True)
+
+        if len(successes) > 0 and all(successes):
+            return True
+        return False
+
+    def _getStreamFor(self, streamId: StreamId) -> Union[Stream, None]:
+        for stream in self.streams:
+            if stream.streamId == streamId:
+                return stream
+        return None
+
+    def triggerManually(self, streamId: StreamId) -> bool:
+        ''' called from UI '''
+        stream = self._getStreamFor(streamId)
+        if stream is not None:
+            return self.callRelay([stream])
+        return False
+
+    def _cadence(self, stream: Stream) -> int:
+        ''' returns cadence in seconds, engine does not allow < 60 '''
+        return int(max(stream.cadence or 60, 60))
 
     def runForever(self, active: int):
         # though I would like to use the asyncThread for this, as it would be
@@ -164,36 +220,45 @@ class RawStreamRelayEngine(Cached):
         # of api calls as we are doing here (see uri logic) for streams that all
         # call the same api. so we're leaving it as is.
 
-        def cadence(stream: Stream) -> int:
-            ''' returns cadence in seconds, engine does not allow < 60 '''
-            return int(max(stream.cadence or 60, 60))
-
         while self.active == active:
             now = int(time.time())
             streams: list[Stream] = []
             for stream in self.streams:
-                if now % cadence(stream) == 0:
+                logging.debug(
+                    '\n now ',
+                    now % self._cadence(stream), 'cadence(stream)', self._cadence(stream), color='yellow')
+                if now % self._cadence(stream) == 0:
                     streams.append(stream)
             if len(streams) > 0:
                 segmentedStreams: dict[str, list[Stream]] = {}
                 for stream in streams:
+                    logging.debug(
+                        '\n stream ',
+                        stream.streamId.stream, color='yellow')
                     uri = (stream.uri + str(stream.headers) +
                            str(stream.payload))
+                    logging.debug(
+                        '\n uri ',
+                        uri, color='yellow')
                     if uri not in segmentedStreams.keys():
                         segmentedStreams[uri] = []
                     segmentedStreams[uri].append(stream)
                 for _, ss in segmentedStreams.items():
                     threading.Thread(
                         target=self.callRelay,
-                        args=[ss]).start()
+                        args=(ss,)).start()
             newNow = time.time()
             if int(newNow) == now:
                 try:
                     # wait till the next stream
                     seconds = min([
-                        cadence(stream) - (int(newNow) % cadence(stream))
-                        for stream in streams])
-                except Exception as _:
+                        self._cadence(stream) - (int(newNow) %
+                                                 self._cadence(stream))
+                        for stream in self.streams])
+                except Exception as e:
+                    logging.debug(
+                        '\n err ',
+                        e, color='red')
                     # wait till the next second
                     seconds = (int(newNow)+1)-newNow
                 time.sleep(seconds)
