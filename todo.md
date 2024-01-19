@@ -99,12 +99,6 @@ neuron - seed with datastreams with histories
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
 central - modify queries to respect soft delete.
-neuron - point everything at evrmore wallet instead of ravencoin wallet and test
-all - convert rvn wallet to evr wallet
-all - all test evr manually since electrum servers are newer versions for evr
-central - update website (images)
-central - update website (copy)
-central - update website (yellowpaper)
 
 neuron - build in a "vault"
 vault - creation process with encrypting with a password of their own
@@ -116,6 +110,13 @@ central - rendezvous, pubsub, server: anything behind gunicorn not logging right
 central - make a history table and test the history table
 central - make sure server is saving history of observations
 central - purge history more than 8 days old
+
+neuron - point everything at evrmore wallet instead of ravencoin wallet and test
+all - convert rvn wallet to evr wallet
+all - all test evr manually since electrum servers are newer versions for evr
+central - update website (images)
+central - update website (copy)
+central - update website (yellowpaper)
 
 -- Launch --
 
