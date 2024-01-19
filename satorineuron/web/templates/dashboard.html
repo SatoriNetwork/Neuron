@@ -312,7 +312,7 @@
           });
         </script>
         <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
-          <table class="table align-items-center mb-0" style="min-width: 1200px;">
+          <table id="DataStreamsTable" class="table align-items-center mb-0" style="min-width: 1200px;">
             <thead>
             <tr>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream Actions</th>
@@ -347,7 +347,7 @@
                     </h6>
                     <h6 class="mb-0 text-lg {% if darkmode %}dark-text{% endif %}" title="remove">
                       <!--<a href=" url_for('removeStream', source=existingRelayStream['streamId']['source'], stream=existingRelayStream['streamId']['stream'], target=existingRelayStream['streamId']['target']) " onclick="showWorking();">-->
-                      <a href="{{ url_for('removeStream', topic=existingRelayStream['topic']) }}" onclick="showWorking();">
+                      <a href="{{ url_for('removeStream', topic=existingRelayStream['topic']) }}" class="requireConfirmation">
                         <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
                           <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">remove_circle_outline</i>
                         </button>
@@ -371,7 +371,8 @@
                       </button>
                     </h6>
                     <h6 class="mb-0 text-lg {% if darkmode %}dark-text{% endif %}" title="remove history">
-                      <a href="{{ url_for('removeHistoryCsv', topic=existingRelayStream['topic']) }}" onclick="showWorking();">
+                      <!-- id ... only works on first one-->
+                      <a href="{{ url_for('removeHistoryCsv', topic=existingRelayStream['topic']) }}" class="requireConfirmation">
                         <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
                           <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">remove_circle_outline</i>
                         </button>
@@ -496,6 +497,30 @@
     </div>
   </div>
 </div>
+<script>
+  document.getElementById('DataStreamsTable').addEventListener('click', function(event) {
+    // Check if the clicked element is a link with class 'confirmAction'
+    var target = event.target;
+    while (target && target.nodeName !== "A") {
+        target = target.parentNode;
+        if (!target) return;
+    }
+
+    if (target && target.classList.contains('requireConfirmation')) {
+        event.preventDefault(); // Prevent the default action
+        var confirmAction = confirm("Are you sure you want to proceed?");
+        if (confirmAction) {
+            // User clicked 'OK', navigate to the link
+            window.location.href = target.getAttribute('href');
+            showWorking();
+        } else {
+            // User clicked 'Cancel', do nothing
+            console.log("Action canceled.");
+        }
+    }
+});
+
+</script>
 <div class="row mb-4" style="margin-bottom: 3rem !important;">
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">

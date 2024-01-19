@@ -742,10 +742,11 @@ def relayCsv():
 def relayHistoryCsv(topic: str = None):
     ''' returns a csv file of the history of the relay stream '''
     cache = start.cacheOf(StreamId.fromTopic(topic))
+
     return (
         (
             cache.df.drop(columns=['hash'])
-            if cache is not None and cache.df is not None
+            if cache is not None and cache.df is not None and 'hash' in cache.df.columns
             else pd.DataFrame({'failure': [
                 f'no history found for stream with stream id of {topic}']}
             )

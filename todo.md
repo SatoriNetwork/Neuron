@@ -87,10 +87,11 @@ DONE wallet - add op_return memos for tracking payment types
 DONE central - add python-evrmorelib to the image
 DONE central - add issuance logic to server
 DONE central - test issuance logic to server with test token
+DONE neuron - build an are you sure alert for any delete activity.
+DONE neuron - does not always ask for server time first. (lib/server/server.py register_stream)
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
-neuron - build an are you sure alert for any delete activity, and why not, send all activity too.
 -- BETA (test coin) target: march 3rd --
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
