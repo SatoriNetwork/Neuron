@@ -70,7 +70,7 @@ def acceptRelaySubmission(start: 'StartupDag', data: dict):
 
 
 def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
-    if len(start.relay.streams) >= 25:
+    if len(start.relay.streams) >= 50:
         return ['relay stream limit reached'], 400
     if data.get('uri') is None:
         data['uri'] = data.get('url')
