@@ -250,7 +250,7 @@ class RawStreamRelayEngine(Cached):
                 time.sleep(seconds)
 
     def run(self):
-        if len(self.streams) == 0:
+        if len(self.streams) > 0:
             self.thread = threading.Thread(
                 target=self.runForever,
                 args=(self.active,),
