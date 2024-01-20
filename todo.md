@@ -98,6 +98,7 @@ DONE neuron - relay data stream fix
 DONE neuron - limit relay streams? port limitations, threads, etc. 100? 50? 25? 25 for now
 DONE neuron - relay data stream indicator of not working or working
 DONE neuron - relay data stream indicator could be red if the history is longer in the past than cadence should allow? or yellow if that's the case but you just started the neuron. otherwise green.
+DONE neuron - fix for dark mode
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
