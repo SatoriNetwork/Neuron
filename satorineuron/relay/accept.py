@@ -8,43 +8,32 @@ def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
     # start = getStart()
     statuses = []
     for _, row in df.iterrows():
-        logging.debug('\n processing row', row, color='yellow')
         # data = row.to_dict(na_action='ignore')
         data = {col: None if pd.isna(val) else val for col, val in row.items()}
         if data.get('stream') is None or data.get('stream') == '':
-            logging.debug('\n no stream', data, color='yellow')
             continue
         data['name'] = data.get('stream', '')
         data['source'] = data.get('source', 'satori')
-        logging.debug('\n data1', data, color='yellow')
-        logging.debug('\n data1.1', data.get('hook', '') == '', color='yellow')
         if data.get('hook') is None or data.get('hook') == '':
             msg, status = generateHookFromTarget(data.get('target', ''))
             if status == 200:
                 data['hook'] = msg
-        logging.debug('\n data2', data, color='yellow')
         # msg, status = _registerDataStreamMock(start, data=data)
         msg, status = registerDataStream(start, data=data, restart=False)
-        logging.debug('\n msg status', msg, status, color='yellow')
         statuses.append(status)
         start.workingUpdates.on_next(
             f"{data['stream']}{data['target']} - {'success' if status == 200 else msg}")
     failures = [str(i) for i, s in enumerate(statuses) if s != 200]
-    logging.debug('\n failures', failures, color='yellow')
     if len(failures) == 0:
-        logging.debug('\n len(failures)', len(
-            failures), 'all good', color='yellow')
         start.checkin()
         start.pubsubConnect()
         start.startRelay()
         return 'all succeeded', 200
     elif len(failures) == len(statuses):
-        logging.debug('\n all bad', color='yellow')
         return 'all failed', 500
     start.checkin()
     start.pubsubConnect()
     start.startRelay()
-    logging.debug('\n mix', color='yellow')
     return f'rows {",".join(failures)} failed', 200
 
 

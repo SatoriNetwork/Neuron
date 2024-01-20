@@ -150,14 +150,11 @@ class RawStreamRelayEngine(Cached):
         and payload. Then we can only make 1 call and parse it out according to
         the details of each stream.
         '''
-        logging.debug('\n streams ', streams, color='green')
         result = RawStreamRelayEngine.call(streams[0])
         successes = []
         if result is not None:
             for stream in streams:
                 hookResult = RawStreamRelayEngine.callHook(stream, result)
-                logging.debug(
-                    '\n stream ', stream.streamId.stream, color='green')
                 if hookResult is not None:
                     (
                         success,
@@ -165,8 +162,6 @@ class RawStreamRelayEngine(Cached):
                         observationHash,
                     ) = self.save(stream, data=hookResult)
                     if success:
-                        logging.debug('\n relaying ',
-                                      stream.streamId.stream, color='green')
                         self.relay(
                             stream,
                             data=hookResult,
@@ -224,22 +219,13 @@ class RawStreamRelayEngine(Cached):
             now = int(time.time())
             streams: list[Stream] = []
             for stream in self.streams:
-                logging.debug(
-                    '\n now ',
-                    now % self._cadence(stream), 'cadence(stream)', self._cadence(stream), color='yellow')
                 if now % self._cadence(stream) == 0:
                     streams.append(stream)
             if len(streams) > 0:
                 segmentedStreams: dict[str, list[Stream]] = {}
                 for stream in streams:
-                    logging.debug(
-                        '\n stream ',
-                        stream.streamId.stream, color='yellow')
                     uri = (stream.uri + str(stream.headers) +
                            str(stream.payload))
-                    logging.debug(
-                        '\n uri ',
-                        uri, color='yellow')
                     if uri not in segmentedStreams.keys():
                         segmentedStreams[uri] = []
                     segmentedStreams[uri].append(stream)

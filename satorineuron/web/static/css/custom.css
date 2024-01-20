@@ -67,6 +67,9 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 .dark-text {
   color: snow !important;
 }
+.dark-text2 {
+  color: snow;
+}
 
 .navbar .navbar-brand {
   font-family: "Zen Maru Gothic";

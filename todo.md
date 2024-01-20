@@ -114,7 +114,6 @@ vault - creation process with saving words
 vault - add vault page
 vault - allow for automatic send of tokens to their vault
 
-
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
 central - make sure server is saving history of observations
@@ -134,6 +133,8 @@ central - update website (yellowpaper)
 central - setup electrumx server for evr
 
 all - include different languages in neuron and on website, etc.
+
+neuron - make values get pushed to front end UI for relay streams in realtime
 
 Wallet Encryption:
     neuron - we really should at least give the option to encrypt the wallet yaml

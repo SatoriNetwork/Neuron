@@ -399,7 +399,7 @@
                 </td>
                 <td >
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['latest'] }}" style="color: {% if existingRelayStream['late'] %}red{% else %}darkgreen{% endif %};">{{ existingRelayStream['latest'] }} </h6>
+                    <h6 class="mb-0 text-sm" title="{{ existingRelayStream['latest'] }}" style="color: {% if existingRelayStream['late'] %}red{% else %}{% if darkmode %}limegreen{% else %}green{% endif %}{% endif %};">{{ existingRelayStream['latest'] }} </h6>
                   </div>
                 </td>
                 <td>
