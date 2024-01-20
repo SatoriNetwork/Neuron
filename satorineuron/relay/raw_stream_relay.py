@@ -250,11 +250,14 @@ class RawStreamRelayEngine(Cached):
                 time.sleep(seconds)
 
     def run(self):
-        self.thread = threading.Thread(
-            target=self.runForever,
-            args=(self.active,),
-            daemon=True)
-        self.thread.start()
+        if len(self.streams) == 0:
+            self.thread = threading.Thread(
+                target=self.runForever,
+                args=(self.active,),
+                daemon=True)
+            self.thread.start()
+        else:
+            logging.info('no streams to relay')
 
     def kill(self):
         self.active += 1
