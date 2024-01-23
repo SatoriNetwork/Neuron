@@ -1,0 +1,33 @@
+{% extends "basic.html" %}
+{% block content %}
+<div class="row mb-4">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-less-drastic-reverse shadow-drastic{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">lock</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Vault</h4>
+        </div>
+      </div>
+      <div class="text-center pt-1" style="padding-top: 12rem !important;padding-bottom: 10rem !important;">
+        <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Coming Soon!</h4>
+        <p class="text-sm mb-0 "></p>
+      </div>
+      <div class="card-footer p-1">
+        <center><p class="mb-1 {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>
+          The Vault is an encrypted wallet.
+          <br>
+          <br>
+          Your main Wallet is used to authenticate you to the network and as such is not encrypted, since if it were you would have to be present to provide a decryption password each time your machine wanted to authenticate itself on the Satori Network. The Vault is a wallet that is encrypted with a password only you know and must remember. It is meant to be a more secure location to store your Satori Tokens.
+          </p></center>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+

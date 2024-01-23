@@ -710,6 +710,12 @@ def wallet():
     return render_template('wallet.html', **resp)
 
 
+@app.route('/vault')
+def vault():
+    resp = {'darkmode': darkmode, 'title': 'Vault'}
+    return render_template('vault.html', **resp)
+
+
 @app.route('/voting')
 def voting():
     resp = {'darkmode': darkmode, 'title': 'Voting'}

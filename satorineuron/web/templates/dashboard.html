@@ -152,6 +152,7 @@
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
+                    <!-- we don't give this color yet because the indication is ambiguous - is it late or on time? or is it accurate or way off? -->
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['value'] }}</h6>
                   </div>
                 </td>
@@ -399,7 +400,7 @@
                 </td>
                 <td >
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm" title="{{ existingRelayStream['latest'] }}" style="color: {% if existingRelayStream['late'] %}red{% else %}{% if darkmode %}limegreen{% else %}green{% endif %}{% endif %};">{{ existingRelayStream['latest'] }} </h6>
+                    <h6 class="mb-0 text-sm" title="{% if existingRelayStream['late'] %}late{% else %}on time{% endif %}" style="color: {% if existingRelayStream['late'] %}red{% else %}{% if darkmode %}limegreen{% else %}green{% endif %}{% endif %};">{{ existingRelayStream['latest'] }} </h6>
                   </div>
                 </td>
                 <td>

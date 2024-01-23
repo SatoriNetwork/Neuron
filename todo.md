@@ -99,6 +99,8 @@ DONE neuron - limit relay streams? port limitations, threads, etc. 100? 50? 25? 
 DONE neuron - relay data stream indicator of not working or working
 DONE neuron - relay data stream indicator could be red if the history is longer in the past than cadence should allow? or yellow if that's the case but you just started the neuron. otherwise green.
 DONE neuron - fix for dark mode
+DONE neuron - build in a "vault" placeholders
+neuron - rebuild image
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
@@ -114,6 +116,7 @@ vault - creation process with encrypting with a password of their own
 vault - creation process with saving words
 vault - add vault page
 vault - allow for automatic send of tokens to their vault
+vault - allow for voting with vaulted coins and wallet coins
 
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
