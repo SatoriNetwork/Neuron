@@ -100,7 +100,16 @@ DONE neuron - relay data stream indicator of not working or working
 DONE neuron - relay data stream indicator could be red if the history is longer in the past than cadence should allow? or yellow if that's the case but you just started the neuron. otherwise green.
 DONE neuron - fix for dark mode
 DONE neuron - build in a "vault" placeholders
-neuron - rebuild image
+DONE neuron - rebuild image
+DONE central - restart server with all these changes
+DONE installer - fix linux printouts
+DONE installer - rebuild
+
+rendezvous - deubg - large number of streams unable to establish connection - shouldn't that be done one at a time anyway? no?
+neuron - debug - large number of streams takes a long time to open cache - why? - beucase it's rehashing them? or no? 50 + streams takes 10-30 minutes
+central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
+
+central - clean up database for test payouts
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
@@ -118,7 +127,6 @@ vault - add vault page
 vault - allow for automatic send of tokens to their vault
 vault - allow for voting with vaulted coins and wallet coins
 
-central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - make a history table and test the history table
 central - make sure server is saving history of observations
 central - purge history more than 8 days old
