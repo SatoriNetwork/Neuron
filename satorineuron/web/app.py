@@ -17,7 +17,7 @@ from waitress import serve
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context
-from satorineuron import config
+from satorineuron import VERSION, MOTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
@@ -100,6 +100,16 @@ def getFile(ext: str = '.csv') -> tuple[str, int, Union[None, 'FileStorage']]:
         else:
             return 'Invalid file format. Only CSV files are allowed', 400, None
     return 'unknown error getting file', 500, None
+
+
+def getResp(resp: Union[dict, None] = None) -> dict:
+    return {
+        'v': VERSION,
+        'm': MOTO,
+        'darkmode': darkmode,
+        'title': 'Satori',
+        **(resp or {})}
+
 ###############################################################################
 ## Errors #####################################################################
 ###############################################################################
@@ -230,11 +240,9 @@ def editConfiguration():
         edit_configuration.walletPath.data = config.walletPath()
         edit_configuration.defaultSource.data = config.defaultSource()
         edit_configuration.electrumxServers.data = config.electrumxServers()
-        resp = {
-            'darkmode': darkmode,
+        return render_template('forms/config.html', **getResp({
             'title': 'Configuration',
-            'edit_configuration': edit_configuration}
-        return render_template('forms/config.html', **resp)
+            'edit_configuration': edit_configuration}))
 
     def accept_submittion(edit_configuration):
         data = {}
@@ -547,9 +555,7 @@ def dashboard():
         newRelayStream.history.data = badForm.get('history', '')
         return newRelayStream
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
-    resp = {
-        'darkmode': darkmode,
-        'title': 'Satori',
+    return render_template('dashboard.html', **getResp({
         'wallet': start.wallet,
         'streamsOverview': streamsOverview,
         'configOverrides': config.get(),
@@ -609,8 +615,7 @@ def dashboard():
         return None
 
 """,
-    }
-    return render_template('dashboard.html', **resp)
+    }))
 
 
 @app.route('/model-updates')
@@ -701,25 +706,21 @@ def wallet():
         sendSatoriTransaction.amount.data = ''
         return sendSatoriTransaction
 
-    resp = {
-        'darkmode': darkmode,
+    return render_template('wallet.html', **getResp({
         'title': 'Wallet',
         'image': img_tag,
         'wallet': start.wallet,
-        'sendSatoriTransaction': present_tx_form()}
-    return render_template('wallet.html', **resp)
+        'sendSatoriTransaction': present_tx_form()}))
 
 
 @app.route('/vault')
 def vault():
-    resp = {'darkmode': darkmode, 'title': 'Vault'}
-    return render_template('vault.html', **resp)
+    return render_template('vault.html', **getResp({'title': 'Vault'}))
 
 
 @app.route('/voting')
 def voting():
-    resp = {'darkmode': darkmode, 'title': 'Voting'}
-    return render_template('voting.html', **resp)
+    return render_template('voting.html', **getResp({'title': 'Voting'}))
 
 
 @app.route('/relay_csv', methods=['GET'])
@@ -871,15 +872,13 @@ def publsih():
     ''' to streamr - create a new datastream to publish to '''
     # todo: spoof a dataset response - random generated data, so that the
     #       scholar can be built to ask for history and download it.
-    resp = {}
-    return render_template('unknown.html', **resp)
+    return render_template('unknown.html', **getResp())
 
 
 @app.route('/history')
 def publsihMeta():
     ''' to streamr - publish to a stream '''
-    resp = {}
-    return render_template('unknown.html', **resp)
+    return render_template('unknown.html', **getResp())
 
 ###############################################################################
 ## UDP communication ##########################################################
