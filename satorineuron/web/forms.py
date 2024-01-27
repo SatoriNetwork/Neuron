@@ -38,7 +38,7 @@ class RelayStreamForm(FlaskForm):
     # number of seconds to offset from utc or None
     offset = IntegerField(
         'Offset',
-        validators=[NumberRange(min=1, max=None, message='Offset is in seconds. Is not required.')])
+        validators=[NumberRange(min=0, max=86399, message='Offset is in seconds. Is not required.')])
     # type of data, just a str right now, whatever
     datatype = StringField(
         'Datatype',

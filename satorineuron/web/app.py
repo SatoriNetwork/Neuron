@@ -25,7 +25,7 @@ from satorilib.concepts.structs import Observation, StreamId, StreamsOverview
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timestampToSeconds
 from satorineuron.init.start import StartupDag
-from satorineuron.web.utils import deduceCadenceString
+from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
 ###############################################################################
 ## Globals ####################################################################
@@ -396,6 +396,8 @@ def registerStream():
         msgs, status = registerDataStream(start, data)
         if status == 400:
             badForm = data
+        elif status == 200:
+            badForm = {}
         for msg in msgs:
             flash(msg)
         return redirect('/dashboard')
@@ -420,7 +422,8 @@ def editStream(topic=None):
         # IndexError: list index out of range
         # cannot reproduce, maybe it's in the middle of reconnecting?
         pass
-    return redirect('/dashboard')
+    # return redirect('/dashboard#:~:text=Create%20Data%20Stream')
+    return redirect('/dashboard#CreateDataStream')
 
 
 # @app.route('/remove_stream/<source>/<stream>/<target>/', methods=['GET'])
@@ -569,7 +572,7 @@ def dashboard():
                 **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
                 **{'late': start.relay.late(stream.streamId, timestampToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
                 **{'cadenceStr': deduceCadenceString(stream.cadence)},
-                **{'offsetStr': deduceCadenceString(stream.offset)}}
+                **{'offsetStr': deduceOffsetString(stream.offset)}}
             for stream in start.relay.streams]
          if start.relay is not None else []),
 
@@ -736,7 +739,7 @@ def relayCsv():
             **stream.asMap(noneToBlank=True),
             **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
             **{'cadenceStr': deduceCadenceString(stream.cadence)},
-            **{'offsetStr': deduceCadenceString(stream.offset)}}
+            **{'offsetStr': deduceOffsetString(stream.offset)}}
             for stream in start.relay.streams]
             if start.relay is not None else []).to_csv(index=False),
         200,

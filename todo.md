@@ -105,16 +105,16 @@ DONE central - restart server with all these changes
 DONE installer - fix linux printouts
 DONE installer - rebuild
 DONE installer - add mac installer
-central - add mac installer to webiste
+DONE neuron - the show the current satori version and build on the UI somewhere
+DONE central - add mac installer to webiste
+DONE neuron - respect offset: now that we are doing the cadence by the proper utc time, we can use the offset as intended.
+DONE neuron - fix offset issues: if you add a data stream with an offset and save it, it works fine. But when you enter its edit mode and try to remove or change the offset, the system freezes. You have to refresh the page, but the offset remains unchanged.
 
 rendezvous - deubg - large number of streams unable to establish connection - shouldn't that be done one at a time anyway? no?
+
 neuron - debug - large number of streams takes a long time to open cache - why? - beucase it's rehashing them? or no? 50 + streams takes 10-30 minutes
+
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
-
-neuron - respect offset: now that we are doing the cadence by the proper utc time, we can use the offset as intended.
-neuron - fix offset issues: if you add a data stream with an offset and save it, it works fine. But when you enter its edit mode and try to remove or change the offset, the system freezes. You have to refresh the page, but the offset remains unchanged.
-
-neuron - the show the current satori version and build on the UI somewhere
 
 neuron - debug peer to peer connections
 

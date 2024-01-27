@@ -529,7 +529,7 @@
 });
 
 </script>
-<div class="row mb-4" style="margin-bottom: 3rem !important;">
+<div id='CreateDataStream', class="row mb-4" style="margin-bottom: 3rem !important;">
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
@@ -1056,7 +1056,8 @@
 		return (
 			document.getElementById("name").value != "" && 
 			document.getElementById("cadence").value >= 60 && 
-			document.getElementById("url").value.startsWith("http")
+			document.getElementById("url").value.startsWith("http") && 
+      (document.getElementById("offset").value== '' || document.getElementById("offset").value < 86400)
       // don't require uri, if blank it'll automatically populate from url
 			//  && document.getElementById("uri").value.startsWith("http") 
       );

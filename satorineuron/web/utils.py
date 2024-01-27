@@ -18,3 +18,21 @@ def deduceCadenceString(seconds):
     if (seconds > 0):
         aggregate.append(f'{seconds} secs')
     return ','.join(aggregate)
+
+
+def deduceOffsetString(seconds):
+    if seconds is None:
+        return ''
+    from math import floor
+    aggregate = []
+    hourSeconds = floor(seconds/60/60)
+    if (hourSeconds > 0):
+        aggregate.append(f'{hourSeconds} hrs')
+        seconds = seconds - (hourSeconds*60*60)
+    minuteSeconds = floor(seconds/60)
+    if (minuteSeconds > 0):
+        aggregate.append(f'{minuteSeconds} mins')
+        seconds = seconds - (minuteSeconds*60)
+    if (seconds > 0):
+        aggregate.append(f'{seconds} secs')
+    return ','.join(aggregate)

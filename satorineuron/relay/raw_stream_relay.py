@@ -57,7 +57,7 @@ class RawStreamRelayEngine(Cached):
         stream = self._getStreamFor(streamId)
         if stream is not None:
             # return mostRecentTSinSeconds < (int(time.time()) - self._cadence(stream)) # more intuitive I think
-            return int(time.time()) > (mostRecentTSinSeconds + self._cadence(stream))
+            return int(time.time()) > (mostRecentTSinSeconds + self._cadence(stream) + self._offset(stream))
         return True
 
     @staticmethod
@@ -209,6 +209,10 @@ class RawStreamRelayEngine(Cached):
         ''' returns cadence in seconds, engine does not allow < 60 '''
         return int(max(stream.cadence or 60, 60))
 
+    def _offset(self, stream: Stream) -> int:
+        ''' returns cadence in seconds, engine does not allow < 60 '''
+        return int(stream.offset or 0)
+
     def runForever(self, active: int):
         # though I would like to use the asyncThread for this, as it would be
         # simpler to reason about, I'm not sure how I would reduce the number
@@ -219,7 +223,7 @@ class RawStreamRelayEngine(Cached):
             now = int(time.time())
             streams: list[Stream] = []
             for stream in self.streams:
-                if now % self._cadence(stream) == 0:
+                if (now + self._offset(stream)) % self._cadence(stream) == 0:
                     streams.append(stream)
             if len(streams) > 0:
                 segmentedStreams: dict[str, list[Stream]] = {}
@@ -238,7 +242,7 @@ class RawStreamRelayEngine(Cached):
                 try:
                     # wait till the next stream
                     seconds = min([
-                        self._cadence(stream) - (int(newNow) %
+                        self._cadence(stream) - ((int(newNow) + self._offset(stream)) %
                                                  self._cadence(stream))
                         for stream in self.streams])
                 except Exception as e:
