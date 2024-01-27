@@ -137,11 +137,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def verifyCaches(self) -> bool:
         ''' rehashes my published hashes '''
-        for stream in set(self.publications):
-            cache = self.cacheOf(stream.id)
-            success, details = cache.validateAllHashes()
+
+        def validateCache(cache: disk.Cache):
+            success, _ = cache.validateAllHashes()
             if not success:
                 cache.saveHashes()
+
+        for stream in set(self.publications):
+            cache = self.cacheOf(stream.id)
+            self.asyncThread.runAsync(cache, task=validateCache)
         return True
 
     def buildEngine(self):
