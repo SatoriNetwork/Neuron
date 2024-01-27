@@ -113,6 +113,8 @@ DONE neuron - debug - large number of streams takes a long time to open cache - 
 DONE rendezvous - deubg - large number of streams unable to establish connection - shouldn't that be done one at a time anyway? no?
 DONE neuron - debug peer to peer connections
 DONE neuron - enforce 50 relays limit
+DONE neuron - don't request if you publish
+DONE neuron - rebuild neuron
 
 central - a neuron shouldn't subscribe to it's own datastreams by default.
 central - clean up database for test payouts
