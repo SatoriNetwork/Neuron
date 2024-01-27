@@ -128,8 +128,11 @@ def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
 
     # attempt to save to server.
     save = start.relayValidation.register_stream(data=data)
+
+    # we no longer use ipfs.
     # subscribe to save ipfs automatically
-    subscribed = start.relayValidation.subscribe_to_stream(data=data)
+    # subscribed = start.relayValidation.subscribe_to_stream(data=data)
+
     start.relayValidation.save_local(data)
     if hasHistory:
         try:

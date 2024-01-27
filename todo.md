@@ -114,10 +114,11 @@ DONE rendezvous - deubg - large number of streams unable to establish connection
 DONE neuron - debug peer to peer connections
 DONE neuron - enforce 50 relays limit
 
-central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
-
-central - clean up database for test payouts
 central - a neuron shouldn't subscribe to it's own datastreams by default.
+central - clean up database for test payouts
+central - test pubsub and rendezvous after we remove own subscriptions.
+
+central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
