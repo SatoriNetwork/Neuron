@@ -115,10 +115,9 @@ DONE neuron - debug peer to peer connections
 DONE neuron - enforce 50 relays limit
 DONE neuron - don't request if you publish
 DONE neuron - rebuild neuron
-
-central - a neuron shouldn't subscribe to it's own datastreams by default.
-central - clean up database for test payouts
-central - test pubsub and rendezvous after we remove own subscriptions.
+DONE central - a neuron shouldn't subscribe to it's own datastreams by default.
+DONE central - clean up database for test payouts
+DONE central - test pubsub and rendezvous after we remove own subscriptions.
 
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 
