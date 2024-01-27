@@ -109,16 +109,15 @@ DONE neuron - the show the current satori version and build on the UI somewhere
 DONE central - add mac installer to webiste
 DONE neuron - respect offset: now that we are doing the cadence by the proper utc time, we can use the offset as intended.
 DONE neuron - fix offset issues: if you add a data stream with an offset and save it, it works fine. But when you enter its edit mode and try to remove or change the offset, the system freezes. You have to refresh the page, but the offset remains unchanged.
-
-rendezvous - deubg - large number of streams unable to establish connection - shouldn't that be done one at a time anyway? no?
-
-neuron - debug - large number of streams takes a long time to open cache - why? - beucase it's rehashing them? or no? 50 + streams takes 10-30 minutes
+DONE neuron - debug - large number of streams takes a long time to open cache - why? - beucase it's rehashing them? or no? 50 + streams takes 10-30 minutes
+DONE rendezvous - deubg - large number of streams unable to establish connection - shouldn't that be done one at a time anyway? no?
+DONE neuron - debug peer to peer connections
+DONE neuron - enforce 50 relays limit
 
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 
-neuron - debug peer to peer connections
-
 central - clean up database for test payouts
+central - a neuron shouldn't subscribe to it's own datastreams by default.
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories

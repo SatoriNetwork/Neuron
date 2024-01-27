@@ -7,7 +7,9 @@ def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
     # from satorineuron.init.start import getStart
     # start = getStart()
     statuses = []
-    for _, row in df.iterrows():
+    for ix, row in df.iterrows():
+        if len(start.relay.streams) + ix+1 >= 50:
+            return ['relay stream limit reached'], 400
         # data = row.to_dict(na_action='ignore')
         data = {col: None if pd.isna(val) else val for col, val in row.items()}
         if data.get('stream') is None or data.get('stream') == '':
