@@ -119,7 +119,13 @@ DONE central - a neuron shouldn't subscribe to it's own datastreams by default.
 DONE central - clean up database for test payouts
 DONE central - test pubsub and rendezvous after we remove own subscriptions.
 
+DONE neuron - make wallet reference test token in wallet page
+DONE neuron - create main and test token link on navbar
+neuron - create make wallet page adaptable to main or test
+neuron - create main wallet as well as test wallet on startup
+
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
+central - needs a wallet on server
 
 neuron - setup 3 more neurons
 neuron - seed with datastreams with histories
@@ -163,3 +169,17 @@ Wallet Encryption:
     neuron - so on the wallet page add a card for encryption
     neuron - and ask for their password when showing the secret
     neuron - the only problem is in order to sign anything to verify your identity you need to use the private key... so the user would have to provide their password everytime satori starts... This is a problem for later... when they can authorize from their phone...
+
+
+neuron - allow neurons to predict any stream by choice (include their own), but make them ineligible for reward for those streams
+"""
+ah, I see.
+
+Well, you know what we probably should do that huh? We don't currently allow a neuron to predict its own streams because we wanted to avoid the problem of unfair advantage, so I think the right solution is actually to allow a neuron to predict its own streams but it won't be eligible for prediction reward on those particular streams, because since it's the one that's also generating them it could know them before it releases them to everyone else.
+
+So that's a change I'm going to have to make.
+"""
+neuron - add the ability to manually trigger update, or make it instant and automatic.
+"""
+Can you add information in the panel or somewhere on the page that a new version has been released and with one click it will restart the node to the new version?
+"""

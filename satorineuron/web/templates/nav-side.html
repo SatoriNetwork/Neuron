@@ -24,13 +24,22 @@
 	  <li class="nav-item mt-3">
         <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8"></h6>
       </li>-->
-      <li class="nav-item">
-        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="{{ url_for('wallet') }}" onclick="showWorking();">
-          <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-            <i class="material-icons opacity-10">wallet</i><!--receipt_long</i>-->
+      <li class="nav-item sidenav-dropdown-chevron">
+        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="#" onclick="toggleDropdown(event);">
+          <div class="d-flex justify-content-between align-items-center w-100">
+            <div class="d-flex align-items-center">
+              <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                <i class="material-icons opacity-10">wallet</i>
+              </div>
+              <span class="nav-link-text">Wallet</span>
+            </div>
+            <i class="material-icons opacity-10">expand_more</i>
           </div>
-          <span class="nav-link-text ms-1">Wallet</span>
         </a>
+        <div class="sidenav-dropdown-content">
+          <a href="{{ url_for('wallet') }}" onclick="showWorking();">Main</a>
+          <a href="{{ url_for('wallet') }}" onclick="showWorking();">Test</a>
+        </div>
       </li>
       <!-- this will be a page that shows all our predictions and all our subscriptions and what feeds which.
       <li class="nav-item">
@@ -114,4 +123,23 @@
   <!--
 -->
 </aside>
+<script>
+  function toggleDropdown(event) {
+    event.stopPropagation();
+    var dropdownContent = event.currentTarget.nextElementSibling;
+    dropdownContent.classList.toggle("sidenav-show");
+  }
+  // Close the dropdown if the user clicks outside of it
+  window.onclick = function(event) {
+    if (!event.target.matches('.sidenav-dropdown-chevron, .sidenav-dropdown-chevron *')) {
+      var dropdowns = document.getElementsByClassName("sidenav-dropdown-content");
+      for (var i = 0; i < dropdowns.length; i++) {
+        var openDropdown = dropdowns[i];
+        if (openDropdown.classList.contains('sidenav-show')) {
+          openDropdown.classList.remove('sidenav-show');
+        }
+      }
+    }
+  }
+</script>
    
