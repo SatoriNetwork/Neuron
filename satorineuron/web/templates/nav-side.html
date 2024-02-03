@@ -26,7 +26,7 @@
       </li>-->
       <!--
       <li class="nav-item">
-        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="{{ url_for('wallet') }}" onclick="showWorking();">
+        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="{{ url_for('wallet', network='main') }}" onclick="showWorking();">
           <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
             <i class="material-icons opacity-10">wallet</i>
           </div>
@@ -34,10 +34,27 @@
         </a>
       </li>-->
 
+      <!--<li class="nav-item sidenav-dropdown-chevron">
+        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="{{ url_for('wallet', network='main') }}">
+          <div class="d-flex justify-content-between align-items-center w-100">
+            <div class="d-flex align-items-center">
+              <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                <i class="material-icons opacity-10">wallet</i>
+              </div>
+              <span class="nav-link-text">Wallet</span>
+            </div>
+          </div>
+        </a>
+        <div class="sidenav-dropdown-content">
+          <a href="{{ url_for('wallet', network='main') }}" onclick="showWorking();">Main</a>
+          <a href="{{ url_for('wallet', network='test') }}" onclick="showWorking();">Test</a>
+        </div>
+      </li>-->
       <li class="nav-item sidenav-dropdown-chevron">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="#" onclick="toggleDropdown(event);">
           <div class="d-flex justify-content-between align-items-center w-100">
-            <div class="d-flex align-items-center">
+            <div id='urlWalletMain' style='display:none;'>{{ url_for('wallet', network='main') }}</div>
+            <div id='gotoWalletMain' class="d-flex align-items-center" style='z-index:2;'>
               <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
                 <i class="material-icons opacity-10">wallet</i>
               </div>
@@ -47,11 +64,18 @@
           </div>
         </a>
         <div class="sidenav-dropdown-content">
-          <a href="{{ url_for('wallet') }}" onclick="showWorking();">Main</a>
-          <a href="{{ url_for('wallet') }}" onclick="showWorking();">Test</a>
+          <a href="{{ url_for('wallet', network='main') }}" onclick="showWorking();">Main</a>
+          <a href="{{ url_for('wallet', network='test') }}" onclick="showWorking();">Test</a>
         </div>
       </li>
       <script>
+        document.getElementById('gotoWalletMain').addEventListener(
+          'click', 
+          function(event) {
+            window.location.href =document.getElementById('urlWalletMain').innerHTML;
+            showWorking();
+          });
+
         function toggleDropdown(event) {
           event.stopPropagation();
           var dropdownContent = event.currentTarget.nextElementSibling;
@@ -73,6 +97,7 @@
         
       </script>
 
+      
       <!-- this will be a page that shows all our predictions and all our subscriptions and what feeds which.
       <li class="nav-item">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Predictions' else '' }}" href="{{ url_for('dashboard') }}">

@@ -550,13 +550,14 @@ td:last-child {
   margin-bottom: 4px;
   font-size: 0.875rem;
   border-radius: 8px;
+  color: #fff;
 }
 
 .sidenav-dropdown-content a:hover {
   /*background-image: linear-gradient(195deg, #F9ED4E 0%, #F6B042 100%);*/
   display: block;
   --bs-navbar-hover-color: rgba(255, 255, 255, 0.12);
-  --bs-link-color: #F6B042;
+  --bs-link-color: #fff;
   --bs-navbar-toggler-border-color: #dee2e6;
 
   color: var(--bs-link-color);
@@ -566,3 +567,15 @@ td:last-child {
 }
 
 .sidenav-show {display: block;}
+
+.chevron-overlay {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 20%; /* Adjust based on your layout, ensuring it covers just the chevron area */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 2; /* Ensure it's above the nav-link but below any dropdowns */
+}

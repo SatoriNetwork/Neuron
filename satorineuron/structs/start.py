@@ -1,8 +1,8 @@
 from typing import Union
 import threading
 from reactivex.subject import BehaviorSubject
-from satorilib.concepts.structs import Stream
-from satorilib.api.wallet import RavencoinWallet
+from satorilib.concepts.structs import StreamId, Stream
+from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 # from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.pubsub import SatoriPubSubConn
@@ -19,7 +19,8 @@ class StartupDagStruct(object):
         self.urlPubsub: str = None
         self.paused: bool = None
         self.pauseThread: Union[threading.Thread, None] = None
-        self.wallet: RavencoinWallet = None
+        self.ravencoinWallet: RavencoinWallet = None
+        self.evrmoreWallet: EvrmoreWallet = None
         self.details: dict = None
         self.key: str = None
         self.idKey: str = None
@@ -37,6 +38,22 @@ class StartupDagStruct(object):
         self.subscriptions: list[Stream] = None
         self.asyncThread: AsyncThread = None
 
+    def cacheOf(self, streamId: StreamId):
+        ''' returns the reference to the cache of a stream '''
+        pass
+
+    @property
+    def wallet(self) -> RavencoinWallet:
+        return self.ravencoinWallet
+
+    def networkIsTest(self, network: str = None) -> bool:
+        return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn', 'ravencoin')
+
+    def getWallet(self, test: bool = False, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
+        if test or self.networkIsTest(network):
+            return self.ravencoinWallet
+        return self.evrmoreWallet
+    
     def start(self):
         ''' start the satori engine. '''
         pass

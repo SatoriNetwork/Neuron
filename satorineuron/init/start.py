@@ -7,7 +7,7 @@ import satorineuron
 import satoriengine
 from satorilib.concepts.structs import StreamId, Stream
 from satorilib.api import disk
-from satorilib.api.wallet import RavencoinWallet
+from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 # from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
@@ -48,7 +48,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.urlPubsub: str = urlPubsub
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
-        self.wallet: RavencoinWallet
+        self.ravencoinWallet: RavencoinWallet
+        self.evrmoreWallet: EvrmoreWallet
         self.details: dict
         self.key: str
         self.idKey: str
@@ -71,6 +72,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' returns the reference to the cache of a stream '''
         return self.caches.get(streamId)
 
+    @property
+    def wallet(self) -> RavencoinWallet:
+        return self.ravencoinWallet
+
+    def networkIsTest(self, network: str = None) -> bool:
+        return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn', 'ravencoin')
+
+    def getWallet(self, test: bool = False, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
+        if test or self.networkIsTest(network):
+            return self.ravencoinWallet
+        return self.evrmoreWallet
+
     def start(self):
         ''' start the satori engine. '''
         self.createRelayValidation()
@@ -89,8 +102,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info('started relay validation engine', color='green')
 
     def openWallet(self):
-        self.wallet = RavencoinWallet(
-            config.walletPath('wallet.yaml'), reserve=0.01)()
+        self.ravencoinWallet = RavencoinWallet(
+            config.walletPath('wallet.yaml'), 
+            reserve=0.01,
+            isTestnet=self.networkIsTest('ravencoin'))()
+        self.evrmoreWallet = EvrmoreWallet(
+            config.walletPath('wallet.yaml'), 
+            reserve=0.01,
+            isTestnet=self.networkIsTest('evrmore'))()
         logging.info('opened wallet', color='green')
 
     def checkin(self):

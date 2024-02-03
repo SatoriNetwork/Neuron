@@ -118,11 +118,10 @@ DONE neuron - rebuild neuron
 DONE central - a neuron shouldn't subscribe to it's own datastreams by default.
 DONE central - clean up database for test payouts
 DONE central - test pubsub and rendezvous after we remove own subscriptions.
-
 DONE neuron - make wallet reference test token in wallet page
 DONE neuron - create main and test token link on navbar
-neuron - create make wallet page adaptable to main or test
-neuron - create main wallet as well as test wallet on startup
+DONE neuron - create make wallet page adaptable to main or test
+DONE neuron - create main wallet as well as test wallet on startup
 
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - needs a wallet on server

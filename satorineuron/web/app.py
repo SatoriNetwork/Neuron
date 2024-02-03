@@ -326,8 +326,9 @@ def relay():
     return acceptRelaySubmission(start, json.loads(request.get_json()))
 
 
-@app.route('/send_satori_transaction', methods=['POST'])
-def sendSatoriTransaction():
+@app.route('/send_satori_transaction/<network>', methods=['POST'])
+def sendSatoriTransaction(network: str = 'main'):
+    myWallet = start.getWallet(network=network)
     import importlib
     global forms
     global badForm
@@ -336,7 +337,7 @@ def sendSatoriTransaction():
     def accept_submittion(sendSatoriForm):
         if sendSatoriForm.sweep.data == True:
             try:
-                result = start.wallet.sendAllTransaction(
+                result = myWallet.sendAllTransaction(
                     sendSatoriForm.address.data or '')
                 if result is None:
                     flash('Send Failed: try again in a few minutes.')
@@ -346,7 +347,7 @@ def sendSatoriTransaction():
                 flash(f'Send Failed: {e}')
         else:
             try:
-                result = start.wallet.satoriTransaction(
+                result = myWallet.satoriTransaction(
                     amount=sendSatoriForm.amount.data or 0,
                     address=sendSatoriForm.address.data or '')
                 if result is None:
@@ -442,7 +443,8 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
     def accept_submittion(removeRelayStream: StreamId, doRedirect=True):
         r = start.server.removeStream(payload=json.dumps({
             'source': removeRelayStream.source,
-            'pubkey': start.wallet.publicKey,  # should match removeRelayStream.author
+            # should match removeRelayStream.author
+            'pubkey': start.wallet.publicKey,
             'stream': removeRelayStream.stream,
             'target': removeRelayStream.target,
         }))
@@ -679,14 +681,15 @@ def workingUpdatesEnd():
     return 'ok', 200
 
 
-@app.route('/wallet')
-def wallet():
+@app.route('/wallet/<network>')
+def wallet(network: str = 'main'):
+    myWallet = start.getWallet(network=network)
     # not handling buffering correctly, so getting a list of transactions gets cut off and kills the page.
-    start.wallet.get(allWalletInfo=False)
+    myWallet.get(allWalletInfo=False)
     import io
     import qrcode
     from base64 import b64encode
-    img = qrcode.make(start.wallet.address)
+    img = qrcode.make(myWallet.address)
     buf = io.BytesIO()
     img.save(buf)
     buf.seek(0)
@@ -712,7 +715,7 @@ def wallet():
     return render_template('wallet.html', **getResp({
         'title': 'Wallet',
         'image': img_tag,
-        'wallet': start.wallet,
+        'wallet': myWallet,
         'sendSatoriTransaction': present_tx_form()}))
 
 
