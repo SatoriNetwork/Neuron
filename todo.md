@@ -122,12 +122,26 @@ DONE neuron - make wallet reference test token in wallet page
 DONE neuron - create main and test token link on navbar
 DONE neuron - create make wallet page adaptable to main or test
 DONE neuron - create main wallet as well as test wallet on startup
+DONE neuron - setup 3 more neurons
+DONE neuron - seed with datastreams with histories
+
+central - test:
+central - do inactive neurons get removed nightly?
+    central - get a list of inactive neurons, run nightly process, see if they're gone
+central - do streams, subscription, etc, attached to missing neurons get removed?
+    central - get a list of streams pulished by above neurons, run nightly process, see if they're gone
+central - do inactive streams get unsanctioned nightly?
+    central - found ksm datastream with no observations, run the nightly schedule process, verify ksm no longer sanctioned
+central - do reactivated streams get resanctioned automatically?
+    central - found kws neuron, start it, run the nightly schedule process, verify ksm no longer sanctioned
+central - do neurons get distributions if they published predictions on a sanctioned datastream within the last 24 hours? are they accurate?
+    central - generate a list of neurons and what they deserve, verify after run
+
+central - does the nightly process run automatically?
+
 
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - needs a wallet on server
-
-neuron - setup 3 more neurons
-neuron - seed with datastreams with histories
 
 -- BETA (test coin) target: march 3rd --
 
@@ -153,11 +167,20 @@ central - update website (images)
 central - update website (copy)
 central - update website (yellowpaper)
 
+central - if a neuron is subscribed to an unsanctioned stream does that neuron get reassigned a sanctioned datastream?
+central - if a neuron is subscribed to an unsanctioned stream does the user know about it?
+
+central - we will need an admin dashboard to track the activity of the network
+
 -- Launch --
 
 -- Nice --
 
 central - setup electrumx server for evr
+
+neuron - settings:
+neuron - change 'configuration' to settings, remove whats there, include options like, autorequest sanctioned datastreams
+central - if a neuron is subscribed to an unsanctioned stream does the user know about it, and have the ability to switch to a sanctioned one? can that be a setting?
 
 all - include different languages in neuron and on website, etc.
 
@@ -182,3 +205,4 @@ neuron - add the ability to manually trigger update, or make it instant and auto
 """
 Can you add information in the panel or somewhere on the page that a new version has been released and with one click it will restart the node to the new version?
 """
+
