@@ -125,6 +125,10 @@ DONE neuron - create main wallet as well as test wallet on startup
 DONE neuron - setup 3 more neurons
 DONE neuron - seed with datastreams with histories
 DONE central - fix scheduler to run in it's own process (gunicorn runs multiple workers, so even though the object is singleton it runs more than once)
+DONE central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
+DONE central - implement alternative logging solution
+DONE central - needs a wallet on server
+DONE central - add test value to server wallet
 
 central - test:
 DONE central - does the nightly process run automatically?
@@ -132,24 +136,27 @@ DONE central - do inactive neurons get removed nightly?
 DONE central - get a list of inactive neurons, run nightly process, see if they're gone
 DONE central - do streams, subscription, etc, attached to missing neurons get removed?
 DONE central - get a list of streams pulished by above neurons, run nightly process, see if they're gone
+DONE central - do inactive streams get unsanctioned nightly?
+DONE central - found ksm datastream with no observations, run the nightly schedule process, verify ksm no longer sanctioned
+DONE central - do reactivated streams get resanctioned automatically?
+DONE central - found kws neuron, start it, run the nightly schedule process, verify ksm no longer sanctioned
 
-central - do neurons get distributions if they published predictions on a sanctioned datastream within the last 24 hours? are they accurate? NO.
-central - generate a list of neurons and what they deserve, verify after run
-central - we don't keep history beyond a day so query for checking if relay or prediction streams had activity always fails. - we need to implement the history table, and if we're going to do that we might as well implement soft delete and derived cadence as well...
+central - do neurons get distributions if they published predictions on a sanctioned datastream within the last 24 hours? are they accurate?
 
-central - do inactive streams get unsanctioned nightly?
-    central - found ksm datastream with no observations, run the nightly schedule process, verify ksm no longer sanctioned
-central - do reactivated streams get resanctioned automatically?
-    central - found kws neuron, start it, run the nightly schedule process, verify ksm no longer sanctioned
-
-central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
-central - needs a wallet on server
+DONE central - we don't keep history beyond a day so query for checking if relay or prediction streams had activity always fails. - we need to implement the history table.
+DONE central - add History table
+DONE central - verify observations are saved to history table
+DONE central - fix hisotry table
+DONE central - use history table in mining queries and verify
 
 -- BETA (test coin) target: march 3rd --
 
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
 central - modify queries to respect soft delete.
+central - derived cadence as well from history table
+central - consider turning observation table into a view on history...
+central - should we purge history more than 60 days old
 
 neuron - build in a "vault"
 vault - creation process with encrypting with a password of their own
