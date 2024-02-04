@@ -124,21 +124,23 @@ DONE neuron - create make wallet page adaptable to main or test
 DONE neuron - create main wallet as well as test wallet on startup
 DONE neuron - setup 3 more neurons
 DONE neuron - seed with datastreams with histories
+DONE central - fix scheduler to run in it's own process (gunicorn runs multiple workers, so even though the object is singleton it runs more than once)
 
 central - test:
-central - do inactive neurons get removed nightly?
-    central - get a list of inactive neurons, run nightly process, see if they're gone
-central - do streams, subscription, etc, attached to missing neurons get removed?
-    central - get a list of streams pulished by above neurons, run nightly process, see if they're gone
+DONE central - does the nightly process run automatically?
+DONE central - do inactive neurons get removed nightly?
+DONE central - get a list of inactive neurons, run nightly process, see if they're gone
+DONE central - do streams, subscription, etc, attached to missing neurons get removed?
+DONE central - get a list of streams pulished by above neurons, run nightly process, see if they're gone
+
+central - do neurons get distributions if they published predictions on a sanctioned datastream within the last 24 hours? are they accurate? NO.
+central - generate a list of neurons and what they deserve, verify after run
+central - we don't keep history beyond a day so query for checking if relay or prediction streams had activity always fails. - we need to implement the history table, and if we're going to do that we might as well implement soft delete and derived cadence as well...
+
 central - do inactive streams get unsanctioned nightly?
     central - found ksm datastream with no observations, run the nightly schedule process, verify ksm no longer sanctioned
 central - do reactivated streams get resanctioned automatically?
     central - found kws neuron, start it, run the nightly schedule process, verify ksm no longer sanctioned
-central - do neurons get distributions if they published predictions on a sanctioned datastream within the last 24 hours? are they accurate?
-    central - generate a list of neurons and what they deserve, verify after run
-
-central - does the nightly process run automatically?
-
 
 central - rendezvous, pubsub, server: anything behind gunicorn not logging right.
 central - needs a wallet on server
