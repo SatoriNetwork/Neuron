@@ -23,6 +23,9 @@ COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
 COPY Neuron/setup.py /Satori/Neuron/setup.py
 COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
 
+#move to base
+RUN pip install pycryptodome
+
 RUN chmod -R 777 /Satori/Lib
 RUN chmod -R 777 /Satori/Rendezvous
 RUN chmod -R 777 /Satori/Wallet
