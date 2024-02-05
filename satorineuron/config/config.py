@@ -17,6 +17,7 @@ def args_to_config_path(*args, root: callable) -> str:
     args.insert(0, 'config')
     return root(*args)
 
+
 def read(*args, path: str = None, root: callable = None):
     ''' gets configuration out of the yaml file '''
     path = path or args_to_config_path(*args, root=root)
@@ -24,6 +25,7 @@ def read(*args, path: str = None, root: callable = None):
         with open(path, mode='r') as f:
             return f.readlines()
     return []
+
 
 def write(
     *args,
@@ -36,13 +38,22 @@ def write(
     with open(path, mode='w') as f:
         f.writelines(lines)
 
-def get(*args, path: str = None, root: callable = None):
+
+def get(*args, path: str = None, root: callable = None, decrypt: callable = None):
     ''' gets configuration out of the yaml file '''
     path = path or args_to_config_path(*args, root=root)
     if os.path.exists(path):
         with open(path, mode='r') as f:
+            ## you can use the file directly
+            #try:
+            #    return yaml.load(f, Loader=yaml.FullLoader) or {}
+            #except AttributeError:
+            #    return yaml.load(f) or {}
+            contents = f.read()
+            if decrypt is not None:
+                contents = decrypt(contents)
             try:
-                return yaml.load(f, Loader=yaml.FullLoader) or {}
+                return yaml.load(contents, Loader=yaml.FullLoader) or {}
             except AttributeError:
                 return yaml.load(f) or {}
     return {}
@@ -55,7 +66,7 @@ def put(
     root: callable = None,
 ) -> dict:
     ''' makes a yaml fill somewhere in config folder '''
-    if data is not None: 
+    if data is not None:
         path = path or args_to_config_path(*args, root=root)
         with open(path, mode='w') as f:
             yaml.dump(data, f, default_flow_style=False)

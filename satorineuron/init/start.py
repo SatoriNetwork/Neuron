@@ -50,6 +50,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.pauseThread: Union[threading.Thread, None] = None
         self.ravencoinWallet: RavencoinWallet
         self.evrmoreWallet: EvrmoreWallet
+        self.ravencoinVault: RavencoinWallet
+        self.evrmoreVault: EvrmoreWallet
         self.details: dict
         self.key: str
         self.idKey: str
@@ -103,11 +105,22 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def openWallet(self):
         self.ravencoinWallet = RavencoinWallet(
-            config.walletPath('wallet.yaml'), 
+            config.walletPath('wallet.yaml'),
             reserve=0.01,
             isTestnet=self.networkIsTest('ravencoin'))()
         self.evrmoreWallet = EvrmoreWallet(
-            config.walletPath('wallet.yaml'), 
+            config.walletPath('wallet.yaml'),
+            reserve=0.01,
+            isTestnet=self.networkIsTest('evrmore'))()
+        logging.info('opened wallet', color='green')
+
+    def openVault(self, password: str):
+        self.ravencoinVault = RavencoinWallet(
+            config.walletPath('vault.yaml'),
+            reserve=0.01,
+            isTestnet=self.networkIsTest('ravencoin'))()
+        self.evrmoreVault = EvrmoreWallet(
+            config.walletPath('vault.yaml'),
             reserve=0.01,
             isTestnet=self.networkIsTest('evrmore'))()
         logging.info('opened wallet', color='green')
