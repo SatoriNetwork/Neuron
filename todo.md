@@ -159,6 +159,12 @@ central - consider turning observation table into a view on history...
 central - should we purge history more than 60 days old
 
 neuron - build in a "vault"
+DONE vault - allow wallet to be encrypted and decrypted
+DONE vault - make endpoint for opening vault
+DONE vault - make endpoint for vault
+DONE vault - if they navigate away from the vault forget the vault
+vault - add wallet template to vault template
+vault - add wallet code to vault endpoint
 vault - creation process with encrypting with a password of their own
 vault - creation process with saving words
 vault - add vault page

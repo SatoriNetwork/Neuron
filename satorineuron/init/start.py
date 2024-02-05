@@ -50,8 +50,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.pauseThread: Union[threading.Thread, None] = None
         self.ravencoinWallet: RavencoinWallet
         self.evrmoreWallet: EvrmoreWallet
-        self.ravencoinVault: RavencoinWallet
-        self.evrmoreVault: EvrmoreWallet
+        self.ravencoinVault: Union[RavencoinWallet, None] = None
+        self.evrmoreVault: Union[EvrmoreWallet, None] = None
         self.details: dict
         self.key: str
         self.idKey: str
@@ -73,6 +73,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         ''' returns the reference to the cache of a stream '''
         return self.caches.get(streamId)
+
+    @property
+    def vault(self) -> RavencoinWallet:
+        return self.ravencoinVault
 
     @property
     def wallet(self) -> RavencoinWallet:
@@ -108,22 +112,35 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             config.walletPath('wallet.yaml'),
             reserve=0.01,
             isTestnet=self.networkIsTest('ravencoin'))()
-        self.evrmoreWallet = EvrmoreWallet(
-            config.walletPath('wallet.yaml'),
-            reserve=0.01,
-            isTestnet=self.networkIsTest('evrmore'))()
-        logging.info('opened wallet', color='green')
+        # self.evrmoreWallet = EvrmoreWallet(
+        #    config.walletPath('wallet.yaml'),
+        #    reserve=0.01,
+        #    isTestnet=self.networkIsTest('evrmore'))()
+        logging.info('opened vault', color='green')
 
-    def openVault(self, password: str):
-        self.ravencoinVault = RavencoinWallet(
-            config.walletPath('vault.yaml'),
-            reserve=0.01,
-            isTestnet=self.networkIsTest('ravencoin'))()
-        self.evrmoreVault = EvrmoreWallet(
-            config.walletPath('vault.yaml'),
-            reserve=0.01,
-            isTestnet=self.networkIsTest('evrmore'))()
+    def closeVault(self):
+        self.ravencoinVault = None
+        self.evrmoreVault = None
+
+    def openVault(self, password: str) -> tuple[RavencoinWallet, EvrmoreWallet]:
+        try:
+            self.ravencoinVault = RavencoinWallet(
+                config.walletPath('vault.yaml'),
+                reserve=0.01,
+                isTestnet=self.networkIsTest('ravencoin'),
+                password=password,
+            )()
+            self.evrmoreVault = EvrmoreWallet(
+                config.walletPath('vault.yaml'),
+                reserve=0.01,
+                isTestnet=self.networkIsTest('evrmore'),
+                password=password,
+            )()
+        except Exception as e:
+            logging.error('failed to open vault', color='red')
+            raise e
         logging.info('opened wallet', color='green')
+        return self.ravencoinVault, self.evrmoreVault
 
     def checkin(self):
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)

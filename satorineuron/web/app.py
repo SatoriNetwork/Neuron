@@ -5,6 +5,7 @@
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
 
 from typing import Union
+from functools import wraps
 import os
 import json
 import threading
@@ -109,6 +110,15 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'darkmode': darkmode,
         'title': 'Satori',
         **(resp or {})}
+
+
+def closeVault(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        start.closeVault()
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 ###############################################################################
 ## Errors #####################################################################
@@ -227,6 +237,7 @@ def modeDark():
 
 
 @app.route('/configuration', methods=['GET', 'POST'])
+@closeVault
 def editConfiguration():
     import importlib
     global forms
@@ -502,6 +513,7 @@ def removeStreamByPost():
 @app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 @app.route('/dashboard', methods=['GET'])
+@closeVault
 def dashboard():
     '''
     UI
@@ -682,6 +694,7 @@ def workingUpdatesEnd():
 
 
 @app.route('/wallet/<network>')
+@closeVault
 def wallet(network: str = 'main'):
     myWallet = start.getWallet(network=network)
     # not handling buffering correctly, so getting a list of transactions gets cut off and kills the page.
@@ -719,9 +732,38 @@ def wallet(network: str = 'main'):
         'sendSatoriTransaction': present_tx_form()}))
 
 
-@app.route('/vault')
+@app.route('/vault', methods=['GET', 'POST'])
 def vault():
-    return render_template('vault.html', **getResp({'title': 'Vault'}))
+
+    def present_password_form():
+        '''
+        this function could be used to fill a form with the current
+        configuration for a stream in order to edit it.
+        '''
+        passwordForm = forms.VaultPassword(formdata=request.form)
+        passwordForm.password.data = ''
+        return passwordForm
+
+    def accept_submittion(passwordForm):
+        rvn, evr = start.openVault(password=passwordForm.password.data)
+        if rvn is None:
+            flash('unable to open vault')
+
+    if request.method == 'POST':
+        accept_submittion(forms.VaultPassword(formdata=request.form))
+    if start.vault is not None:
+        return render_template('vault.html', **getResp({
+            'title': 'Vault',
+            'vaultPasswordForm': present_password_form(),
+            'vaultOpened': True,
+            'vault': start.vault,
+        }))
+    return render_template('vault.html', **getResp({
+        'title': 'Vault',
+        'vaultPasswordForm': present_password_form(),
+        'vaultOpened': False,
+        'vault': start.vault,
+    }))
 
 
 @app.route('/voting')
@@ -757,7 +799,6 @@ def relayCsv():
 def relayHistoryCsv(topic: str = None):
     ''' returns a csv file of the history of the relay stream '''
     cache = start.cacheOf(StreamId.fromTopic(topic))
-
     return (
         (
             cache.df.drop(columns=['hash'])

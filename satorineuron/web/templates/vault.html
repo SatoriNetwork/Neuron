@@ -1,5 +1,86 @@
 {% extends "basic.html" %}
 {% block content %}
+<div class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="z-index: 9999 !important; display: {% if vaultOpened %}none{% else %}block{% endif %};">
+  <div class="container-for-center vertical-center" style="padding-left: 0px;">
+    <div class="tight text-format-table-header {% if darkmode %}dark-colors{% endif %}">
+      <div class="row mb-4">
+        <div class="col-xl-3 col-sm-1">
+        </div>
+        <div class="col-xl-6 col-sm-10 mb-xl-4 mb-4">
+          <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+            <div class="input-group input-group-outline">
+              
+              
+              <form action="/vault" method="POST">
+                {{ vaultPasswordForm.hidden_tag() }}
+                {{ vaultPasswordForm.csrf_token }}
+                <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ vaultPasswordForm.password(size=32, class_="tight form-control dark-colors", placeholder="Password") }}
+                    {% else %}{{ vaultPasswordForm.password(size=32, class_="tight form-control", placeholder="Password") }}
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px; display: none;">
+                  <div class="input-group input-group-outline">
+                    {% if darkmode %}{{ vaultPasswordForm.submit(size=32, style_="text-align: center;", class_="tight form-control dark-colors", onclick="showWorking();") }}
+                    {% else %}{{ vaultPasswordForm.submit(size=32, style_="text-align: center;", class_="tight form-control", onclick="showWorking();") }}
+                    {% endif %}
+                  </div>
+                </div>
+              </form>
+              
+              <!--<input 
+              style="text-align: center;"
+              class="tight form-control input-tall code-placeholder {% if darkmode %}dark-colors{% endif %}",
+              type="password" id="passwordInput" placeholder="Enter your password" />-->
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-sm-1">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="vaultContainer"></div>
+<script>
+  document.getElementById('passwordInput').addEventListener('keypress', function(event) {
+    // Check if the key pressed is the Enter key
+    if (event.key === "Enter") {
+      event.preventDefault(); // Prevent the default action to avoid form submission or other undesired behaviors
+
+      // Get the password from the input field
+      const password = this.value;
+
+      // Assuming you want to send the password along with other data
+      const data = { password: password, otherData: 'value' }; // Include other data as needed
+
+      fetch('{{ url_for("vault") }}', {
+        method: 'POST', // or 'PUT', as needed
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({password: password, otherData: 'value'})
+      }).then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+          return response.text(); // Expecting HTML, so use .text() instead of .json()
+      }).then(html => {
+        // Here, 'html' is the HTML content returned by the server
+        // You can insert this HTML into the current page dynamically
+        document.getElementById('vaultContainer').innerHTML = html;
+      }).catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+
+      // Optionally clear the input field after sending
+      this.value = '';
+    }
+  });
+</script>
+  
 <div class="row mb-4">
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">

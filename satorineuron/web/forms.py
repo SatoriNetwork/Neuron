@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, IntegerField, SelectField, TextAreaField, BooleanField
+from wtforms import StringField, SubmitField, IntegerField, SelectField, TextAreaField, BooleanField, PasswordField
 from wtforms.validators import InputRequired, Length, URL, NumberRange, ValidationError
 from satorineuron import config
 
@@ -93,3 +93,10 @@ class SendSatoriTransaction(FlaskForm):
         default=False,
         validators=[])
     submit = SubmitField('Send')
+
+
+class VaultPassword(FlaskForm):
+    password = PasswordField(
+        'Password',
+        validators=[InputRequired(), Length(min=8, max=34)])
+    submit = SubmitField('Unlock')
