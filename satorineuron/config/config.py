@@ -44,18 +44,18 @@ def get(*args, path: str = None, root: callable = None, decrypt: callable = None
     path = path or args_to_config_path(*args, root=root)
     if os.path.exists(path):
         with open(path, mode='r') as f:
-            ## you can use the file directly
-            #try:
-            #    return yaml.load(f, Loader=yaml.FullLoader) or {}
-            #except AttributeError:
-            #    return yaml.load(f) or {}
-            contents = f.read()
-            if decrypt is not None:
-                contents = decrypt(contents)
             try:
-                return yaml.load(contents, Loader=yaml.FullLoader) or {}
+                return yaml.load(f, Loader=yaml.FullLoader) or {}
             except AttributeError:
                 return yaml.load(f) or {}
+            ## decryption at this level not necessary
+            #contents = f.read()
+            #if decrypt is not None:
+            #    contents = decrypt(contents)
+            #try:
+            #    return yaml.load(contents, Loader=yaml.FullLoader) or {}
+            #except AttributeError:
+            #    return yaml.load(f) or {}
     return {}
 
 
