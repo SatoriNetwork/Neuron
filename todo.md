@@ -149,6 +149,8 @@ DONE central - verify observations are saved to history table
 DONE central - fix hisotry table
 DONE central - use history table in mining queries and verify
 
+rebuild images for new package
+
 -- BETA (test coin) target: march 3rd --
 
 central - test the average cadence query
