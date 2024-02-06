@@ -337,9 +337,21 @@ def relay():
     return acceptRelaySubmission(start, json.loads(request.get_json()))
 
 
-@app.route('/send_satori_transaction/<network>', methods=['POST'])
-def sendSatoriTransaction(network: str = 'main'):
-    myWallet = start.getWallet(network=network)
+@app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
+def sendSatoriTransactionFromWallet(network: str = 'main'):
+    return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
+
+
+@app.route('/send_satori_transaction_from_vault/<network>', methods=['POST'])
+def sendSatoriTransactionFromVault(network: str = 'main'):
+    return sendSatoriTransactionUsing(start.vault, network, 'vault')
+
+
+def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
+    if myWallet is None:
+        flash(f'Send Failed: {e}')
+        return redirect(f'/wallet/{network}')
+
     import importlib
     global forms
     global badForm
@@ -367,7 +379,7 @@ def sendSatoriTransaction(network: str = 'main'):
                     flash(str(result))
             except TransactionFailure as e:
                 flash(f'Send Failed: {e}')
-        return redirect(f'/wallet/{network}')
+        return redirect(f'/{loc}/{network}')
 
     sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
     return accept_submittion(sendSatoriForm)
@@ -735,6 +747,11 @@ def presentSendSatoriTransactionform(formData):
     return sendSatoriTransaction
 
 
+@app.route('/vault/<network>', methods=['GET', 'POST'])
+def vaultMainTest(network: str = 'main'):
+    return vault()
+
+
 @app.route('/vault', methods=['GET', 'POST'])
 def vault():
 
@@ -760,7 +777,7 @@ def vault():
             'title': 'Vault',
             'walletIcon': 'lock',
             'image': getQRCode(start.vault.address),
-            # 'network': network,
+            'network': 'test',  # change to main when ready
             'vaultPasswordForm': present_password_form(),
             'vaultOpened': True,
             'wallet': start.vault,
@@ -769,7 +786,7 @@ def vault():
         'title': 'Vault',
         'walletIcon': 'lock',
         'image': '',
-        # 'network': network,
+        'network': 'test',  # change to main when ready
         'vaultPasswordForm': present_password_form(),
         'vaultOpened': False,
         'wallet': start.vault,
