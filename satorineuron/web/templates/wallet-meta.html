@@ -1,0 +1,50 @@
+{% block content %}
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-12 col-12">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">About Satori Token {%if wallet.isTestnet %} (testnet) {%endif%}</h6>
+            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
+              Satori Tokens {%if wallet.isTestnet %} (testnet) {%endif%} are an asset on a public blockchain. Below are stats about Satori according to the blockchain:
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}">
+          <pre>{{ wallet.showStats() }}</pre>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-12 col-12">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">About Electrumx</h6>
+            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
+              {{ wallet.chain }} blockchain data is retrieved through Electrumx. Below is information about the specific Electrumx server used to retrieve wallet information:
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}"  style='padding-left: 1.5rem; padding-bottom: 1.5rem;'>
+          <code>
+          {{ wallet.banner }}
+          </code>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+

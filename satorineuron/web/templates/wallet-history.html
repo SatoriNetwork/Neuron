@@ -1,0 +1,101 @@
+{% block content %}
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Transaction History</h6>
+            <!--<p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
+              Transaction history for this wallet
+            </p>-->
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Transaction Id</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if wallet.transactionHistory %}
+                {% for transaction in wallet.transactionHistory %}
+                <tr class='yellow-hover'>
+                  <td>
+                    <a href="https://rvn.cryptoscope.io/tx/?txid={{ transaction.tx_hash }}", target='_blank'>
+                      <div class="d-flex px-3 py-1">
+                        <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ transaction.tx_hash }}</h6>
+                      </div>
+                    </a>
+                  </td>
+                </tr> 
+                {% endfor %}
+              {% else %}
+              <tr>
+                <td>
+                  <p style='text-align:center;'>
+                  No Transactions
+                  </p>
+                </td>
+              </tr> 
+              {% endif %}
+            </tbody>
+          </table>
+
+          <!--<table class="table align-items-center mb-0">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Id</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Confirmations</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Sent</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Received</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for transaction in wallet.transactions %}
+              <tr class='yellow-hover'>
+                <td>
+                  <a href="https://rvn.cryptoscope.io/tx/?txid={{ transaction.txid }}", target='_blank'>
+                    <div class="d-flex px-3 py-1">
+                      <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ transaction.txid }}</h6>
+                    </div>
+                  </a>
+                </td>
+                <td>
+                  <a href="https://rvn.cryptoscope.io/tx/?txid={{ transaction.txid }}", target='_blank'>
+                    <div class="d-flex px-3 py-1">
+                      <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ transaction.confirmations }}</h6>
+                    </div>
+                  </a>
+                </td>
+              <td>
+                    {% for name, value in transaction.received.items() %}
+                    <div class="d-flex px-3 py-1">
+                      <h6 class="mb-0 text-sm">{{ name }}: {{ value }}</h6>
+                    </div>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    {% for name, value in transaction.sent.items() %}
+                    <div class="d-flex px-3 py-1">
+                      <h6 class="mb-0 text-sm">{{ name }}: {{ value }}</h6>
+                    </div>
+                    {% endfor %}
+                  </td>
+                </tr> 
+              {% endfor %}
+            </tbody>
+          </table>-->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+

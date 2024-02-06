@@ -112,10 +112,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             config.walletPath('wallet.yaml'),
             reserve=0.01,
             isTestnet=self.networkIsTest('ravencoin'))()
-        # self.evrmoreWallet = EvrmoreWallet(
-        #    config.walletPath('wallet.yaml'),
-        #    reserve=0.01,
-        #    isTestnet=self.networkIsTest('evrmore'))()
+        self.evrmoreWallet = EvrmoreWallet(
+            config.walletPath('wallet.yaml'),
+            reserve=0.01,
+            isTestnet=self.networkIsTest('evrmore'))()
         logging.info('opened vault', color='green')
 
     def closeVault(self):
@@ -130,12 +130,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 isTestnet=self.networkIsTest('ravencoin'),
                 password=password,
             )()
-            self.evrmoreVault = EvrmoreWallet(
-                config.walletPath('vault.yaml'),
-                reserve=0.01,
-                isTestnet=self.networkIsTest('evrmore'),
-                password=password,
-            )()
+            #self.evrmoreVault = EvrmoreWallet(
+            #    config.walletPath('vault.yaml'),
+            #    reserve=0.01,
+            #    isTestnet=self.networkIsTest('evrmore'),
+            #    password=password,
+            #)()
         except Exception as e:
             logging.error('failed to open vault', color='red')
             raise e

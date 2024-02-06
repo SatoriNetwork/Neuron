@@ -129,6 +129,16 @@ DONE central - rendezvous, pubsub, server: anything behind gunicorn not logging 
 DONE central - implement alternative logging solution
 DONE central - needs a wallet on server
 DONE central - add test value to server wallet
+DONE neuron - rebuild images for new package
+DONE neuron - build in a "vault"
+DONE vault - allow wallet to be encrypted and decrypted
+DONE vault - make endpoint for opening vault
+DONE vault - make endpoint for vault
+DONE vault - if they navigate away from the vault forget the vault
+DOEN vault - add wallet template to vault template
+DONE vault - add wallet code to vault endpoint
+DONE vault - creation process with encrypting with a password of their own
+DONE vault - add vault page
 
 central - test:
 DONE central - does the nightly process run automatically?
@@ -149,8 +159,6 @@ DONE central - verify observations are saved to history table
 DONE central - fix hisotry table
 DONE central - use history table in mining queries and verify
 
-rebuild images for new package
-
 -- BETA (test coin) target: march 3rd --
 
 central - test the average cadence query
@@ -160,18 +168,12 @@ central - derived cadence as well from history table
 central - consider turning observation table into a view on history...
 central - should we purge history more than 60 days old
 
-neuron - build in a "vault"
-DONE vault - allow wallet to be encrypted and decrypted
-DONE vault - make endpoint for opening vault
-DONE vault - make endpoint for vault
-DONE vault - if they navigate away from the vault forget the vault
-vault - add wallet template to vault template
-vault - add wallet code to vault endpoint
-vault - creation process with encrypting with a password of their own
-vault - creation process with saving words
-vault - add vault page
+vault - allow user to change vault password
 vault - allow for automatic send of tokens to their vault
 vault - allow for voting with vaulted coins and wallet coins
+vault - creation process with saving words
+vault - show words on page as well as private key
+wallet - show words on page as well as private key
 
 central - make a history table and test the history table
 central - make sure server is saving history of observations

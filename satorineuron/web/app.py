@@ -25,7 +25,7 @@ from satorineuron.web import forms
 from satorilib.concepts.structs import Observation, StreamId, StreamsOverview
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timestampToSeconds
-from satorineuron.init.start import StartupDag
+from satorineuron.init.start import StartupDag, getStart
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
 ###############################################################################
@@ -367,7 +367,7 @@ def sendSatoriTransaction(network: str = 'main'):
                     flash(str(result))
             except TransactionFailure as e:
                 flash(f'Send Failed: {e}')
-        return redirect('/wallet')
+        return redirect(f'/wallet/{network}')
 
     sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
     return accept_submittion(sendSatoriForm)
@@ -697,39 +697,41 @@ def workingUpdatesEnd():
 @closeVault
 def wallet(network: str = 'main'):
     myWallet = start.getWallet(network=network)
-    # not handling buffering correctly, so getting a list of transactions gets cut off and kills the page.
     myWallet.get(allWalletInfo=False)
+    return render_template('wallet-page.html', **getResp({
+        'title': 'Wallet',
+        'walletIcon': 'wallet',
+        'image': getQRCode(myWallet.address),
+        'wallet': myWallet,
+        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+
+
+def getQRCode(value: str) -> str:
     import io
     import qrcode
     from base64 import b64encode
-    img = qrcode.make(myWallet.address)
+    img = qrcode.make(value)
     buf = io.BytesIO()
     img.save(buf)
     buf.seek(0)
     # return send_file(buf, mimetype='image/jpeg')
     img = b64encode(buf.getvalue()).decode('ascii')
-    img_tag = f'<img src="data:image/jpg;base64,{img}" class="img-fluid"/>'
+    return f'<img src="data:image/jpg;base64,{img}" class="img-fluid"/>'
 
-    import importlib
+
+def presentSendSatoriTransactionform(formData):
+    '''
+    this function could be used to fill a form with the current
+    configuration for a stream in order to edit it.
+    '''
+    # not sure if this part is necessary
     global forms
+    import importlib
     forms = importlib.reload(forms)
-
-    def present_tx_form():
-        '''
-        this function could be used to fill a form with the current
-        configuration for a stream in order to edit it.
-        '''
-        sendSatoriTransaction = forms.SendSatoriTransaction(
-            formdata=request.form)
-        sendSatoriTransaction.address.data = ''
-        sendSatoriTransaction.amount.data = ''
-        return sendSatoriTransaction
-
-    return render_template('wallet.html', **getResp({
-        'title': 'Wallet',
-        'image': img_tag,
-        'wallet': myWallet,
-        'sendSatoriTransaction': present_tx_form()}))
+    sendSatoriTransaction = forms.SendSatoriTransaction(formdata=formData)
+    sendSatoriTransaction.address.data = ''
+    sendSatoriTransaction.amount.data = ''
+    return sendSatoriTransaction
 
 
 @app.route('/vault', methods=['GET', 'POST'])
@@ -752,18 +754,23 @@ def vault():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None:
+        start.vault.get(allWalletInfo=False)
         return render_template('vault.html', **getResp({
             'title': 'Vault',
+            'walletIcon': 'lock',
+            'image': getQRCode(start.vault.address),
             'vaultPasswordForm': present_password_form(),
             'vaultOpened': True,
-            'vault': start.vault,
-        }))
+            'wallet': start.vault,
+            'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
     return render_template('vault.html', **getResp({
         'title': 'Vault',
+        'walletIcon': 'lock',
+        'image': '',
         'vaultPasswordForm': present_password_form(),
         'vaultOpened': False,
-        'vault': start.vault,
-    }))
+        'wallet': start.vault,
+        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
 @app.route('/voting')
