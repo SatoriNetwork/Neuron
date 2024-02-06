@@ -139,8 +139,7 @@ DOEN vault - add wallet template to vault template
 DONE vault - add wallet code to vault endpoint
 DONE vault - creation process with encrypting with a password of their own
 DONE vault - add vault page
-
-central - test:
+DONE central - test:
 DONE central - does the nightly process run automatically?
 DONE central - do inactive neurons get removed nightly?
 DONE central - get a list of inactive neurons, run nightly process, see if they're gone
@@ -150,16 +149,14 @@ DONE central - do inactive streams get unsanctioned nightly?
 DONE central - found ksm datastream with no observations, run the nightly schedule process, verify ksm no longer sanctioned
 DONE central - do reactivated streams get resanctioned automatically?
 DONE central - found kws neuron, start it, run the nightly schedule process, verify ksm no longer sanctioned
-
-central - do neurons get distributions if they published predictions on a sanctioned datastream within the last 24 hours? are they accurate?
-
+DONE central - do neurons get distributions if they published predictions on a sanctioned datastream within the last 24 hours? are they accurate?
 DONE central - we don't keep history beyond a day so query for checking if relay or prediction streams had activity always fails. - we need to implement the history table.
 DONE central - add History table
 DONE central - verify observations are saved to history table
 DONE central - fix hisotry table
 DONE central - use history table in mining queries and verify
 
--- BETA (test coin) target: march 3rd --
+-- BETA (test coin) target --
 
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others

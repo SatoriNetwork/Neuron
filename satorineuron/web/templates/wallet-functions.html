@@ -55,7 +55,7 @@
           
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom: 2rem !important;">Send Satori {%if wallet.isTestnet %} (testnet) {%endif%}</h4>
             <div style="padding: 1.25rem;">
-              <form action="/send_satori_transaction" method="POST">
+              <form action="/send_satori_transaction/{{ network }}" method="POST">
                 {{ sendSatoriTransaction.hidden_tag() }}
                 {{ sendSatoriTransaction.csrf_token }}
                 <div class="tight text-format-table-header" style="text-align: left;">

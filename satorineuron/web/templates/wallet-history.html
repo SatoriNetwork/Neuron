@@ -22,7 +22,7 @@
             </thead>
             <tbody>
               {% if wallet.transactionHistory %}
-                {% for transaction in wallet.transactionHistory %}
+                {% for transaction in wallet.transactionHistory|reverse %}
                 <tr class='yellow-hover'>
                   <td>
                     <a href="https://rvn.cryptoscope.io/tx/?txid={{ transaction.tx_hash }}", target='_blank'>

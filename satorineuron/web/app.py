@@ -701,6 +701,7 @@ def wallet(network: str = 'main'):
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
+        'network': network,
         'image': getQRCode(myWallet.address),
         'wallet': myWallet,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
@@ -759,6 +760,7 @@ def vault():
             'title': 'Vault',
             'walletIcon': 'lock',
             'image': getQRCode(start.vault.address),
+            # 'network': network,
             'vaultPasswordForm': present_password_form(),
             'vaultOpened': True,
             'wallet': start.vault,
@@ -767,6 +769,7 @@ def vault():
         'title': 'Vault',
         'walletIcon': 'lock',
         'image': '',
+        # 'network': network,
         'vaultPasswordForm': present_password_form(),
         'vaultOpened': False,
         'wallet': start.vault,
