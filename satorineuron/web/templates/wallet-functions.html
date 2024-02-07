@@ -35,19 +35,21 @@
         <p id="showKey" class="cursor-pointer danger text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('sensitiveKey').style.display='block';document.getElementById('showKey').style.display='none';">
           Show private key and seed words
         </p>
-        <div id="sensitiveKey" style="display: none;">
-          <p class="cursor-pointer text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('showKey').style.display='block';document.getElementById('sensitiveKey').style.display='none';">Hide private key and seed words</p>
+        <div id="sensitiveKey" style="display: none; margin-left:2rem; margin-right:2rem;">
+          <p class="cursor-pointer text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom:1rem;" onclick="document.getElementById('showKey').style.display='block';document.getElementById('sensitiveKey').style.display='none';">Hide private key and seed words</p>
           PRIVATE KEY:<br>{{ wallet.privateKey }}
           <br>
           <br>
           SEED WORDS:<br>{{ wallet.words }}
+          <br>
+          <br>
         </div>
       </center>
     </div>
   </div>
   <div class="col-xl-6 col-sm-6">
-    <div class="card {% if darkmode %}dark-colors{% endif %}">
-      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+    <div class="card {% if darkmode %}dark-colors{% endif %}" style="min-height:760.5px;display: flex;flex-direction: column;">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}" style='flex: 1;'>
         <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-drastic{% endif %} text-center border-radius-xl mt-n4 position-absolute">
           <i class="material-icons opacity-10">send</i>
         </div>
@@ -55,7 +57,7 @@
           <!--<h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Send</h4>-->
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom: 2rem !important;">Send Satori {%if wallet.isTestnet %} (testnet) {%endif%}</h4>
         </div>
-        <div class="text-center pt-1" style="padding-top: 4rem !important;padding-bottom: 4rem !important;">
+        <div class="text-center pt-1" style="padding-top: 3rem !important;">
             <div style="padding: 1.25rem;">
               <form action="/send_satori_transaction_from_{{ title|lower }}/{{ network }}" method="POST">
                 {{ sendSatoriTransaction.hidden_tag() }}
@@ -72,14 +74,14 @@
                     {% endif %}
                   </div>
                 </div>
-                <div class="row">
+                <div class="row" style="padding: 1px !important; margin-bottom: 2rem;">
                   <div class="col-xl-6 col-sm-6">
                     <div class="tight text-format-table-header" style="text-align: left;">
                       {% if darkmode %}{{ sendSatoriTransaction.amount.label(class="dark-colors tight-label") }}
                       {% else %}{{ sendSatoriTransaction.amount.label(class="tight-label") }}
                       {% endif %}
                     </div>
-                    <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 4rem;">
+                    <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                       <div class="input-group input-group-outline">
                         {% if darkmode %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;", oninput="enforceDivisibility();") }}
                         {% else %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;", oninput="enforceDivisibility();") }}
@@ -93,7 +95,7 @@
                       {% else %}{{ sendSatoriTransaction.sweep.label(class="tight-label") }}
                       {% endif %}
                     </div>
-                    <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 4rem;">
+                    <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                       <div class="input-group input-group-outline">
                         {% if darkmode %}{{ sendSatoriTransaction.sweep(size=32, class_="tight dark-colors", style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;", onClick="sweepEverything();") }}
                         {% else %}{{ sendSatoriTransaction.sweep(size=32, class_="tight", style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;", onClick="sweepEverything();") }}
@@ -115,8 +117,8 @@
       </div>
       <hr class="dark horizontal my-0">
       <div class="card-footer p-1">
-        <center><p class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:1rem; margin-right:1rem;"><span class="text-success text-sm font-weight-bolder"></span>
-          Transaction fees will be added during the send process. For more details and control download and import your private key into a full-featured wallet such as <a href='https://moontree.com/'>Moontree</a></p></center>
+        <center><p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
+          Transaction fees will be added during the send process. If Ravencoin is available the transaction fee will be about 0.0075 RVN. If only SATORI is present the transaction fee will be 1 SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://moontree.com/'>Moontree</a></p></center>
       </div>
     </div>
   </div>

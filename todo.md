@@ -158,6 +158,13 @@ DONE central - use history table in mining queries and verify
 
 -- BETA (test coin) target --
 
+DONE neuron - test send to and from vault
+DONE neuron - cleanup wallet ui
+
+atomic swaps:
+neuron - if they have no currency, generate a transaction without currency input but using 1 SATORI as the sending fee: generate an output without an address, send to server.
+central - take transaction and supply sufficient RVN fee in inputs, and add output with own address and 1 SATORI.
+
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
 central - modify queries to respect soft delete.

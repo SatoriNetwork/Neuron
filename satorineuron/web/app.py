@@ -360,16 +360,26 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
     def accept_submittion(sendSatoriForm):
         if sendSatoriForm.sweep.data == True:
             try:
-                result = myWallet.sendAllTransaction(
-                    sendSatoriForm.address.data or '')
+                result = myWallet.typicalNeuronTransaction(
+                    sweep=True,
+                    amouhnt=sendSatoriForm.amount.data or 0,
+                    address=sendSatoriForm.address.data or '')
                 if result is None:
                     flash('Send Failed: try again in a few minutes.')
+                elif result.success:
+                    if result.tx is None:
+                        flash(str(result.result))
+                    else:
+                        # pass it to the server
+                        # r = start.server.sendSatoriPartial()
+                        pass
                 else:
-                    flash(str(result))
+                    flash(f'Send Failed: {result.msg}')
             except TransactionFailure as e:
                 flash(f'Send Failed: {e}')
         else:
             try:
+
                 result = myWallet.satoriTransaction(
                     amount=sendSatoriForm.amount.data or 0,
                     address=sendSatoriForm.address.data or '')
