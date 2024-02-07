@@ -83,7 +83,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.ravencoinWallet
 
     def networkIsTest(self, network: str = None) -> bool:
-        return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn', 'ravencoin')
+        return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn')
 
     def getWallet(self, test: bool = False, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
         if test or self.networkIsTest(network):

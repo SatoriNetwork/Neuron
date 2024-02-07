@@ -365,14 +365,21 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
                     amouhnt=sendSatoriForm.amount.data or 0,
                     address=sendSatoriForm.address.data or '')
                 if result is None:
-                    flash('Send Failed: try again in a few minutes.')
+                    flash('Send Failed: wait 10 minutes, refresh, and try again.')
                 elif result.success:
                     if result.tx is None:
                         flash(str(result.result))
                     else:
-                        # pass it to the server
-                        # r = start.server.sendSatoriPartial()
-                        pass
+                        r = start.server.sendSatoriPartial(
+                            result.tx,
+                            network=(
+                                'ravencoin' if start.networkIsTest(network)
+                                else 'evrmore'))
+                        if r.text != '':
+                            flash(r.text)
+                        else:
+                            flash(
+                                'Send Failed: wait 10 minutes, refresh, and try again.')
                 else:
                     flash(f'Send Failed: {result.msg}')
             except TransactionFailure as e:
@@ -384,9 +391,23 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
                     amount=sendSatoriForm.amount.data or 0,
                     address=sendSatoriForm.address.data or '')
                 if result is None:
-                    flash('Send Failed: try again in a few minutes.')
+                    flash('Send Failed: wait 10 minutes, refresh, and try again.')
+                elif result.success:
+                    if result.tx is None:
+                        flash(str(result.result))
+                    else:
+                        r = start.server.sendSatoriPartial(
+                            result.tx,
+                            network=(
+                                'ravencoin' if start.networkIsTest(network)
+                                else 'evrmore'))
+                        if r.text != '':
+                            flash(r.text)
+                        else:
+                            flash(
+                                'Send Failed: wait 10 minutes, refresh, and try again.')
                 else:
-                    flash(str(result))
+                    flash(f'Send Failed: {result.msg}')
             except TransactionFailure as e:
                 flash(f'Send Failed: {e}')
         return redirect(f'/{loc}/{network}')
