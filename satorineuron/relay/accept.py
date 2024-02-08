@@ -152,9 +152,9 @@ def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
     if save == False:
         msgs.append('Unable to save stream.')
         return msgs, 500
-    if subscribed == False:
-        msgs.append('FYI: Unable to subscribe stream.')
-        return msgs, 500
+    # if subscribed == False:
+    #    msgs.append('FYI: Unable to subscribe stream.')
+    #    return msgs, 500
     msgs.append('Stream saved. Test call result: ' +
                 (str(hookResult) if hookResult is not None else str(result.text)))
     return msgs, 200
