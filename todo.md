@@ -204,6 +204,10 @@ central - if a neuron is subscribed to an unsanctioned stream does the user know
 
 central - we will need an admin dashboard to track the activity of the network
 
+neuron - make the wallet value on dashboard and wallet pages and vault update more realtime
+neuron - doesn't have to be subscriptions to the electrumx, although that would be ideal,
+neuron - could just be calling get just for the balance right after broadcasting, and right after distributions are scheduled to go out daily.
+
 -- Launch --
 
 -- Nice --
@@ -238,3 +242,22 @@ neuron - add the ability to manually trigger update, or make it instant and auto
 Can you add information in the panel or somewhere on the page that a new version has been released and with one click it will restart the node to the new version?
 """
 
+neuron - earned pending estimate
+"""
+lajot — Today at 1:37 PM
+would be nice to see pending satoris
+meta stack — Today at 1:37 PM
+oh like how many you've earned that day?
+lajot — Today at 1:37 PM
+and countdown for next payout
+kinda lika a mininpool interface
+lajot — Today at 1:37 PM
+yeah
+meta stack — Today at 1:37 PM
+nice, it would have to be an estimate but good idea
+lajot — Today at 1:38 PM
+and some kind of "explorer" page with statistics
+charts of neurons and so on
+meta stack — Today at 1:39 PM
+like a world map and growth charts, nice
+"""

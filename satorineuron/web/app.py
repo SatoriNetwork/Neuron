@@ -365,14 +365,28 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
                 sweep=sendSatoriForm.sweep.data,
                 amount=sendSatoriForm.amount.data or 0,
                 address=sendSatoriForm.address.data or '')
+            if result.msg == 'creating partial, need feeAmountReserved.':
+                responseJson = start.server.requestSimplePartial(network=network)
+                result = myWallet.typicalNeuronTransaction(
+                    sweep=sendSatoriForm.sweep.data,
+                    amount=sendSatoriForm.amount.data or 0,
+                    address=sendSatoriForm.address.data or '',
+                    completerAddress=responseJson.get('completerAddress'),
+                    feeAmountReserved=responseJson.get('feeAmountReserved'))
             if result is None:
                 flash('Send Failed: wait 10 minutes, refresh, and try again.')
             elif result.success:
-                if result.tx is None:
-                    flash(str(result.result))
-                else:
-                    r = start.server.sendSatoriPartial(
-                        result.tx,
+                if ( # checking any on of these should suffice in theory...
+                    result.tx is not None and 
+                    result.reportedFeeAmount is not None and 
+                    result.reportedFeeAmount > 0 and 
+                    result.msg == 'send transaction requires fee.'
+                ):
+                    r = start.server.broadcastSimplePartial(
+                        tx=result.tx,
+                        reportedFeeAmount=result.reportedFeeAmount,
+                        feeAmountReserved=responseJson.get(
+                            'feeAmountReserved'),
                         network=(
                             'ravencoin' if start.networkIsTest(network)
                             else 'evrmore'))
@@ -381,6 +395,8 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
                     else:
                         flash(
                             'Send Failed: wait 10 minutes, refresh, and try again.')
+                else:
+                    flash(str(result.result))
             else:
                 flash(f'Send Failed: {result.msg}')
         except TransactionFailure as e:
