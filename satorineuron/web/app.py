@@ -368,6 +368,7 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
             if result.msg == 'creating partial, need feeSatsReserved.':
                 responseJson = start.server.requestSimplePartial(
                     network=network)
+                logging.debug(responseJson, color='yellow')
                 result = myWallet.typicalNeuronTransaction(
                     sweep=sendSatoriForm.sweep.data,
                     amount=sendSatoriForm.amount.data or 0,
