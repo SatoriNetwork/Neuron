@@ -365,28 +365,28 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
                 sweep=sendSatoriForm.sweep.data,
                 amount=sendSatoriForm.amount.data or 0,
                 address=sendSatoriForm.address.data or '')
-            if result.msg == 'creating partial, need feeAmountReserved.':
-                responseJson = start.server.requestSimplePartial(network=network)
+            if result.msg == 'creating partial, need feeSatsReserved.':
+                responseJson = start.server.requestSimplePartial(
+                    network=network)
                 result = myWallet.typicalNeuronTransaction(
                     sweep=sendSatoriForm.sweep.data,
                     amount=sendSatoriForm.amount.data or 0,
                     address=sendSatoriForm.address.data or '',
                     completerAddress=responseJson.get('completerAddress'),
-                    feeAmountReserved=responseJson.get('feeAmountReserved'))
+                    feeSatsReserved=responseJson.get('feeSatsReserved'))
             if result is None:
                 flash('Send Failed: wait 10 minutes, refresh, and try again.')
             elif result.success:
-                if ( # checking any on of these should suffice in theory...
-                    result.tx is not None and 
-                    result.reportedFeeAmount is not None and 
-                    result.reportedFeeAmount > 0 and 
+                if (  # checking any on of these should suffice in theory...
+                    result.tx is not None and
+                    result.reportedFeeSats is not None and
+                    result.reportedFeeSats > 0 and
                     result.msg == 'send transaction requires fee.'
                 ):
                     r = start.server.broadcastSimplePartial(
                         tx=result.tx,
-                        reportedFeeAmount=result.reportedFeeAmount,
-                        feeAmountReserved=responseJson.get(
-                            'feeAmountReserved'),
+                        reportedFeeSats=result.reportedFeeSats,
+                        feeSatsReserved=responseJson.get('feeSatsReserved'),
                         network=(
                             'ravencoin' if start.networkIsTest(network)
                             else 'evrmore'))
