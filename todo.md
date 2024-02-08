@@ -161,9 +161,18 @@ DONE central - use history table in mining queries and verify
 DONE neuron - test send to and from vault
 DONE neuron - cleanup wallet ui
 
+DONE neuron - autosend to vault:
+DONE neuron - add choice to UI
+DONE neuron - add form and endpoint
+DONE neuron - add entry to config file
+DONE neuron - config entry to include vault address, vault pubkey, and signature
+DONE neuron - signature involves (decrypted) address
+
 DONE atomic swaps:
 DONE neuron - if they have no currency, generate a transaction without currency input but using 1 SATORI as the sending fee: generate an output without an address, send to server.
 DONE central - take transaction and supply sufficient RVN fee in inputs, and add output with own address and 1 SATORI.
+neuron - test
+central - test
 
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others

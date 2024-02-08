@@ -98,9 +98,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.verifyCaches()
         self.pubsubConnect()
         self.startRelay()
-        self.buildEngine()
-        self.rendezvousConnect()
-        self.incrementallyDownloadDatasets()
+        # self.buildEngine()
+        # self.rendezvousConnect()
+        # self.incrementallyDownloadDatasets()
         # self.downloadDatasets()
 
     def createRelayValidation(self):
@@ -130,12 +130,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 isTestnet=self.networkIsTest('ravencoin'),
                 password=password,
             )()
-            #self.evrmoreVault = EvrmoreWallet(
+            # self.evrmoreVault = EvrmoreWallet(
             #    config.walletPath('vault.yaml'),
             #    reserve=0.01,
             #    isTestnet=self.networkIsTest('evrmore'),
             #    password=password,
-            #)()
+            # )()
         except Exception as e:
             logging.error('failed to open vault', color='red')
             raise e

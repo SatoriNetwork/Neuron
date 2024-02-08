@@ -48,13 +48,13 @@ def get(*args, path: str = None, root: callable = None, decrypt: callable = None
                 return yaml.load(f, Loader=yaml.FullLoader) or {}
             except AttributeError:
                 return yaml.load(f) or {}
-            ## decryption at this level not necessary
-            #contents = f.read()
-            #if decrypt is not None:
+            # decryption at this level not necessary
+            # contents = f.read()
+            # if decrypt is not None:
             #    contents = decrypt(contents)
-            #try:
+            # try:
             #    return yaml.load(contents, Loader=yaml.FullLoader) or {}
-            #except AttributeError:
+            # except AttributeError:
             #    return yaml.load(f) or {}
     return {}
 
@@ -70,6 +70,21 @@ def put(
         path = path or args_to_config_path(*args, root=root)
         with open(path, mode='w') as f:
             yaml.dump(data, f, default_flow_style=False)
+    return path
+
+
+def add(
+    *args,
+    data: dict = None,
+    path: str = None,
+    root: callable = None,
+) -> dict:
+    ''' makes a yaml fill somewhere in config folder '''
+    if data is not None:
+        existing = get(*args, path=path, root=root)
+        path = path or args_to_config_path(*args, root=root)
+        with open(path, mode='w') as f:
+            yaml.dump({**existing, **data}, f, default_flow_style=False)
     return path
 
 

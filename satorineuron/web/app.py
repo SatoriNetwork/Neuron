@@ -8,13 +8,12 @@ from typing import Union
 from functools import wraps
 import os
 import json
-import threading
 import secrets
 import webbrowser
 import time
 import traceback
 import pandas as pd
-from waitress import serve
+from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context
@@ -22,10 +21,10 @@ from satorineuron import VERSION, MOTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
-from satorilib.concepts.structs import Observation, StreamId, StreamsOverview
+from satorilib.concepts.structs import StreamId, StreamsOverview
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timestampToSeconds
-from satorineuron.init.start import StartupDag, getStart
+from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
 ###############################################################################
@@ -358,58 +357,34 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
     forms = importlib.reload(forms)
 
     def accept_submittion(sendSatoriForm):
-        if sendSatoriForm.sweep.data == True:
-            try:
-                result = myWallet.typicalNeuronTransaction(
-                    sweep=True,
-                    amouhnt=sendSatoriForm.amount.data or 0,
-                    address=sendSatoriForm.address.data or '')
-                if result is None:
-                    flash('Send Failed: wait 10 minutes, refresh, and try again.')
-                elif result.success:
-                    if result.tx is None:
-                        flash(str(result.result))
-                    else:
-                        r = start.server.sendSatoriPartial(
-                            result.tx,
-                            network=(
-                                'ravencoin' if start.networkIsTest(network)
-                                else 'evrmore'))
-                        if r.text != '':
-                            flash(r.text)
-                        else:
-                            flash(
-                                'Send Failed: wait 10 minutes, refresh, and try again.')
+        if sendSatoriForm.address.data == start.getWallet(network=network).address:
+            # if we're sending to wallet we don't want it to auto send back to vault
+            disableAutosecure(network)
+        try:
+            result = myWallet.typicalNeuronTransaction(
+                sweep=sendSatoriForm.sweep.data,
+                amount=sendSatoriForm.amount.data or 0,
+                address=sendSatoriForm.address.data or '')
+            if result is None:
+                flash('Send Failed: wait 10 minutes, refresh, and try again.')
+            elif result.success:
+                if result.tx is None:
+                    flash(str(result.result))
                 else:
-                    flash(f'Send Failed: {result.msg}')
-            except TransactionFailure as e:
-                flash(f'Send Failed: {e}')
-        else:
-            try:
-
-                result = myWallet.satoriTransaction(
-                    amount=sendSatoriForm.amount.data or 0,
-                    address=sendSatoriForm.address.data or '')
-                if result is None:
-                    flash('Send Failed: wait 10 minutes, refresh, and try again.')
-                elif result.success:
-                    if result.tx is None:
-                        flash(str(result.result))
+                    r = start.server.sendSatoriPartial(
+                        result.tx,
+                        network=(
+                            'ravencoin' if start.networkIsTest(network)
+                            else 'evrmore'))
+                    if r.text != '':
+                        flash(r.text)
                     else:
-                        r = start.server.sendSatoriPartial(
-                            result.tx,
-                            network=(
-                                'ravencoin' if start.networkIsTest(network)
-                                else 'evrmore'))
-                        if r.text != '':
-                            flash(r.text)
-                        else:
-                            flash(
-                                'Send Failed: wait 10 minutes, refresh, and try again.')
-                else:
-                    flash(f'Send Failed: {result.msg}')
-            except TransactionFailure as e:
-                flash(f'Send Failed: {e}')
+                        flash(
+                            'Send Failed: wait 10 minutes, refresh, and try again.')
+            else:
+                flash(f'Send Failed: {result.msg}')
+        except TransactionFailure as e:
+            flash(f'Send Failed: {e}')
         return redirect(f'/{loc}/{network}')
 
     sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
@@ -809,6 +784,7 @@ def vault():
             'walletIcon': 'lock',
             'image': getQRCode(start.vault.address),
             'network': 'test',  # change to main when ready
+            'autosecured': start.vault.autosecured(),
             'vaultPasswordForm': present_password_form(),
             'vaultOpened': True,
             'wallet': start.vault,
@@ -818,10 +794,48 @@ def vault():
         'walletIcon': 'lock',
         'image': '',
         'network': 'test',  # change to main when ready
+        'autosecured': False,
         'vaultPasswordForm': present_password_form(),
         'vaultOpened': False,
         'wallet': start.vault,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+
+
+@app.route('/enable_autosecure/<network>', methods=['GET'])
+def enableAutosecure(network: str = 'main'):
+    if start.vault is None:
+        flash('Must unlock your vault to enable autosecure.')
+        return redirect('/dashboard')
+    # for this network open the wallet get the address
+    # config.get('autosecure')
+    # save the address to the autosecure config
+    # as the value save the map:
+    # {'address': vaultAddress, 'pubkey': vaultPubkey, 'sig': signature}
+    # make the signature sign the encrypted string representation of their vault
+    # plus the vaultAddress
+    # that way we can verify the signature is for this vault in the future.
+    # the config will be checked daily when value comes in.
+    config.add(
+        'autosecure',
+        data={
+            start.getWallet(network=network).address: start.vault.authPayload(
+                asDict=True,
+                challenge=start.vault.address + start.vault.publicKey
+            )})
+    # start.getWallet(network=network).get() # we think this triggers the tx twice
+    return 'OK', 200
+
+
+@app.route('/disable_autosecure/<network>', methods=['GET'])
+def disableAutosecure(network: str = 'main'):
+    # find the entry in the autosecure config of this wallet's nework address
+    # remove it, save the config
+    config.put(
+        'autosecure',
+        data={
+            k: v for k, v in config.get('autosecure').items()
+            if k != start.getWallet(network=network).address})
+    return 'OK', 200
 
 
 @app.route('/voting')

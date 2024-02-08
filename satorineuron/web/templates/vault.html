@@ -34,7 +34,6 @@
     </div>
   </div>
 </div>
-<div id="vaultContainer"></div>
 <div class="row mb-4">
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}" onclick="describeVault();">
@@ -58,30 +57,29 @@
   window.onload = function() {
     document.getElementById("password").focus();
   };
-
   function validateVaultPassword() {
 		return document.getElementById("password").value.length > 7;
 	}
 
   function describeVault() {
     var shortDescription = (
-      "The Vault is an encrypted wallet." +
+      "The vault is an encrypted wallet." +
       "<br>" +
       "<br>" +
       "YOU MUST REMEMBER YOUR PASSWORD. THERE IS NO WAY TO RETRIEVE IT." +
       "<br>" +
       "<br>" )
     var longDescription = (
-      "The Vault is an encrypted wallet." +
+      "The vault is an encrypted wallet." +
       "<br>" +
       "<br>" +
-      "Your main Wallet is used to authenticate you to the network and as such is not encrypted. If it were, you would need to provide the decryption password each time your machine attempt to authenticate itself on the Satori Network." +
+      "Your main wallet is used to authenticate you to the network and as such is not encrypted. If it were, you would need to provide the decryption password each time your machine attempt to authenticate itself on the Satori network." +
       "<br>" +
       "<br>" +
-      "You can transfer SATORI Tokens from your Wallet to your Vault to for safe keeping." +
+      "You can transfer SATORI tokens from your wallet to your vault to for safe keeping." +
       "<br>" +
       "<br>" +
-      "Since the Vault is encrypted with a password you must remember it or you will not be able to access the assets in your Vault." +
+      "Since the vault is encrypted with a password you must remember it or you will not be able to access the assets in your vault." +
       "<br>" +
       "<br>" )
     if (document.getElementById('explainVault').innerHTML == longDescription) {
@@ -91,6 +89,90 @@
     }
   }
 </script>
+<div class="row mb-4">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-9 col-sm-9 mb-xl-0">
+          <p class="mb-1 {% if darkmode %}dark-colors{% endif %} text-center" style='padding-top:3rem;'></span>
+            Your vault is more secure than your wallet.
+        </div>
+        <div class="col-xl-3 col-sm-3 mb-xl-0">
+          <div class="text-center pt-1">
+            <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Auto-Secure</h4>
+          </div>
+        </div>
+      </div>
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-9 col-sm-9 mb-xl-0 mb-4 mb-1 {% if darkmode %}dark-colors{% endif %} text-center">
+          <p class=""><span class="text-success text-sm font-weight-bolder"></span>
+            Check the box to automatically transfer all current and future SATORI tokens to your vault.
+          </br>
+          </br>
+          </p>
+        </div>
+        <div class="col-xl-3 col-sm-3 mb-xl-0">
+          <center>
+            <input id="autosendCheckbox" type="checkbox" class="tight {% if darkmode %}dark-colors{% endif %}" style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;" onclick="autosendDescription();enableDisableAutosecure('{{network}}');"{% if autosecured %}checked{% endif %}>
+            <p id='autosendVaultToggle' class="mb-1 text-center {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>{% if autosecured %}ENABLED{% else %}NOT ENABLED{% endif %}</p>
+          </center>
+        </div>
+      </div>
+      <hr class="dark horizontal my-0">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-9 col-sm-9 mb-xl-0">
+          <p class="text-sm mb-2 {% if darkmode %}dark-colors{% endif %} text-center"><span class="text-success text-sm font-weight-bolder"></span>
+            <i>Enabling this feature will immediately transfer existing tokens to your vault.</i>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<br>
+<script>
+  function enableDisableAutosecure(network) {
+    if (document.getElementById("autosendCheckbox").checked){
+      enableAutosecure(network);
+    } else {
+      disableAutosecure(network);
+    }
+  }
+  function enableAutosecure(network) {
+    fetch('/enable_autosecure/' + network, { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+            console.log("Autosecure enabled");
+            document.getElementById("autosendCheckbox").checked = true;
+            autosendDescription();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function disableAutosecure(network) {
+    fetch('/disable_autosecure/' + network, { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+            console.log("Autosecure disabled");
+            document.getElementById("autosendCheckbox").checked = false;
+            autosendDescription();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function autosendDescription() {
+    if (document.getElementById("autosendCheckbox").checked){
+      document.getElementById("autosendVaultToggle").innerHTML = "ENABLED";
+    } else {
+      document.getElementById("autosendVaultToggle").innerHTML = "NOT ENABLED";
+    }
+  }
+  //document.addEventListener('DOMContentLoaded', function() {
+  //  var elems = document.querySelectorAll('.switch');
+  //  var instances = M.Switch.init(elems, options);
+  //});
+</script>
+
 {% include 'wallet-functions.html' %}
 <!-- put voting template here -->
 {% include 'wallet-history.html' %}

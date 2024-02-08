@@ -1,6 +1,6 @@
 import os
 from functools import partial
-from .config import root, read, write, get, put, env, var
+from .config import root, read, write, get, put, env, var, add
 
 
 # root = partial(root, os.path.abspath(__file__)) # no, put configs outside lib:
@@ -9,6 +9,7 @@ read = partial(read, root=root)
 write = partial(write, root=root)
 get = partial(get, root=root)
 put = partial(put, root=root)
+add = partial(add, root=root)
 env = partial(env, get=get, root=root)
 
 
