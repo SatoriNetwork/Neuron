@@ -171,8 +171,11 @@ DONE neuron - signature involves (decrypted) address
 DONE atomic swaps:
 DONE neuron - if they have no currency, generate a transaction without currency input but using 1 SATORI as the sending fee: generate an output without an address, send to server.
 DONE central - take transaction and supply sufficient RVN fee in inputs, and add output with own address and 1 SATORI.
-neuron - test
-central - test
+DONE neuron - test
+DONE neuron - fix the signing for partial transactions, redo the whole thing.
+DONE central - test
+
+neuron - hide/grey inactive streams allow users to cycle to new ones.
 
 central - test the average cadence query
 central - make it a soft delete - one reason we need it is streams can be published by others
