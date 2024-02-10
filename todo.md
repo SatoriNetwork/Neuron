@@ -174,6 +174,10 @@ DONE central - take transaction and supply sufficient RVN fee in inputs, and add
 DONE neuron - test
 DONE neuron - fix the signing for partial transactions, redo the whole thing.
 DONE central - test
+DONE neuron - test send all satori transactions
+DONE neuron - fix send all satori transactions
+DONE central - check addresses too
+DONE central - test again
 
 neuron - hide/grey inactive streams allow users to cycle to new ones.
 
