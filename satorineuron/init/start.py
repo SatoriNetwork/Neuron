@@ -41,8 +41,9 @@ class SingletonMeta(type):
 class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ''' a DAG of startup tasks. '''
 
-    def __init__(self, *args, urlServer: str = None, urlPubsub: str = None):
+    def __init__(self, *args, urlServer: str = None, urlPubsub: str = None, isDebug: bool =False):
         super(StartupDag, self).__init__(*args)
+        self.isDebug: bool = isDebug
         self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
         self.urlServer: str = urlServer
         self.urlPubsub: str = urlPubsub
@@ -97,6 +98,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.checkin()
         self.verifyCaches()
         self.pubsubConnect()
+        if self.isDebug:
+            return 
         self.startRelay()
         self.buildEngine()
         self.rendezvousConnect()

@@ -7,6 +7,7 @@
 from typing import Union
 from functools import wraps
 import os
+import sys
 import json
 import secrets
 import webbrowser
@@ -55,7 +56,8 @@ while True:
                 'dev': 'ws://localhost:3000',
                 'prod': None,  # 'ws://satorinet.io:3000',
                 'dockerdev': 'ws://192.168.0.10:3000',
-            }[MODE])
+            }[MODE],
+            isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
         start.start()
         logging.info('Satori Neuron started!', color='green')
         break
