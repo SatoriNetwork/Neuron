@@ -25,6 +25,7 @@ from satorineuron.web import forms
 from satorilib.concepts.structs import StreamId, StreamsOverview
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timestampToSeconds
+from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
@@ -348,7 +349,7 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
     return sendSatoriTransactionUsing(start.vault, network, 'vault')
 
 
-def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
+def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], network: str, loc: str):
     if myWallet is None:
         flash(f'Send Failed: {e}')
         return redirect(f'/wallet/{network}')
@@ -359,6 +360,10 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
     forms = importlib.reload(forms)
 
     def accept_submittion(sendSatoriForm):
+        def refreshWallet():
+            time.sleep(4)
+            myWallet.get(allWalletInfo=False)
+
         if sendSatoriForm.address.data == start.getWallet(network=network).address:
             # if we're sending to wallet we don't want it to auto send back to vault
             disableAutosecure(network)
@@ -406,6 +411,7 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
                 flash(f'Send Failed: {result.msg}')
         except TransactionFailure as e:
             flash(f'Send Failed: {e}')
+        refreshWallet()
         return redirect(f'/{loc}/{network}')
 
     sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
