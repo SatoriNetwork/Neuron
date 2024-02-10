@@ -98,9 +98,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.verifyCaches()
         self.pubsubConnect()
         self.startRelay()
-        # self.buildEngine()
-        # self.rendezvousConnect()
-        # self.incrementallyDownloadDatasets()
+        self.buildEngine()
+        self.rendezvousConnect()
+        self.incrementallyDownloadDatasets()
         # self.downloadDatasets()
 
     def createRelayValidation(self):
