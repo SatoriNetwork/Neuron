@@ -374,7 +374,9 @@ def sendSatoriTransactionUsing(myWallet, network: str, loc: str):
                     amount=sendSatoriForm.amount.data or 0,
                     address=sendSatoriForm.address.data or '',
                     completerAddress=responseJson.get('completerAddress'),
-                    feeSatsReserved=responseJson.get('feeSatsReserved'))
+                    feeSatsReserved=responseJson.get('feeSatsReserved'),
+                    changeAddress=responseJson.get('changeAddress'),
+                )
             if result is None:
                 flash('Send Failed: wait 10 minutes, refresh, and try again.')
             elif result.success:
