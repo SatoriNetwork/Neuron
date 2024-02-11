@@ -179,6 +179,22 @@ DONE neuron - fix send all satori transactions
 DONE central - check addresses too
 DONE central - test again
 
+neuron - autosecure - add optional minimum wallet account balance
+
+neuron - allow people to specify an alias for their wallet.
+central - allow people to specify an alias for their wallet.
+
+vote - create:
+neuron - create voting page with form and explanation
+neuron - create communication with network and server to specify preference
+neuron - create communication with network and server to get community vote
+central - sql create table
+central - sql create orm
+central - create endpoints
+
+neuron - just automatically give neurons sanctioned datastreams to work on.
+neuron - allow users to pause individually.
+
 neuron - hide/grey inactive streams allow users to cycle to new ones.
 
 central - test the average cadence query

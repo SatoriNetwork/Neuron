@@ -867,7 +867,27 @@ def disableAutosecure(network: str = 'main'):
 
 @app.route('/voting')
 def voting():
-    return render_template('voting.html', **getResp({'title': 'Voting'}))
+    return render_template('voting.html', **getResp({
+        'title': 'Voting',
+        'communityVotes': {
+            'predictors': 50,
+            'oracles': 20,
+            'creators': 20,
+            'managers': 10,
+        },
+        'walletVotes': {
+            'predictors': 50,
+            'oracles': 20,
+            'creators': 20,
+            'managers': 10,
+        },
+        'vaultVotes': {
+            'predictors': '0',
+            'oracles': '0',
+            'creators': '0',
+            'managers': '0',
+        },
+    }))
 
 
 @app.route('/relay_csv', methods=['GET'])
