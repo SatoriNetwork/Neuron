@@ -1,6 +1,6 @@
 {% block content %}
-<div class="row mb-4">
-  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+<div class="row">
+  <div class="col-xl-12 col-sm-12 mb-xl-0">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
       </div>
@@ -8,7 +8,7 @@
         <div class="col-xl-6 col-sm-6 mb-xl-0">
           <center>
             <p id='explainVault' class="mb-1 {% if darkmode %}dark-colors{% endif %}", style="padding-top: .25rem;">
-              Wallet Alias
+              Wallet Alias:
             </p>
           <center>
         </div>
@@ -16,11 +16,12 @@
           <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
             <div class="d-flex px-3 py-1" style="padding-right: 1rem; margin-left:auto; margin-right: auto;">
               <div class="input-group input-group-outline">
-                <input id="walletAlias" name="walletAlias" placeholder="{{ exampleAlias }}" value="{{ alias }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: center;" maxlength="70" min="0" required="" size="3" type="text" onfocus="focused(this)" onfocusout="defocused(this)" onClick="fillAlias('{{ exampleAlias }}');" onChange="updateAlias();">
+                <input id="walletAlias" name="walletAlias" placeholder="{{ exampleAlias }}" value="{{ alias }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: center;" maxlength="70" min="0" required="" size="3" type="text" onfocus="focused(this)" onfocusout="defocused(this)" onClick="fillAlias('{{ exampleAlias }}');" onChange="updateAlias('{{ network }}');" onkeypress="checkEnter(event, '{{ network }}')">
               </div>
             </div>
           </h6>
         </div>
+      </div>
     </div>
   </div>
 </div>
@@ -31,7 +32,18 @@
       document.getElementById('walletAlias').value = exampleAlias;
     }
   }
-  function updateAlias(){
+  function checkEnter(event, network){
+    if (event.key === "Enter" || event.keyCode === 13) {
+      updateAlias(network);
+    }
+  }
+  //document.getElementById('walletAlias').addEventListener('keydown', function(event) {
+  //  if (event.key === "Enter") {
+  //      console.log("Enter key was pressed inside input field");
+  //  }
+  //});
+  function updateAlias(network){
+    console.log("updating wallet alias")
     if (document.getElementById('walletAlias').value == ''){
       fetch(
         '/remove_wallet_alias/' + network,
