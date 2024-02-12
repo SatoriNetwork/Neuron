@@ -738,11 +738,12 @@ def workingUpdatesEnd():
     start.workingUpdates.on_next('working_updates_end')
     return 'ok', 200
 
+
 @app.route('/remove_wallet_alias/<network>')
 def removeWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.getWallet(network=network)
     myWallet.get(allWalletInfo=False)
-    #start.server.removeWalletAlias()
+    # start.server.removeWalletAlias()
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
@@ -753,12 +754,13 @@ def removeWalletAlias(network: str = 'main', alias: str = ''):
         'alias': '',
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
+
 @app.route('/update_wallet_alias/<network>/<alias>')
 def updateWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.getWallet(network=network)
     myWallet.get(allWalletInfo=False)
-    # tell server
-    #start.server.updateWalletAlias()
+    myWallet.setAlias(alias)
+    # start.server.updateWalletAlias(alias)
     logging.debug('update_wallet_alias', alias, color='yellow')
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
@@ -767,14 +769,16 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
         'image': getQRCode(myWallet.address),
         'wallet': myWallet,
         'exampleAlias': getRandomName(),
-        'alias': '',
+        'alias': alias,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+
 
 @app.route('/wallet/<network>')
 @closeVault
 def wallet(network: str = 'main'):
     myWallet = start.getWallet(network=network)
     myWallet.get(allWalletInfo=False)
+    # alias = myWallet.alias or start.server.getWalletAlias()
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
@@ -782,7 +786,7 @@ def wallet(network: str = 'main'):
         'image': getQRCode(myWallet.address),
         'wallet': myWallet,
         'exampleAlias': getRandomName(),
-        'alias': '',
+        'alias': 'alias',
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
