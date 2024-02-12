@@ -743,7 +743,8 @@ def workingUpdatesEnd():
 def removeWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.getWallet(network=network)
     myWallet.get(allWalletInfo=False)
-    # start.server.removeWalletAlias()
+    myWallet.setAlias(None)
+    start.server.removeWalletAlias()
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
@@ -760,7 +761,7 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.getWallet(network=network)
     myWallet.get(allWalletInfo=False)
     myWallet.setAlias(alias)
-    # start.server.updateWalletAlias(alias)
+    start.server.updateWalletAlias(alias)
     logging.debug('update_wallet_alias', alias, color='yellow')
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
@@ -778,7 +779,7 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 def wallet(network: str = 'main'):
     myWallet = start.getWallet(network=network)
     myWallet.get(allWalletInfo=False)
-    # alias = myWallet.alias or start.server.getWalletAlias()
+    alias = myWallet.alias or start.server.getWalletAlias()
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
@@ -786,7 +787,7 @@ def wallet(network: str = 'main'):
         'image': getQRCode(myWallet.address),
         'wallet': myWallet,
         'exampleAlias': getRandomName(),
-        'alias': 'alias',
+        'alias': alias,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
