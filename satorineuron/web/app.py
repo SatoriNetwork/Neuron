@@ -824,17 +824,18 @@ def vaultMainTest(network: str = 'main'):
     return vault()
 
 
+def presentVaultPasswordForm():
+    '''
+    this function could be used to fill a form with the current
+    configuration for a stream in order to edit it.
+    '''
+    passwordForm = forms.VaultPassword(formdata=request.form)
+    passwordForm.password.data = ''
+    return passwordForm
+
+
 @app.route('/vault', methods=['GET', 'POST'])
 def vault():
-
-    def present_password_form():
-        '''
-        this function could be used to fill a form with the current
-        configuration for a stream in order to edit it.
-        '''
-        passwordForm = forms.VaultPassword(formdata=request.form)
-        passwordForm.password.data = ''
-        return passwordForm
 
     def accept_submittion(passwordForm):
         rvn, evr = start.openVault(password=passwordForm.password.data)
@@ -851,7 +852,7 @@ def vault():
             'image': getQRCode(start.vault.address),
             'network': 'test',  # change to main when ready
             'autosecured': start.vault.autosecured(),
-            'vaultPasswordForm': present_password_form(),
+            'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
@@ -861,7 +862,7 @@ def vault():
         'image': '',
         'network': 'test',  # change to main when ready
         'autosecured': False,
-        'vaultPasswordForm': present_password_form(),
+        'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
@@ -904,29 +905,49 @@ def disableAutosecure(network: str = 'main'):
     return 'OK', 200
 
 
-@app.route('/voting')
-def voting():
-    return render_template('voting.html', **getResp({
-        'title': 'Voting',
+@app.route('/vote', methods=['GET', 'POST'])
+def vote():
+
+    def accept_submittion(passwordForm):
+        rvn, evr = start.openVault(password=passwordForm.password.data)
+        if rvn is None:
+            flash('unable to open vault')
+
+    if request.method == 'POST':
+        accept_submittion(forms.VaultPassword(formdata=request.form))
+    votes = {
         'communityVotes': {
             'predictors': 50,
             'oracles': 20,
             'creators': 20,
-            'managers': 10,
-        },
+            'managers': 10},
         'walletVotes': {
             'predictors': 50,
             'oracles': 20,
             'creators': 20,
-            'managers': 10,
-        },
+            'managers': 10},
         'vaultVotes': {
-            'predictors': '0',
-            'oracles': '0',
-            'creators': '0',
-            'managers': '0',
-        },
-    }))
+            'predictors': '1',
+            'oracles': '2',
+            'creators': '3',
+            'managers': '4'}}
+    if start.vault is not None:
+        return render_template('vote.html', **getResp({
+            'title': 'Vote',
+            'network': 'test',  # change to main when ready
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'vaultOpened': True,
+            'wallet': start.getWallet(network='test'),
+            'vault': start.vault,
+            **votes}))
+    return render_template('vote.html', **getResp({
+        'title': 'Vote',
+        'network': 'test',  # change to main when ready
+        'vaultPasswordForm': presentVaultPasswordForm(),
+        'vaultOpened': False,
+        'wallet': start.getWallet(network='test'),
+        'vault': start.vault,
+        **votes}))
 
 
 @app.route('/relay_csv', methods=['GET'])

@@ -4,7 +4,7 @@
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
-        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-drastic{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl mt-n4 position-absolute">
           <i class="material-icons opacity-10">thumbs_up_down</i>
         </div>
         <div class="text-end pt-1">
@@ -150,6 +150,7 @@
                     <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Vault</h6>
                   </div>
                 </td>
+                {% if vaultOpened %}
                 <td>
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
@@ -194,6 +195,26 @@
                     </h6>
                   </div>
                 </td>
+                {% else %}
+                <td colspan="4">
+                  <center>
+                    <form action="/vote" method="POST">
+                      {{ vaultPasswordForm.hidden_tag() }}
+                      {{ vaultPasswordForm.csrf_token }}
+                      <div class="input-group input-group-outline">
+                        {% if darkmode %}{{ vaultPasswordForm.password(size=32, style_="text-align: center; border: 2px solid #F9ED4E;", class_="tight form-control dark-colors", placeholder="", autofocus=True) }}
+                        {% else %}{{ vaultPasswordForm.password(size=32, style_="text-align: center; border: 2px solid #10051D;", class_="tight form-control", placeholder="", autofocus=True) }}
+                        {% endif %}
+                      </div>
+                      <div class="input-group input-group-outline">
+                        {% if darkmode %}{{ vaultPasswordForm.submit(size=32, style_="display:none;", class_="tight form-control dark-colors", onclick="if(validateVaultPassword()) showWorking();") }}
+                        {% else %}{{ vaultPasswordForm.submit(size=32, style_="display:none;", class_="tight form-control", onclick="if(validateVaultPassword()) showWorking();") }}
+                        {% endif %}
+                      </div>
+                    </form>
+                  </center>
+                </td>
+                {% endif %}
                 <td>
                   <div class="d-flex px-3 py-1">
                     <h6 id="vaultPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ vaultVotes['predictors'] + vaultVotes['oracles'] + vaultVotes['creators'] + vaultVotes['managers'] }} %</h6>
@@ -216,6 +237,9 @@
   </div>
 </div>
 <script>
+  function validateVaultPassword() {
+    return document.getElementById("password").value.length > 7;
+  }
   function updateMintingManifestDescription(activity) {
     if (activity == 'predictors') {
       document.getElementById('mintingManifestDescription').innerHTML = 'Predictors are Satori Neurons that predict raw datastreams and publish those predictions for free.';
@@ -237,11 +261,15 @@
       parseInt(document.getElementById('walletVoteManagers').value)) + ' %';
   }
   function updateVaultTotal() {
-    document.getElementById('vaultPercent').innerHTML = (
-      parseInt(document.getElementById('vaultVotePredictors').value) + 
-      parseInt(document.getElementById('vaultVoteOracles').value) + 
-      parseInt(document.getElementById('vaultVoteCreators').value) + 
-      parseInt(document.getElementById('vaultVoteManagers').value)) + ' %';
+    try {
+      document.getElementById('vaultPercent').innerHTML = (
+        parseInt(document.getElementById('vaultVotePredictors').value) + 
+        parseInt(document.getElementById('vaultVoteOracles').value) + 
+        parseInt(document.getElementById('vaultVoteCreators').value) + 
+        parseInt(document.getElementById('vaultVoteManagers').value)) + ' %';
+    } catch (error) {
+      document.getElementById('vaultPercent').innerHTML = 0 + ' %';
+    }
   }
   function showManifestSave(
     walletPredictors, walletOracles, walletCreators, walletManagers,
@@ -355,7 +383,7 @@
     </div>
   </div>
 </div>
-
+<script>updateVaultTotal();</script>
 {% endblock %}
 
 
