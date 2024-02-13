@@ -65,14 +65,23 @@
       </div>
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
         <div class="col-xl-9 col-sm-9 mb-xl-0 mb-4 mb-1 {% if darkmode %}dark-colors{% endif %} text-center">
-          <p class=""><span class="text-success text-sm font-weight-bolder"></span>
-            Check the box to automatically transfer all current and future SATORI tokens to your vault.
-          </br>
-          </br>
-          </p>
+            <p style='padding-top:2rem;'>
+              Check the box to automatically transfer current and future SATORI tokens to your vault.
+            </br>
+            </br>
+            </p>
         </div>
         <div class="col-xl-3 col-sm-3 mb-xl-0">
           <center>
+            <p class="mb-1 text-center {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>Keep in wallet:</p>
+            <style>
+              input::placeholder {
+                color: #ADB5BD;
+              }
+            </style>
+            <input id="retainInWallet" type="number" class="tight {% if darkmode %}dark-colors{% endif %} {% if darkmode %}dark-text{% endif %}" style="text-align: end;width: -webkit-fill-available; border: 1px solid #ccc;border-radius: 4px;" placeholder="0" min="0">
+            <br>
+            <br>
             <input id="autosendCheckbox" type="checkbox" class="tight {% if darkmode %}dark-colors{% endif %}" style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;" onclick="autosendDescription();enableDisableAutosecure('{{network}}');"{% if autosecured %}checked{% endif %}>
             <p id='autosendVaultToggle' class="mb-1 text-center {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>{% if autosecured %}ENABLED{% else %}NOT ENABLED{% endif %}</p>
           </center>
