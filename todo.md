@@ -178,11 +178,15 @@ DONE neuron - test send all satori transactions
 DONE neuron - fix send all satori transactions
 DONE central - check addresses too
 DONE central - test again
+DONE central - problem - unable to create and save subscriptions ever since database update
+DONE central - add github link to website
+DONE central - add resources links to website
+DONE central - change donation link to btc, eth, rvn, evr addresses
+DONE central - problem - database is locked while distributions run...
+DONE neuron - allow people to specify an alias for their wallet.
+DONE central - allow people to specify an alias for their wallet.
 
 neuron - autosecure - add optional minimum wallet account balance
-
-neuron - allow people to specify an alias for their wallet.
-central - allow people to specify an alias for their wallet.
 
 vote - create:
 neuron - create voting page with form and explanation

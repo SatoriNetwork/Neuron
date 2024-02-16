@@ -1,0 +1,391 @@
+{% extends "basic.html" %}
+{% block content %}
+<div class="row mb-4">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">thumbs_up_down</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Voting</h4>
+        </div>
+      </div>
+      <center>
+      <p id='explainVault' class="mb-1 {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-center font-weight-bolder"></span>
+        Voting costs nothing.
+        <br>
+        <br>
+        Here you can simply register your preference for each proposal as a percentage of the coins you hold.
+        <br>
+        <br>
+      </p>
+      <center>
+    </div>
+  </div>
+</div>
+<br>
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-12 col-12">
+            <!--<a href='https://satorinet.io/tokenomics#:~:text=Daily%20Minting%20Manifest' target='_blank'>-->
+            <a href='https://satorinet.io/tokenomics#manifest' target='_blank'>
+              <h6 class="{% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription()'>Minting Manifest</h6>
+              <p id='mintingManifestDescription' class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+                The Minting Manifest determines which mining activity deserves what percentage of the newly minted coins.
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}"></th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription("predictors")'>Predictors</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription("oracles")'>Oracles</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription("creators")'>Creators</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription("managers")'>Managers</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}"></th>
+              </tr>
+            </thead>
+            <tbody id="updating_table">
+              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Community</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['predictors'] }} %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['oracles'] }} %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['creators'] }} %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <!-- we don't give this color yet because the indication is ambiguous - is it late or on time? or is it accurate or way off? -->
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['managers'] }} %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 id="communityPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ communityVotes['predictors'] + communityVotes['oracles'] + communityVotes['creators'] + communityVotes['managers'] }} %</h6>
+                  </div>
+                </td>
+              </tr> 
+              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onmouseover="">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Wallet</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="walletVotePredictors" name="walletVotePredictors" placeholder="{{ walletVotes['predictors'] }}" value="{{ walletVotes['predictors'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="updateWalletTotal();showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="walletVoteOracles" name="walletVoteOracles" placeholder="{{ walletVotes['oracles'] }}" value="{{ walletVotes['oracles'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="updateWalletTotal();showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="walletVoteCreators" name="walletVoteCreators" placeholder="{{ walletVotes['creators'] }}" value="{{ walletVotes['creators'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="updateWalletTotal();showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="walletVoteManagers" name="walletVoteManagers" placeholder="{{ walletVotes['managers'] }}" value="{{ walletVotes['managers'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="updateWalletTotal();showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 id="walletPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ walletVotes['predictors'] + walletVotes['oracles'] + walletVotes['creators'] + walletVotes['managers'] }} %</h6>
+                  </div>
+                </td>
+              </tr> 
+              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onmouseover="">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Vault</h6>
+                  </div>
+                </td>
+                {% if vaultOpened %}
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="vaultVotePredictors" name="vaultVotePredictors" placeholder="{{ vaultVotes['predictors'] }}" value="{{ vaultVotes['predictors'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="updateVaultTotal();showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="vaultVoteOracles" name="vaultVoteOracles" placeholder="{{ vaultVotes['oracles'] }}" value="{{ vaultVotes['oracles'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="updateVaultTotal();showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="vaultVoteCreators" name="vaultVoteCreators" placeholder="{{ vaultVotes['creators'] }}" value="{{ vaultVotes['creators'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="updateVaultTotal();showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="vaultVoteManagers" name="vaultVoteManagers" placeholder="{{ vaultVotes['managers'] }}" value="{{ vaultVotes['managers'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="updateVaultTotal();showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                {% else %}
+                <td colspan="4">
+                  <center>
+                    <form action="/vote" method="POST">
+                      {{ vaultPasswordForm.hidden_tag() }}
+                      {{ vaultPasswordForm.csrf_token }}
+                      <div class="input-group input-group-outline">
+                        {% if darkmode %}{{ vaultPasswordForm.password(size=32, style_="text-align: center; border: 2px solid #F9ED4E;", class_="tight form-control dark-colors", placeholder="", autofocus=True) }}
+                        {% else %}{{ vaultPasswordForm.password(size=32, style_="text-align: center; border: 2px solid #10051D;", class_="tight form-control", placeholder="", autofocus=True) }}
+                        {% endif %}
+                      </div>
+                      <div class="input-group input-group-outline">
+                        {% if darkmode %}{{ vaultPasswordForm.submit(size=32, style_="display:none;", class_="tight form-control dark-colors", onclick="if(validateVaultPassword()) showWorking();") }}
+                        {% else %}{{ vaultPasswordForm.submit(size=32, style_="display:none;", class_="tight form-control", onclick="if(validateVaultPassword()) showWorking();") }}
+                        {% endif %}
+                      </div>
+                    </form>
+                  </center>
+                </td>
+                {% endif %}
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 id="vaultPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ vaultVotes['predictors'] + vaultVotes['oracles'] + vaultVotes['creators'] + vaultVotes['managers'] }} %</h6>
+                  </div>
+                </td>
+              </tr> 
+            </tbody>
+          </table>
+          <!-- show on demand -->
+          <div id='manifestSubmit' class="col-xl-12 col-sm-12" style='display:none;'>
+            <div class="d-flex px-3 py-1" style="padding-top: 1rem !important; height: 75px;">
+              <div class="input-group input-group-outline is-filled" onclick="">
+                <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" id="submitManifest" name="submitManifest" onclick="if(validateJs()) showWorking();" size="32" type="submit" value="Save" onfocus="focused(this)" onfocusout="defocused(this)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function validateVaultPassword() {
+    return document.getElementById("password").value.length > 7;
+  }
+  function updateMintingManifestDescription(activity) {
+    if (activity == 'predictors') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Predictors are Satori Neurons that predict raw datastreams and publish those predictions for free.';
+    } else if (activity == 'oracles') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Oracles are Satori Neurons that publish raw data streams desribing or tracking some aspect of the real world.';
+    } else if (activity == 'creators') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Creators are developers that earn bounties from the Development Fund.';
+    } else if (activity == 'managers') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Managers (effectively the Satori Foundation) maintain the infrastructure that supports the Satori Network and ecosystem, such as, but not limited to:<br/> • the Satorinet.io website where all predictions are made freely availble to the world<br/> • the Satori Servers which facilitate the Satori Neurons and peer-to-peer network<br/> • management of the development process<br/> • and management of outreach';
+    } else {
+      document.getElementById('mintingManifestDescription').innerHTML = 'The Minting Manifest determines which mining activity deserves what percentage of the newly minted coins.';
+    }
+  }
+  function updateWalletTotal() {
+    document.getElementById('walletPercent').innerHTML = (
+      parseInt(document.getElementById('walletVotePredictors').value) + 
+      parseInt(document.getElementById('walletVoteOracles').value) + 
+      parseInt(document.getElementById('walletVoteCreators').value) + 
+      parseInt(document.getElementById('walletVoteManagers').value)) + ' %';
+  }
+  function updateVaultTotal() {
+    try {
+      document.getElementById('vaultPercent').innerHTML = (
+        parseInt(document.getElementById('vaultVotePredictors').value) + 
+        parseInt(document.getElementById('vaultVoteOracles').value) + 
+        parseInt(document.getElementById('vaultVoteCreators').value) + 
+        parseInt(document.getElementById('vaultVoteManagers').value)) + ' %';
+    } catch (error) {
+      document.getElementById('vaultPercent').innerHTML = 0 + ' %';
+    }
+  }
+  function showManifestSave(
+    walletPredictors, walletOracles, walletCreators, walletManagers,
+    vaultPredictors, vaultOracles, vaultCreators, vaultManagers,
+  ) {
+    console.log(walletPredictors);
+    console.log(walletOracles);
+    console.log(walletCreators);
+    console.log(walletManagers);
+    console.log(vaultPredictors);
+    console.log(vaultOracles);
+    console.log(vaultCreators);
+    console.log(vaultManagers);
+    if (
+      document.getElementById('walletVotePredictors').value != walletPredictors ||
+      document.getElementById('walletVoteOracles').value != walletOracles ||
+      document.getElementById('walletVoteCreators').value != walletCreators ||
+      document.getElementById('walletVoteManagers').value != walletManagers ||
+      document.getElementById('vaultVotePredictors').value != vaultPredictors ||
+      document.getElementById('vaultVoteOracles').value != vaultOracles ||
+      document.getElementById('vaultVoteCreators').value != vaultCreators ||
+      document.getElementById('vaultVoteManagers').value != vaultManagers) {
+      document.getElementById('manifestSubmit').style.display = 'block';
+      } else { 
+        document.getElementById('manifestSubmit').style.display = 'none';
+       }
+  }
+
+</script>
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Proposals</h6>
+            <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+              Prediction data streams published by this Satori Neuron 
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Sanctioned</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Oracle</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Active</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Start</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Cadence</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Vote</th>
+              </tr>
+            </thead>
+            <tbody id="updating_table">
+              {% for communityVote in communityVotes %}
+              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onmouseover="">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Community</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ communityVote['predictors'] }} %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ communityVote['oracles'] }} %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ communityVote['creators'] }} %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <!-- we don't give this color yet because the indication is ambiguous - is it late or on time? or is it accurate or way off? -->
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ communityVote['managers'] }} %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">100 %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <!-- for loop to create the input fields 
+                            <input id="streamVoteNumberX" name="streamVoteNumberX" placeholder="{{ vaultVotes['managers'] }}" value="{{ vaultVotes['managers'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="updateVaultTotal();showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});">
+                          -->
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+              </tr> 
+              {% endfor %}
+              
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>updateVaultTotal();</script>
+{% endblock %}
+
+
+
+

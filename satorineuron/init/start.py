@@ -41,7 +41,7 @@ class SingletonMeta(type):
 class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ''' a DAG of startup tasks. '''
 
-    def __init__(self, *args, urlServer: str = None, urlPubsub: str = None, isDebug: bool =False):
+    def __init__(self, *args, urlServer: str = None, urlPubsub: str = None, isDebug: bool = False):
         super(StartupDag, self).__init__(*args)
         self.isDebug: bool = isDebug
         self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
@@ -99,7 +99,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.verifyCaches()
         self.pubsubConnect()
         if self.isDebug:
-            return 
+            return
         self.startRelay()
         self.buildEngine()
         self.rendezvousConnect()
@@ -148,6 +148,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def checkin(self):
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
         self.details = CheckinDetails(self.server.checkin())
+        # logging.debug(self.details, color='magenta')
         self.key = self.details.key
         self.idKey = self.details.idKey
         self.subscriptionKeys = self.details.subscriptionKeys
@@ -161,6 +162,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches = {
             x.streamId: disk.Cache(id=x.streamId)
             for x in set(self.subscriptions + self.publications)}
+        # logging.debug(self.caches, color='yellow')
         self.signedStreamIds = [
             SignedStreamId(
                 source=s.id.source,
