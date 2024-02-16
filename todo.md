@@ -185,8 +185,14 @@ DONE central - change donation link to btc, eth, rvn, evr addresses
 DONE central - problem - database is locked while distributions run...
 DONE neuron - allow people to specify an alias for their wallet.
 DONE central - allow people to specify an alias for their wallet.
+DONE central - I want the scheduler to continually update the time file so no other scheduler can start as a worker later
+DONE neuron - autosecure - add optional minimum wallet account balance
+DONE neuron - autosecure - send even multiparty transaction too
+DONE central - clear out scheduler log on cycle
+DONE neuron - vault - fix decrypting words
+DONE neuron - vault - fix encrypting entropy
 
-neuron - autosecure - add optional minimum wallet account balance
+neuron - fix self.disk issues, sometimes we don't have stream data we should...?
 
 vote - create:
 neuron - create voting page with form and explanation

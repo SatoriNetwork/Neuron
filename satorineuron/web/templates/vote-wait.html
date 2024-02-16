@@ -1,0 +1,33 @@
+{% extends "basic.html" %}
+{% block content %}
+<div class="row mb-4">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">thumbs_up_down</i>
+        </div>
+        <div class="text-end pt-1">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Voting</h4>
+        </div>
+      </div>
+      <div class="text-center pt-1" style="padding-top: 12rem !important;padding-bottom: 10rem !important;">
+        <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Coming Soon!</h4>
+        <p class="text-sm mb-0 "></p>
+      </div>
+      <div class="card-footer p-1">
+        <center><p class="mb-1 {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>
+          Satori employs Community Mining. This means the token holders own the token and how it opperates. Here you'll be able to vote on how the Satori system opperates. For example, voters will decide if changes need to be made to the Minting Schedule, as well as modifying distribution rates according to various mining activities.
+          <br>
+          <br>
+          Voters will also decide which datastreams are sanctioned for mining and which are not. This is important because the token holders have the power to direct the attention of the entire Satori prediction network.
+          </p></center>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+

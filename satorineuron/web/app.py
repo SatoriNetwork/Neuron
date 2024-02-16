@@ -838,19 +838,23 @@ def presentVaultPasswordForm():
 def vault():
 
     def accept_submittion(passwordForm):
+        logging.debug(type(passwordForm.password.data),
+                      passwordForm.password.data, color='yellow')
         rvn, evr = start.openVault(password=passwordForm.password.data)
-        if rvn is None:
+        logging.debug(rvn.isEncrypted, color='yellow')
+        if rvn is None and not rvn.isEncrypted:
             flash('unable to open vault')
 
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
-    if start.vault is not None:
+    if start.vault is not None and not start.vault.isEncrypted:
         start.vault.get(allWalletInfo=False)
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
             'image': getQRCode(start.vault.address),
             'network': 'test',  # change to main when ready
+            'retain': start.vault.getAutosecureEntry().get('retain', 0),
             'autosecured': start.vault.autosecured(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
@@ -868,8 +872,12 @@ def vault():
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@app.route('/enable_autosecure/<network>', methods=['GET'])
-def enableAutosecure(network: str = 'main'):
+@app.route('/enable_autosecure/<network>/<retainInWallet>', methods=['GET'])
+def enableAutosecure(network: str = 'main', retainInWallet: int = 0):
+    try:
+        retainInWallet = int(retainInWallet)
+    except Exception as _:
+        retainInWallet = 0
     if start.vault is None:
         flash('Must unlock your vault to enable autosecure.')
         return redirect('/dashboard')
@@ -885,10 +893,13 @@ def enableAutosecure(network: str = 'main'):
     config.add(
         'autosecure',
         data={
-            start.getWallet(network=network).address: start.vault.authPayload(
-                asDict=True,
-                challenge=start.vault.address + start.vault.publicKey
-            )})
+            start.getWallet(network=network).address: {
+                **start.vault.authPayload(
+                    asDict=True,
+                    challenge=start.vault.address + start.vault.publicKey),
+                **{'retain': retainInWallet}
+            }
+        })
     # start.getWallet(network=network).get() # we think this triggers the tx twice
     return 'OK', 200
 
@@ -908,9 +919,34 @@ def disableAutosecure(network: str = 'main'):
 @app.route('/vote', methods=['GET', 'POST'])
 def vote():
 
+    def getStreams():
+        return [{
+            'sanctioned': 10,
+            'active': True,
+            'oracle': 'pubkey',
+            'alias': 'alias',
+            'stream': 'stream',
+            'target': 'target',
+            'start': 'start',
+            'cadence': 60*10,
+            'id': '0',
+            'vote': 27,
+        }, {
+            'sanctioned': 0,
+            'active': False,
+            'oracle': 'pubkey',
+            'alias': 'alias',
+            'stream': 'stream',
+            'target': 'target',
+            'start': 'start',
+            'cadence': 60*15,
+            'id': '1',
+            'vote': 36,
+        }]
+
     def accept_submittion(passwordForm):
         rvn, evr = start.openVault(password=passwordForm.password.data)
-        if rvn is None:
+        if rvn is None and not rvn.isEncrypted:
             flash('unable to open vault')
 
     if request.method == 'POST':
@@ -931,7 +967,7 @@ def vote():
             'oracles': '2',
             'creators': '3',
             'managers': '4'}}
-    if start.vault is not None:
+    if start.vault is not None and not start.vault.isEncrypted:
         return render_template('vote.html', **getResp({
             'title': 'Vote',
             'network': 'test',  # change to main when ready
@@ -939,6 +975,7 @@ def vote():
             'vaultOpened': True,
             'wallet': start.getWallet(network='test'),
             'vault': start.vault,
+            'streams': getStreams(),
             **votes}))
     return render_template('vote.html', **getResp({
         'title': 'Vote',
@@ -947,8 +984,21 @@ def vote():
         'vaultOpened': False,
         'wallet': start.getWallet(network='test'),
         'vault': start.vault,
+        'streams': getStreams(),
         **votes}))
 
+
+@app.route('/vote/submit/manifest', methods=['POST'])
+def voteSubmitManifest():
+    logging.debug(request.json, color='yellow')
+    return jsonify({'message': 'Manifest votes received successfully'}), 200
+
+@app.route('/vote/submit/streams', methods=['POST'])
+def voteSubmitStreams():
+    logging.debug(request.json, color='yellow')
+    # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
+    # zip(walletStreamIds, walletVotes)
+    return jsonify({'message': 'Stream votes received successfully'}), 200
 
 @app.route('/relay_csv', methods=['GET'])
 def relayCsv():

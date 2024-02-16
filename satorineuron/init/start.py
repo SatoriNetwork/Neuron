@@ -95,6 +95,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' start the satori engine. '''
         self.createRelayValidation()
         self.openWallet()
+        self.autosecure()
         self.checkin()
         self.verifyCaches()
         self.pubsubConnect()
@@ -345,3 +346,71 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.asyncThread.cancelTask(self.pauseThread)
         self.pauseThread = None
         logging.info('AI engine unpaused', color='green')
+
+    def autosecure(self):
+
+        def executeAutosecure(wallet: Union[RavencoinWallet, EvrmoreWallet], network: str):
+            import time
+            entry = wallet.getAutosecureEntry()
+            amount = wallet.balanceAmount - entry.get('retain', 0)
+            if amount > 0:
+                result = wallet.typicalNeuronTransaction(
+                    amount=amount,
+                    address=entry.get('address'),
+                    sweep=False,
+                    pullFeeFromAmount=True)
+                if result.msg == 'creating partial, need feeSatsReserved.':
+                    responseJson = self.server.requestSimplePartial(
+                        network=network)
+                    logging.debug(responseJson, color='yellow')
+                    result = wallet.typicalNeuronTransaction(
+                        sweep=False,
+                        amount=amount,
+                        address=entry.get('address'),
+                        completerAddress=responseJson.get('completerAddress'),
+                        feeSatsReserved=responseJson.get('feeSatsReserved'),
+                        changeAddress=responseJson.get('changeAddress'),
+                    )
+                if result is None:
+                    logging.error('Unable to execute autosecure transaction')
+                elif result.success:
+                    if (  # checking any on of these should suffice in theory...
+                        result.tx is not None and
+                        result.reportedFeeSats is not None and
+                        result.reportedFeeSats > 0 and
+                        result.msg == 'send transaction requires fee.'
+                    ):
+                        r = self.server.broadcastSimplePartial(
+                            tx=result.tx,
+                            reportedFeeSats=result.reportedFeeSats,
+                            feeSatsReserved=responseJson.get(
+                                'feeSatsReserved'),
+                            network=(
+                                'ravencoin' if self.networkIsTest(network)
+                                else 'evrmore'))
+                        if r.text != '':
+                            logging.info(r.text)
+                            time.sleep(10)
+                            wallet.get(allWalletInfo=False)
+                            return
+                        logging.error(
+                            'Unable to execute autosecure transaction')
+                        return
+                    time.sleep(10)
+                    wallet.get(allWalletInfo=False)
+                    return
+                logging.error('Unable to execute autosecure transaction')
+
+        def autosecureLoop():
+            logging.info('running autosecure loop', color='green')
+            for wallet, network in zip(
+                [self.ravencoinWallet, self.evrmoreWallet],
+                ['test', 'main']
+            ):
+                if wallet is not None and wallet.shouldAutosecure():
+                    executeAutosecure(wallet, network)
+
+        self.autosecureThread = self.asyncThread.repeatRun(
+            task=autosecureLoop,
+            interval=60*60*6,
+            delay=10)

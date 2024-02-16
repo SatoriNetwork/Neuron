@@ -8,10 +8,10 @@
       </div>
       <center>
         <p id='explainVault' class="mb-1 {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>
-          The Vault is an encrypted wallet.
+          The Vault is an encrypted wallet
           <br>
           <br>
-          YOU MUST REMEMBER YOUR PASSWORD. THERE IS NO WAY TO RETRIEVE IT.
+          YOU MUST REMEMBER YOUR PASSWORD, THERE IS NO WAY TO RETRIEVE IT
           <br>
           <br>
         </p>
@@ -23,14 +23,14 @@
 <script>
   function describeVault() {
     var shortDescription = (
-      "The vault is an encrypted wallet." +
+      "The vault is an encrypted wallet" +
       "<br>" +
       "<br>" +
-      "YOU MUST REMEMBER YOUR PASSWORD. THERE IS NO WAY TO RETRIEVE IT." +
+      "YOU MUST REMEMBER YOUR PASSWORD, THERE IS NO WAY TO RETRIEVE IT" +
       "<br>" +
       "<br>" )
     var longDescription = (
-      "The vault is an encrypted wallet." +
+      "The vault is an encrypted wallet" +
       "<br>" +
       "<br>" +
       "Your main wallet is used to authenticate you to the network and as such is not encrypted. If it were, you would need to provide the decryption password each time your machine attempt to authenticate itself on the Satori network." +
@@ -55,7 +55,7 @@
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
         <div class="col-xl-9 col-sm-9 mb-xl-0">
           <p class="mb-1 {% if darkmode %}dark-colors{% endif %} text-center" style='padding-top:3rem;'></span>
-            Your vault is more secure than your wallet.
+            Your vault is more secure than your wallet
         </div>
         <div class="col-xl-3 col-sm-3 mb-xl-0">
           <div class="text-center pt-1">
@@ -66,7 +66,7 @@
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
         <div class="col-xl-9 col-sm-9 mb-xl-0 mb-4 mb-1 {% if darkmode %}dark-colors{% endif %} text-center">
             <p style='padding-top:2rem;'>
-              Check the box to automatically transfer current and future SATORI tokens to your vault.
+              Check the box to automatically transfer current and future SATORI tokens to your vault
             </br>
             </br>
             </p>
@@ -79,7 +79,7 @@
                 color: #ADB5BD;
               }
             </style>
-            <input id="retainInWallet" type="number" class="tight {% if darkmode %}dark-colors{% endif %} {% if darkmode %}dark-text{% endif %}" style="text-align: end;width: -webkit-fill-available; border: 1px solid #ccc;border-radius: 4px;" placeholder="0" min="0">
+            <input id="retainInWallet" type="number" class="tight {% if darkmode %}dark-colors{% endif %} {% if darkmode %}dark-text{% endif %}" style="text-align: end;width: -webkit-fill-available; border: 1px solid #ccc;border-radius: 4px;" placeholder="{{ retain }}" {% if autosecured %}value="{{ retain }}"{% endif %} min="0">
             <br>
             <br>
             <input id="autosendCheckbox" type="checkbox" class="tight {% if darkmode %}dark-colors{% endif %}" style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;" onclick="autosendDescription();enableDisableAutosecure('{{network}}');"{% if autosecured %}checked{% endif %}>
@@ -91,7 +91,7 @@
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
         <div class="col-xl-9 col-sm-9 mb-xl-0">
           <p class="text-sm mb-2 {% if darkmode %}dark-colors{% endif %} text-center"><span class="text-success text-sm font-weight-bolder"></span>
-            <i>Enabling this feature will immediately transfer existing tokens to your vault.</i>
+            <i>Enabling this feature will periodically transfer existing tokens to your vault.</i>
           </p>
         </div>
       </div>
@@ -108,7 +108,11 @@
     }
   }
   function enableAutosecure(network) {
-    fetch('/enable_autosecure/' + network, { method: 'GET' })
+    var retainInWallet = document.getElementById("retainInWallet").value;
+    if (retainInWallet == '') {
+      retainInWallet = 0;
+    };
+    fetch('/enable_autosecure/' + network + '/' + retainInWallet, { method: 'GET' })
     .then(response => {
         if (response.ok) {
             console.log("Autosecure enabled");
