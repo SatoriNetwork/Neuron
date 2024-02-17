@@ -991,6 +991,33 @@ def vote():
 @app.route('/vote/submit/manifest', methods=['POST'])
 def voteSubmitManifest():
     logging.debug(request.json, color='yellow')
+    if (
+        request.json.get('walletPredictors') >  0 or 
+        request.json.get('walletOracles') >  0 or 
+        request.json.get('walletCreators') >  0 or 
+        request.json.get('walletManagers') >  0
+    ):
+        start.server.submitMaifestVote(
+            wallet=start.getWallet(network='test'), 
+            votes={
+                'predictors': request.json.get('walletPredictors', 0),
+                'oracles': request.json.get('walletOracles', 0),
+                'creators': request.json.get('walletCreators', 0),
+                'managers': request.json.get('walletManagers', 0)})
+    if ((
+        request.json.get('vaultPredictors') >  0 or 
+        request.json.get('vaultOracles') >  0 or 
+        request.json.get('vaultCreators') >  0 or 
+        request.json.get('vaultManagers') >  0) and
+        start.vault is not None and start.vault.isDecrypted
+    ):
+        start.server.submitMaifestVote(
+            start.vault,
+            votes={
+                'predictors': request.json.get('vaultdictors', 0),
+                'oracles': request.json.get('vaultOracles', 0),
+                'creators': request.json.get('vaultreators', 0),
+                'managers': request.json.get('vaultanagers', 0)})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 @app.route('/vote/submit/streams', methods=['POST'])
@@ -998,6 +1025,27 @@ def voteSubmitStreams():
     logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
     # zip(walletStreamIds, walletVotes)
+    if (
+        len(request.json.get('walletStreamIds', [])) >  0 and 
+        len(request.json.get('walletVotes', [])) >  0 and 
+        request.json.get('walletStreamIds') == request.json.get('walletVotes', [])
+    ):
+        start.server.submitStreamVote(
+            wallet=start.getWallet(network='test'), 
+            votes={
+                'streamIds': request.json.get('walletStreamIds'),
+                'votes': request.json.get('walletVotes')})
+    if (
+        len(request.json.get('vaultStreamIds', [])) >  0 and 
+        len(request.json.get('vaultVotes', [])) >  0 and 
+        request.json.get('vaultStreamIds') == request.json.get('vaultVotes', []) and 
+        start.vault is not None and start.vault.isDecrypted
+    ):
+        start.server.submitStreamVote(
+            start.vault,
+            votes={
+                'streamIds': request.json.get('vaultStreamIds'),
+                'votes': request.json.get('vaultVotes')})
     return jsonify({'message': 'Stream votes received successfully'}), 200
 
 @app.route('/relay_csv', methods=['GET'])

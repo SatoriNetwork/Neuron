@@ -197,7 +197,6 @@
                 </td>
                 {% else %}
                 <td colspan="4">
-                  <center>
                     <form action="/vote" method="POST">
                       {{ vaultPasswordForm.hidden_tag() }}
                       {{ vaultPasswordForm.csrf_token }}
@@ -212,7 +211,6 @@
                         {% endif %}
                       </div>
                     </form>
-                  </center>
                 </td>
                 {% endif %}
                 <td>
@@ -480,8 +478,8 @@
     updateWalletStreamsTotal();
     let total = parseFloat(document.getElementById('streamsWalletVoteTotal').innerHTML.split(' ')[0]);
     if (total > 100.0) {
-      for (let i = 0; i < document.getElementsByClassName('streamWalletVoteIdentifier').length; i++) {
-        document.getElementsByClassName('streamWalletVoteIdentifier')[i].value = parseInt(parseInt(document.getElementsByClassName('streamWalletVoteIdentifier')[i].value) / total * 100);
+      for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+        element.value = parseInt(parseInt(element.value) / total * 100);
       }
       updateWalletStreamsTotal();
     } 
@@ -491,8 +489,8 @@
     updateVaultStreamsTotal();
     let total = parseFloat(document.getElementById('streamsVaultVoteTotal').innerHTML.split(' ')[0]);
     if (total > 100.0) {
-      for (let i = 0; i < document.getElementsByClassName('streamVaultVoteIdentifier').length; i++) {
-        document.getElementsByClassName('streamVaultVoteIdentifier')[i].value = parseInt(parseInt(document.getElementsByClassName('streamVaultVoteIdentifier')[i].value) / total * 100);
+      for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+        element.value = parseInt(parseInt(element.value) / total * 100);
       }
       updateVaultStreamsTotal();
     } 
@@ -501,8 +499,8 @@
   function updateWalletStreamsTotal() {
     try {
       let total = 0;
-      for (let i = 0; i < document.getElementsByClassName('streamWalletVoteIdentifier').length; i++) {
-        total += parseInt(document.getElementsByClassName('streamWalletVoteIdentifier')[i].value) || 0;
+      for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+        total += parseInt(element.value) || 0;
       }
       document.getElementById('streamsWalletVoteTotal').innerHTML = total + ' %';
     } catch (error) {
@@ -512,8 +510,8 @@
   function updateVaultStreamsTotal() {
     try {
       let total = 0;
-      for (let i = 0; i < document.getElementsByClassName('streamVaultVoteIdentifier').length; i++) {
-        total += parseInt(document.getElementsByClassName('streamVaultVoteIdentifier')[i].value) || 0;
+      for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+        total += parseInt(element.value) || 0;
       }
       document.getElementById('streamsVaultVoteTotal').innerHTML = total + ' %';
     } catch (error) {
@@ -526,18 +524,20 @@
   function saveStreamVotes() {
     let walletStreamIds = [];
     let walletVotes = [];
-    for (let i = 0; i < document.getElementsByClassName('streamWalletVoteIdentifier').length; i++) {
-      if (parseInt(document.getElementsByClassName('streamWalletVoteIdentifier')[i].value) || 0 > 0) {
-        walletStreamIds.push(parseInt(document.getElementsByClassName('streamWalletVoteIdentifier')[i].name.split('_')[1]));
-        walletVotes.push(parseInt(document.getElementsByClassName('streamWalletVoteIdentifier')[i].value) || 0);
+    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+      const voteValue = parseInt(element.value) || 0;
+      if (voteValue > 0) {
+        walletStreamIds.push(parseInt(element.name.split('_')[1]));
+        walletVotes.push(voteValue);
       }
     }
     let vaultStreamIds = [];
     let vaultVotes = [];
-    for (let i = 0; i < document.getElementsByClassName('streamVaultVoteIdentifier').length; i++) {
-      if (parseInt(document.getElementsByClassName('streamVaultVoteIdentifier')[i].value) || 0 > 0) {
-        vaultStreamIds.push(parseInt(document.getElementsByClassName('streamVaultVoteIdentifier')[i].name.split('_')[1]));
-        vaultVotes.push(parseInt(document.getElementsByClassName('streamVaultVoteIdentifier')[i].value) || 0);
+    for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+      const voteValue = parseInt(element.value) || 0;
+      if (voteValue > 0) {
+        vaultStreamIds.push(parseInt(element.name.split('_')[1]));
+        vaultVotes.push(voteValue);
       }
     }
     fetch(
@@ -545,10 +545,10 @@
         method: 'POST', 
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-        walletStreamIds: walletStreamIds,
-        vaultStreamIds: vaultStreamIds,
-        walletVotes: walletVotes,
-        vaultVotes: vaultVotes,
+          walletStreamIds: walletStreamIds,
+          vaultStreamIds: vaultStreamIds,
+          walletVotes: walletVotes,
+          vaultVotes: vaultVotes,
         })})
     .then(response => {
         if (response.ok) {
@@ -558,8 +558,7 @@
     .catch(error => console.error('Error:', error));
   }
 </script>
-</script>
-<script>updateVaultTotal();</script>
+<script>updateVaultTotal();updateVaultStreamsTotal();</script>
 {% endblock %}
 
 

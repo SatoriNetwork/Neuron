@@ -195,9 +195,9 @@ DONE neuron - vault - fix encrypting entropy
 neuron - fix self.disk issues, sometimes we don't have stream data we should...?
 
 vote - create:
-neuron - create voting page with form and explanation
-neuron - create communication with network and server to specify preference
-neuron - create communication with network and server to get community vote
+DONE neuron - create voting page with form and explanation
+DONE neuron - create communication with network and server to specify preference
+DONE neuron - create communication with network and server to get community vote
 central - sql create table
 central - sql create orm
 central - create endpoints
