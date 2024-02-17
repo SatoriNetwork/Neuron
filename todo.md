@@ -198,9 +198,12 @@ vote - create:
 DONE neuron - create voting page with form and explanation
 DONE neuron - create communication with network and server to specify preference
 DONE neuron - create communication with network and server to get community vote
-central - sql create table
-central - sql create orm
-central - create endpoints
+DONE central - sql create table
+DONE central - sql create orm
+DONE central - create endpoints
+central - add manifest queries
+central - add sanction queries
+central - test everything
 
 neuron - just automatically give neurons sanctioned datastreams to work on.
 neuron - allow users to pause individually.
