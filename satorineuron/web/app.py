@@ -920,6 +920,7 @@ def disableAutosecure(network: str = 'main'):
 def vote():
 
     def getStreams():
+        #start.server.getSanctionVotes()
         return [{
             'sanctioned': 10,
             'active': True,
@@ -951,18 +952,25 @@ def vote():
 
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
+    
     votes = {
-        'communityVotes': {
+        'communityVotes': 
+            #start.server.getManifestVotes()
+            {
             'predictors': 50,
             'oracles': 20,
             'creators': 20,
             'managers': 10},
-        'walletVotes': {
+        'walletVotes': 
+            #start.server.getManifestVotes(wallet)
+            {
             'predictors': 50,
             'oracles': 20,
             'creators': 20,
             'managers': 10},
-        'vaultVotes': {
+        'vaultVotes': 
+            #start.server.getManifestVotes(start.vault)
+            {
             'predictors': '1',
             'oracles': '2',
             'creators': '3',
@@ -1020,8 +1028,8 @@ def voteSubmitManifest():
                 'managers': request.json.get('vaultanagers', 0)})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
-@app.route('/vote/submit/streams', methods=['POST'])
-def voteSubmitStreams():
+@app.route('/vote/submit/sanction', methods=['POST'])
+def voteSubmitSanction():
     logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
     # zip(walletStreamIds, walletVotes)
@@ -1030,7 +1038,7 @@ def voteSubmitStreams():
         len(request.json.get('walletVotes', [])) >  0 and 
         request.json.get('walletStreamIds') == request.json.get('walletVotes', [])
     ):
-        start.server.submitStreamVote(
+        start.server.submitSanctionVote(
             wallet=start.getWallet(network='test'), 
             votes={
                 'streamIds': request.json.get('walletStreamIds'),
@@ -1041,7 +1049,7 @@ def voteSubmitStreams():
         request.json.get('vaultStreamIds') == request.json.get('vaultVotes', []) and 
         start.vault is not None and start.vault.isDecrypted
     ):
-        start.server.submitStreamVote(
+        start.server.submitSanctionVote(
             start.vault,
             votes={
                 'streamIds': request.json.get('vaultStreamIds'),

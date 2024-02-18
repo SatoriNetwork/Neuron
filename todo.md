@@ -201,6 +201,10 @@ DONE neuron - create communication with network and server to get community vote
 DONE central - sql create table
 DONE central - sql create orm
 DONE central - create endpoints
+DONE central - add balances table
+DONE central - add balances orm
+DONE central - add balances process
+
 central - add manifest queries
 central - add sanction queries
 central - test everything
