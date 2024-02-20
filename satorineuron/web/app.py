@@ -919,31 +919,46 @@ def disableAutosecure(network: str = 'main'):
 @app.route('/vote', methods=['GET', 'POST'])
 def vote():
 
+    def getVotes(wallet):
+        return {
+            'communityVotes': start.server.getManifestVote(),
+            'walletVotes': start.server.getManifestVote(wallet),
+            'vaultVotes': (
+                start.server.getManifestVote(start.vault)
+                if start.vault is not None and start.vault.isDecrypted else {
+                    'predictors': '0',
+                    'oracles': '0',
+                    'creators': '0',
+                    'managers': '0'})}
+
     def getStreams():
-        #start.server.getSanctionVotes()
-        return [{
-            'sanctioned': 10,
-            'active': True,
-            'oracle': 'pubkey',
-            'alias': 'alias',
-            'stream': 'stream',
-            'target': 'target',
-            'start': 'start',
-            'cadence': 60*10,
-            'id': '0',
-            'vote': 27,
-        }, {
-            'sanctioned': 0,
-            'active': False,
-            'oracle': 'pubkey',
-            'alias': 'alias',
-            'stream': 'stream',
-            'target': 'target',
-            'start': 'start',
-            'cadence': 60*15,
-            'id': '1',
-            'vote': 36,
-        }]
+        # todo convert result to the strucutre the template expects:
+        # [ {'cols': 'value'}]
+        streams = start.server.getSanctionVote(wallet, vault)
+        return streams
+        # return [{
+        #    'sanctioned': 10,
+        #    'active': True,
+        #    'oracle_pubkey': 'pubkey',
+        #    'oacle_alias': 'alias',
+        #    'stream': 'stream',
+        #    'target': 'target',
+        #    'start': 'start',
+        #    'cadence': 60*10,
+        #    'id': '0',
+        #    'total_vote': 27,
+        # }, {
+        #    'sanctioned': 0,
+        #    'active': False,
+        #    'oracle': 'pubkey',
+        #    'alias': 'alias',
+        #    'stream': 'stream',
+        #    'target': 'target',
+        #    'start': 'start',
+        #    'cadence': 60*15,
+        #    'id': '1',
+        #    'vote': 36,
+        # }]
 
     def accept_submittion(passwordForm):
         rvn, evr = start.openVault(password=passwordForm.password.data)
@@ -952,73 +967,52 @@ def vote():
 
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
-    
-    votes = {
-        'communityVotes': 
-            #start.server.getManifestVotes()
-            {
-            'predictors': 50,
-            'oracles': 20,
-            'creators': 20,
-            'managers': 10},
-        'walletVotes': 
-            #start.server.getManifestVotes(wallet)
-            {
-            'predictors': 50,
-            'oracles': 20,
-            'creators': 20,
-            'managers': 10},
-        'vaultVotes': 
-            #start.server.getManifestVotes(start.vault)
-            {
-            'predictors': '1',
-            'oracles': '2',
-            'creators': '3',
-            'managers': '4'}}
+
+    myWallet = start.getWallet(network='test')
     if start.vault is not None and not start.vault.isEncrypted:
         return render_template('vote.html', **getResp({
             'title': 'Vote',
             'network': 'test',  # change to main when ready
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
-            'wallet': start.getWallet(network='test'),
+            'wallet': myWallet,
             'vault': start.vault,
             'streams': getStreams(),
-            **votes}))
+            **getVotes(myWallet)}))
     return render_template('vote.html', **getResp({
         'title': 'Vote',
         'network': 'test',  # change to main when ready
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
-        'wallet': start.getWallet(network='test'),
+        'wallet': myWallet,
         'vault': start.vault,
         'streams': getStreams(),
-        **votes}))
+        **getVotes(myWallet)}))
 
 
 @app.route('/vote/submit/manifest', methods=['POST'])
 def voteSubmitManifest():
     logging.debug(request.json, color='yellow')
     if (
-        request.json.get('walletPredictors') >  0 or 
-        request.json.get('walletOracles') >  0 or 
-        request.json.get('walletCreators') >  0 or 
-        request.json.get('walletManagers') >  0
+        request.json.get('walletPredictors') > 0 or
+        request.json.get('walletOracles') > 0 or
+        request.json.get('walletCreators') > 0 or
+        request.json.get('walletManagers') > 0
     ):
         start.server.submitMaifestVote(
-            wallet=start.getWallet(network='test'), 
+            wallet=start.getWallet(network='test'),
             votes={
                 'predictors': request.json.get('walletPredictors', 0),
                 'oracles': request.json.get('walletOracles', 0),
                 'creators': request.json.get('walletCreators', 0),
                 'managers': request.json.get('walletManagers', 0)})
     if ((
-        request.json.get('vaultPredictors') >  0 or 
-        request.json.get('vaultOracles') >  0 or 
-        request.json.get('vaultCreators') >  0 or 
-        request.json.get('vaultManagers') >  0) and
+        request.json.get('vaultPredictors') > 0 or
+        request.json.get('vaultOracles') > 0 or
+        request.json.get('vaultCreators') > 0 or
+        request.json.get('vaultManagers') > 0) and
         start.vault is not None and start.vault.isDecrypted
-    ):
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
@@ -1028,25 +1022,27 @@ def voteSubmitManifest():
                 'managers': request.json.get('vaultanagers', 0)})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
+
 @app.route('/vote/submit/sanction', methods=['POST'])
 def voteSubmitSanction():
     logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
     # zip(walletStreamIds, walletVotes)
     if (
-        len(request.json.get('walletStreamIds', [])) >  0 and 
-        len(request.json.get('walletVotes', [])) >  0 and 
-        request.json.get('walletStreamIds') == request.json.get('walletVotes', [])
+        len(request.json.get('walletStreamIds', [])) > 0 and
+        len(request.json.get('walletVotes', [])) > 0 and
+        request.json.get('walletStreamIds') == request.json.get(
+            'walletVotes', [])
     ):
         start.server.submitSanctionVote(
-            wallet=start.getWallet(network='test'), 
+            wallet=start.getWallet(network='test'),
             votes={
                 'streamIds': request.json.get('walletStreamIds'),
                 'votes': request.json.get('walletVotes')})
     if (
-        len(request.json.get('vaultStreamIds', [])) >  0 and 
-        len(request.json.get('vaultVotes', [])) >  0 and 
-        request.json.get('vaultStreamIds') == request.json.get('vaultVotes', []) and 
+        len(request.json.get('vaultStreamIds', [])) > 0 and
+        len(request.json.get('vaultVotes', [])) > 0 and
+        request.json.get('vaultStreamIds') == request.json.get('vaultVotes', []) and
         start.vault is not None and start.vault.isDecrypted
     ):
         start.server.submitSanctionVote(
@@ -1055,6 +1051,19 @@ def voteSubmitSanction():
                 'streamIds': request.json.get('vaultStreamIds'),
                 'votes': request.json.get('vaultVotes')})
     return jsonify({'message': 'Stream votes received successfully'}), 200
+
+# todo: this needs a ui button.
+# this ability to clear them all lets us just display a subset of streams to vote on with a search for a specific one
+
+
+@app.route('/vote/remove_all/sanction', methods=['GET'])
+def voteRemoveAllSanction():
+    logging.debug(request.json, color='yellow')
+    start.server.removeSanctionVote(wallet=start.getWallet(network='test'))
+    if (start.vault is not None and start.vault.isDecrypted):
+        start.server.removeSanctionVote(start.vaul)
+    return jsonify({'message': 'Stream votes received successfully'}), 200
+
 
 @app.route('/relay_csv', methods=['GET'])
 def relayCsv():

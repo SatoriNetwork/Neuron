@@ -192,7 +192,10 @@ DONE central - clear out scheduler log on cycle
 DONE neuron - vault - fix decrypting words
 DONE neuron - vault - fix encrypting entropy
 
+neuron - vault - require password twice on first setup
 neuron - fix self.disk issues, sometimes we don't have stream data we should...?
+
+central - either move sanction out it it's own table, rebuilding streams or update in bulk with a temporary table (probably ideal)
 
 vote - create:
 DONE neuron - create voting page with form and explanation

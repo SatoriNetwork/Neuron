@@ -417,7 +417,7 @@
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle'] }}">{{ stream['alias'] }}</h6>
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] }}</h6>
                   </div>
                 </td>
                 <td>
@@ -445,7 +445,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="streamIdWallet_{{stream['id']}}" name="streamIdWallet_{{stream['id']}}" placeholder="{{ stream['walletVote'] }}" value="{{ stream['walletVote'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamWalletVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateWalletStreamsVotes();saveStreamVotes();">
+                          <input id="streamIdWallet_{{stream['id']}}" name="streamIdWallet_{{stream['id']}}" placeholder="{{ stream['wallet_vote'] }}" value="{{ stream['wallet_vote'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamWalletVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateWalletStreamsVotes();saveStreamVotes();">
                         </div>
                       </div>
                     </h6>
@@ -457,7 +457,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="streamIdVault_{{stream['id']}}" name="streamIdVault_{{stream['id']}}" placeholder="{{ stream['vaultVote'] }}" value="{{ stream['vaultVote'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamVaultVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateVaultStreamsVotes();saveStreamVotes();">
+                          <input id="streamIdVault_{{stream['id']}}" name="streamIdVault_{{stream['id']}}" placeholder="{{ stream['vault_vote'] }}" value="{{ stream['vault_vote'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamVaultVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateVaultStreamsVotes();saveStreamVotes();">
                         </div>
                       </div>
                     </h6>
