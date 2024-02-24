@@ -5,7 +5,7 @@ from satorilib import logging
 from satorilib.utils import colored
 from satorirendezvous.client.structs.rest.message import FromServerMessage
 from satorirendezvous.example.client.structs.protocol import ToServerSubscribeProtocol as ToServerProtocol
-
+from satorineuron.common.constants import HTTP_TIMEOUT
 
 class RendezvousByRest():
     ''' conn for server, using signature and key for identity  '''
@@ -53,7 +53,7 @@ class RendezvousByRest():
             self.msgId += 1
             self.outbox[self.msgId] = payload
             logging.info('outgoing rendezvous message', payload, print=True)
-            response = requests.post(self.rendezvousServer, data=payload)
+            response = requests.post(self.rendezvousServer, data=payload, timeout=HTTP_TIMEOUT)
             if response.status_code != 200 or not response.text.startswith('{"response": '):
                 logging.warning('bad response', response, payload)
             # response.json() {'response': "RendezvousClient(('97.117.28.178', 4431), 0)"}

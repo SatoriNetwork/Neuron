@@ -9,6 +9,8 @@ import time
 import json
 import requests
 
+HTTP_TIMEOUT = 300
+
 
 class RelayStreamExample:
     def __init__(
@@ -44,10 +46,10 @@ class RelayStreamExample:
     def call(self):
         ''' calls API and relays data to Satori Node '''
         if self.payload is None:
-            response = requests.get(self.uri, headers=self.headers)
+            response = requests.get(self.uri, headers=self.headers, timeout=HTTP_TIMEOUT)
         else:
             response = requests.post(
-                self.uri, headers=self.headers, json=self.payload)
+                self.uri, headers=self.headers, json=self.payload, timeout=HTTP_TIMEOUT)
         response.raise_for_status()
         if self.hook is not None:
             return self.hook(response.text)
@@ -61,6 +63,7 @@ class RelayStreamExample:
         ''' once the data is retrieved, pass it to the Satori Node '''
         return requests.post(
             'http://localhost:24601/relay',
+            timeout=HTTP_TIMEOUT,
             json=json.dumps({
                 # required
                 'source': self.source,

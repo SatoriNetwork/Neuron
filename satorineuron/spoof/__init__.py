@@ -8,6 +8,7 @@ import pandas as pd
 from satorilib.api import disk
 from satorilib.concepts.structs import StreamId
 from satorineuron import config
+from satorineuron.common.constants import HTTP_TIMEOUT
 
 
 class Streamr():
@@ -63,7 +64,8 @@ class Streamr():
             x = self.provideIncrementalWithId()
             response = requests.post(
                 url=f'http://127.0.0.1:{self.port}/subscription/update',
-                json=x)
+                json=x,
+                timeout=HTTP_TIMEOUT)
             response.raise_for_status()
 
 

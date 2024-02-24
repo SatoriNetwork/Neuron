@@ -9,6 +9,7 @@ from satorilib.api import hash
 from satorilib.api.disk import Cached
 from satorineuron import config
 from satorineuron import logging
+from satorineuron.common.constants import HTTP_TIMEOUT
 from satorineuron.relay.history import GetHistory
 
 
@@ -161,12 +162,12 @@ class ValidateRelayStream(object):
                 return False
 
         if data.get('payload') is None:
-            method = partial(requests.get)
+            method = partial(requests.get, timeout=HTTP_TIMEOUT)
         else:
             if is_valid_json(data.get('payload')):
-                method = partial(requests.post, json=data.get('payload'))
+                method = partial(requests.post, json=data.get('payload'), timeout=HTTP_TIMEOUT)
             else:
-                method = partial(requests.post, data=data.get('payload'))
+                method = partial(requests.post, data=data.get('payload'), timeout=HTTP_TIMEOUT)
         if data.get('headers') not in ['', None]:
             if is_valid_json(data.get('headers')):
                 r = method(

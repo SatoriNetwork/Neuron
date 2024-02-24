@@ -14,8 +14,8 @@ import datetime as dt
 import aiohttp
 import requests
 import traceback
+from satorineuron.common.constants import HTTP_TIMEOUT
 # from requests_toolbelt.multipart.encoder import MultipartEncoder
-
 
 def greyPrint(msg: str):
     return print(
@@ -236,6 +236,7 @@ class UDPRelay():
         requests.post(
             UDPRelay.satoriUrl('/message'),
             data=data,
+            timeout=HTTP_TIMEOUT,
             headers={
                 'Content-Type': 'application/octet-stream',
                 'remoteIp': addr[0],

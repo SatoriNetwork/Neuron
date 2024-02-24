@@ -1,3 +1,5 @@
+HTTP_TIMEOUT=300
+
 class GetHistory(object):
     '''
     supplies the history of the data stream
@@ -10,7 +12,8 @@ class GetHistory(object):
         super(GetHistory, self).__init__(*args, **kwargs)
         import requests
         self.response = requests.get(
-            url='https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&past_days=10&hourly=winddirection_10m')
+            url='https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&past_days=10&hourly=winddirection_10m',
+            timeout=HTTP_TIMEOUT)
         self.times = self.response.json().get('hourly', {}).get('time', [])
         self.values = self.response.json().get(
             'hourly', {}).get('winddirection_10m', [])
