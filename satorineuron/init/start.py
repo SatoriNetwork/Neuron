@@ -1,5 +1,6 @@
 # todo create config if no config present, use config if config present
 from typing import Union
+import os
 import json
 import threading
 from reactivex.subject import BehaviorSubject
@@ -95,6 +96,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' start the satori engine. '''
         self.createRelayValidation()
         self.openWallet()
+        self.openVault()
         self.autosecure()
         self.checkin()
         self.verifyCaches()
@@ -120,30 +122,40 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             config.walletPath('wallet.yaml'),
             reserve=0.01,
             isTestnet=self.networkIsTest('evrmore'))()
-        logging.info('opened vault', color='green')
+        logging.info('opened wallet', color='green')
 
     def closeVault(self):
+        ''' close the vault, reopen it without decrypting it. '''
         self.ravencoinVault = None
         self.evrmoreVault = None
+        self.openVault()
 
-    def openVault(self, password: str) -> tuple[RavencoinWallet, EvrmoreWallet]:
+    def openVault(self, password: str = None) -> tuple[RavencoinWallet, EvrmoreWallet]:
+        '''
+        without a password it will open the vault (if it exists) but not decrypt
+        it. this allows us to get it's balance, but not spend from it.
+        '''
         try:
-            self.ravencoinVault = RavencoinWallet(
-                config.walletPath('vault.yaml'),
-                reserve=0.01,
-                isTestnet=self.networkIsTest('ravencoin'),
-                password=password,
-            )()
-            # self.evrmoreVault = EvrmoreWallet(
-            #    config.walletPath('vault.yaml'),
-            #    reserve=0.01,
-            #    isTestnet=self.networkIsTest('evrmore'),
-            #    password=password,
-            # )()
+            vaultPath = config.walletPath('vault.yaml')
+            if os.path.exists(vaultPath):
+                self.ravencoinVault = RavencoinWallet(
+                    vaultPath,
+                    reserve=0.01,
+                    isTestnet=self.networkIsTest('ravencoin'),
+                    password=password,
+                )()
+                # self.evrmoreVault = EvrmoreWallet(
+                #    vaultPath,
+                #    reserve=0.01,
+                #    isTestnet=self.networkIsTest('evrmore'),
+                #    password=password,
+                # )()
+            else:
+                raise Exception('vault file not found.')
         except Exception as e:
             logging.error('failed to open vault', color='red')
             raise e
-        logging.info('opened wallet', color='green')
+        logging.info('opened vault', color='green')
         return self.ravencoinVault, self.evrmoreVault
 
     def checkin(self):
@@ -363,6 +375,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     responseJson = self.server.requestSimplePartial(
                         network=network)
                     logging.debug(responseJson, color='yellow')
+                    # account for fee
+                    if amount > 1:
+                        amount -= 1
                     result = wallet.typicalNeuronTransaction(
                         sweep=False,
                         amount=amount,
