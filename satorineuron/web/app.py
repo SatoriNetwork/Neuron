@@ -921,15 +921,16 @@ def disableAutosecure(network: str = 'main'):
 def vote():
 
     def getVotes(wallet):
-        
+
         def valuesAsNumbers(map: dict):
             return {k: int(v) for k, v in map.items()}
-        
+
         x = {
             'communityVotes': start.server.getManifestVote(),
-            'walletVotes': start.server.getManifestVote(wallet),
+            'walletVotes': {k: v/100 for k, v in start.server.getManifestVote(wallet).items()},
             'vaultVotes': (
-                valuesAsNumbers(start.server.getManifestVote(start.vault))
+                valuesAsNumbers(
+                    {k: v/100 for k, v in start.server.getManifestVote(start.vault).items()})
                 if start.vault is not None and start.vault.isDecrypted else {
                     'predictors': 0,
                     'oracles': 0,
@@ -942,9 +943,9 @@ def vote():
         # todo convert result to the strucutre the template expects:
         # [ {'cols': 'value'}]
         # query TAKES WAY TOO LONG
-        #streams = start.server.getSanctionVote(wallet, start.vault)
-        #logging.debug('streams', streams, color='yellow')
-        #return streams
+        # streams = start.server.getSanctionVote(wallet, start.vault)
+        # logging.debug('streams', streams, color='yellow')
+        # return streams
         return []
         # return [{
         #    'sanctioned': 10,
@@ -1000,8 +1001,8 @@ def vote():
         **getVotes(myWallet)}))
 
 
-@app.route('/vote/submit/manifest', methods=['POST'])
-def voteSubmitManifest():
+@app.route('/vote/submit/manifest/wallet', methods=['POST'])
+def voteSubmitManifestWallet():
     logging.debug(request.json, color='yellow')
     if (
         request.json.get('walletPredictors') > 0 or
@@ -1016,6 +1017,12 @@ def voteSubmitManifest():
                 'oracles': request.json.get('walletOracles', 0),
                 'creators': request.json.get('walletCreators', 0),
                 'managers': request.json.get('walletManagers', 0)})
+    return jsonify({'message': 'Manifest votes received successfully'}), 200
+
+
+@app.route('/vote/submit/manifest/vault', methods=['POST'])
+def voteSubmitManifestVault():
+    logging.debug(request.json, color='yellow')
     if ((
         request.json.get('vaultPredictors') > 0 or
         request.json.get('vaultOracles') > 0 or
