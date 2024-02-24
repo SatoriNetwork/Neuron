@@ -63,28 +63,28 @@
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['predictors'] }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['predictors']*100 }} %</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['oracles'] }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['oracles']*100 }} %</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['creators'] }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['creators']*100 }} %</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
                     <!-- we don't give this color yet because the indication is ambiguous - is it late or on time? or is it accurate or way off? -->
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['managers'] }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['managers']*100 }} %</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 id="communityPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ communityVotes['predictors'] + communityVotes['oracles'] + communityVotes['creators'] + communityVotes['managers'] }} %</h6>
+                    <h6 id="communityPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ communityVotes['predictors']*100 + communityVotes['oracles']*100 + communityVotes['creators']*100 + communityVotes['managers']*100 }} %</h6>
                   </div>
                 </td>
               </tr> 
@@ -99,7 +99,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="walletVotePredictors" name="walletVotePredictors" placeholder="{{ walletVotes['predictors'] }}" value="{{ walletVotes['predictors'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotes();">
+                          <input id="walletVotePredictors" name="walletVotePredictors" placeholder="{{ walletVotes['predictors'] }}" value="{{ walletVotes['predictors'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
                         </div>
                       </div>
                     </h6>
@@ -110,7 +110,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="walletVoteOracles" name="walletVoteOracles" placeholder="{{ walletVotes['oracles'] }}" value="{{ walletVotes['oracles'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotes();">
+                          <input id="walletVoteOracles" name="walletVoteOracles" placeholder="{{ walletVotes['oracles'] }}" value="{{ walletVotes['oracles'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
                         </div>
                       </div>
                     </h6>
@@ -121,7 +121,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="walletVoteCreators" name="walletVoteCreators" placeholder="{{ walletVotes['creators'] }}" value="{{ walletVotes['creators'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotes();">
+                          <input id="walletVoteCreators" name="walletVoteCreators" placeholder="{{ walletVotes['creators'] }}" value="{{ walletVotes['creators'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
                         </div>
                       </div>
                     </h6>
@@ -132,7 +132,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="walletVoteManagers" name="walletVoteManagers" placeholder="{{ walletVotes['managers'] }}" value="{{ walletVotes['managers'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotes();">
+                          <input id="walletVoteManagers" name="walletVoteManagers" placeholder="{{ walletVotes['managers'] }}" value="{{ walletVotes['managers'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
                         </div>
                       </div>
                     </h6>
@@ -156,7 +156,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="vaultVotePredictors" name="vaultVotePredictors" placeholder="{{ vaultVotes['predictors'] }}" value="{{ vaultVotes['predictors'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotes();">
+                          <input id="vaultVotePredictors" name="vaultVotePredictors" placeholder="{{ vaultVotes['predictors'] }}" value="{{ vaultVotes['predictors'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -167,7 +167,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="vaultVoteOracles" name="vaultVoteOracles" placeholder="{{ vaultVotes['oracles'] }}" value="{{ vaultVotes['oracles'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotes();">
+                          <input id="vaultVoteOracles" name="vaultVoteOracles" placeholder="{{ vaultVotes['oracles'] }}" value="{{ vaultVotes['oracles'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -178,7 +178,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="vaultVoteCreators" name="vaultVoteCreators" placeholder="{{ vaultVotes['creators'] }}" value="{{ vaultVotes['creators'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotes();">
+                          <input id="vaultVoteCreators" name="vaultVoteCreators" placeholder="{{ vaultVotes['creators'] }}" value="{{ vaultVotes['creators'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -189,7 +189,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="vaultVoteManagers" name="vaultVoteManagers" placeholder="{{ vaultVotes['managers'] }}" value="{{ vaultVotes['managers'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotes();">
+                          <input id="vaultVoteManagers" name="vaultVoteManagers" placeholder="{{ vaultVotes['managers'] }}" value="{{ vaultVotes['managers'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -276,7 +276,7 @@
     } else if (activity == 'creators') {
       document.getElementById('mintingManifestDescription').innerHTML = 'Creators are developers that earn bounties from the Development Fund.';
     } else if (activity == 'managers') {
-      document.getElementById('mintingManifestDescription').innerHTML = 'Managers (effectively the Satori Foundation) maintain the infrastructure that supports the Satori Network and ecosystem, such as, but not limited to:<br/> • the Satorinet.io website where all predictions are made freely availble to the world<br/> • the Satori Servers which facilitate the Satori Neurons and peer-to-peer network<br/> • management of the development process<br/> • and management of outreach';
+      document.getElementById('mintingManifestDescription').innerHTML = 'Managers (effectively the Satori Foundation) maintain the infrastructure that supports the Satori Network and ecosystem.';
     } else {
       document.getElementById('mintingManifestDescription').innerHTML = 'The Minting Manifest determines which mining activity deserves what percentage of the newly minted coins.<br/>Please vote on the relative worth of each mining activity.';
     }
@@ -326,20 +326,35 @@
   //      document.getElementById('manifestSubmit').style.display = 'none';
   //     }
   //}
-  function saveManifestVotes() {
+  function saveManifestVotesWallet() {
+    console.log('saving manifest votes');
     fetch(
-      '/vote/submit/manifest', { 
+      '/vote/submit/manifest/wallet', { 
         method: 'POST', 
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-        walletPredictors: document.getElementById('walletVotePredictors').value,
-        walletOracles: document.getElementById('walletVoteOracles').value,
-        walletCreators: document.getElementById('walletVoteCreators').value,
-        walletManagers: document.getElementById('walletVoteManagers').value,
-        vaultPredictors: document.getElementById('vaultVotePredictors').value,
-        vaultOracles: document.getElementById('vaultVoteOracles').value,
-        vaultCreators: document.getElementById('vaultVoteCreators').value,
-        vaultManagers: document.getElementById('vaultVoteManagers').value})})
+          walletPredictors: parseInt(document.getElementById('walletVotePredictors').value),
+          walletOracles: parseInt(document.getElementById('walletVoteOracles').value),
+          walletCreators: parseInt(document.getElementById('walletVoteCreators').value),
+          walletManagers: parseInt(document.getElementById('walletVoteManagers').value)})})
+    .then(response => {
+        if (response.ok) {
+            console.log("manifest submitted");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function saveManifestVotesVault() {
+    console.log('saving manifest votes');
+    fetch(
+      '/vote/submit/manifest/vault', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          vaultPredictors: document.getElementById('vaultVotePredictors').value,
+          vaultOracles: document.getElementById('vaultVoteOracles').value,
+          vaultCreators: document.getElementById('vaultVoteCreators').value,
+          vaultManagers: document.getElementById('vaultVoteManagers').value})})
     .then(response => {
         if (response.ok) {
             console.log("manifest submitted");

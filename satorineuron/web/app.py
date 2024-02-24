@@ -620,6 +620,7 @@ def dashboard():
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
     return render_template('dashboard.html', **getResp({
         'wallet': start.wallet,
+        'vaultBalanceAmount': start.vault.balanceAmount if start.vault is not None else 0,
         'streamsOverview': streamsOverview,
         'configOverrides': config.get(),
         'paused': start.paused,
@@ -920,22 +921,32 @@ def disableAutosecure(network: str = 'main'):
 def vote():
 
     def getVotes(wallet):
-        return {
-            'communityVotes': start.server.getManifestVote(),
-            'walletVotes': start.server.getManifestVote(wallet),
-            'vaultVotes': (
-                start.server.getManifestVote(start.vault)
-                if start.vault is not None and start.vault.isDecrypted else {
-                    'predictors': '0',
-                    'oracles': '0',
-                    'creators': '0',
-                    'managers': '0'})}
 
-    def getStreams():
+        def valuesAsNumbers(map: dict):
+            return {k: int(v) for k, v in map.items()}
+
+        x = {
+            'communityVotes': start.server.getManifestVote(),
+            'walletVotes': {k: v/100 for k, v in start.server.getManifestVote(wallet).items()},
+            'vaultVotes': (
+                valuesAsNumbers(
+                    {k: v/100 for k, v in start.server.getManifestVote(start.vault).items()})
+                if start.vault is not None and start.vault.isDecrypted else {
+                    'predictors': 0,
+                    'oracles': 0,
+                    'creators': 0,
+                    'managers': 0})}
+        logging.debug('x', x, color='yellow')
+        return x
+
+    def getStreams(wallet):
         # todo convert result to the strucutre the template expects:
         # [ {'cols': 'value'}]
-        streams = start.server.getSanctionVote(wallet, vault)
-        return streams
+        # query TAKES WAY TOO LONG
+        # streams = start.server.getSanctionVote(wallet, start.vault)
+        # logging.debug('streams', streams, color='yellow')
+        # return streams
+        return []
         # return [{
         #    'sanctioned': 10,
         #    'active': True,
@@ -977,7 +988,7 @@ def vote():
             'vaultOpened': True,
             'wallet': myWallet,
             'vault': start.vault,
-            'streams': getStreams(),
+            'streams': getStreams(myWallet),
             **getVotes(myWallet)}))
     return render_template('vote.html', **getResp({
         'title': 'Vote',
@@ -986,12 +997,12 @@ def vote():
         'vaultOpened': False,
         'wallet': myWallet,
         'vault': start.vault,
-        'streams': getStreams(),
+        'streams': getStreams(myWallet),
         **getVotes(myWallet)}))
 
 
-@app.route('/vote/submit/manifest', methods=['POST'])
-def voteSubmitManifest():
+@app.route('/vote/submit/manifest/wallet', methods=['POST'])
+def voteSubmitManifestWallet():
     logging.debug(request.json, color='yellow')
     if (
         request.json.get('walletPredictors') > 0 or
@@ -1006,6 +1017,12 @@ def voteSubmitManifest():
                 'oracles': request.json.get('walletOracles', 0),
                 'creators': request.json.get('walletCreators', 0),
                 'managers': request.json.get('walletManagers', 0)})
+    return jsonify({'message': 'Manifest votes received successfully'}), 200
+
+
+@app.route('/vote/submit/manifest/vault', methods=['POST'])
+def voteSubmitManifestVault():
+    logging.debug(request.json, color='yellow')
     if ((
         request.json.get('vaultPredictors') > 0 or
         request.json.get('vaultOracles') > 0 or

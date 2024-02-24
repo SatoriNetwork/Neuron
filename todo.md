@@ -191,13 +191,7 @@ DONE neuron - autosecure - send even multiparty transaction too
 DONE central - clear out scheduler log on cycle
 DONE neuron - vault - fix decrypting words
 DONE neuron - vault - fix encrypting entropy
-
-neuron - vault - require password twice on first setup
-neuron - fix self.disk issues, sometimes we don't have stream data we should...?
-
-central - either move sanction out it it's own table, rebuilding streams or update in bulk with a temporary table (probably ideal)
-
-vote - create:
+DONE vote - create:
 DONE neuron - create voting page with form and explanation
 DONE neuron - create communication with network and server to specify preference
 DONE neuron - create communication with network and server to get community vote
@@ -207,6 +201,19 @@ DONE central - create endpoints
 DONE central - add balances table
 DONE central - add balances orm
 DONE central - add balances process
+
+central - fix - publications not working
+neuron - fix - subscriptions not being turned into anything...
+central - fix - call to database to get predictions is broken
+neuron - fix - voting page is broken
+neuron - fix - checkin - something wrong with subscriptions and publications
+neuron - isolate transactions to it's own page/call
+neuron - isolate stream votes to it's own page/call
+
+neuron - vault - require password twice on first setup
+neuron - fix self.disk issues, sometimes we don't have stream data we should...?
+
+central - either move sanction out it it's own table, rebuilding streams or update in bulk with a temporary table (probably ideal)
 
 central - add manifest queries
 central - add sanction queries
