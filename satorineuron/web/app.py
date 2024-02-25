@@ -944,11 +944,11 @@ def vote():
     def getStreams(wallet):
         # todo convert result to the strucutre the template expects:
         # [ {'cols': 'value'}]
-        # query TAKES WAY TOO LONG
-        # streams = start.server.getSanctionVote(wallet, start.vault)
-        # logging.debug('streams', streams, color='yellow')
-        # return streams
-        return []
+        streams = start.server.getSanctionVote(wallet, start.vault)
+        logging.debug('streams', [
+                      s for s in streams if s['oracle_alias'] is not None], color='yellow')
+        return streams
+        # return []
         # return [{
         #    'sanctioned': 10,
         #    'active': True,
@@ -1026,11 +1026,11 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     logging.debug(request.json, color='yellow')
     if ((
-        request.json.get('vaultPredictors') > 0 or
-        request.json.get('vaultOracles') > 0 or
-        request.json.get('vaultCreators') > 0 or
-        request.json.get('vaultManagers') > 0) and
-        start.vault is not None and start.vault.isDecrypted
+            request.json.get('vaultPredictors') > 0 or
+            request.json.get('vaultOracles') > 0 or
+            request.json.get('vaultCreators') > 0 or
+            request.json.get('vaultManagers') > 0) and
+            start.vault is not None and start.vault.isDecrypted
         ):
         start.server.submitMaifestVote(
             start.vault,
@@ -1042,26 +1042,35 @@ def voteSubmitManifestVault():
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
-@app.route('/vote/submit/sanction', methods=['POST'])
-def voteSubmitSanction():
+@app.route('/vote/submit/sanction/wallet', methods=['POST'])
+def voteSubmitSanctionWallet():
     logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
     # zip(walletStreamIds, walletVotes)
+    # {'walletStreamIds': [None], 'walletVotes': [1]}
     if (
         len(request.json.get('walletStreamIds', [])) > 0 and
         len(request.json.get('walletVotes', [])) > 0 and
-        request.json.get('walletStreamIds') == request.json.get(
-            'walletVotes', [])
+        len(request.json.get('walletStreamIds', [])) == len(request.json.get(
+            'walletVotes', []))
     ):
         start.server.submitSanctionVote(
             wallet=start.getWallet(network='test'),
             votes={
                 'streamIds': request.json.get('walletStreamIds'),
                 'votes': request.json.get('walletVotes')})
+    return jsonify({'message': 'Stream votes received successfully'}), 200
+
+
+@app.route('/vote/submit/sanction/vault', methods=['POST'])
+def voteSubmitSanctionVault():
+    logging.debug(request.json, color='yellow')
+    # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
+    # zip(walletStreamIds, walletVotes)
     if (
         len(request.json.get('vaultStreamIds', [])) > 0 and
         len(request.json.get('vaultVotes', [])) > 0 and
-        request.json.get('vaultStreamIds') == request.json.get('vaultVotes', []) and
+        len(request.json.get('vaultStreamIds')) == len(request.json.get('vaultVotes', [])) and
         start.vault is not None and start.vault.isDecrypted
     ):
         start.server.submitSanctionVote(
@@ -1070,6 +1079,7 @@ def voteSubmitSanction():
                 'streamIds': request.json.get('vaultStreamIds'),
                 'votes': request.json.get('vaultVotes')})
     return jsonify({'message': 'Stream votes received successfully'}), 200
+
 
 # todo: this needs a ui button.
 # this ability to clear them all lets us just display a subset of streams to vote on with a search for a specific one

@@ -383,13 +383,11 @@
           <table class="table align-items-center mb-0">
             <thead>
               <tr>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Sanctioned</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Active</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Oracle</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Start</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Cadence</th>
+                <!--<th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Cadence</th>-->
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Sanctioned</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Wallet Vote</th>
                 {%if vault.isDecrypted %}
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Vault Vote</th>
@@ -398,11 +396,11 @@
             </thead>
             <tbody id="updating_table">
               <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onmouseover="">
-                <td colspan="6">
+                <td colspan="3">
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">Total:</h6>
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
                   </div>
                 </td>
                 <td>
@@ -422,17 +420,7 @@
               <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onmouseover="">
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">{{ stream['sanctioned'] }}</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['active'] }}</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] }}</h6>
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
                   </div>
                 </td>
                 <td>
@@ -445,14 +433,14 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['target'] }}</h6>
                   </div>
                 </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['start'] }}</h6>
-                  </div>
-                </td>
-                <td>
+                <!--<td>
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['cadence'] }}</h6>
+                  </div>
+                </td>-->
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">{{ stream['sanctioned'] if stream['sanctioned'] > 0 else 0 }}</h6>
                   </div>
                 </td>
                 <td>
@@ -460,7 +448,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="streamIdWallet_{{stream['id']}}" name="streamIdWallet_{{stream['id']}}" placeholder="{{ stream['wallet_vote'] }}" value="{{ stream['wallet_vote'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamWalletVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateWalletStreamsVotes();saveStreamVotes();">
+                          <input id="streamIdWallet_{{stream['stream_id']}}" name="streamIdWallet_{{stream['stream_id']}}" placeholder="{{ stream['wallet_vote'] if stream['wallet_vote'] != 0 else '' }}" value="{{ stream['wallet_vote'] if stream['wallet_vote'] != 0 else '' }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamWalletVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateWalletStreamsVotes();saveStreamVotesWallet();">
                         </div>
                       </div>
                     </h6>
@@ -472,7 +460,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="streamIdVault_{{stream['id']}}" name="streamIdVault_{{stream['id']}}" placeholder="{{ stream['vault_vote'] }}" value="{{ stream['vault_vote'] }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamVaultVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateVaultStreamsVotes();saveStreamVotes();">
+                          <input id="streamIdVault_{{stream['stream_id']}}" name="streamIdVault_{{stream['stream_id']}}" placeholder="{{ stream['vault_vote'] if stream['vault_vote'] != 0 else '' }}" value="{{ stream['vault_vote'] if stream['vault_vote'] != 0 else '' }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamVaultVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateVaultStreamsVotes();saveStreamVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -524,7 +512,7 @@
   }
   function updateVaultStreamsTotal() {
     try {
-      let total = 0;
+      var total = 0;
       for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
         total += parseInt(element.value) || 0;
       }
@@ -533,10 +521,7 @@
       document.getElementById('streamsVaultVoteTotal').innerHTML = 0 + ' %';
     }
   }
-  function showStreamsSave() {
-    //on change send to server
-  }
-  function saveStreamVotes() {
+  function saveStreamVotesWallet() {
     let walletStreamIds = [];
     let walletVotes = [];
     for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
@@ -546,6 +531,22 @@
         walletVotes.push(voteValue);
       }
     }
+    fetch(
+      '/vote/submit/sanction/wallet', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          walletStreamIds: walletStreamIds,
+          walletVotes: walletVotes,
+        })})
+    .then(response => {
+        if (response.ok) {
+            console.log("stream votes submitted");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function saveStreamVotesVault() {
     let vaultStreamIds = [];
     let vaultVotes = [];
     for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
@@ -556,13 +557,11 @@
       }
     }
     fetch(
-      '/vote/submit/sanction', { 
+      '/vote/submit/sanction/vault', { 
         method: 'POST', 
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-          walletStreamIds: walletStreamIds,
           vaultStreamIds: vaultStreamIds,
-          walletVotes: walletVotes,
           vaultVotes: vaultVotes,
         })})
     .then(response => {
@@ -572,6 +571,7 @@
     })
     .catch(error => console.error('Error:', error));
   }
+
 </script>
 <script>updateVaultTotal();updateVaultStreamsTotal();</script>
 {% endblock %}
