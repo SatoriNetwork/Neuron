@@ -445,10 +445,20 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 }
 
 .yellow-hover:hover {
+  background: linear-gradient(90deg, rgb(246, 176, 66, .2) 0%, rgb(249, 237, 78, .2) 100%);
+}
+.yellow-selected {
   background: linear-gradient(90deg, rgb(246, 176, 66, .5) 0%, rgb(249, 237, 78, .5) 100%);
 }
 .yellow-dark-hover:hover {
   outline-color:  #fbce44; /*middle of orange and lemon*/
+  outline-style: solid;
+  outline-offset: -6px;
+  border-radius: 1rem;
+  outline-width: 2px;
+}
+.yellow-dark-selected {
+  outline-color:  #F9ED4E; /*middle of orange and lemon*/
   outline-style: solid;
   outline-offset: -6px;
   border-radius: 1rem;
