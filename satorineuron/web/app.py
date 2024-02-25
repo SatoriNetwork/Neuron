@@ -3,7 +3,7 @@
 
 # run with:
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
-
+from flask_cors import CORS
 from typing import Union
 from functools import wraps
 import os
@@ -41,6 +41,8 @@ badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updating = False
+CORS(app, origins=["https://satorinet.io"])
+
 
 ###############################################################################
 ## Startup ####################################################################
