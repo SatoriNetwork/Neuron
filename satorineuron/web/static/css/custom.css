@@ -458,11 +458,14 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
   outline-width: 2px;
 }
 .yellow-dark-selected {
-  outline-color:  #F9ED4E; /*middle of orange and lemon*/
+  /*outline-color:  #F9ED4E; 
   outline-style: solid;
   outline-offset: -6px;
   border-radius: 1rem;
-  outline-width: 2px;
+  outline-width: 2px;*/
+  /*background: linear-gradient(90deg, rgb(246, 176, 66, .5) 0%, rgb(249, 237, 78, .5) 100%);
+  background: -webkit-linear-gradient(45deg, #10051D 15%, #533549 85%);*/
+  background: linear-gradient(90deg, rgb(16, 5, 29, .5) 0%, rgb(83, 53, 73, .5) 90%);
 }
 td:first-child {
   border-radius: 0.5rem  0 0 0.5rem;
