@@ -144,6 +144,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     isTestnet=self.networkIsTest('ravencoin'),
                     password=password,
                 )()
+                logging.info(
+                    'vault:', self.ravencoinVault.words, color='green')
                 # self.evrmoreVault = EvrmoreWallet(
                 #    vaultPath,
                 #    reserve=0.01,
