@@ -1,0 +1,326 @@
+{% block content %}
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
+            <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+              Data streams published by Satori Neurons.
+              <br>
+              Please vote on which data streams should be predicted.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0">
+            <thead ondblclick='toggleVotingDetails();'>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Oracle</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
+                <!--<th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Cadence</th>-->
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Sanctioned</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" id='walletVoteColumn' style='display:none;'>Wallet Vote</th>
+                {%if vault.isDecrypted %}
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" id='vaultVoteColumn' style='display:none;'>Vault Vote</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody id="updating_table">
+              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" id='totalsRow' style='display:none;'>
+                <td colspan="3">
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 id='streamsWalletVoteTotal' class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
+                  </div>
+                </td>
+                {%if vault.isDecrypted %}
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 id='streamsVaultVoteTotal' class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
+                  </div>
+                </td>
+                {% endif %}
+              </tr> 
+              {% for stream in streams %}
+              <tr id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %} {% if stream['wallet_vote'] != 0 or (vault.isDecrypted and stream['vault_vote'] != 0) %}{% if darkmode %}yellow-dark-selected{% else %}yellow-selected{% endif %}{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['stream'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['target'] }}</h6>
+                  </div>
+                </td>
+                <!--<td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['cadence'] }}</h6>
+                  </div>
+                </td>-->
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">{{ stream['sanctioned'] if stream['sanctioned'] > 0 else 0 }}</h6>
+                  </div>
+                </td>
+                <td class='walletValueCellIdentifier' style='display:none;'>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="streamIdWallet_{{stream['stream_id']}}" name="streamIdWallet_{{stream['stream_id']}}" placeholder="{{ stream['wallet_vote'] if stream['wallet_vote'] != 0 else '' }}" value="{{ stream['wallet_vote'] if stream['wallet_vote'] != 0 else '' }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamWalletVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateWalletStreamsVotes();saveStreamVotesWallet();">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                {%if vault.isDecrypted %}
+                <td class='vaultValueCellIdentifier' style='display:none;'>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="streamIdVault_{{stream['stream_id']}}" name="streamIdVault_{{stream['stream_id']}}" placeholder="{{ stream['vault_vote'] if stream['vault_vote'] != 0 else '' }}" value="{{ stream['vault_vote'] if stream['vault_vote'] != 0 else '' }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamVaultVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateVaultStreamsVotes();saveStreamVotesVault();">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                {% endif %}
+              </tr> 
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function toggleVotingDetails(){
+    if (document.getElementById('walletVoteColumn').style.display === 'none'){
+      document.getElementById('walletVoteColumn').style.display = 'block';
+      //document.getElementById('totalsRow').style.display = 'block';
+      for (const element of document.getElementsByClassName('walletValueCellIdentifier')) {
+        element.style.display = 'block';
+      }
+      try {
+        document.getElementById('vaultVoteColumn').style.display = 'block';
+        for (const element of document.getElementsByClassName('vaultValueCellIdentifier')) {
+          element.style.display = 'block';
+        }
+      } catch (error) {}
+    } else {
+      document.getElementById('walletVoteColumn').style.display = 'none';
+      //document.getElementById('totalsRow').style.display = 'none';
+      for (const element of document.getElementsByClassName('walletValueCellIdentifier')) {
+        element.style.display = 'none';
+      }
+      try {
+        document.getElementById('vaultVoteColumn').style.display = 'none';
+        for (const element of document.getElementsByClassName('vaultValueCellIdentifier')) {
+          element.style.display = 'none';
+        }
+      } catch (error) {}
+    }
+  }
+  function clickVote(obj, includeVault) {
+    console.log('clicked');
+    console.log(obj.id);
+    let walletInput = document.getElementById('streamIdWallet_' + obj.id.split('_')[1]);
+    if (walletInput.value === '0' || walletInput.value === '') {
+      let count = getWalletStreamsCount()+1;
+      if (count > 100) {
+        alert('Limit reached: you can vote for no more than 100 streams.');
+        return;
+      }
+      if (obj.classList.contains('yellow-hover')) {
+        obj.classList.add('yellow-selected');
+      } else {
+        obj.classList.add('yellow-dark-selected');
+      }
+      walletInput.value = 100/count;
+      updateWalletStreamsByCount(100/count);
+    } else {
+      if (obj.classList.contains('yellow-selected')) {
+        obj.classList.remove('yellow-selected');
+      } else {
+        obj.classList.remove('yellow-dark-selected');
+      }
+      let count = getWalletStreamsCount()-1;
+      walletInput.value = 0;
+      updateWalletStreamsByCount(100/count);
+    }
+    validateWalletStreamsVotes();
+    saveStreamVotesWallet();
+    if (includeVault) {
+      console.log('vault');
+      let vaultInput = document.getElementById('streamIdVault_' + obj.id.split('_')[1]);
+      if (vaultInput.value === '0') {
+        let count = getVaultStreamsCount()+1;
+        vaultInput.value = 100;
+        updateVaultStreamsByCount(100/count);
+      } else {
+        let count = getVaultStreamsCount()-1;
+        vaultInput.value = 0;
+        updateVaultStreamsByCount(100/count);
+      }
+      validateVaultStreamsVotes();
+      saveStreamVotesVault();
+    }
+  }
+  function validateWalletStreamsVotes() {
+    updateWalletStreamsTotal();
+    let total = parseFloat(document.getElementById('streamsWalletVoteTotal').innerHTML.split(' ')[0]);
+    if (total > 100.0) {
+      for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+        element.value = parseInt(parseInt(element.value) / total * 100);
+      }
+      updateWalletStreamsTotal();
+    } 
+    return true;
+  }
+  function validateVaultStreamsVotes() {
+    updateVaultStreamsTotal();
+    let total = parseFloat(document.getElementById('streamsVaultVoteTotal').innerHTML.split(' ')[0]);
+    if (total > 100.0) {
+      for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+        element.value = parseInt(parseInt(element.value) / total * 100);
+      }
+      updateVaultStreamsTotal();
+    } 
+    return true;
+  }
+  function getWalletStreamsCount() {
+    let count = 0;
+    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+      if (parseFloat(element.value) > 0){
+        count += 1;
+      }
+    }
+    return count;
+  }
+  function updateWalletStreamsByCount(value) {
+    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+      if (parseFloat(element.value) > 0){
+        element.value = value;
+      }
+    }
+  }
+  function getWalletStreamsTotal() {
+    let total = 0;
+    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+      total += parseInt(element.value) || 0;
+    }
+    return total;
+  }
+  function updateWalletStreamsTotal() {
+    try {
+      let total = getWalletStreamsTotal();
+      document.getElementById('streamsWalletVoteTotal').innerHTML = total + ' %';
+    } catch (error) {
+      document.getElementById('streamsWalletVoteTotal').innerHTML = 0 + ' %';
+    }
+  }
+
+  function getVaultStreamsCount() {
+    var count = 0;
+      for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+        if (parseFloat(element.value) > 0) {
+          count += 1;
+        }
+      }
+    return count;
+  }
+  function updateVaultStreamsByCount(value) {
+    for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+      if (parseFloat(element.value) > 0) {
+        element.value = value;
+      }
+    }
+  }
+  function getVaultStreamsTotal() {
+    var total = 0;
+      for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+        total += parseInt(element.value) || 0;
+      }
+    return total;
+  }
+  function updateVaultStreamsTotal() {
+    try {
+      let total = getVaultStreamsTotal();
+      document.getElementById('streamsVaultVoteTotal').innerHTML = total + ' %';
+    } catch (error) {
+      document.getElementById('streamsVaultVoteTotal').innerHTML = 0 + ' %';
+    }
+  }
+  function saveStreamVotesWallet() {
+    let walletStreamIds = [];
+    let walletVotes = [];
+    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+      const voteValue = parseInt(element.value) || 0;
+      if (voteValue > 0) {
+        walletStreamIds.push(parseInt(element.name.split('_')[1]));
+        walletVotes.push(voteValue);
+      }
+    }
+    fetch(
+      '/vote/submit/sanction/wallet', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          walletStreamIds: walletStreamIds,
+          walletVotes: walletVotes,
+        })})
+    .then(response => {
+        if (response.ok) {
+            console.log("stream votes submitted");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function saveStreamVotesVault() {
+    let vaultStreamIds = [];
+    let vaultVotes = [];
+    for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+      const voteValue = parseInt(element.value) || 0;
+      if (voteValue > 0) {
+        vaultStreamIds.push(parseInt(element.name.split('_')[1]));
+        vaultVotes.push(voteValue);
+      }
+    }
+    fetch(
+      '/vote/submit/sanction/vault', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          vaultStreamIds: vaultStreamIds,
+          vaultVotes: vaultVotes,
+        })})
+    .then(response => {
+        if (response.ok) {
+            console.log("stream votes submitted");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+</script>
+<script>updateVaultTotal();updateVaultStreamsTotal();</script>
+{% endblock %}

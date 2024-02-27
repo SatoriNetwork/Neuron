@@ -10,16 +10,37 @@
               {{ vaultPasswordForm.csrf_token }}
               <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
                 <div class="input-group input-group-outline">
-                  {% if darkmode %}{{ vaultPasswordForm.password(size=32, style_="text-align: center; border: 2px solid #F9ED4E;", class_="tight form-control dark-colors", placeholder="", autofocus=True) }}
-                  {% else %}{{ vaultPasswordForm.password(size=32, style_="text-align: center; border: 2px solid #10051D;", class_="tight form-control", placeholder="", autofocus=True) }}
-                  {% endif %}
+                  {{ vaultPasswordForm.password(
+                      size=256,
+                      style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
+                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
+                      placeholder="password" if wallet is none else "",
+                      autofocus=True,
+                      onkeypress="checkEnter(event);") }}
                 </div>
               </div>
-              <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px; display: none;">
+              {% if wallet is none %}
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
                 <div class="input-group input-group-outline">
-                  {% if darkmode %}{{ vaultPasswordForm.submit(size=32, style_="display:none;", class_="tight form-control dark-colors", onclick="if(validateVaultPassword()) showWorking();") }}
-                  {% else %}{{ vaultPasswordForm.submit(size=32, style_="display:none;", class_="tight form-control", onclick="if(validateVaultPassword()) showWorking();") }}
-                  {% endif %}
+                  {{ vaultPasswordForm.password(
+                      size=256,
+                      style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
+                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
+                      id="repeatPassword",
+                      placeholder="repeat password",
+                      autofocus=True,
+                      onkeypress="checkEnter(event);") }}
+                </div>
+              </div>
+              {% endif %}
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px; display:{{'block' if wallet is none else 'none'}};">
+                <div class="input-group input-group-outline">
+                  {{ vaultPasswordForm.submit(
+                      size=32,
+                      style_="display:block" if wallet is none else "display:none;", 
+                      value="Create Vault", 
+                      class_="tight form-control" + (" dark-colors" if darkmode else ""), 
+                      onclick="if(validateVaultPassword()) showWorking();") }}
                 </div>
               </div>
             </form>
@@ -37,8 +58,24 @@
   window.onload = function() {
     document.getElementById("password").focus();
   };
+  function checkEnter(event){
+    if (event.key === "Enter" || event.keyCode === 13) {
+      if(validateVaultPassword()) {
+        showWorking();
+        console.log('success');
+        return true;
+      }
+      console.log('fail');
+      return false;
+    }
+    return event.keyCode != 13;
+  }
   function validateVaultPassword() {
-    return document.getElementById("password").value.length > 7;
+    let repeat = document.getElementById("repeatPassword");
+    if (repeat === null ) {
+      return document.getElementById("password").value.length > 7;
+    }
+    return document.getElementById("password").value.length > 7 && repeat.value === document.getElementById("password").value;
   }
 </script>
 {% endblock %}

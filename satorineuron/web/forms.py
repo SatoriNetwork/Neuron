@@ -98,5 +98,5 @@ class SendSatoriTransaction(FlaskForm):
 class VaultPassword(FlaskForm):
     password = PasswordField(
         'Password',
-        validators=[InputRequired(), Length(min=8, max=34)])
+        validators=[InputRequired(), Length(min=8, max=256)])
     submit = SubmitField('Unlock')

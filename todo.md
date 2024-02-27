@@ -201,46 +201,44 @@ DONE central - create endpoints
 DONE central - add balances table
 DONE central - add balances orm
 DONE central - add balances process
+DONE central - fix - publications not working
+DONE neuron - fix - subscriptions not being turned into anything...
+DONE neuron - fix - voting page is broken
+DONE neuron - fix - checkin - something wrong with subscriptions and publications
+DONE central - either move sanction out it it's own table, rebuilding streams or update in bulk with a temporary table (probably ideal)
+DONE central - add manifest queries
+DONE central - add sanction queries
+DONE neuron - fix self.disk issues, sometimes we don't have stream data we should...?
+DONE central - consider turning observation table into a view on history... (this may have been a bad idea: it slows down our ability to determine if a stream is active more than expected).
+DONE central - make it a soft delete - one reason we need it is streams can be published by others
+DONE central - modify queries to respect soft delete.
+DONE vault - allow for voting with vaulted coins and wallet coins
+DONE central - make a history table and test the history table
+DONE central - make sure server is saving history of observations
+DONE vault - show words on page as well as private key
+DONE wallet - show words on page as well as private key
+DONE neuron - make the wallet value on dashboard and wallet pages and vault update more realtime
+DONE neuron - could just be calling get just for the balance right after broadcasting, and right after distributions are scheduled to go out daily.
+DONE central - fix - call to database to get predictions is broken
+DONE central - make separate observation table instead of using a view on history (needs testing)
+DONE central - make the Observation object again
+DONE central - save new observations to the observations table using upsert
+DONE central - remove history view
+DONE neuron - vault - require password twice on first setup
 
-central - fix - publications not working
-neuron - fix - subscriptions not being turned into anything...
-central - fix - call to database to get predictions is broken
-neuron - fix - voting page is broken
-neuron - fix - checkin - something wrong with subscriptions and publications
-neuron - isolate transactions to it's own page/call
-neuron - isolate stream votes to it's own page/call
+central - better customer experience
 
-neuron - vault - require password twice on first setup
-neuron - fix self.disk issues, sometimes we don't have stream data we should...?
+-- B4 Launch --
 
-central - either move sanction out it it's own table, rebuilding streams or update in bulk with a temporary table (probably ideal)
-
-central - add manifest queries
-central - add sanction queries
-central - test everything
-
+central - if a neuron is subscribed to an unsanctioned stream does the user know about it?
+central - if a neuron is subscribed to an unsanctioned stream does that neuron get reassigned a sanctioned datastream?
 neuron - just automatically give neurons sanctioned datastreams to work on.
 neuron - allow users to pause individually.
-
 neuron - hide/grey inactive streams allow users to cycle to new ones.
 
 central - test the average cadence query
-central - make it a soft delete - one reason we need it is streams can be published by others
-central - modify queries to respect soft delete.
 central - derived cadence as well from history table
-central - consider turning observation table into a view on history...
-central - should we purge history more than 60 days old
-
-vault - allow user to change vault password
-vault - allow for automatic send of tokens to their vault
-vault - allow for voting with vaulted coins and wallet coins
-vault - creation process with saving words
-vault - show words on page as well as private key
-wallet - show words on page as well as private key
-
-central - make a history table and test the history table
-central - make sure server is saving history of observations
-central - purge history more than 8 days old
+central - purge history more than 31+ days old (it grows very quickly)
 
 neuron - point everything at evrmore wallet instead of ravencoin wallet and test
 all - convert rvn wallet to evr wallet
@@ -249,20 +247,23 @@ central - update website (images)
 central - update website (copy)
 central - update website (yellowpaper)
 
-central - if a neuron is subscribed to an unsanctioned stream does that neuron get reassigned a sanctioned datastream?
-central - if a neuron is subscribed to an unsanctioned stream does the user know about it?
-
 central - we will need an admin dashboard to track the activity of the network
 
-neuron - make the wallet value on dashboard and wallet pages and vault update more realtime
-neuron - doesn't have to be subscriptions to the electrumx, although that would be ideal,
-neuron - could just be calling get just for the balance right after broadcasting, and right after distributions are scheduled to go out daily.
+neuron - update balances more realtime via subscriptions to the electrumx
+
+vault - allow for automatic send of tokens to their vault (needed for vps users especially, advanced autosecure?)
 
 -- Launch --
 
 -- Nice --
 
 central - setup electrumx server for evr
+
+vault - creation process with saving words
+vault - allow user to change vault password
+
+neuron - isolate transactions to it's own page/call
+neuron - isolate stream votes to it's own page/call
 
 neuron - settings:
 neuron - change 'configuration' to settings, remove whats there, include options like, autorequest sanctioned datastreams
