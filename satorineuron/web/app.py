@@ -841,12 +841,11 @@ def presentVaultPasswordForm():
 def vault():
 
     def accept_submittion(passwordForm):
-        logging.debug(type(passwordForm.password.data),
-                      passwordForm.password.data, color='yellow')
-        rvn, evr = start.openVault(password=passwordForm.password.data)
-        logging.debug(rvn.isEncrypted, color='yellow')
-        if rvn is None and not rvn.isEncrypted:
-            flash('unable to open vault')
+        _rvn, _evr = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+        # if rvn is None or not rvn.isEncrypted:
+        #    flash('unable to open vault')
 
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
@@ -857,7 +856,7 @@ def vault():
             'walletIcon': 'lock',
             'image': getQRCode(start.vault.address),
             'network': 'test',  # change to main when ready
-            'retain': start.vault.getAutosecureEntry().get('retain', 0),
+            'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
@@ -974,9 +973,9 @@ def vote():
         # }]
 
     def accept_submittion(passwordForm):
-        rvn, evr = start.openVault(password=passwordForm.password.data)
-        if rvn is None and not rvn.isEncrypted:
-            flash('unable to open vault')
+        _rvn, _evr = start.openVault(password=passwordForm.password.data)
+        # if rvn is None and not rvn.isEncrypted:
+        #    flash('unable to open vault')
 
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))

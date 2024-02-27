@@ -130,7 +130,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.evrmoreVault = None
         self.openVault()
 
-    def openVault(self, password: str = None) -> tuple[RavencoinWallet, EvrmoreWallet]:
+    def openVault(self, password: str = None, create: bool = False) -> tuple[RavencoinWallet, EvrmoreWallet]:
         '''
         without a password it will open the vault (if it exists) but not decrypt
         it. this allows us to get it's balance, but not spend from it.
@@ -150,8 +150,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 #    isTestnet=self.networkIsTest('evrmore'),
                 #    password=password,
                 # )()
-            else:
-                raise Exception('vault file not found.')
+            else:  # create it if we're allowed to
+                if create:
+                    self.ravencoinVault = RavencoinWallet(
+                        vaultPath,
+                        reserve=0.01,
+                        isTestnet=self.networkIsTest('ravencoin'),
+                        password=password,
+                    )()
+                # raise Exception('vault file not found.')
+                logging.error('vault not created yet', color='red')
         except Exception as e:
             logging.error('failed to open vault', color='red')
             raise e
@@ -364,6 +372,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         def executeAutosecure(wallet: Union[RavencoinWallet, EvrmoreWallet], network: str):
             import time
             entry = wallet.getAutosecureEntry()
+            if entry is None:
+                return
             amount = wallet.balanceAmount - entry.get('retain', 0)
             if amount > 0:
                 result = wallet.typicalNeuronTransaction(

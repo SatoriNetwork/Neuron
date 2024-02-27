@@ -220,16 +220,15 @@ DONE wallet - show words on page as well as private key
 DONE neuron - make the wallet value on dashboard and wallet pages and vault update more realtime
 DONE neuron - could just be calling get just for the balance right after broadcasting, and right after distributions are scheduled to go out daily.
 DONE central - fix - call to database to get predictions is broken
+DONE central - make separate observation table instead of using a view on history (needs testing)
+DONE central - make the Observation object again
+DONE central - save new observations to the observations table using upsert
+DONE central - remove history view
+DONE neuron - vault - require password twice on first setup
 
-central - make separate observation table instead of using a view on history
-central - make the Observation object again
-central - save new observations to the observations table using upsert
-central - remove history view
+central - better customer experience
 
-neuron - vault - require password twice on first setup
-vault - allow user to change vault password
-vault - allow for automatic send of tokens to their vault (needed for vps users especially, advanced autosecure?)
-vault - creation process with saving words
+-- B4 Launch --
 
 central - if a neuron is subscribed to an unsanctioned stream does the user know about it?
 central - if a neuron is subscribed to an unsanctioned stream does that neuron get reassigned a sanctioned datastream?
@@ -252,11 +251,16 @@ central - we will need an admin dashboard to track the activity of the network
 
 neuron - update balances more realtime via subscriptions to the electrumx
 
+vault - allow for automatic send of tokens to their vault (needed for vps users especially, advanced autosecure?)
+
 -- Launch --
 
 -- Nice --
 
 central - setup electrumx server for evr
+
+vault - creation process with saving words
+vault - allow user to change vault password
 
 neuron - isolate transactions to it's own page/call
 neuron - isolate stream votes to it's own page/call
