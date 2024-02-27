@@ -143,6 +143,7 @@
                   </div>
                 </td>
               </tr> 
+              {% if vault is not none %}
               <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onmouseover="">
                 <td>
                   <div class="d-flex px-3 py-1">
@@ -194,7 +195,7 @@
                     </h6>
                   </div>
                 </td>
-                {% else %}
+                {% elif vault is not none and vault.isEncrypted %}
                 <td colspan="4">
                     <form action="/vote" method="POST">
                       {{ vaultPasswordForm.hidden_tag() }}
@@ -218,6 +219,7 @@
                   </div>
                 </td>
               </tr> 
+              {% endif %}
             </tbody>
           </table>
           <!-- show on demand -->
