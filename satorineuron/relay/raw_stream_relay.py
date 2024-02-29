@@ -16,6 +16,7 @@ from satorilib.concepts.structs import Stream, StreamId
 from satorilib.api.disk import Cached
 from satorilib import logging
 
+HTTP_TIMEOUT=300
 
 def postRequestHookForNone(r: requests.Response):
     # logging.info('postRequestHook default method')
@@ -72,12 +73,12 @@ class RawStreamRelayEngine(Cached):
                 return False
 
         if stream.payload is None:
-            method = partial(requests.get)
+            method = partial(requests.get, timeout=HTTP_TIMEOUT)
         else:
             if is_valid_json(stream.payload):
-                method = partial(requests.post, json=stream.payload)
+                method = partial(requests.post, json=stream.payload, timeout=HTTP_TIMEOUT)
             else:
-                method = partial(requests.post, data=stream.payload)
+                method = partial(requests.post, data=stream.payload, timeout=HTTP_TIMEOUT)
         if stream.headers not in ['', None]:
             if is_valid_json(stream.headers):
                 r = method(

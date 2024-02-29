@@ -8,6 +8,7 @@ import socket
 import requests
 import json
 
+HTTP_TIMEOUT=300
 
 def main():
     url = "http://moontree.com:50002"
@@ -18,7 +19,7 @@ def main():
         "jsonrpc": "2.0",
         "id": 0,
     }
-    response = requests.post(url, json=payload).json()
+    response = requests.post(url, json=payload, timeout=HTTP_TIMEOUT).json()
     print(response)
     # assert response["result"] == "echome!"
     # assert response["jsonrpc"]
