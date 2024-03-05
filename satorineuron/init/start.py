@@ -158,8 +158,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         isTestnet=self.networkIsTest('ravencoin'),
                         password=password,
                     )()
-                # raise Exception('vault file not found.')
-                logging.error('vault not created yet', color='red')
+                logging.info('vault not created yet')
         except Exception as e:
             logging.error('failed to open vault', color='red')
             raise e
