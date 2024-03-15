@@ -162,7 +162,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         except Exception as e:
             logging.error('failed to open vault', color='red')
             raise e
-        logging.info('opened vault', color='green')
+        if password is None:
+            logging.info('loaded vault', color='green')
+        else:
+            logging.info('opened vault', color='green')
         return self.ravencoinVault, self.evrmoreVault
 
     def checkin(self):

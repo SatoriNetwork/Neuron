@@ -22,7 +22,7 @@ from satorineuron import VERSION, MOTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
-from satorilib.concepts.structs import StreamId, StreamsOverview
+from satorilib.concepts.structs import StreamId, StreamOverviews
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timestampToSeconds
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
@@ -577,12 +577,6 @@ def dashboard():
         (model inputs and relative strengths)
         (access to all predictions and the truth)
     '''
-    if start.engine is None:
-        streamsOverview = [{'source': 'Streamr', 'stream': 'DATAUSD/binance/ticker', 'target': 'Close', 'subscribers': '3',
-                            'accuracy': '97.062 %', 'prediction': '3621.00', 'value': '3548.00', 'predictions': [2, 3, 1]}]
-    else:
-        streamsOverview = [model.overview() for model in start.engine.models]
-
     import importlib
     global forms
     global badForm
@@ -619,11 +613,17 @@ def dashboard():
         newRelayStream.hook.data = badForm.get('hook', '')
         newRelayStream.history.data = badForm.get('history', '')
         return newRelayStream
+
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
+    streamOverviews = (
+        [model.overview() for model in start.engine.models]
+        if start.engine is not None else StreamOverviews.demo())
+    for s in streamOverviews:
+        print(s)
     return render_template('dashboard.html', **getResp({
         'wallet': start.wallet,
         'vaultBalanceAmount': start.vault.balanceAmount if start.vault is not None else 0,
-        'streamsOverview': streamsOverview,
+        'streamOverviews': streamOverviews,
         'configOverrides': config.get(),
         'paused': start.paused,
         'newRelayStream': present_stream_form(),
@@ -684,30 +684,63 @@ def dashboard():
     }))
 
 
+@app.route('/pin_depin', methods=['POST'])
+def pinDepinStream():
+    # tell the server we want to toggle the pin of this stream
+    # on the server that means mark the subscription as chosen by user
+    # s = StreamId.fromTopic(request.data) # binary string actually works
+    s = request.json
+    payload = json.dumps({
+        'source': s.get('source', 'satori'),
+        # 'pubkey': start.wallet.publicKey,
+        'author': s.get('author'),
+        'stream': s.get('stream', s.get('name')),
+        'target': s.get('target'),
+    })
+    print('payload', payload)
+    success, result = start.server.pinDepinStream(stream=payload)
+    # return 'pinned' 'depinned' based on server response
+    if success:
+        return result, 200
+    logging.error(pinDepinStream, s, success, result)
+    return 'OK', 200
+
+
 @app.route('/model-updates')
 def modelUpdates():
     def update():
         global updating
         if updating:
             yield 'data: []\n\n'
+        logging.debug('modelUpdates', updating, color='yellow')
         updating = True
-        streamsOverview = StreamsOverview(start.engine)
+        streamOverviews = StreamOverviews(start.engine)
+        logging.debug('streamOverviews', streamOverviews, color='yellow')
         listeners = []
         # listeners.append(start.engine.data.newData.subscribe(
-        #    lambda x: streamsOverview.setIt() if x is not None else None))
+        #    lambda x: streamOverviews.setIt() if x is not None else None))
         if start.engine is not None:
+            logging.debug('start.engine is not None',
+                          start.engine is not None, color='yellow')
             for model in start.engine.models:
                 listeners.append(model.predictionUpdate.subscribe(
-                    lambda x: streamsOverview.setIt() if x is not None else None))
+                    lambda x: streamOverviews.setIt() if x is not None else None))
             while True:
-                if streamsOverview.viewed:
+                logging.debug('in while loop', color='yellow')
+                if streamOverviews.viewed:
+                    logging.debug('NOT yeilding',
+                                  streamOverviews.viewed, color='yellow')
                     time.sleep(60)
                 else:
+                    logging.debug('yeilding',
+                                  str(streamOverviews.overview).replace("'", '"'), color='yellow')
                     # parse it out here?
-                    yield "data: " + str(streamsOverview.overview).replace("'", '"') + "\n\n"
-                    streamsOverview.setViewed()
+                    yield "data: " + str(streamOverviews.overview).replace("'", '"') + "\n\n"
+                    streamOverviews.setViewed()
         else:
-            yield "data: " + str(streamsOverview.demo).replace("'", '"') + "\n\n"
+            logging.debug('yeilding once', len(
+                str(streamOverviews.demo).replace("'", '"')), color='yellow')
+            yield "data: " + str(streamOverviews.demo).replace("'", '"') + "\n\n"
 
     import time
     return Response(update(), mimetype='text/event-stream')
@@ -1030,7 +1063,7 @@ def voteSubmitManifestVault():
             request.json.get('vaultCreators') > 0 or
             request.json.get('vaultManagers') > 0) and
             start.vault is not None and start.vault.isDecrypted
-        ):
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
@@ -1144,7 +1177,6 @@ def mergeHistoryCsv(topic: str = None):
         msg, status, f = getFile('.csv')
         if f is not None:
             df = pd.read_csv(f)
-            print('df', df)
             cache.merge(df)
             success, _ = cache.validateAllHashes()
             if success:

@@ -225,16 +225,20 @@ DONE central - make the Observation object again
 DONE central - save new observations to the observations table using upsert
 DONE central - remove history view
 DONE neuron - vault - require password twice on first setup
-
-central - better customer experience
+DONE central - better customer experience
 
 -- B4 Launch --
+
+neuron - show which datastreams are active
+neuron - show which datastreams are approved
+all - change sanctioned to approved on all public stuff
+neuron - allow users to "pin" a stream
 
 central - if a neuron is subscribed to an unsanctioned stream does the user know about it?
 central - if a neuron is subscribed to an unsanctioned stream does that neuron get reassigned a sanctioned datastream?
 neuron - just automatically give neurons sanctioned datastreams to work on.
-neuron - allow users to pause individually.
-neuron - hide/grey inactive streams allow users to cycle to new ones.
+neuron - allow users to pause individually
+neuron - hide/grey inactive/unsanctioned streams allow users to cycle to new ones.
 
 central - test the average cadence query
 central - derived cadence as well from history table
@@ -252,6 +256,8 @@ central - we will need an admin dashboard to track the activity of the network
 neuron - update balances more realtime via subscriptions to the electrumx
 
 vault - allow for automatic send of tokens to their vault (needed for vps users especially, advanced autosecure?)
+
+central - better frontend experience
 
 -- Launch --
 

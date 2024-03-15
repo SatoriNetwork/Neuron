@@ -281,7 +281,7 @@ class Topic(Cached):
         logging.info(
             'outgoing peer message',
             (self.localPort, remoteIp, remotePort, cmd),
-            print=True)
+            print=False)
         self.outbox((self.localPort, remoteIp, remotePort, cmd))
 
     def requestOneObservation(self, datetime: dt.datetime, msgId: int):
