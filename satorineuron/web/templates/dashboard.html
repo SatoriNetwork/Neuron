@@ -1526,7 +1526,7 @@
             <div class="d-flex px-3 py-1">
               <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview.source + `, ` + streamOverview.author + `, ` + streamOverview.stream + `, ` + streamOverview.target + `, ` + streamOverview.hashed+`);">
                 <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
-                  <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ streamOverview.pinned ? 'color: black;' :  'color: grey;' +`">`+ streamOverview.pinned ? 'check' : 'check_box_outline_blank' + `</i>
+                  <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
                 </button>
               </h6>
             </div>
