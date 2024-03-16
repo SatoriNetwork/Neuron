@@ -22,7 +22,7 @@ from satorineuron import VERSION, MOTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
-from satorilib.concepts.structs import StreamId, StreamOverviews
+from satorilib.concepts.structs import StreamId, StreamOverviews, StreamOverview
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timestampToSeconds
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
@@ -706,41 +706,73 @@ def pinDepinStream():
     return 'OK', 200
 
 
+# old way
+# @app.route('/model-updates')
+# def modelUpdates():
+#    def update():
+#        global updating
+#        if updating:
+#            yield 'data: []\n\n'
+#        logging.debug('modelUpdates', updating, color='yellow')
+#        updating = True
+#        streamOverviews = StreamOverviews(start.engine)
+#        logging.debug('streamOverviews', streamOverviews, color='yellow')
+#        listeners = []
+#        # listeners.append(start.engine.data.newData.subscribe(
+#        #    lambda x: streamOverviews.setIt() if x is not None else None))
+#        if start.engine is not None:
+#            logging.debug('start.engine is not None',
+#                          start.engine is not None, color='yellow')
+#            for model in start.engine.models:
+#                listeners.append(model.predictionUpdate.subscribe(
+#                    lambda x: streamOverviews.setIt() if x is not None else None))
+#            while True:
+#                logging.debug('in while loop', color='yellow')
+#                if streamOverviews.viewed:
+#                    logging.debug('NOT yeilding',
+#                                  streamOverviews.viewed, color='yellow')
+#                    time.sleep(60)
+#                else:
+#                    logging.debug('yeilding',
+#                                  str(streamOverviews.overview).replace("'", '"'), color='yellow')
+#                    # parse it out here?
+#                    yield "data: " + str(streamOverviews.overview).replace("'", '"') + "\n\n"
+#                    streamOverviews.setViewed()
+#        else:
+#            logging.debug('yeilding once', len(
+#                str(streamOverviews.demo).replace("'", '"')), color='yellow')
+#            yield "data: " + str(streamOverviews.demo).replace("'", '"') + "\n\n"
+#
+#    import time
+#    return Response(update(), mimetype='text/event-stream')
+
 @app.route('/model-updates')
 def modelUpdates():
     def update():
+
+        def on_next(overview):
+            logging.debug('Yielding', overview, color='yellow')
+            yield "data: " + str(overview).replace("'", '"') + "\n\n"
+
         global updating
         if updating:
             yield 'data: []\n\n'
         logging.debug('modelUpdates', updating, color='yellow')
         updating = True
-        streamOverviews = StreamOverviews(start.engine)
-        logging.debug('streamOverviews', streamOverviews, color='yellow')
         listeners = []
-        # listeners.append(start.engine.data.newData.subscribe(
-        #    lambda x: streamOverviews.setIt() if x is not None else None))
         if start.engine is not None:
             logging.debug('start.engine is not None',
                           start.engine is not None, color='yellow')
             for model in start.engine.models:
-                listeners.append(model.predictionUpdate.subscribe(
-                    lambda x: streamOverviews.setIt() if x is not None else None))
+                listeners.append(
+                    model.predictionUpdate.subscribe(
+                        on_next=lambda x: on_next(model.overview()) if x is not None else None))
             while True:
-                logging.debug('in while loop', color='yellow')
-                if streamOverviews.viewed:
-                    logging.debug('NOT yeilding',
-                                  streamOverviews.viewed, color='yellow')
-                    time.sleep(60)
-                else:
-                    logging.debug('yeilding',
-                                  str(streamOverviews.overview).replace("'", '"'), color='yellow')
-                    # parse it out here?
-                    yield "data: " + str(streamOverviews.overview).replace("'", '"') + "\n\n"
-                    streamOverviews.setViewed()
+                time.sleep(1)
         else:
             logging.debug('yeilding once', len(
-                str(streamOverviews.demo).replace("'", '"')), color='yellow')
-            yield "data: " + str(streamOverviews.demo).replace("'", '"') + "\n\n"
+                str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
+            yield "data: " + str(StreamOverviews.demo()).replace("'", '"') + "\n\n"
 
     import time
     return Response(update(), mimetype='text/event-stream')
@@ -1063,7 +1095,7 @@ def voteSubmitManifestVault():
             request.json.get('vaultCreators') > 0 or
             request.json.get('vaultManagers') > 0) and
             start.vault is not None and start.vault.isDecrypted
-            ):
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={

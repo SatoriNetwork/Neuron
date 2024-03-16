@@ -227,6 +227,18 @@ DONE central - remove history view
 DONE neuron - vault - require password twice on first setup
 DONE central - better customer experience
 
+neuron - streamline the ui model updates more by pushing individual model updates
+neuron - and interpreting individual model updates on the ui
+
+-- P2P options --
+
+we have to make a more robust p2p solution. because we don't want to make the node operator change port settings, and we have to find a solution that handles nat traversal we can't use most available options, perhaps even including IPFS and  BitTorrent. I think there are basically 2 options:
+
+1. use aiortc to implement p2p connections using webrtc protocol: set up your own peer discovery server, and your own signaling server and maybe even your own stun and turn and ice servers. I don't think we can use WebTorrent built on webrtc because it requires a browser, and satori is headless.
+2. sure-up and simplify our current implmentation of udp hole punching: we were able to get it to work for 2 test nodes reliably, but it seems to constantly fail in beta production. I think the design is trying to do too much and is too complex (prematurely optimized), leading to it being too brittle. Instead of using rest on a rendezvous server and connecting to every machine at all times we could set up a websocket connection as a secondary pubsub server where reuqests for immediate connections would come in and be handled on an on-demand basis. Clients would only have to deal with one connection per stream at a time. And we'd use that connection to negotiate historic data only, for now.
+
+I think option 2 is worth trying, partly because I know exactly what it entails and how to troubleshoot it and tell if it's working well, and partly because if we can get the UDP hole punching method to work it's simple and elegant. So after we finish giving the user more control over their predictive datastreams, we should try that to see if we can solve the p2p issue before launch.
+
 -- B4 Launch --
 
 neuron - show which datastreams are active

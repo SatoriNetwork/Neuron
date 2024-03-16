@@ -138,7 +138,7 @@
               <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onmouseover="setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream('{{streamOverview.topic}}', '{{streamOverview.hashed}}')">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream('{{streamOverview.source}}', '{{streamOverview.author}}', '{{streamOverview.stream}}', '{{streamOverview.target}}', '{{streamOverview.hashed}}');">
                       <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
                         <i id="pinDepinIconFor{{ streamOverview.hashed }}" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;{{ 'color: black;' if streamOverview.pinned else 'color: grey;' }}">{{ 'check' if streamOverview.pinned else 'check_box_outline_blank' }}</i>
                       </button>
@@ -264,13 +264,13 @@
   </div>
 </div>
 <script>
-  function pinDepinStream(topic, hash) {
+  function pinDepinStream(source, author, stream, target, hash) {
     console.log('pinning stream ' +  topic);
     fetch(
       '/pin_depin', { 
         method: 'POST', 
         headers: {'Content-Type': 'application/json'},
-        body: topic})
+        body: JSON.stringify({source: source, author: author, stream: stream, target: target})
     .then(response => {
         if (response.ok) {
             console.log("should mark the thing as pinned");
@@ -1510,6 +1510,8 @@
       const streamOverview = JSON.parse(e.data);
       console.log('streamOverview');
       console.log(streamOverview);
+      // find the table row for this stream and update it
+      // document.getElementById("tr-hash").innerHTML = `see below`;
       if (streamOverview.length == 0) {
         return;
       }
@@ -1520,11 +1522,12 @@
         //<tr class='yellow-hover' onmouseenter="setData(chartOne,[` + streamOverview[i].predictions + `]);setData(chartTwo,[.5,.7,.8,.85,.87,.9,.91,.92,.93]);setDataChartThree([` + streamOverview[i].values + `], ` + streamOverview[i].prediction + `);">
         // we don't really want to override the pin, because the model might not be up to date...
         // none of this is working right now, so when you fix it, make sure we don't override pins with old data.
+        
         rows.push(`
         <tr class='{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{%endif%}' onclick="setData(chartOne,[` + streamOverview[i].predictions + `]);setData(chartTwo,[` + streamOverview[i].errs + `]);setDataChartThree([` + streamOverview[i].values + `], ` + streamOverview[i].prediction + `,[` + streamOverview[i].predictions + `]);">
           <td>
             <div class="d-flex px-3 py-1">
-              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview[i].topic + `, ` + streamOverview[i].hashed+`)">
+              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview[i].source + `, ` + streamOverview[i].author + `, ` + streamOverview[i].stream + `, ` + streamOverview[i].target + `, ` + streamOverview[i].hashed+`);">
                 <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
                   <i id="pinDepinIconFor`+streamOverview[i].hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ streamOverview.pinned ? 'color: black;' :  'color: grey;' +`">`+ streamOverview.pinned ? 'check' : 'check_box_outline_blank' + `</i>
                 </button>
