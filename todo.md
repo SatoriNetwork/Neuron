@@ -229,6 +229,7 @@ DONE central - better customer experience
 
 neuron - streamline the ui model updates more by pushing individual model updates
 neuron - and interpreting individual model updates on the ui
+neuron - fix list of predictions - not pulling correctly to show on the UI
 
 -- P2P options --
 

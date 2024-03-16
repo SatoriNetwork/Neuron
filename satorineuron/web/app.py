@@ -5,7 +5,7 @@
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
 from flask_cors import CORS
 from typing import Union
-from functools import wraps
+from functools import wraps, partial
 import os
 import sys
 import json
@@ -14,6 +14,7 @@ import webbrowser
 import time
 import traceback
 import pandas as pd
+from queue import Queue
 from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
@@ -40,7 +41,8 @@ darkmode = False
 badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
-updating = False
+updateTime = 0
+updateQueue = Queue()
 CORS(app, origins=["https://satorinet.io"])
 
 
@@ -616,10 +618,8 @@ def dashboard():
 
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
     streamOverviews = (
-        [model.overview() for model in start.engine.models]
+        [model.miniOverview() for model in start.engine.models]
         if start.engine is not None else StreamOverviews.demo())
-    for s in streamOverviews:
-        print(s)
     return render_template('dashboard.html', **getResp({
         'wallet': start.wallet,
         'vaultBalanceAmount': start.vault.balanceAmount if start.vault is not None else 0,
@@ -750,31 +750,39 @@ def pinDepinStream():
 def modelUpdates():
     def update():
 
-        def on_next(overview):
-            logging.debug('Yielding', overview, color='yellow')
-            yield "data: " + str(overview).replace("'", '"') + "\n\n"
+        def on_next(model, x):
+            global updateQueue
+            if x is not None:
+                overview = model.overview()
+                logging.debug('Yielding', overview.target, color='yellow')
+                updateQueue.put(
+                    "data: " + str(overview).replace("'", '"') + "\n\n")
 
-        global updating
-        if updating:
-            yield 'data: []\n\n'
-        logging.debug('modelUpdates', updating, color='yellow')
-        updating = True
+        global updateTime
+        global updateQueue
+        logging.debug('modelUpdates called', color='yellow')
         listeners = []
+        import time
+        thisThreadsTime = time.time()
+        updateTime = thisThreadsTime
         if start.engine is not None:
             logging.debug('start.engine is not None',
                           start.engine is not None, color='yellow')
             for model in start.engine.models:
                 listeners.append(
-                    model.predictionUpdate.subscribe(
-                        on_next=lambda x: on_next(model.overview()) if x is not None else None))
+                    model.predictionUpdate.subscribe(on_next=partial(on_next, model)))
+            logging.debug('listeners', len(listeners), color='yellow')
             while True:
-                time.sleep(1)
+                data = updateQueue.get()
+                if thisThreadsTime != updateTime:
+                    return Response('data: oldCall\n\n', mimetype='text/event-stream')
+                print('sending,', thisThreadsTime, data, end='\r')
+                yield data
         else:
             logging.debug('yeilding once', len(
                 str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
             yield "data: " + str(StreamOverviews.demo()).replace("'", '"') + "\n\n"
 
-    import time
     return Response(update(), mimetype='text/event-stream')
 
 
@@ -1090,11 +1098,11 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     logging.debug(request.json, color='yellow')
     if ((
-            request.json.get('vaultPredictors') > 0 or
-            request.json.get('vaultOracles') > 0 or
-            request.json.get('vaultCreators') > 0 or
-            request.json.get('vaultManagers') > 0) and
-            start.vault is not None and start.vault.isDecrypted
+        request.json.get('vaultPredictors') > 0 or
+        request.json.get('vaultOracles') > 0 or
+        request.json.get('vaultCreators') > 0 or
+        request.json.get('vaultManagers') > 0) and
+        start.vault is not None and start.vault.isDecrypted
         ):
         start.server.submitMaifestVote(
             start.vault,
