@@ -6,12 +6,16 @@
 <script src="{{ url_for('static', filename='js/plugins/smooth-scrollbar.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/plugins/chartjs.min.js') }}"></script>
 <script>
-  var win = navigator.platform.indexOf('Win') > -1;
-  if (win && document.querySelector('#sidenav-scrollbar')) {
-    var options = {
-      damping: '0.5'
-    }
-    Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+  //var win = navigator.platform.indexOf('Win') > -1;
+  //if (win && document.querySelector('#sidenav-scrollbar')) {
+  //  var options = {
+  //    damping: '0.5'
+  //  }
+  //  Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+  //  Scrollbar.init(document.querySelector('#ps__rail-y'), options);
+  //}
+  function scrollOrJumpToTop() {
+    document.getElementById('top-navbar').scrollIntoView();
   }
 </script>
 <!-- Github buttons -->

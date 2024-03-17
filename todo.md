@@ -227,10 +227,6 @@ DONE central - remove history view
 DONE neuron - vault - require password twice on first setup
 DONE central - better customer experience
 
-neuron - streamline the ui model updates more by pushing individual model updates
-neuron - and interpreting individual model updates on the ui
-neuron - fix list of predictions - not pulling correctly to show on the UI
-
 -- P2P options --
 
 we have to make a more robust p2p solution. because we don't want to make the node operator change port settings, and we have to find a solution that handles nat traversal we can't use most available options, perhaps even including IPFS and  BitTorrent. I think there are basically 2 options:
@@ -242,6 +238,10 @@ I think option 2 is worth trying, partly because I know exactly what it entails 
 
 -- B4 Launch --
 
+DONE neuron - streamline the ui model updates more by pushing individual model updates
+DONE neuron - and interpreting individual model updates on the ui
+neuron - fix saving of predictions locally
+neuron - fix list of predictions - not pulling correctly to show on the UI
 neuron - show which datastreams are active
 neuron - show which datastreams are approved
 all - change sanctioned to approved on all public stuff
