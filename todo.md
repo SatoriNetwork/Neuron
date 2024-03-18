@@ -240,12 +240,18 @@ I think option 2 is worth trying, partly because I know exactly what it entails 
 
 DONE neuron - streamline the ui model updates more by pushing individual model updates
 DONE neuron - and interpreting individual model updates on the ui
-neuron - fix saving of predictions locally
-neuron - fix list of predictions - not pulling correctly to show on the UI
+DONE neuron - fix saving of predictions locally
+DONE neuron - fix list of predictions - not pulling correctly to show on the UI
+server - get the pin/depin call working on neuron
+neuron - allow neurons to predict any datastream including their own (not incentivized)
+neuron - automatic switching out of inactive neurons
+(then move on to p2p options)
+
 neuron - show which datastreams are active
 neuron - show which datastreams are approved
 all - change sanctioned to approved on all public stuff
 neuron - allow users to "pin" a stream
+
 
 central - if a neuron is subscribed to an unsanctioned stream does the user know about it?
 central - if a neuron is subscribed to an unsanctioned stream does that neuron get reassigned a sanctioned datastream?

@@ -754,29 +754,24 @@ def modelUpdates():
             global updateQueue
             if x is not None:
                 overview = model.overview()
-                logging.debug('Yielding', overview.target, color='yellow')
+                # logging.debug('Yielding', overview.target, color='yellow')
                 updateQueue.put(
                     "data: " + str(overview).replace("'", '"') + "\n\n")
 
         global updateTime
         global updateQueue
-        logging.debug('modelUpdates called', color='yellow')
         listeners = []
         import time
         thisThreadsTime = time.time()
         updateTime = thisThreadsTime
         if start.engine is not None:
-            logging.debug('start.engine is not None',
-                          start.engine is not None, color='yellow')
             for model in start.engine.models:
                 listeners.append(
-                    model.predictionUpdate.subscribe(on_next=partial(on_next, model)))
-            logging.debug('listeners', len(listeners), color='yellow')
+                    model.anyPpredictionUpdate.subscribe(on_next=partial(on_next, model)))
             while True:
                 data = updateQueue.get()
                 if thisThreadsTime != updateTime:
                     return Response('data: oldCall\n\n', mimetype='text/event-stream')
-                print('sending,', thisThreadsTime, data, end='\r')
                 yield data
         else:
             logging.debug('yeilding once', len(
@@ -1098,12 +1093,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     logging.debug(request.json, color='yellow')
     if ((
-        request.json.get('vaultPredictors') > 0 or
-        request.json.get('vaultOracles') > 0 or
-        request.json.get('vaultCreators') > 0 or
-        request.json.get('vaultManagers') > 0) and
-        start.vault is not None and start.vault.isDecrypted
-        ):
+            request.json.get('vaultPredictors') > 0 or
+            request.json.get('vaultOracles') > 0 or
+            request.json.get('vaultCreators') > 0 or
+            request.json.get('vaultManagers') > 0) and
+            start.vault is not None and start.vault.isDecrypted
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
