@@ -697,12 +697,12 @@ def pinDepinStream():
         'stream': s.get('stream', s.get('name')),
         'target': s.get('target'),
     })
-    print('payload', payload)
+    logging.debug('payload', payload, color='magenta')
     success, result = start.server.pinDepinStream(stream=payload)
     # return 'pinned' 'depinned' based on server response
     if success:
         return result, 200
-    logging.error(pinDepinStream, s, success, result)
+    logging.error('pinDepinStream', s, success, result)
     return 'OK', 200
 
 

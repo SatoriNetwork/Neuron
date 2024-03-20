@@ -1,5 +1,5 @@
 {% block content %}
-<div class="row mb-4">
+<div class="row mb-0">
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
@@ -76,7 +76,7 @@
                 </td>-->
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">{{ stream['sanctioned'] if stream['sanctioned'] > 0 else 0 }}</h6>
+                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">{{ ((stream['sanctioned']) | round | int) if stream['sanctioned'] > 0 else 0 }}</h6>
                   </div>
                 </td>
                 <td class='walletValueCellIdentifier' style='display:none;'>

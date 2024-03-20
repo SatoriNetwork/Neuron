@@ -106,8 +106,8 @@
   </div>
 </div>
 
-<br/>
-<div class="row mb-4">
+<br id='predictionsbr'>
+<div class="row mb-0">
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
@@ -135,8 +135,8 @@
             </thead>
             <tbody id="updating_table">
               {% for streamOverview in streamOverviews %}
-              <tr id="tr-{{streamOverview.hashed}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" style='cursor:pointer;' onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
-                <td>
+              <tr id="tr-{{streamOverview.hashed}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" style='cursor:pointer;'>
+                <td id="td-{{streamOverview.hashed}}-icon" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream('{{streamOverview.source}}', '{{streamOverview.author}}', '{{streamOverview.stream}}', '{{streamOverview.target}}', '{{streamOverview.hashed}}');">
                       <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
@@ -145,28 +145,28 @@
                     </h6>
                   </div>
                 </td>
-                <td>
+                <td id="td-{{streamOverview.hashed}}-source" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.source }}</h6>
                   </div>
                 </td>
-                <td>
+                <td id="td-{{streamOverview.hashed}}-stream" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.stream }}</h6>
                   </div>
                 </td>
-                <td>
+                <td id="td-{{streamOverview.hashed}}-target" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.target }}</h6>
                   </div>
                 </td>
-                <td>
+                <td id="td-{{streamOverview.hashed}}-value" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <!-- we don't give this color yet because the indication is ambiguous - is it late or on time? or is it accurate or way off? -->
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.value }}</h6>
                   </div>
                 </td>
-                <td>
+                <td id="td-{{streamOverview.hashed}}-prediction" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.prediction }}</h6>
                   </div>
@@ -286,13 +286,14 @@
     .catch(error => console.error('Error:', error));
   }
 </script>
-<div class="row mb-4">
+<br id='oraclesbr'>
+<div class="row mb-0">
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
         <div class="row">
           <div class="col-lg-10 col-10">
-            <h6 class="{% if darkmode %}dark-colors{% endif %}">Data Streams</h6>
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
             <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
             Primary data streams published by this Satori Neuron 
             </p>
@@ -559,8 +560,8 @@
         }
     }
 });
-
 </script>
+<br id='createbr'>
 <div id='CreateDataStream', class="row mb-4" style="margin-bottom: 3rem !important;">
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
@@ -569,7 +570,7 @@
           <div class="col-lg-12 col-12">
             <div class="row">
               <div class="col-lg-10 col-10">
-                <h6 class="{% if darkmode %}dark-colors{% endif %}">Create Data Stream</h6>
+                <h6 class="{% if darkmode %}dark-colors{% endif %}">Create Oracle Data Stream</h6>
                 <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
                   Fill out the form to published a new primary data stream to the Satori Network
                 </p>
@@ -1515,48 +1516,74 @@
       console.log(streamOverview.predictions);
       console.log(streamOverview.prediction);
       // find the table row for this stream and update it
-      let myRow = document.getElementById("tr-" + streamOverview.hashed);
-      myRow.onclick = function() {
-        scrollOrJumpToTop();
-        setData(chartOne, streamOverview.predictions);
-        setData(chartTwo, streamOverview.errs);
-        setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
-      };
-      myRow.innerHTML = `
-          <td>
-            <div class="d-flex px-3 py-1">
-              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview.source + `, ` + streamOverview.author + `, ` + streamOverview.stream + `, ` + streamOverview.target + `, ` + streamOverview.hashed+`);">
-                <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
-                  <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
-                </button>
-              </h6>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex px-3 py-1">
-              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.source + `</h6>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex px-3 py-1">
-              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.stream + `</h6>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex px-3 py-1">
-              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.target + `</h6>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex px-3 py-1">
-              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.value + `</h6>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex px-3 py-1">
-              <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview.prediction) + `</h6>
-            </div>
-          </td>`;
+      let tdIcon = document.getElementById("td-" + streamOverview.hashed + "-icon");
+      let tdSource = document.getElementById("td-" + streamOverview.hashed + "-source");
+      let tdStream = document.getElementById("td-" + streamOverview.hashed + "-stream");
+      let tdTarget = document.getElementById("td-" + streamOverview.hashed + "-target");
+      let tdValue = document.getElementById("td-" + streamOverview.hashed + "-value");
+      let tdPrediction = document.getElementById("td-" + streamOverview.hashed + "-prediction");
+      for (let x in [tdIcon,  tdSource,  tdStream,  tdTarget,  tdValue,  tdPrediction]) {
+        x.onclick = function() {
+          scrollOrJumpToTop();
+          setData(chartOne, streamOverview.predictions);
+          setData(chartTwo, streamOverview.errs);
+          setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
+        };
+      }
+      tdIcon.innerHTML = `<div class="d-flex px-3 py-1">
+        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview.source + `, ` + streamOverview.author + `, ` + streamOverview.stream + `, ` + streamOverview.target + `, ` + streamOverview.hashed+`);">
+          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+            <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
+          </button>
+        </h6>
+      </div>`
+      tdSource.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.source + `</h6></div>`
+      tdStream.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.stream + `</h6></div>`
+      tdTarget.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.target + `</h6></div>`
+      tdValue.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.value + `</h6></div>`
+      tdPrediction.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview.prediction) + `</h6></div>`
+      //let myRow = document.getElementById("tr-" + streamOverview.hashed);
+      //myRow.onclick = function() {
+      //  scrollOrJumpToTop();
+      //  setData(chartOne, streamOverview.predictions);
+      //  setData(chartTwo, streamOverview.errs);
+      //  setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
+      //};
+      //myRow.innerHTML = `
+      //    <td class="td-`+streamOverview.hashed+`">
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview.source + `, ` + streamOverview.author + `, ` + streamOverview.stream + `, ` + streamOverview.target + `, ` + streamOverview.hashed+`);">
+      //          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+      //            <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
+      //          </button>
+      //        </h6>
+      //      </div>
+      //    </td>
+      //    <td class="td-`+streamOverview.hashed+`">
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.source + `</h6>
+      //      </div>
+      //    </td>
+      //    <td>
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.stream + `</h6>
+      //      </div>
+      //    </td>
+      //    <td>
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.target + `</h6>
+      //      </div>
+      //    </td>
+      //    <td>
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.value + `</h6>
+      //      </div>
+      //    </td>
+      //    <td>
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview.prediction) + `</h6>
+      //      </div>
+      //    </td>`;
     }
   };
   function predictionOrEmptyString(p) {

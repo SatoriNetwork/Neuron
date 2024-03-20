@@ -1,5 +1,5 @@
 {% block content %}
-<div class="row mb-4">
+<div class="row mb-0">
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
@@ -23,7 +23,7 @@
     </div>
   </div>
 </div>
-<br>
+<br id='manifestbr'>
 <div class="row mb-4">
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
@@ -62,28 +62,28 @@
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['predictors']*100 }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['predictors']*100) | round | int }} %</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['oracles']*100 }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['oracles']*100) | round | int }} %</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['creators']*100 }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['creators']*100) | round | int }} %</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
                     <!-- we don't give this color yet because the indication is ambiguous - is it late or on time? or is it accurate or way off? -->
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ communityVotes['managers']*100 }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['managers']*100) | round | int }} %</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 id="communityPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ communityVotes['predictors']*100 + communityVotes['oracles']*100 + communityVotes['creators']*100 + communityVotes['managers']*100 }} %</h6>
+                    <h6 id="communityPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (communityVotes['predictors']*100 + communityVotes['oracles']*100 + communityVotes['creators']*100 + communityVotes['managers']*100) | round | int }} %</h6>
                   </div>
                 </td>
               </tr> 
@@ -98,7 +98,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="walletVotePredictors" name="walletVotePredictors" placeholder="{{ walletVotes['predictors']*100 }}" value="{{ walletVotes['predictors']*100 }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
+                          <input id="walletVotePredictors" name="walletVotePredictors" placeholder="{{ (walletVotes['predictors']*100) | round | int }}" value="{{ (walletVotes['predictors']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
                         </div>
                       </div>
                     </h6>
@@ -109,7 +109,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="walletVoteOracles" name="walletVoteOracles" placeholder="{{ walletVotes['oracles']*100 }}" value="{{ walletVotes['oracles']*100 }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
+                          <input id="walletVoteOracles" name="walletVoteOracles" placeholder="{{ (walletVotes['oracles']*100) | round | int }}" value="{{ (walletVotes['oracles']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
                         </div>
                       </div>
                     </h6>
@@ -120,7 +120,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="walletVoteCreators" name="walletVoteCreators" placeholder="{{ walletVotes['creators']*100 }}" value="{{ walletVotes['creators']*100 }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
+                          <input id="walletVoteCreators" name="walletVoteCreators" placeholder="{{ (walletVotes['creators']*100) | round | int }}" value="{{ (walletVotes['creators']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
                         </div>
                       </div>
                     </h6>
@@ -131,7 +131,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="walletVoteManagers" name="walletVoteManagers" placeholder="{{ walletVotes['managers']*100 }}" value="{{ walletVotes['managers']*100 }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
+                          <input id="walletVoteManagers" name="walletVoteManagers" placeholder="{{ (walletVotes['managers']*100) | round | int }}" value="{{ (walletVotes['managers']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
                         </div>
                       </div>
                     </h6>
@@ -139,7 +139,7 @@
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 id="walletPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ walletVotes['predictors']*100 + walletVotes['oracles']*100 + walletVotes['creators']*100 + walletVotes['managers']*100 }} %</h6>
+                    <h6 id="walletPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (walletVotes['predictors']*100 + walletVotes['oracles']*100 + walletVotes['creators']*100 + walletVotes['managers']*100) | round | int }} %</h6>
                   </div>
                 </td>
               </tr> 
@@ -156,7 +156,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="vaultVotePredictors" name="vaultVotePredictors" placeholder="{{ vaultVotes['predictors']*100 }}" value="{{ vaultVotes['predictors']*100 }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
+                          <input id="vaultVotePredictors" name="vaultVotePredictors" placeholder="{{ (vaultVotes['predictors']*100) | round | int }}" value="{{ (vaultVotes['predictors']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -167,7 +167,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="vaultVoteOracles" name="vaultVoteOracles" placeholder="{{ vaultVotes['oracles']*100 }}" value="{{ vaultVotes['oracles']*100 }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
+                          <input id="vaultVoteOracles" name="vaultVoteOracles" placeholder="{{ (vaultVotes['oracles']*100) | round | int }}" value="{{ (vaultVotes['oracles']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -178,7 +178,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="vaultVoteCreators" name="vaultVoteCreators" placeholder="{{ vaultVotes['creators']*100 }}" value="{{ vaultVotes['creators']*100 }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
+                          <input id="vaultVoteCreators" name="vaultVoteCreators" placeholder="{{ (vaultVotes['creators']*100) | round | int }}" value="{{ (vaultVotes['creators']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -189,7 +189,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
-                          <input id="vaultVoteManagers" name="vaultVoteManagers" placeholder="{{ vaultVotes['managers']*100 }}" value="{{ vaultVotes['managers']*100 }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
+                          <input id="vaultVoteManagers" name="vaultVoteManagers" placeholder="{{ (vaultVotes['managers']*100) | round | int }}" value="{{ (vaultVotes['managers']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -215,7 +215,7 @@
                 {% endif %}
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 id="vaultPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ vaultVotes['predictors']*100 + vaultVotes['oracles']*100 + vaultVotes['creators']*100 + vaultVotes['managers']*100 }} %</h6>
+                    <h6 id="vaultPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (vaultVotes['predictors']*100 + vaultVotes['oracles']*100 + vaultVotes['creators']*100 + vaultVotes['managers']*100) | round | int }} %</h6>
                   </div>
                 </td>
               </tr> 
