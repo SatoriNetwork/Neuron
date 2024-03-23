@@ -696,6 +696,7 @@ def pinDepinStream():
         'author': s.get('author'),
         'stream': s.get('stream', s.get('name')),
         'target': s.get('target'),
+        'client': start.wallet.publicKey,
     })
     logging.debug('payload', payload, color='magenta')
     success, result = start.server.pinDepinStream(stream=payload)

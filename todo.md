@@ -242,6 +242,8 @@ DONE neuron - streamline the ui model updates more by pushing individual model u
 DONE neuron - and interpreting individual model updates on the ui
 DONE neuron - fix saving of predictions locally
 DONE neuron - fix list of predictions - not pulling correctly to show on the UI
+neuron - fix the front end so you don't have to refresh page to get histories
+neuron - fix the front end so you can click on the checkbox instead of the entire row
 server - get the pin/depin call working on neuron
 neuron - allow neurons to predict any datastream including their own (not incentivized)
 neuron - automatic switching out of inactive neurons
