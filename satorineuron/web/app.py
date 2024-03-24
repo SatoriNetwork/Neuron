@@ -765,14 +765,18 @@ def modelUpdates():
         import time
         thisThreadsTime = time.time()
         updateTime = thisThreadsTime
+        logging.debug('modelUpdates', updateTime, color='yellow')
         if start.engine is not None:
+            logging.debug('modelUpdates', 'started', color='yellow')
             for model in start.engine.models:
                 listeners.append(
                     model.anyPpredictionUpdate.subscribe(on_next=partial(on_next, model)))
+            logging.debug('modelUpdates', 'subscribed', color='yellow')
             while True:
                 data = updateQueue.get()
                 if thisThreadsTime != updateTime:
                     return Response('data: oldCall\n\n', mimetype='text/event-stream')
+                logging.debug('yielding', color='yellow')
                 yield data
         else:
             logging.debug('yeilding once', len(

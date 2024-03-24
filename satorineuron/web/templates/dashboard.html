@@ -1240,7 +1240,6 @@
         addDataChartThree('', data[i], null, predictions.length-data.length+i >= 0 ? predictions[predictions.length-data.length+i] : null);
       }
     }
-    console.log(prediction)
     addDataChartThree('next', null, prediction, null);
   }
   
@@ -1504,6 +1503,14 @@
   var table_output = document.getElementById("updating_table");
   var table_update = new EventSource("/model-updates");
   table_update.onmessage = function (e) {
+    function viewOnClick(streamOverview) {
+      return function () {
+        scrollOrJumpToTop();
+        setData(chartOne, streamOverview.predictions);
+        setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
+        setData(chartTwo, streamOverview.errs);
+      }
+    }
     if (e.data == "close") {
       table_update.close();
     } else if (e.data == "redundantCall") {
@@ -1521,14 +1528,12 @@
       let tdTarget = document.getElementById("td-" + streamOverview.hashed + "-target");
       let tdValue = document.getElementById("td-" + streamOverview.hashed + "-value");
       let tdPrediction = document.getElementById("td-" + streamOverview.hashed + "-prediction");
-      for (let x in [tdIcon,  tdSource,  tdStream,  tdTarget,  tdValue,  tdPrediction]) {
-        x.onclick = function() {
-          scrollOrJumpToTop();
-          setData(chartOne, streamOverview.predictions);
-          setData(chartTwo, streamOverview.errs);
-          setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
-        };
-      }
+      tdIcon.onclick = viewOnClick(streamOverview);
+      tdSource.onclick = viewOnClick(streamOverview);
+      tdStream.onclick = viewOnClick(streamOverview);
+      tdTarget.onclick = viewOnClick(streamOverview);
+      tdValue.onclick = viewOnClick(streamOverview);
+      tdPrediction.onclick = viewOnClick(streamOverview);
       tdIcon.innerHTML = `<div class="d-flex px-3 py-1">
         <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview.source + `, ` + streamOverview.author + `, ` + streamOverview.stream + `, ` + streamOverview.target + `, ` + streamOverview.hashed+`);">
           <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
