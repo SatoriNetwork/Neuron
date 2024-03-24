@@ -136,7 +136,7 @@
             <tbody id="updating_table">
               {% for streamOverview in streamOverviews %}
               <tr id="tr-{{streamOverview.hashed}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" style='cursor:pointer;'>
-                <td id="td-{{streamOverview.hashed}}-icon" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
+                <td id="td-{{streamOverview.hashed}}-icon">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream('{{streamOverview.source}}', '{{streamOverview.author}}', '{{streamOverview.stream}}', '{{streamOverview.target}}', '{{streamOverview.hashed}}');">
                       <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
@@ -265,7 +265,6 @@
 </div>
 <script>
   function pinDepinStream(source, author, stream, target, hash) {
-    console.log('pinning stream ' +  topic);
     fetch(
       '/pin_depin', { 
         method: 'POST', 
