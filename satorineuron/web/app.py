@@ -690,14 +690,14 @@ def pinDepinStream():
     # on the server that means mark the subscription as chosen by user
     # s = StreamId.fromTopic(request.data) # binary string actually works
     s = request.json
-    payload = json.dumps({
+    payload = {
         'source': s.get('source', 'satori'),
         # 'pubkey': start.wallet.publicKey,
         'author': s.get('author'),
         'stream': s.get('stream', s.get('name')),
         'target': s.get('target'),
-        'client': start.wallet.publicKey,
-    })
+        # 'client': start.wallet.publicKey, # gets this from authenticated call
+    }
     logging.debug('payload', payload, color='magenta')
     success, result = start.server.pinDepinStream(stream=payload)
     # return 'pinned' 'depinned' based on server response
@@ -765,18 +765,14 @@ def modelUpdates():
         import time
         thisThreadsTime = time.time()
         updateTime = thisThreadsTime
-        logging.debug('modelUpdates', updateTime, color='yellow')
         if start.engine is not None:
-            logging.debug('modelUpdates', 'started', color='yellow')
             for model in start.engine.models:
                 listeners.append(
                     model.anyPpredictionUpdate.subscribe(on_next=partial(on_next, model)))
-            logging.debug('modelUpdates', 'subscribed', color='yellow')
             while True:
                 data = updateQueue.get()
                 if thisThreadsTime != updateTime:
                     return Response('data: oldCall\n\n', mimetype='text/event-stream')
-                logging.debug('yielding', color='yellow')
                 yield data
         else:
             logging.debug('yeilding once', len(
@@ -1103,7 +1099,7 @@ def voteSubmitManifestVault():
             request.json.get('vaultCreators') > 0 or
             request.json.get('vaultManagers') > 0) and
             start.vault is not None and start.vault.isDecrypted
-            ):
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={

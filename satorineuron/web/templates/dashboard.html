@@ -265,13 +265,12 @@
 </div>
 <script>
   function pinDepinStream(source, author, stream, target, hash) {
+    // preemtive change
     let indicator = document.getElementById('pinDepinIconFor' + hash)
     if (indicator.innerHTML === 'check_box_outline_blank') {
       indicator.innerHTML = 'check'
-      //indicator.style.color = "black;"
     } else {
       indicator.innerHTML = 'check_box_outline_blank'
-      //indicator.style.color = "grey;"
     }
     fetch(
       '/pin_depin', { 
@@ -282,12 +281,26 @@
         if (response.ok) {
             console.log("should mark the thing as pinned");
             if (response.text === "pinned") {
-              document.getElementById("pinDepinIconFor" + hash).innerHTML = 'check'
-              //document.getElementById("pinDepinIconFor" + hash).style.color = "black;"
+              indicator.innerHTML = 'check'
+              //indicator.style.color = "black;"
             } else if (response.text === "depinned") {
-              document.getElementById("pinDepinIconFor" + hash).innerHTML = 'check_box_outline_blank'
-              //document.getElementById("pinDepinIconFor" + hash).style.color = "grey;"
+              indicator.innerHTML = 'check_box_outline_blank'
+              //indicator.style.color = "grey;"
+            } else {
+              // revert the preemtive change
+              if (indicator.innerHTML === 'check_box_outline_blank') {
+                indicator.innerHTML = 'check'
+              } else {
+                indicator.innerHTML = 'check_box_outline_blank'
+              }
             }
+        } else {
+           // revert the preemtive change
+           if (indicator.innerHTML === 'check_box_outline_blank') {
+            indicator.innerHTML = 'check'
+          } else {
+            indicator.innerHTML = 'check_box_outline_blank'
+          }
         }
     })
     .catch(error => console.error('Error:', error));
@@ -1536,7 +1549,7 @@
       let tdTarget = document.getElementById("td-" + streamOverview.hashed + "-target");
       let tdValue = document.getElementById("td-" + streamOverview.hashed + "-value");
       let tdPrediction = document.getElementById("td-" + streamOverview.hashed + "-prediction");
-      tdIcon.onclick = viewOnClick(streamOverview);
+      //tdIcon.onclick = viewOnClick(streamOverview);
       tdSource.onclick = viewOnClick(streamOverview);
       tdStream.onclick = viewOnClick(streamOverview);
       tdTarget.onclick = viewOnClick(streamOverview);
