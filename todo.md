@@ -227,6 +227,16 @@ DONE central - remove history view
 DONE neuron - vault - require password twice on first setup
 DONE central - better customer experience
 
+DONE neuron - streamline the ui model updates more by pushing individual model updates
+DONE neuron - and interpreting individual model updates on the ui
+DONE neuron - fix saving of predictions locally
+DONE neuron - fix list of predictions - not pulling correctly to show on the UI
+DONE neuron - fix the front end so you can click on the checkbox instead of the entire row
+DONE neuron - fix the front end so you don't have to refresh page to get histories
+DONE server - get the pin/depin call working on neuron
+DONE neuron - remove view of the pinning feature (not sure it works)
+DONE neuron - automatically delete subscriptions and predictive streams for unsanctioned streams
+
 -- P2P options --
 
 we have to make a more robust p2p solution. because we don't want to make the node operator change port settings, and we have to find a solution that handles nat traversal we can't use most available options, perhaps even including IPFS and  BitTorrent. I think there are basically 2 options:
@@ -236,30 +246,22 @@ we have to make a more robust p2p solution. because we don't want to make the no
 
 I think option 2 is worth trying, partly because I know exactly what it entails and how to troubleshoot it and tell if it's working well, and partly because if we can get the UDP hole punching method to work it's simple and elegant. So after we finish giving the user more control over their predictive datastreams, we should try that to see if we can solve the p2p issue before launch.
 
--- B4 Launch --
-
-DONE neuron - streamline the ui model updates more by pushing individual model updates
-DONE neuron - and interpreting individual model updates on the ui
-DONE neuron - fix saving of predictions locally
-DONE neuron - fix list of predictions - not pulling correctly to show on the UI
-DONE neuron - fix the front end so you can click on the checkbox instead of the entire row
-DONE neuron - fix the front end so you don't have to refresh page to get histories
-server - get the pin/depin call working on neuron
-neuron - allow neurons to predict any datastream including their own (not incentivized)
-neuron - automatic switching out of inactive neurons
-(then move on to p2p options)
-
-neuron - show which datastreams are active
-neuron - show which datastreams are approved
-all - change sanctioned to approved on all public stuff
-neuron - allow users to "pin" a stream
+central - set up a synergy server (pubsub clone where subscribers can send in a request to connect, and the publisher will simply distribute historic datasets to them.)
+synergy - synergy protocol - request connection (with data request embedded) 
+synergy - synergy protocol - promise connection
+synergy - synergy protocol - connect connection
+synergy - synergy protocol - send data
+synergy - synergy protocol - receive data
+neuron - publisher must allways be connected to synergy
+neuron - subscribers need only connect to synergy on demand
+neuron - handle saving data
 
 
-central - if a neuron is subscribed to an unsanctioned stream does the user know about it?
-central - if a neuron is subscribed to an unsanctioned stream does that neuron get reassigned a sanctioned datastream?
-neuron - just automatically give neurons sanctioned datastreams to work on.
-neuron - allow users to pause individually
-neuron - hide/grey inactive/unsanctioned streams allow users to cycle to new ones.
+-- p2p end --
+
+-- Prep for launch --
+
+all - reissue SATORI to be 8 decimal places, handle everywhere
 
 central - test the average cadence query
 central - derived cadence as well from history table
@@ -274,17 +276,23 @@ central - update website (yellowpaper)
 
 central - we will need an admin dashboard to track the activity of the network
 
-neuron - update balances more realtime via subscriptions to the electrumx
+central - setup additional electrumx server for evr
 
 vault - allow for automatic send of tokens to their vault (needed for vps users especially, advanced autosecure?)
 
-central - better frontend experience
+central - better frontend experience - llm lite
 
 -- Launch --
 
 -- Nice --
 
-central - setup electrumx server for evr
+neuron - test and fix potential problems in the pinning feature (make sure it respects the pinning decision)
+neuron - allow neurons to predict any datastream including their own (not incentivized: assign_id = 2)
+neuron - show which datastreams are active
+neuron - show which datastreams are approved
+all - change sanctioned to approved on all public stuff
+
+neuron - update balances more realtime via subscriptions to the electrumx
 
 vault - creation process with saving words
 vault - allow user to change vault password

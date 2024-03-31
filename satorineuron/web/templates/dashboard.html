@@ -125,7 +125,10 @@
           <table class="table align-items-center mb-0">
             <thead>
               <tr>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Pin</th>
+                <!--
+                  I think there's an issue with pinning, so we're removing the view of this feature for now:
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Pin</th>
+                -->
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Source</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
@@ -136,15 +139,18 @@
             <tbody id="updating_table">
               {% for streamOverview in streamOverviews %}
               <tr id="tr-{{streamOverview.hashed}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" style='cursor:pointer;'>
-                <td id="td-{{streamOverview.hashed}}-icon">
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream('{{streamOverview.source}}', '{{streamOverview.author}}', '{{streamOverview.stream}}', '{{streamOverview.target}}', '{{streamOverview.hashed}}');">
-                      <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
-                        <i id="pinDepinIconFor{{ streamOverview.hashed }}" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;{{ 'color: black;' if streamOverview.pinned else 'color: grey;' }}">{{ 'check' if streamOverview.pinned else 'check_box_outline_blank' }}</i>
-                      </button>
-                    </h6>
-                  </div>
-                </td>
+                <!--
+                  I think there's an issue with pinning, so we're removing the view of this feature for now:
+                  <td id="td-{{streamOverview.hashed}}-icon">
+                    <div class="d-flex px-3 py-1">
+                      <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream('{{streamOverview.source}}', '{{streamOverview.author}}', '{{streamOverview.stream}}', '{{streamOverview.target}}', '{{streamOverview.hashed}}');">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+                          <i id="pinDepinIconFor{{ streamOverview.hashed }}" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;{{ 'color: black;' if streamOverview.pinned else 'color: grey;' }}">{{ 'check' if streamOverview.pinned else 'check_box_outline_blank' }}</i>
+                        </button>
+                      </h6>
+                    </div>
+                  </td>
+                -->
                 <td id="td-{{streamOverview.hashed}}-source" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.source }}</h6>
