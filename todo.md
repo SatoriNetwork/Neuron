@@ -237,6 +237,9 @@ DONE server - get the pin/depin call working on neuron
 DONE neuron - remove view of the pinning feature (not sure it works)
 DONE neuron - automatically delete subscriptions and predictive streams for unsanctioned streams
 
+server - add pinned status to checkin payload
+neuron - use pinned status in checkin payload
+
 -- P2P options --
 
 we have to make a more robust p2p solution. because we don't want to make the node operator change port settings, and we have to find a solution that handles nat traversal we can't use most available options, perhaps even including IPFS and  BitTorrent. I think there are basically 2 options:
@@ -256,7 +259,6 @@ neuron - publisher must allways be connected to synergy
 neuron - subscribers need only connect to synergy on demand
 neuron - handle saving data
 
-
 -- p2p end --
 
 -- Prep for launch --
@@ -266,6 +268,7 @@ all - reissue SATORI to be 8 decimal places, handle everywhere
 central - test the average cadence query
 central - derived cadence as well from history table
 central - purge history more than 31+ days old (it grows very quickly)
+central - see server todo
 
 neuron - point everything at evrmore wallet instead of ravencoin wallet and test
 all - convert rvn wallet to evr wallet
