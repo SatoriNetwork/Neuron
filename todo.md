@@ -237,9 +237,6 @@ DONE server - get the pin/depin call working on neuron
 DONE neuron - remove view of the pinning feature (not sure it works)
 DONE neuron - automatically delete subscriptions and predictive streams for unsanctioned streams
 
-server - add pinned status to checkin payload
-neuron - use pinned status in checkin payload
-
 -- P2P options --
 
 we have to make a more robust p2p solution. because we don't want to make the node operator change port settings, and we have to find a solution that handles nat traversal we can't use most available options, perhaps even including IPFS and  BitTorrent. I think there are basically 2 options:
@@ -289,6 +286,9 @@ central - better frontend experience - llm lite
 
 -- Nice --
 
+all - complete stream pinning service:
+server - add pinned status to checkin payload
+neuron - use pinned status in checkin payload
 neuron - test and fix potential problems in the pinning feature (make sure it respects the pinning decision)
 neuron - allow neurons to predict any datastream including their own (not incentivized: assign_id = 2)
 neuron - show which datastreams are active
