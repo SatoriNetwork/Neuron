@@ -9,22 +9,45 @@ request through rest api and check back for a response a few seconds later.
 TODO: 
 DONE use wss and https for secure connections on special ports.
 DONE simplify
-login logic to verify pubkey of both publisher and subscriber: pull from server
-
+DONE login logic to verify pubkey of both publisher and subscriber: pull from server
 '''
 import json
+import secrets
+import datetime as dt
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
+from satoriwallet import ravencoin
 from satorilib import logging
+# from satoricentral import logging
+from satorilib.api.time.time import timestampToDatetime, datetimeToTimestamp, now
 from satorineuron.synergy.protocol.server import SynergyProtocol
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
 
-sessionByClient = {
-    # 'pubkey': Socket.IO session IDs (request.sid)
-}
+class SessionTime:
+    def __init__(self, time: str, room: str):
+        self.time = time
+        self.room = room  # Socket.IO session IDs (request.sid)
+
+    @staticmethod
+    def expiry() -> int:
+        return 30
+
+    @property
+    def expired(self):
+        return timestampToDatetime(self.time) < now() - dt.timedelta(seconds=SessionTime.expiry())
+
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
+socketio = SocketIO(app)
+challengeSalt: str = 'synergy'
+sessionTimeByClient: dict[str, SessionTime] = {}
+
+
+@app.route('/challenge', methods=['GET'])
+def timeEndpoint():
+    ''' test time route '''
+    return challengeSalt + datetimeToTimestamp(now()), 200
 
 
 @app.route('/api/data', methods=['GET', 'POST'])
@@ -35,38 +58,76 @@ def handle_data():
     else:  # GET
         return jsonify({'data': 'Sample data'})
 
-# I've decided both publisher and subscribers can connect to the server via
-# websocket, the subscribers will just disconnect after they've received the
-# data they need. This way, we don't need to make a separate mailbox for the
-# subscribers. But we do need them to authenticate, proving their pubkey, so no
-# one can just claim to be them. or they could just use a random uid...
-# everyone who publishes data will always be here. so perhaps they should all be
-# persistent connections. Yes that's best. but we need to map their pubkey to
-# all their published datastreams. this way subscribers can send the request
-# to the datastream and the message will be routed to the correct publisher.
-# @app.route('/msg4user', methods=['POST'])
-# def msg4user():
-#    data = request.json
-#    pubkey = data.get('pubkey')
-#    msg = data.get('msg')
-#    # Check if the user is connected and has a session
-#    if pubkey in sessionByClient:
-#        emit('response', {'data': msg}, room=sessionByClient[pubkey])
-#        return jsonify({'relayed': True, 'to': pubkey}), 200
-#    else:
-#        return jsonify({'error': 'User not connected'}), 404
-
 
 @socketio.on('connect')
 def handleConnect():
     '''Expect the client to send their pubkey upon connection'''
-    pubkey = request.args.get('pubkey')
-    if pubkey:
-        sessionByClient[pubkey] = request.sid
-        join_room(request.sid)
+
+    def verifyTimestamp(ts, seconds: float = None):
+        if seconds is None:
+            seconds = SessionTime.expiry()
+        timestamp = timestampToDatetime(ts)
+        rightNow = now()
+        if seconds > 0:
+            recentPast = rightNow - dt.timedelta(seconds=seconds)
+            return timestamp > recentPast
+        if seconds == 0:
+            return timestamp < rightNow
+        if seconds < 0:
+            nearFuture = rightNow - dt.timedelta(seconds=seconds)
+            return timestampToDatetime(ts) < nearFuture
+
+    def validateChallenge(challenge):
+        ts = challenge[len(challengeSalt):]
+        if (not verifyTimestamp(ts)) or (not verifyTimestamp(ts, seconds=0)):
+            logging.error('auth ts error', ts, (not verifyTimestamp(ts)),
+                          (not verifyTimestamp(ts, seconds=0)), 'now:', dt.datetime.utcnow())
+            return False
+        return ts
+
+    def authenticate(challenge, signature, pubkey):
+        if not ravencoin.verify(
+            message=challenge,
+            signature=signature,
+            publicKey=pubkey,
+        ):
+            return 'unable to verify signature', 400
+        return '', 200
+
+    def saveUser(ts: str):
+        if pubkey in sessionTimeByClient and not sessionTimeByClient[pubkey].expired:
+            emit('error', {'data': "don't do that."})
+            disconnect()
+            return
+        room = request.sid
+        sessionTimeByClient[pubkey] = SessionTime(time=ts, room=room)
+        join_room(room)
         emit('response', {'data': f'{pubkey} connected.'})
+
+    pubkey = request.args.get('pubkey')
+    signature = request.args.get('signature')
+    challenge = request.args.get('challenge')
+    if pubkey:
+        if signature:
+            if challenge:
+                ts = validateChallenge(challenge)
+                if ts:
+                    if authenticate(challenge, signature, pubkey):
+                        saveUser(ts)
+                    else:
+                        emit('error', {'data': 'unable to authenticate.'})
+                        disconnect()
+                else:
+                    emit('error', {'data': 'invalid challenge.'})
+                    disconnect()
+            else:
+                emit('error', {'data': 'no challenge.'})
+                disconnect()
+        else:
+            emit('error', {'data': 'no signature.'})
+            disconnect()
     else:
-        emit('error', {'data': 'provide valid pubkey.'})
+        emit('error', {'data': 'no pubkey.'})
         disconnect()
 
 
@@ -74,10 +135,17 @@ def handleConnect():
 def handleDisconnect():
     '''find which pubkey is associated with the disconnecting SID and remove it'''
     pubkeyToRemove = [
-        pubkey for pubkey, sid in sessionByClient.items() if sid == request.sid]
+        pubkey for pubkey, sessionTime in sessionTimeByClient.items()
+        if sessionTime.room == request.sid]
     if pubkeyToRemove:
-        del sessionByClient[pubkeyToRemove[0]]
+        del sessionTimeByClient[pubkeyToRemove[0]]
         leave_room(request.sid)
+
+
+@socketio.on('ping')
+def handlePing(message):
+    print('handlePing:', message)
+    emit('response', message), 200
 
 
 @socketio.on('message')
@@ -91,21 +159,21 @@ def handleMessage(message):
         return
     if msg.subscriberIp is None:
         msg.subscriberIp = request.remote_addr
-        if msg.author in sessionByClient:
+        if msg.author in sessionTimeByClient:
             emit(
                 'response',
                 {'message': msg.toJson()},
-                room=sessionByClient[msg.author])
+                room=sessionTimeByClient[msg.author].room)
             emit('response', {'relayed': True}), 200
     elif msg.authorPort is None:
         emit('error', {'relayed': False, 'error': 'author port?'}), 404
     elif msg.authorIp is None:
         msg.authorIp = request.remote_addr
-        if msg.subscriber in sessionByClient:
+        if msg.subscriber in sessionTimeByClient:
             emit(
                 'response',
                 {'message': msg.toJson()},
-                room=sessionByClient[msg.subscriber])
+                room=sessionTimeByClient[msg.subscriber].room)
             emit('response', {'relayed': True}), 200
     else:
         emit('error', {'relayed': False, 'error': 'User not connected'}), 404
