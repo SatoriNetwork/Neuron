@@ -1099,7 +1099,7 @@ def voteSubmitManifestVault():
             request.json.get('vaultCreators') > 0 or
             request.json.get('vaultManagers') > 0) and
             start.vault is not None and start.vault.isDecrypted
-        ):
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
@@ -1324,10 +1324,35 @@ def publsihMeta():
 
 @app.route('/udp/ports', methods=['GET'])
 def udpPorts():
-    ''' recieves data from udp relay '''
+    ''' receives data from udp relay '''
     return str(start.peer.gatherChannels())
 
 
+# @app.route('/udp/stream')
+# def udpStream():
+#
+#    def event_stream():
+#        '''
+#        here we gather all the messages from the rendezvous object
+#        it will be a list of tuples (address, message)
+#        then we have to organize it into a dictionary for the udp relay
+#        then make it a string. will be interpretted this way:
+#        literal: dict[str, object] = ast.literal_eval(message)
+#        data = literal.get('data', None)
+#        localPort = literal.get('localPort', None)
+#        '''
+#        while True:
+#            time.sleep(1)
+#            messages = start.peer.gatherMessages()
+#            if len(messages) > 0:
+#                yield 'data:' + str(messages) + '\n\n'
+#            yield '\n'
+#
+#    return Response(
+#        stream_with_context(event_stream()),
+#        content_type='text/event-stream')
+
+# with this solution we can push messages to the queue instead of pulling them
 @app.route('/udp/stream')
 def udpStream():
 
@@ -1342,9 +1367,8 @@ def udpStream():
         localPort = literal.get('localPort', None)
         '''
         while True:
-            time.sleep(1)
-            messages = start.peer.gatherMessages()
-            if len(messages) > 0:
+            messages = start.udpQueue.get()
+            if len(messages) > 0:  # broken fix
                 yield 'data:' + str(messages) + '\n\n'
             yield '\n'
 
@@ -1361,7 +1385,7 @@ def udpReconnect():
 
 @app.route('/udp/message', methods=['POST'])
 def udpMessage():
-    ''' recieves data from udp relay '''
+    ''' receives data from udp relay '''
     # payload = request.json
     # print('udpMessage', payload)
     # data = payload.get('data', None)

@@ -13,9 +13,9 @@ class SynergyProtocol:
         # target: str,  # provided by subscriber
         author: str,  # provided by subscriber
         subscriber: str,  # provided by subscriber
-        subscriberPort: str,  # provided by subscriber
+        subscriberPort: int,  # provided by subscriber
         subscriberIp: Union[str, None] = None,  # provided by server
-        authorPort: Union[str, None] = None,  # provided by author
+        authorPort: Union[int, None] = None,  # provided by author
         authorIp: Union[str, None] = None,  # provided by server
     ):
         self.author = author
@@ -40,3 +40,13 @@ class SynergyProtocol:
 
     def toJson(self):
         return json.dumps(self.toDict())
+
+    @property
+    def completed(self):
+        return (
+            self.author is not None and
+            self.subscriber is not None and
+            self.subscriberPort is not None and
+            self.subscriberIp is not None and
+            self.authorPort is not None and
+            self.authorIp is not None)

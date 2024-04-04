@@ -1,5 +1,6 @@
 from typing import Union
 import threading
+from queue import Queue
 from reactivex.subject import BehaviorSubject
 from satorilib.concepts.structs import StreamId, Stream
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
@@ -37,6 +38,7 @@ class StartupDagStruct(object):
         self.publications: list[Stream] = None
         self.subscriptions: list[Stream] = None
         self.asyncThread: AsyncThread = None
+        self.udpQueue: Queue
 
     def cacheOf(self, streamId: StreamId):
         ''' returns the reference to the cache of a stream '''
@@ -53,7 +55,7 @@ class StartupDagStruct(object):
         if test or self.networkIsTest(network):
             return self.ravencoinWallet
         return self.evrmoreWallet
-    
+
     def start(self):
         ''' start the satori engine. '''
         pass

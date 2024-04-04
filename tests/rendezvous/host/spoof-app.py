@@ -23,7 +23,7 @@ updating = False
 
 @app.route('/udp/ports', methods=['GET'])
 def udpPorts():
-    ''' recieves data from udp relay '''
+    ''' receives data from udp relay '''
     return str({
         5001: [('165.232.81.173', 5000)],
         # 3: [('ip4', 4), ('ip5', 5)],
@@ -59,7 +59,7 @@ def udpStream():
 
 @app.route('/udp/message', methods=['POST'])
 def udpMessage():
-    ''' recieves data from udp relay '''
+    ''' receives data from udp relay '''
     payload = request.json
     data = payload.get('data', None)
     localPort = payload.get('address', {}).get('local', {}).get('port', None)

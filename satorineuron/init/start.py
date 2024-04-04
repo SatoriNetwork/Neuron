@@ -4,6 +4,7 @@ import os
 import json
 import threading
 from reactivex.subject import BehaviorSubject
+from queue import Queue
 import satorineuron
 import satoriengine
 from satorilib.concepts.structs import StreamId, Stream
@@ -71,6 +72,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.asyncThread: AsyncThread = AsyncThread()
+        self.udpQueue: Queue = Queue()
 
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         ''' returns the reference to the cache of a stream '''

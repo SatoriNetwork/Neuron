@@ -3,15 +3,17 @@ publishers of datastreams connect to the synergy server through socketio
 connections 
 '''
 # pip install python-socketio[client]
+import json
+import time
 import requests
 import socketio
-import time
 import threading
 from urllib.parse import quote_plus
 from satorilib import logging
 from satorilib.api.wallet import Wallet
 from satorilib.api.wallet import RavencoinWallet
 from satorineuron import config
+from satorineuron.synergy.protocol.server import SynergyProtocol
 
 
 class SynergyRestClient(object):
@@ -29,12 +31,13 @@ class SynergyRestClient(object):
 
 
 class SynergyClient:
-    def __init__(self, url, wallet: Wallet):
+    def __init__(self, url, wallet: Wallet, router: callable = None):
         self.sio = socketio.Client(
             reconnection=True,
             reconnection_attempts=5,
             reconnection_delay=5)
         self.url = url
+        self.router = router or SynergyClient.defaultRouter
         self.wallet = wallet
         self.pubkey = wallet.publicKey
         self.connect_event = threading.Event()
@@ -43,35 +46,40 @@ class SynergyClient:
     def setup_handlers(self):
         @self.sio.event
         def connect():
-            self.on_connect()
+            self.onConnect()
 
         @self.sio.event
         def disconnect():
-            self.on_disconnect()
+            self.onDisconnect()
+
+        @self.sio.on('error')
+        def onError(data):
+            logging.error('synergy error:', data, color='red')
 
         @self.sio.on('response')
-        def on_message(data):
-            self.router(data)
+        def onResponse(data):
+            print('synergy response:', data)
 
-    def on_connect(self):
+        @self.sio.on('message')
+        def onMessage(data):
+            try:
+                msg = SynergyProtocol.fromJson(json.loads(data))
+                self.router(msg)
+            except Exception as e:
+                logging.error('error parsing synergy message:',
+                              data, e, color='red')
+
+    def onConnect(self):
         print('connection established')
         self.connect_event.set()
 
-    def on_disconnect(self):
+    def onDisconnect(self):
         print('disconnected from server')
         self.connect_event.clear()
 
-    def router(self, data):
-        # Placeholder for message routing logic
-        print('Routing message:', data)
-
-    # def connect(self):
-    #    try:
-    #        self.sio.connect(f'{self.url}?uid={self.uid}')
-    #    except socketio.exceptions.ConnectionError as e:
-    #        logging.error('Failed to connect to server: %s', e)
-    #        time.sleep(30)
-    #        self.reconnect()
+    @staticmethod
+    def defaultRouter(msg: SynergyProtocol):
+        print('Routing message:', msg)
 
     def connect(self):
         '''connect to the server with a challenge and signature'''

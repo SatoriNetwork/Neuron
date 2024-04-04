@@ -10,6 +10,7 @@ TODO:
 DONE use wss and https for secure connections on special ports.
 DONE simplify
 DONE login logic to verify pubkey of both publisher and subscriber: pull from server
+create logic to handle incoming messages from other clients in the neuron
 '''
 import json
 import secrets
@@ -161,7 +162,7 @@ def handleMessage(message):
         msg.subscriberIp = request.remote_addr
         if msg.author in sessionTimeByClient:
             emit(
-                'response',
+                'message',
                 {'message': msg.toJson()},
                 room=sessionTimeByClient[msg.author].room)
             emit('response', {'relayed': True}), 200
@@ -171,7 +172,7 @@ def handleMessage(message):
         msg.authorIp = request.remote_addr
         if msg.subscriber in sessionTimeByClient:
             emit(
-                'response',
+                'message',
                 {'message': msg.toJson()},
                 room=sessionTimeByClient[msg.subscriber].room)
             emit('response', {'relayed': True}), 200
