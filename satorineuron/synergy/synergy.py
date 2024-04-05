@@ -1,16 +1,7 @@
+# TODO: move to Central server repo
 '''
 creating a custom design for the synergy server allows us to avoid issues 
 stemming from broadcast messages, even guaranteeing identity between clients.
-
-in this case the publisher of a datastream maintains a persistent websocket
-connection and listens for incoming data from the client. the client can make a
-request through rest api and check back for a response a few seconds later.
-
-TODO: 
-DONE use wss and https for secure connections on special ports.
-DONE simplify
-DONE login logic to verify pubkey of both publisher and subscriber: pull from server
-create logic to handle incoming messages from other clients in the neuron
 '''
 import json
 import secrets
@@ -21,7 +12,7 @@ from satoriwallet import ravencoin
 from satorilib import logging
 # from satoricentral import logging
 from satorilib.api.time.time import timestampToDatetime, datetimeToTimestamp, now
-from satorineuron.synergy.protocol.server import SynergyProtocol
+from satorilib.synergy import SynergyProtocol
 
 
 class SessionTime:
@@ -49,15 +40,6 @@ sessionTimeByClient: dict[str, SessionTime] = {}
 def timeEndpoint():
     ''' test time route '''
     return challengeSalt + datetimeToTimestamp(now()), 200
-
-
-@app.route('/api/data', methods=['GET', 'POST'])
-def handle_data():
-    if request.method == 'POST':
-        data = request.json
-        return jsonify({'received': data}), 201
-    else:  # GET
-        return jsonify({'data': 'Sample data'})
 
 
 @socketio.on('connect')
@@ -146,28 +128,34 @@ def handleDisconnect():
 @socketio.on('ping')
 def handlePing(message):
     print('handlePing:', message)
-    emit('response', message), 200
+    emit('response', message)
 
 
 @socketio.on('message')
 def handleMessage(message):
     print('handleMessage:', message)
     try:
-        msg = SynergyProtocol.fromJson(json.loads(message))
+        msg = SynergyProtocol.fromJson(message)
     except Exception as e:
         logging.error(e)
         emit('error', {'relayed': False, 'error': 'Invalid message format'})
         return
-    if msg.subscriberIp is None:
+    if msg.subscriberPort is None:
+        emit('error', {'relayed': False, 'error': 'subscriber port?'})
+    elif msg.source is None or msg.stream is None or msg.target is None or msg.author is None:
+        emit('error', {'relayed': False, 'error': 'stream?'})
+    elif msg.subscriberIp is None:
         msg.subscriberIp = request.remote_addr
         if msg.author in sessionTimeByClient:
             emit(
                 'message',
                 {'message': msg.toJson()},
                 room=sessionTimeByClient[msg.author].room)
-            emit('response', {'relayed': True}), 200
-    elif msg.authorPort is None:
-        emit('error', {'relayed': False, 'error': 'author port?'}), 404
+            emit('response', {'relayed': True})
+        else:
+            emit('error', {'relayed': False, 'error': 'author not connected'})
+    elif msg.authorPort is None or msg.subscriberPort is None:
+        emit('error', {'relayed': False, 'error': 'author port?'})
     elif msg.authorIp is None:
         msg.authorIp = request.remote_addr
         if msg.subscriber in sessionTimeByClient:
@@ -175,9 +163,10 @@ def handleMessage(message):
                 'message',
                 {'message': msg.toJson()},
                 room=sessionTimeByClient[msg.subscriber].room)
-            emit('response', {'relayed': True}), 200
-    else:
-        emit('error', {'relayed': False, 'error': 'User not connected'}), 404
+            emit('response', {'relayed': True})
+        else:
+            emit('error', {'relayed': False,
+                 'error': 'subscriber not connected'})
 
 
 if __name__ == '__main__':

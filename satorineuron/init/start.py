@@ -22,6 +22,7 @@ from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.rendezvous import rendezvous
 from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.structs.start import StartupDagStruct
+from satorineuron.synergy.engine import SynergyManager
 
 
 def getStart():
@@ -67,6 +68,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.server: SatoriServerClient
         self.pubsub: SatoriPubSubConn = None
         self.peer: rendezvous.RendezvousEngine
+        self.synergy: SynergyManager
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
@@ -107,6 +109,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.startRelay()
         self.buildEngine()
+        # self.startSynergyEngine()
+        # self.triggerDataDownloads() # should this be done on demand?
+
         # self.rendezvousConnect()
         # self.incrementallyDownloadDatasets()
         # self.downloadDatasets()
@@ -253,6 +258,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             logging.info('connected to Satori pubsub network', color='green')
         else:
             raise Exception('no key provided by satori server')
+
+    def startSynergyEngine(self):
+        ''' establish a synergy connection '''
+        # if self.idKkey: # rendezvous has changed, instead of sending just our
+        # ID key, we need to send our signed stream ids in a subscription msg.
+        if self.wallet:
+            self.synergy = SynergyManager(wallet=self.wallet)
+            logging.info(
+                'connected to Satori p2p network', color='green')
+        else:
+            raise Exception('wallet not open yet.')
 
     def rendezvousConnect(self):
         ''' establish a rendezvous connection. '''

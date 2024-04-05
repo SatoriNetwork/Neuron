@@ -2,7 +2,7 @@ from typing import Union
 import json
 import pandas as pd
 import datetime as dt
-from satorilib.api.time.time import timestampToDatetime
+from satorilib.api.time import timestampToDatetime, isValidTimestamp
 
 
 class SingleObservation():
@@ -26,17 +26,10 @@ class SingleObservation():
 
     @property
     def isValid(self):
-        def tryTimeConvert():
-            try:
-                timestampToDatetime(self.time)
-                return True
-            except Exception as e:
-                return False
-
         return (
-            isinstance(self.time, str) and 18 < len(self.time) < 27 and
-            tryTimeConvert() and isinstance(self.data, str) and
-            isinstance(self.hash, str))
+            isinstance(self.data, str) and
+            isinstance(self.hash, str) and
+            isValidTimestamp(self.time))
 
     def toDataFrame(self) -> pd.DataFrame:
         df = pd.DataFrame({
@@ -55,5 +48,19 @@ class SingleObservation():
         return json.dumps({
             'time': self.time,
             'data': self.data,
-            'hash': self.hash
-        })
+            'hash': self.hash})
+
+
+class SynergyMsg():
+    def __init__(self, ip: str, data: Union[str, int, bytes, float, None]):
+        self.ip = ip
+        self.data = data
+
+    @staticmethod
+    def fromJson(msg: bytes) -> 'SynergyMsg':
+        return SynergyMsg(**json.loads(msg.decode() if isinstance(msg, bytes) else msg))
+
+    def toJson(self):
+        return json.dumps({
+            'ip': self.ip,
+            'data': self.data})

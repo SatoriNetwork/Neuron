@@ -1367,10 +1367,8 @@ def udpStream():
         localPort = literal.get('localPort', None)
         '''
         while True:
-            messages = start.udpQueue.get()
-            if len(messages) > 0:  # broken fix
-                yield 'data:' + str(messages) + '\n\n'
-            yield '\n'
+            message = start.udpQueue.get()
+            yield 'data:' + message + '\n\n'
 
     return Response(
         stream_with_context(event_stream()),
@@ -1386,21 +1384,15 @@ def udpReconnect():
 @app.route('/udp/message', methods=['POST'])
 def udpMessage():
     ''' receives data from udp relay '''
-    # payload = request.json
-    # print('udpMessage', payload)
-    # data = payload.get('data', None)
-    # localPort = payload.get('address', {}).get('local', {}).get('port', None)
-    # remoteIp = payload.get('address', {}).get('remote', {}).get('ip', None)
-    # remotePort = payload.get('address', {}).get('remote', {}).get('port', None)
     data = request.data
     remoteIp = request.headers.get('remoteIp')
-    remotePort = int(request.headers.get('remotePort'))
-    localPort = int(request.headers.get('localPort'))
+    #remotePort = int(request.headers.get('remotePort')) #not needed at this time
+    #localPort = int(request.headers.get('localPort'))
     # print('udpMessage', data, 'from', remoteIp, remotePort, 'to', localPort)
-    if any(v is None for v in [localPort, remoteIp, remotePort, data]):
+    if any(v is None for v in [remoteIp, data]):
         return 'fail'
-    start.peer.passMessage(localPort, remoteIp, remotePort, message=data)
-    return 'ok'
+    start.synergy.passMessage(remoteIp, message=data)
+    return 'ok', 200
 
 
 ###############################################################################

@@ -1,7 +1,4 @@
-'''
-publishers of datastreams connect to the synergy server through socketio 
-connections 
-'''
+'''publishers of datastreams connect to the synergy server through socketio'''
 # pip install python-socketio[client]
 import json
 import time
@@ -13,7 +10,7 @@ from satorilib import logging
 from satorilib.api.wallet import Wallet
 from satorilib.api.wallet import RavencoinWallet
 from satorineuron import config
-from satorineuron.synergy.protocol.server import SynergyProtocol
+from satorilib.synergy import SynergyProtocol
 
 
 class SynergyRestClient(object):
@@ -63,7 +60,7 @@ class SynergyClient:
         @self.sio.on('message')
         def onMessage(data):
             try:
-                msg = SynergyProtocol.fromJson(json.loads(data))
+                msg = SynergyProtocol.fromJson(data)
                 self.router(msg)
             except Exception as e:
                 logging.error('error parsing synergy message:',

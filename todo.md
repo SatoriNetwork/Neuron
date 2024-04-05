@@ -255,8 +255,11 @@ synergy - synergy protocol - receive data
 neuron - publisher must allways be connected to synergy
 neuron - subscribers need only connect to synergy on demand
 neuron - handle saving data
+server - make an end point for verifying p2p script hash
+neuron - recreate the installer using the abstractor
 
 -- p2p end --
+
 
 -- Prep for launch --
 

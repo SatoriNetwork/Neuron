@@ -6,6 +6,13 @@ it will establish a sse connection with the flask server running inside
 the container. it will handle the UDP hole punching, passing data between the
 flask server and the remote peers.
 '''
+
+# list to the flask server
+# every message will have local port, remote ip, remote port, data
+# if you don't have a connection then set one up, listen to it and send the data
+# if you do have a connection then send the data
+# as you're listening to all the connections, relay their info to flask.
+
 from typing import Union, Dict, List, Tuple  # Python3.7 compatible
 import ast
 import socket
@@ -14,6 +21,7 @@ import datetime as dt
 import aiohttp
 import requests
 import traceback
+import json
 # from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 
@@ -23,6 +31,31 @@ def greyPrint(msg: str):
         + msg +
         "\033[0m"  # reset
     )
+
+
+class SynergyMsg():
+    def __init__(
+        self,
+        localPort: int,
+        remotePort: int,
+        remoteIp: str,
+        data: Union[str, int, bytes, float, None],
+    ):
+        self.localPort = localPort
+        self.remotePort = remotePort
+        self.remoteIp = remoteIp
+        self.data = data
+
+    @staticmethod
+    def fromJson(msg: bytes) -> 'SynergyMsg':
+        return SynergyMsg(**json.loads(msg.decode() if isinstance(msg, bytes) else msg))
+
+    def toJson(self):
+        return json.dumps({
+            'localPort': self.localPort,
+            'remotePort': self.remotePort,
+            'remoteIp': self.remoteIp,
+            'data': self.data})
 
 
 class SseTimeoutFailure(Exception):
@@ -55,6 +88,28 @@ class UDPRelay():
     @property
     def listeners(self) -> list:
         return self.peerListeners + self.neuronListeners
+
+    async def run(self):
+        ''' runs forever '''
+        self.initNeuronListener(UDPRelay.satoriUrl('/stream'))
+
+        # call self.listen()? when first initialized I only need ot listen to
+        # the 'neuron' which is the flask server. then it will tell me about
+        # the peer connections I need to setup and listen to... so I want to
+        # add udp connections and listen to them incremementally. so some
+        # things about this script might have to change...
+        # old code snippet
+        # await self.initSockets()
+        # try:
+        #    secs = seconds()
+        #    await asyncio.wait_for(udpRelay.listen(), secs)
+        # except asyncio.TimeoutError:
+        #    greyPrint('udpRelay cycling')
+        # except SseTimeoutFailure:
+        #    greyPrint("...attempting to reconnect to neuron...")
+        # except Exception as e:
+        #    greyPrint(f'An error occurred: {e}')
+        #    traceback.print_exc()
 
     async def neuronListener(self, url: str):
         # timeout = aiohttp.ClientTimeout(total=None, sock_read=3600)
@@ -140,6 +195,16 @@ class UDPRelay():
                 break
         # close?
 
+    async def listenToConnection(self, sock: socket.socket):
+        ''' this should be called from the flask server listener '''
+        # Create a new listening task for the given socket
+        new_listener_task = asyncio.create_task(self.listenTo(sock))
+
+        # Add this new task to the list of peer listeners
+        self.peerListeners.append(new_listener_task)
+
+    # now I don't want to init all at once, I want to do it incrementally,
+    # so maybe this has to change?
     async def initSockets(self):
         def bind(localPort: int) -> Union[socket.socket, None]:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -244,62 +309,12 @@ class UDPRelay():
 
 
 async def main():
-    def seconds() -> float:
-        ''' calculate number of seconds until the start of the next hour '''
-        now = dt.datetime.now()
-        nextHour = (now + dt.timedelta(hours=1)).replace(
-            minute=0,
-            second=0,
-            microsecond=0)
-        return (nextHour - now).total_seconds()
-
-    def getPorts() -> Dict[int, List[Tuple[str, int]]]:
-        ''' gets ports from the flask server '''
-        r = requests.get(UDPRelay.satoriUrl('/ports'))
-        # greyPrint(r.status_code)
-        # greyPrint(r.text)
-        if r.status_code == 200:
-            try:
-                ports: dict = ast.literal_eval(r.text)
-                validatedPorts = {}
-                # greyPrint(ports)
-                # greyPrint('---')
-                for localPort, remotes in ports.items():
-                    # greyPrint(localPort, remotes)
-                    if (
-                        isinstance(localPort, int) and
-                        isinstance(remotes, list)
-                    ):
-                        # greyPrint('valid')
-                        validatedPorts[localPort] = []
-                        # greyPrint(validatedPorts)
-                        for remote in remotes:
-                            # greyPrint('remote', remote)
-                            if (
-                                isinstance(remote, tuple) and
-                                len(remote) == 2 and
-                                isinstance(remote[0], str) and
-                                isinstance(remote[1], int)
-                            ):
-                                # greyPrint('valid---')
-                                validatedPorts[localPort].append(remote)
-                return validatedPorts
-            except (ValueError, TypeError):
-                greyPrint('Invalid format of received data')
-                return {}
-        return {}
-
-    def triggerReconnect() -> None:
-        ''' tells neuron to reconnect to rendezvous (to refresh ports) '''
-        r = requests.get(UDPRelay.satoriUrl('/reconnect'))
-        if r.status_code == 200:
-            greyPrint('reconnected to rendezvous server')
 
     async def waitForNeuron():
         notified = False
         while True:
             try:
-                r = requests.get(UDPRelay.satoriUrl('/ports'))
+                r = requests.get(UDPRelay.satoriUrl('/ping'))
                 if r.status_code == 200:
                     if notified:
                         greyPrint('established connection to Satori Neuron')
@@ -310,35 +325,8 @@ async def main():
                     notified = True
             await asyncio.sleep(1)
 
-    while True:
-        try:
-            reconnect = True
-            udpRelay = UDPRelay(getPorts())
-            await udpRelay.initSockets()
-            try:
-                secs = seconds()
-                await asyncio.wait_for(udpRelay.listen(), secs)
-            except asyncio.TimeoutError:
-                greyPrint('udpRelay cycling')
-            except SseTimeoutFailure:
-                greyPrint("...attempting to reconnect to neuron...")
-                # udpRelay.cancelNeuronListener()
-                # udpRelay.initNeuronListener(UDPRelay.satoriUrl('/stream'))
-        except requests.exceptions.ConnectionError as e:
-            # greyPrint(f'An error occurred: {e}')
-            await waitForNeuron()
-            reconnect = False
-        except Exception as e:
-            greyPrint(f'An error occurred: {e}')
-            traceback.print_exc()
-        try:
-            if reconnect:
-                triggerReconnect()
-            udpRelay.cancelNeuronListener()
-            await udpRelay.cancel()
-            await udpRelay.shutdown()
-        except Exception as _:
-            pass
-
+    await waitForNeuron()
+    udpRelay = UDPRelay()
+    await udpRelay.run()
 
 asyncio.run(main())

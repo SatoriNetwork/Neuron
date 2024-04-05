@@ -1,6 +1,4 @@
 '''
-contains the protocol to communicate with clients once connected
-
 once connected, the publisher will begin sending data to the subscriber starting
 with the hash request. it will not wait for a response. it will merely continue 
 to send the data to the subscriber until interrupted, at which time it will 
@@ -16,110 +14,24 @@ import time
 import threading
 import pandas as pd
 from queue import Queue, Empty
-from satorilib import logging
 from satorilib.concepts import StreamId
 from satorilib.api.disk import Cached
 from satorilib.api.hash import hashRow
-from satorilib.api.wallet import Wallet
-from satorilib.api.wallet import RavencoinWallet
-from satorilib.api.time import datetimeToTimestamp, earliestDate
-from satorineuron import config
-from satorineuron.synergy.domain import SingleObservation
-from satorineuron.synergy.protocol.server import SynergyProtocol
-from satorineuron.synergy.publisher import SynergyClient
-
-
-def chooseRandomUnusedPortWitninDynamicRange():
-    # todo: implement
-    return 12345
-
-
-class SynergyManager():
-    def __init__(self, wallet: Wallet):
-        self.wallet = wallet
-        self.pubkey = wallet.publicKey
-        self.synergy = SynergyClient(
-            url='http://localhost:3300',
-            router=self.handleMessage,
-            wallet=RavencoinWallet(
-                config.walletPath('wallet.yaml'),
-                reserve=0.01,
-                isTestnet=True)())
-        self.conns: dict[int, SynergyChannel] = {
-            # localport: SynergyChannel
-        }
-
-    def handleMessage(self, msg: SynergyProtocol):
-        # if the msg is not complete, continue to build it, pass it back
-        if not msg.completed:
-            msg = self.buildMessage(msg)
-            self.synergy.send(msg.toJson())
-        # if the msg is complete, then it is time to make a p2p connection
-        self.createChannel(msg)
-
-    def buildMessage(self, msg: SynergyProtocol):
-        ''' completes the next part of the msg and returns '''
-        # subscriber is requesting connection so...
-        if msg.author == self.pubkey:
-            # extract their information and...
-            self.createChannel(msg)
-            # provide a port to connect on...
-            # (choose random )
-            msg.authorPort = chooseRandomUnusedPortWitninDynamicRange()
-            return msg
-        # as the subscriber, I am getting ready to request connection so...
-        if msg.subscriber == self.pubkey and msg.subscriberIp is None:
-            # provide a port to connect on...
-            # (choose random )
-            msg.subscriberPort = chooseRandomUnusedPortWitninDynamicRange()
-            return msg
-        raise Exception('invalid message state')
-
-    def createChannel(self, msg: SynergyProtocol):
-        ''' completes the next part of the msg and returns '''
-        if msg.author == self.pubkey:
-            self.conns[msg.subscriberPort] = SynergyPublisher(
-                streamId=msg.stream,  # should probably have entire stream in here
-                ip=msg.subscriberIp,
-                port=msg.subscriberPort,
-                localPort=msg.authorPort)
-        elif msg.subscriber == self.pubkey:
-            self.conns[msg.subscriberPort] = SynergySubscriber(
-                streamId=msg.stream,  # should probably have entire stream in here
-                ip=msg.authorIp,
-                port=msg.authorPort,
-                localPort=msg.subscriberPort)
-
-    def receive(self, localPort: int, remoteIp: str, remotePort: int, message: bytes):
-        ''' passes a message down to the correct channel '''
-        conn = self.conns.get(localPort)
-        if conn is not None:
-            conn.receive(message)
-        # topic = self.peer.findTopic(localPort)
-        # if topic is None:
-        #    return
-        # channel = topic.findChannel(remoteIp, remotePort)
-        # if channel is None:
-        #    return
-        # channel.onMessage(message=message, sent=False)
+from satorilib.api.time import datetimeToTimestamp, earliestDate, isValidTimestamp
+from satorineuron.synergy.domain.peers import SingleObservation, SynergyMsg
 
 
 class SynergyChannel(Cached):
     ''' get messages from the peer and send messages to them '''
 
-    def __init__(self, streamId: StreamId, ip: str, port: int, localPort: int):
-        super().__init__()
-        from satorineuron.init.start import getStart
+    def __init__(self, streamId: StreamId, ip: str):
         self.streamId = streamId
-        self.localPort = localPort
         self.ip = ip
-        self.port = port
-        self.start = getStart()
 
     def send(self, data: str):
         ''' sends data to the peer '''
-        # todo: must send correct format data correctly
-        self.start.udpQueue.put(data)
+        from satorineuron.init.start import getStart
+        getStart().udpQueue.put(SynergyMsg(ip=self.ip, data=data).toJson())
 
     def receive(self, message: bytes):
         '''Handle incoming messages. Must be implemented by subclasses.'''
@@ -133,8 +45,8 @@ class SynergySubscriber(SynergyChannel):
     back to the peer asking for it to start over at the last known good hash.
     '''
 
-    def __init__(self, streamId: StreamId, ip: str, port: int, localPort: int):
-        super().__init__(streamId, ip, port, localPort)
+    def __init__(self, streamId: StreamId, ip: str):
+        super().__init__(streamId, ip)
         self.inbox = Queue()
         self.main()
 
@@ -152,6 +64,12 @@ class SynergySubscriber(SynergyChannel):
     def processObservations(self):
         ''' save them all to disk '''
 
+        def lastTime():
+            if self.disk.cache.empty:
+                return datetimeToTimestamp(earliestDate())
+            else:
+                return self.disk.cache.index[-1]
+
         def save(observation: SingleObservation):
             ''' save the data to disk, if anything goes wrong request a time '''
 
@@ -160,12 +78,6 @@ class SynergySubscriber(SynergyChannel):
                     return ''
                 else:
                     return self.disk.cache.iloc[[-1]].hash
-
-            def lastTime():
-                if self.disk.cache.empty:
-                    return datetimeToTimestamp(earliestDate())
-                else:
-                    return self.disk.cache.index[-1]
 
             def validateCache():
                 success, _ = self.disk.validateAllHashes()
@@ -196,6 +108,8 @@ class SynergySubscriber(SynergyChannel):
                 # if isinstance(df, pd.DataFrame) and len(df) > 0:
                 #    self.send(df.index[-1])
 
+        if self.inbox.empty():
+            self.send(lastTime())
         while True:
             save(self.inbox.get())
 
@@ -208,14 +122,16 @@ class SynergyPublisher(SynergyChannel):
     until it gets interrupted.
     '''
 
-    def __init__(self, streamId: StreamId, ip: str, port: int, localPort: int):
-        super().__init__(streamId, ip, port, localPort)
+    def __init__(self, streamId: StreamId, ip: str):
+        super().__init__(streamId, ip)
         self.ts: str = datetimeToTimestamp(earliestDate())
         self.main()
 
     def receive(self, message: bytes):
         ''' message will be the timestamp after which to start sending data '''
-        self.ts = message.decode()
+        ts = message.decode()
+        if isValidTimestamp(ts):
+            self.ts = ts
 
     def main(self):
         ''' send the data to the subscriber '''
@@ -245,7 +161,7 @@ class SynergyPublisher(SynergyChannel):
             time.sleep(0.33)  # cool down
             try:
                 observation = getObservationAfter(ts)
-            except Exception as e:
+            except Exception as _:
                 break
             self.send(observation.toJson())
             if self.ts == ts:
