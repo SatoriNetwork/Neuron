@@ -1,6 +1,5 @@
-'''publishers of datastreams connect to the synergy server through socketio'''
-# pip install python-socketio[client]
-import json
+''' connects to the synergy server through socketio '''
+
 import time
 import requests
 import socketio

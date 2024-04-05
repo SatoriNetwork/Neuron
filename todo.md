@@ -1,4 +1,5 @@
-DONE remove row number cache design from disk, add in regular old cache design.
+
+DONE remove row number cache design from disk, add in regular old cache design
 DONE move scheduler up to the engine level, cycle through all datasets.
 DONE make sure we clear out any bad data at all times.
 DONE move the cache out of the topic, and up to the startDag singleton, then make everything pull from the same cache, such DONE as the relay stuff, rendezvous stuff, and engine, anything that uses the Disk object currently.
@@ -26,7 +27,7 @@ DONE still have a connection annoyance,with moontree and checkin and maybe pubsu
 DONE rendezvous - early worker timeout
 DONE ping solution
 DONE add something that fixes data - like when we send a check that verifies the hashes before we send
-DONE fix logging - remove debugs 
+DONE fix logging - remove debugs
 DONE fix logging - add add info about all coming and going
 DONE start over if we've never established the root
 DONE something broke in responding to requests?
@@ -34,6 +35,7 @@ DONE follow newData: save, trigger prediction, save that prediction, publish
 DONE we should show predictions on the dashboard
 DONE release alpha Jan 1
 ---
+
 DONE have it make a prediction and broadcast it on startup
 DONE show the latest prediction on the UI
 DONE loop in runner
@@ -247,7 +249,7 @@ we have to make a more robust p2p solution. because we don't want to make the no
 I think option 2 is worth trying, partly because I know exactly what it entails and how to troubleshoot it and tell if it's working well, and partly because if we can get the UDP hole punching method to work it's simple and elegant. So after we finish giving the user more control over their predictive datastreams, we should try that to see if we can solve the p2p issue before launch.
 
 central - set up a synergy server (pubsub clone where subscribers can send in a request to connect, and the publisher will simply distribute historic datasets to them.)
-synergy - synergy protocol - request connection (with data request embedded) 
+synergy - synergy protocol - request connection (with data request embedded)
 synergy - synergy protocol - promise connection
 synergy - synergy protocol - connect connection
 synergy - synergy protocol - send data
@@ -259,7 +261,6 @@ server - make an end point for verifying p2p script hash
 neuron - recreate the installer using the abstractor
 
 -- p2p end --
-
 
 -- Prep for launch --
 
@@ -319,7 +320,6 @@ Wallet Encryption:
     neuron - so on the wallet page add a card for encryption
     neuron - and ask for their password when showing the secret
     neuron - the only problem is in order to sign anything to verify your identity you need to use the private key... so the user would have to provide their password everytime satori starts... This is a problem for later... when they can authorize from their phone...
-
 
 neuron - allow neurons to predict any stream by choice (include their own), but make them ineligible for reward for those streams
 """

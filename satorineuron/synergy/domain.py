@@ -2,7 +2,7 @@ from typing import Union
 import json
 import pandas as pd
 import datetime as dt
-from satorilib.api.time import timestampToDatetime, isValidTimestamp
+from satorilib.api.time import isValidTimestamp
 
 
 class SingleObservation():

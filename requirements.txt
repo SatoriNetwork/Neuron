@@ -52,6 +52,9 @@ Crypto==1.4.1
 websocket-client==1.4.2 # not sure if we need this
 websockets==10.4 # import websocket; websocket.WebSocket()
 
+# needed for Synergy connection
+python-socketio[client]==5.11.2
+
 ## needed? for old view
 #IPython==8.7.0  # 7.23.0
 #matplotlib==3.6.2 # 3.4.1

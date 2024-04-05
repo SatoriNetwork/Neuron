@@ -18,7 +18,7 @@ from satorilib.concepts import StreamId
 from satorilib.api.disk import Cached
 from satorilib.api.hash import hashRow
 from satorilib.api.time import datetimeToTimestamp, earliestDate, isValidTimestamp
-from satorineuron.synergy.domain.peers import SingleObservation, SynergyMsg
+from satorineuron.synergy.domain import SingleObservation, SynergyMsg
 
 
 class SynergyChannel(Cached):
