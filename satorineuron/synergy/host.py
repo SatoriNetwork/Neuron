@@ -1,4 +1,5 @@
 '''
+This script is baked into the installer executables.
 This script runs the P2P script that exists within the dockerfile itself.
 The reason we've abstracted it is so that we can perform some modifications and
 a certain amount of evolution to the P2P script without requiring people to
@@ -9,15 +10,8 @@ script matches that hash.
 
 # must include and compile all the packages requied by the internal script
 import os
-from typing import Union, Dict, List, Tuple  # Python3.7 compatible
-import ast
-import socket
-import asyncio
-import datetime as dt
-import aiohttp
 import requests
 import traceback
-import json
 import hashlib
 
 INSTALL_DIR = os.path.join(os.environ.get('APPDATA', 'C:\\'), 'Satori')
@@ -30,7 +24,7 @@ def generateHash(inputStr: str) -> str:
 
 
 def run():
-    p2pScript = os.path.join(INSTALL_DIR, 'p2p', 'p2p.py')
+    p2pScript = os.path.join(INSTALL_DIR, 'scripts', 'p2p.py')
     if not os.path.isfile(p2pScript):
         print(f"File not found: {p2pScript}")
         return
@@ -44,6 +38,7 @@ def run():
                 exec(script)
             except Exception as e:
                 print(f'An error occurred while executing the code: {e}')
+                traceback.print_exc()
 
 
 run()

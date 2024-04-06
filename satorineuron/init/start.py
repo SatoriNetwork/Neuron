@@ -18,11 +18,8 @@ from satorilib.asynchronous import AsyncThread
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
-# from satorilib.api.udp.rendezvous import UDPRendezvousConnection  # todo: remove from lib
-from satorineuron.rendezvous import rendezvous
-from satorineuron.rendezvous.structs.domain import SignedStreamId
 from satorineuron.structs.start import StartupDagStruct
-from satorineuron.synergy.engine import SynergyManager
+# from satorineuron.synergy.engine import SynergyManager
 
 
 def getStart():
@@ -62,12 +59,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptionKeys: str
         self.publicationKeys: str
         # self.ipfs: Ipfs = Ipfs()
-        self.signedStreamIds: list[SignedStreamId]
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
         self.pubsub: SatoriPubSubConn = None
-        self.peer: rendezvous.RendezvousEngine
         self.synergy: SynergyManager
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
@@ -110,11 +105,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.startRelay()
         self.buildEngine()
         # self.startSynergyEngine()
-        # self.triggerDataDownloads() # should this be done on demand?
-
-        # self.rendezvousConnect()
-        # self.incrementallyDownloadDatasets()
-        # self.downloadDatasets()
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
@@ -259,31 +249,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         else:
             raise Exception('no key provided by satori server')
 
-    def startSynergyEngine(self):
-        ''' establish a synergy connection '''
-        # if self.idKkey: # rendezvous has changed, instead of sending just our
-        # ID key, we need to send our signed stream ids in a subscription msg.
-        if self.wallet:
-            self.synergy = SynergyManager(wallet=self.wallet)
-            logging.info(
-                'connected to Satori p2p network', color='green')
-        else:
-            raise Exception('wallet not open yet.')
-
-    def rendezvousConnect(self):
-        ''' establish a rendezvous connection. '''
-        # if self.idKkey: # rendezvous has changed, instead of sending just our
-        # ID key, we need to send our signed stream ids in a subscription msg.
-        if self.key:
-            self.peer = rendezvous.RendezvousEngine(
-                peer=rendezvous.generatePeer(
-                    signature=self.wallet.sign(self.key),
-                    signed=self.key,
-                    signedStreamIds=self.signedStreamIds))
-            logging.info('connected to Satori p2p network', color='green')
-        else:
-            raise Exception('no key provided by satori server')
-
     def startRelay(self):
         def append(streams: list[Stream]):
             relays = satorineuron.config.get('relay')
@@ -305,69 +270,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relay.run()
         logging.info('started relay engine', color='green')
 
-    def downloadDatasets(self):
-        '''
-        download pins (by ipfs address) received from satori server:
-        look at each pin, if not up to date, download it to temporary disk,
-        merge on disk, tell models to pull data again.
-        '''
-        def threadedDownload(
-            ipfsAddress: str,
-            ipfsStream: StreamId,
-            ipfsPeer: str,
-            diskApi: disk.Disk,
-        ):
-            # TODO:
-            # if this fails ask the server for all the pins of this stream.
-            # the other pins will be reported by the subscribers. download
-            # them at random. or latest updated or oldest stream? idk.
-
-            # go get the ipfs history and merge it in to the dataset.
-            self.ipfs.connectIfMissing(peer=ipfsPeer)
-            self.ipfs.get(
-                hash=ipfsAddress,
-                abspath=diskApi.path(aggregate=None, temp=True))
-            diskApi.compress(includeTemp=True)
-            # tell models that use this dataset to go get all their data.
-            for model in self.engine.models:
-                if model.variable == ipfsStream:
-                    model.inputsUpdated.on_next(True)
-                else:
-                    for target in model.targets:
-                        if target == ipfsStream:
-                            model.inputsUpdated.on_next(True)
-
-        # we should make the download run in parellel so using async functions
-        # here. but in the meantime, we'll do them sequentially.
-        threads = {}
-        pins = self.details.pins
-        if isinstance(pins, str):
-            pins = json.loads(pins)
-        for pin in [p for p in pins if p.get('pin_author') == p.get('stream_author')]:
-            ipfsAddress = pin.get('ipfs')
-            ipfsPeer = pin.get('peer')
-            ipfsStream = StreamId(
-                source=pin.get('stream_source'),
-                author=pin.get('stream_author'),
-                stream=pin.get('stream_stream'),
-                target=pin.get('stream_target'))
-            diskApi = disk.Disk(id=ipfsStream)
-            if (
-                ipfsAddress is not None and
-                ipfsAddress != self.ipfs.hashOfDirectory(
-                    abspath=diskApi.path(aggregate=None, temp=False))
-            ):
-                threads[ipfsAddress] = threading.Thread(
-                    target=threadedDownload,
-                    args=[ipfsAddress, ipfsStream, ipfsPeer, diskApi],
-                    daemon=True)
-                threads[ipfsAddress].start()
-        logging.info('downloaded datasets via ipfs', color='green')
-
-    def incrementallyDownloadDatasets(self):
-        ''' download history incrementally by using Satori Rendezvous network'''
-        self.peer.run()
-        logging.info('downloading datasets via p2p network', color='green')
+    def startSynergyEngine(self):
+        ''' establish a synergy connection '''
+        # if self.idKkey: # rendezvous has changed, instead of sending just our
+        # ID key, we need to send our signed stream ids in a subscription msg.
+        if self.wallet:
+            self.synergy = SynergyManager(wallet=self.wallet)
+            logging.info(
+                'connected to Satori p2p network', color='green')
+        else:
+            raise Exception('wallet not open yet.')
 
     def pause(self, timeout: int = 60):
         ''' pause the engine. '''

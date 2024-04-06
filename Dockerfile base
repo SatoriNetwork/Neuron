@@ -28,22 +28,19 @@ RUN apt-get install -y cmake
 # todo: maybe just move all this to the code part.
 RUN mkdir /Satori
 RUN mkdir /Satori/Lib
-RUN mkdir /Satori/Rendezvous
 RUN mkdir /Satori/Wallet
 RUN mkdir /Satori/Engine
 RUN mkdir /Satori/Neuron
 RUN mkdir /Satori/Neuron/data
-RUN mkdir /Satori/Neuron/temp
-RUN mkdir /Satori/Neuron/uploaded
 RUN mkdir /Satori/Neuron/models
-RUN mkdir /Satori/Neuron/predictions
 RUN mkdir /Satori/Neuron/wallet
+RUN mkdir /Satori/Neuron/config
+RUN mkdir /Satori/Neuron/scripts
+RUN mkdir /Satori/Neuron/uploaded
+RUN mkdir /Satori/Neuron/predictions
 COPY Lib/satorilib /Satori/Lib/satorilib
 COPY Lib/setup.py /Satori/Lib/setup.py
 COPY Lib/requirements.txt /Satori/Lib/requirements.txt
-COPY Rendezvous/satorirendezvous /Satori/Rendezvous/satorirendezvous
-COPY Rendezvous/setup.py /Satori/Rendezvous/setup.py
-COPY Rendezvous/requirements.txt /Satori/Rendezvous/requirements.txt
 COPY Wallet/satoriwallet /Satori/Wallet/satoriwallet
 COPY Wallet/reqs /Satori/Wallet/reqs
 COPY Wallet/setup.py /Satori/Wallet/setup.py
@@ -52,18 +49,17 @@ COPY Engine/satoriengine /Satori/Engine/satoriengine
 COPY Engine/setup.py /Satori/Engine/setup.py
 COPY Engine/requirements.txt /Satori/Engine/requirements.txt
 COPY Neuron/satorineuron/ /Satori/Neuron/satorineuron/
+COPY Neuron/scripts/ /Satori/Neuron/scripts/
 COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
 COPY Neuron/setup.py /Satori/Neuron/setup.py
 COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
 
 RUN chmod -R 777 /Satori/Lib
-RUN chmod -R 777 /Satori/Rendezvous
 RUN chmod -R 777 /Satori/Wallet
 RUN chmod -R 777 /Satori/Engine
 RUN chmod -R 777 /Satori/Neuron
 
 RUN cd /Satori/Lib && python setup.py develop
-RUN cd /Satori/Rendezvous && python setup.py develop
 RUN cd /Satori/Wallet && python setup.py develop
 RUN cd /Satori/Engine && python setup.py develop
 RUN cd /Satori/Neuron && python setup.py develop

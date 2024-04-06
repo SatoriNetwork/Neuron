@@ -24,7 +24,7 @@ class UDPRelay:
             print(f'unable to bind to port {UDPRelay.PORT}, {e}')
             raise Exception('unable to create socket')
 
-    def speak(self, remoteIp: str, remotePort: int, data: bytes = b'punch'):
+    def speak(self, remoteIp: str, remotePort: int, data: bytes = b'silver'):
         self.socket.sendto(data, (remoteIp, remotePort))
 
     def maybeAddPeer(self, ip: str):
@@ -66,8 +66,9 @@ def main():
         while True:
             # await asyncio.sleep(3600)
             udpRelay.addPeer('198.44.128.196')
+            udpRelay.addPeer('138.199.6.227')
             time.sleep(10)
-            udpRelay.addPeer('198.44.128.196')
+
     except KeyboardInterrupt:
         pass
     except Exception as e:

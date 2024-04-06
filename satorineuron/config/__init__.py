@@ -58,13 +58,6 @@ def nodejsPort():
     return get().get(verbose('nodejsPort'), '24686')
 
 
-def tempPath(filename=None):
-    ''' temporary path for downloading files '''
-    if filename:
-        return os.path.join(path(of='temp'), filename)
-    return path(of='temp')
-
-
 def dataPath(filename=None):
     ''' data path takes presidence over relative data path if both exist '''
     if filename:
