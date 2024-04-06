@@ -92,16 +92,7 @@ class UDPRelay():
     def satoriUrl(endpoint='') -> str:
         return 'http://localhost:24601/udp' + endpoint
 
-    def speak(
-        self,
-        remoteIp: str,
-        remotePort: int,
-        data: bytes
-    ):
-        greyPrint(f'sending to {remoteIp}:{remotePort} {data}')
-        self.socket.sendto(data, (remoteIp, remotePort))
-
-    def createSocket(self) -> Tuple[int, socket.socket]:
+    def createSocket(self) -> socket.socket:
         def bind(localPort: int) -> Union[socket.socket, None]:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
@@ -124,11 +115,16 @@ class UDPRelay():
         # raise Exception('unable to create socket')
         return bind(UDPRelay.PORT)
 
-    def punch(self, remoteIp: str, remotePort: int):
-        self.socket.sendto(b'punch', (remoteIp, remotePort))
+    def speak(self, remoteIp: str, remotePort: int, data: bytes = b'punch'):
+        greyPrint(f'sending to {remoteIp}:{remotePort} {data}')
+        self.socket.sendto(data, (remoteIp, remotePort))
+
+    def maybeAddPeer(self, ip: str):
+        if ip not in self.peers:
+            self.addPeer(ip)
 
     def addPeer(self, ip: str):
-        self.punch(ip, UDPRelay.PORT)
+        self.speak(ip, UDPRelay.PORT)
         self.peers.append(ip)
 
     async def initSocketListener(self):
@@ -173,8 +169,7 @@ class UDPRelay():
 
     def handleNeuronMessage(self, message: str):
         msg = SynergyMsg.fromJson(message)
-        if msg.ip not in self.peers:
-            self.addPeer(msg.ip)
+        self.maybeAddPeer(msg.ip)
         self.speak(
             remoteIp=msg.ip,
             remotePort=UDPRelay.PORT,
