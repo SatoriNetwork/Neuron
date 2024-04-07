@@ -19,7 +19,8 @@ from satorineuron import logging
 from satorineuron import config
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import StartupDagStruct
-# from satorineuron.synergy.engine import SynergyManager
+from satorineuron.structs.pubsub import SignedStreamId
+from satorineuron.synergy.engine import SynergyManager
 
 
 def getStart():
@@ -217,9 +218,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             if not success:
                 cache.saveHashes()
 
+        # TODO: if it's missing create it
+        # also include checking our subscriptions
         for stream in set(self.publications):
             cache = self.cacheOf(stream.id)
             self.asyncThread.runAsync(cache, task=validateCache)
+        import time
+        time.sleep(30)
         return True
 
     def buildEngine(self):

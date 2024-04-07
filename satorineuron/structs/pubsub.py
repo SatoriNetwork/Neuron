@@ -154,19 +154,3 @@ class SignedStreamId(PubSubStreamId):
             subscribe=subscribe,
             signature=signature,
             signed=signed)
-
-
-class SingleObservation():
-    def __init__(
-        self,
-        timestamp: Union[str, int, float, dt.datetime],
-        data: Union[str, int, bytes, float, None],
-        hash: Union[str,  None]
-    ):
-        self.time = timestamp
-        self.data = data
-        self.hash = hash
-
-    @property
-    def isNone(self):
-        return self.time is None or self.data is None or self.hash is None
