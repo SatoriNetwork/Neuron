@@ -24,12 +24,8 @@ import typing as t
 import socket
 import asyncio
 import json
-# import requests
-import urllib.request
-# import aiohttp
-import asyncio
-import http.client
-from urllib.parse import urlparse
+# import requests  # ==2.31.0
+import aiohttp  # ==3.8.4
 
 
 def greyPrint(msg: str):
@@ -67,45 +63,56 @@ class SseTimeoutFailure(Exception):
         return f"{self.__class__.__name__}: {self.args[0]} (Extra Data: {self.extra_data})"
 
 
-class NeuronWatcher:
-
-    async def createNeuronListener(self):
-        url = UDPRelay.satoriUrl('/stream')
-        parsed_url = urlparse(url)
-        host = parsed_url.hostname
-        port = parsed_url.port or (443 if parsed_url.scheme == 'https' else 80)
-        path = parsed_url.path
-
-        reader, writer = await asyncio.open_connection(host, port, ssl=(parsed_url.scheme == 'https'))
-        request_header = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
-        writer.write(request_header.encode('utf-8'))
-
-        try:
-            while True:  # You might want to implement a proper breaking condition
-                line = await reader.readline()
-                if line.startswith(b'data:'):
-                    asyncio.create_task(self.handleNeuronMessage(
-                        line.decode('utf-8')[5:].strip()))
-
-        except asyncio.TimeoutError:
-            print("SSE connection timed out...")
-            await self.shutdown()
-            raise
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            await self.shutdown()
-        finally:
-            writer.close()
-            await writer.wait_closed()
-
-    async def handleNeuronMessage(self, message):
-        # Your message handling logic
-        pass
-
-    async def shutdown(self):
-        # Your shutdown logic
-        pass
-
+# class NeuronWatcher:
+#
+#    @staticmethod
+#    async def createNeuronListener(self):
+#        import asyncio
+#        import http.client
+#        from urllib.parse import urlparse
+#        url = UDPRelay.satoriUrl('/stream')
+#        parsed_url = urlparse(url)
+#        host = parsed_url.hostname
+#        port = parsed_url.port or (443 if parsed_url.scheme == 'https' else 80)
+#        path = parsed_url.path
+#
+#        reader, writer = await asyncio.open_connection(host, port, ssl=(parsed_url.scheme == 'https'))
+#        request_header = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
+#        writer.write(request_header.encode('utf-8'))
+#
+#        try:
+#            while True:  # You might want to implement a proper breaking condition
+#                line = await reader.readline()
+#                if line.startswith(b'data:'):
+#                    asyncio.create_task(self.handleNeuronMessage(
+#                        line.decode('utf-8')[5:].strip()))
+#
+#        except asyncio.TimeoutError:
+#            print("SSE connection timed out...")
+#            await self.shutdown()
+#            raise
+#        except Exception as e:
+#            print(f"An error occurred: {e}")
+#            await self.shutdown()
+#        finally:
+#            writer.close()
+#            await writer.wait_closed()
+#
+#class requests:
+#    ''' works: this could allow us to avoid using 3rd party package requests '''
+#    @staticmethod
+#    def get(url: str) -> t.Any:
+#        import urllib.request
+#        ''' Using urllib.request to open a URL and read the response '''
+#        try:
+#            with urllib.request.urlopen(url) as response:
+#                content = response.read()
+#            # Decoding the content to a string, assuming it's encoded in UTF-8
+#            content_as_string = content.decode('utf-8')
+#            return content_as_string
+#        except Exception as e:
+#            # print(f'unable to read {url}: {e}')
+#            pass
 
 class UDPRelay():
     ''' go-between for the flask server and the remote peers '''
@@ -264,22 +271,6 @@ class UDPRelay():
         await self.cancelNeuronListener()
         self.socket.close()
         print('UDPRelay shutdown complete.')
-
-
-class requests:
-    ''' to avoid using 3rd party package requests, we use urllib.request '''
-    @staticmethod
-    def get(url: str) -> t.Any:
-        ''' Using urllib.request to open a URL and read the response '''
-        try:
-            with urllib.request.urlopen(url) as response:
-                content = response.read()
-            # Decoding the content to a string, assuming it's encoded in UTF-8
-            content_as_string = content.decode('utf-8')
-            return content_as_string
-        except Exception as e:
-            print(f'unable to read {url}: {e}')
-        return
 
 
 async def main():
