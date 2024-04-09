@@ -20,12 +20,16 @@ hash against the server in order to do that safely.
 # if you do have a connection then send the data
 # as you're listening to all the connections, relay their info to flask.
 
-from typing import Union, List, Tuple  # Python3.7 compatible
+import typing as t
 import socket
 import asyncio
-import aiohttp
-import requests
 import json
+# import requests
+import urllib.request
+# import aiohttp
+import asyncio
+import http.client
+from urllib.parse import urlparse
 
 
 def greyPrint(msg: str):
@@ -37,7 +41,7 @@ def greyPrint(msg: str):
 
 
 class SynergyMsg():
-    def __init__(self, ip: str, data: Union[str, int, bytes, float, None]):
+    def __init__(self, ip: str, data: t.Union[str, int, bytes, float, None]):
         self.ip = ip
         self.data = data
 
@@ -63,6 +67,46 @@ class SseTimeoutFailure(Exception):
         return f"{self.__class__.__name__}: {self.args[0]} (Extra Data: {self.extra_data})"
 
 
+class NeuronWatcher:
+
+    async def createNeuronListener(self):
+        url = UDPRelay.satoriUrl('/stream')
+        parsed_url = urlparse(url)
+        host = parsed_url.hostname
+        port = parsed_url.port or (443 if parsed_url.scheme == 'https' else 80)
+        path = parsed_url.path
+
+        reader, writer = await asyncio.open_connection(host, port, ssl=(parsed_url.scheme == 'https'))
+        request_header = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
+        writer.write(request_header.encode('utf-8'))
+
+        try:
+            while True:  # You might want to implement a proper breaking condition
+                line = await reader.readline()
+                if line.startswith(b'data:'):
+                    asyncio.create_task(self.handleNeuronMessage(
+                        line.decode('utf-8')[5:].strip()))
+
+        except asyncio.TimeoutError:
+            print("SSE connection timed out...")
+            await self.shutdown()
+            raise
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            await self.shutdown()
+        finally:
+            writer.close()
+            await writer.wait_closed()
+
+    async def handleNeuronMessage(self, message):
+        # Your message handling logic
+        pass
+
+    async def shutdown(self):
+        # Your shutdown logic
+        pass
+
+
 class UDPRelay():
     ''' go-between for the flask server and the remote peers '''
 
@@ -71,7 +115,7 @@ class UDPRelay():
     def __init__(self):
         self.socketListener = None
         self.neuronListener = None
-        self.peers: List[str] = []
+        self.peers: t.List[str] = []
         self.session = aiohttp.ClientSession()
         self.socket: socket.socket = self.createSocket()
         self.loop = asyncio.get_event_loop()
@@ -117,7 +161,7 @@ class UDPRelay():
                 await self.shutdown()
 
     def createSocket(self) -> socket.socket:
-        def bind(localPort: int) -> Union[socket.socket, None]:
+        def bind(localPort: int) -> t.Union[socket.socket, None]:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
                 sock.bind(('0.0.0.0', localPort))
@@ -166,7 +210,7 @@ class UDPRelay():
             remotePort=UDPRelay.PORT,
             data=msg.data.encode() if isinstance(msg.data, str) else msg.data)
 
-    async def handlePeerMessage(self, data: bytes, address: Tuple[str, int]):
+    async def handlePeerMessage(self, data: bytes, address: t.Tuple[str, int]):
         greyPrint(f'Received {data} from {address[0]}:{address[1]}')
         if data in [b'punch', b'payload']:
             greyPrint('skipping punch or payload')
@@ -220,6 +264,22 @@ class UDPRelay():
         await self.cancelNeuronListener()
         self.socket.close()
         print('UDPRelay shutdown complete.')
+
+
+class requests:
+    ''' to avoid using 3rd party package requests, we use urllib.request '''
+    @staticmethod
+    def get(url: str) -> t.Any:
+        ''' Using urllib.request to open a URL and read the response '''
+        try:
+            with urllib.request.urlopen(url) as response:
+                content = response.read()
+            # Decoding the content to a string, assuming it's encoded in UTF-8
+            content_as_string = content.decode('utf-8')
+            return content_as_string
+        except Exception as e:
+            print(f'unable to read {url}: {e}')
+        return
 
 
 async def main():
