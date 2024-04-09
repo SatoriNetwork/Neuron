@@ -32,7 +32,6 @@ class StartupDagStruct(object):
         self.relayValidation: 'ValidateRelayStream' = None
         self.server: SatoriServerClient = None
         self.pubsub: SatoriPubSubConn = None
-        self.peer: 'rendezvous.RendezvousEngine' = None
         self.relay: 'RawStreamRelayEngine' = None
         self.engine: 'satoriengine.Engine' = None
         self.publications: list[Stream] = None
@@ -42,7 +41,6 @@ class StartupDagStruct(object):
 
     def cacheOf(self, streamId: StreamId):
         ''' returns the reference to the cache of a stream '''
-        pass
 
     @property
     def wallet(self) -> RavencoinWallet:
@@ -58,48 +56,37 @@ class StartupDagStruct(object):
 
     def start(self):
         ''' start the satori engine. '''
-        pass
 
     def createRelayValidation(self):
-        pass
+        ''' creates relay validation engine '''
 
     def openWallet(self):
-        pass
+        ''' opens the local wallet. '''
 
     def checkin(self):
-        pass
+        ''' checks in with the Satori Server '''
 
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
-        pass
 
     def pubsubConnect(self):
         ''' establish a pubsub connection. '''
-        pass
 
-    def rendezvousConnect(self):
-        ''' establish a rendezvous connection. '''
-        pass
+    def startSynergyEngine(self):
+        ''' establish a synergy connection. '''
 
     def startRelay(self):
-        pass
+        ''' starts the relay engine '''
 
-    def downloadDatasets(self):
-        '''
-        download pins (by ipfs address) received from satori server:
-        look at each pin, if not up to date, download it to temporary disk,
-        merge on disk, tell models to pull data again.
-        '''
-        pass
-
-    def incrementallyDownloadDatasets(self):
-        ''' download history incrementally by using Satori Rendezvous network'''
-        pass
+    # def downloadDatasets(self):
+    #    '''
+    #    '''
+    #    pass
+    def autosecure(self):
+        ''' starts autosecure process '''
 
     def pause(self, timeout: int = 60):
         ''' pause the engine. '''
-        pass
 
     def unpause(self):
         ''' pause the engine. '''
-        pass

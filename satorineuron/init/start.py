@@ -223,8 +223,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         for stream in set(self.publications):
             cache = self.cacheOf(stream.id)
             self.asyncThread.runAsync(cache, task=validateCache)
-        import time
-        time.sleep(30)
+        for stream in set(self.publications):
+            cache = self.cacheOf(stream.id)
+            self.asyncThread.runAsync(cache, task=validateCache)
         return True
 
     def buildEngine(self):
@@ -277,8 +278,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def startSynergyEngine(self):
         ''' establish a synergy connection '''
-        # if self.idKkey: # rendezvous has changed, instead of sending just our
-        # ID key, we need to send our signed stream ids in a subscription msg.
         if self.wallet:
             self.synergy = SynergyManager(wallet=self.wallet)
             logging.info(

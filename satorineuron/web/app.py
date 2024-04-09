@@ -1099,7 +1099,7 @@ def voteSubmitManifestVault():
             request.json.get('vaultCreators') > 0 or
             request.json.get('vaultManagers') > 0) and
             start.vault is not None and start.vault.isDecrypted
-            ):
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
@@ -1328,44 +1328,11 @@ def udpPorts():
     return str(start.peer.gatherChannels())
 
 
-# @app.route('/udp/stream')
-# def udpStream():
-#
-#    def event_stream():
-#        '''
-#        here we gather all the messages from the rendezvous object
-#        it will be a list of tuples (address, message)
-#        then we have to organize it into a dictionary for the udp relay
-#        then make it a string. will be interpretted this way:
-#        literal: dict[str, object] = ast.literal_eval(message)
-#        data = literal.get('data', None)
-#        localPort = literal.get('localPort', None)
-#        '''
-#        while True:
-#            time.sleep(1)
-#            messages = start.peer.gatherMessages()
-#            if len(messages) > 0:
-#                yield 'data:' + str(messages) + '\n\n'
-#            yield '\n'
-#
-#    return Response(
-#        stream_with_context(event_stream()),
-#        content_type='text/event-stream')
-
-# with this solution we can push messages to the queue instead of pulling them
 @app.route('/udp/stream')
 def udpStream():
+    ''' here we listen for messages from the synergy engine '''
 
     def event_stream():
-        '''
-        here we gather all the messages from the rendezvous object
-        it will be a list of tuples (address, message)
-        then we have to organize it into a dictionary for the udp relay
-        then make it a string. will be interpretted this way:
-        literal: dict[str, object] = ast.literal_eval(message)
-        data = literal.get('data', None)
-        localPort = literal.get('localPort', None)
-        '''
         while True:
             message = start.udpQueue.get()
             yield 'data:' + message + '\n\n'
@@ -1375,19 +1342,13 @@ def udpStream():
         content_type='text/event-stream')
 
 
-@app.route('/udp/reconnect', methods=['GET'])
-def udpReconnect():
-    start.rendezvousConnect()
-    return 'ok', 200
-
-
 @app.route('/udp/message', methods=['POST'])
 def udpMessage():
     ''' receives data from udp relay '''
     data = request.data
     remoteIp = request.headers.get('remoteIp')
-    #remotePort = int(request.headers.get('remotePort')) #not needed at this time
-    #localPort = int(request.headers.get('localPort'))
+    # remotePort = int(request.headers.get('remotePort')) #not needed at this time
+    # localPort = int(request.headers.get('localPort'))
     # print('udpMessage', data, 'from', remoteIp, remotePort, 'to', localPort)
     if any(v is None for v in [remoteIp, data]):
         return 'fail'
