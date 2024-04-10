@@ -177,37 +177,43 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptions = [
             Stream.fromMap(x)
             for x in json.loads(self.details.subscriptions)]
+        for v in self.subscriptions:
+            logging.debug(v, color='magenta')
         self.publications = [
             Stream.fromMap(x)
             for x in json.loads(self.details.publications)]
+        for v in self.publications:
+            logging.debug(v, color='yellow')
         self.caches = {
             x.streamId: disk.Cache(id=x.streamId)
             for x in set(self.subscriptions + self.publications)}
+        for k, v in self.caches.items():
+            logging.debug(k, v, color='magenta')
         # logging.debug(self.caches, color='yellow')
-        self.signedStreamIds = [
-            SignedStreamId(
-                source=s.id.source,
-                author=s.id.author,
-                stream=s.id.stream,
-                target=s.id.target,
-                publish=False,
-                subscribe=True,
-                signature=sig,  # doesn't the server need my pubkey?
-                signed=self.wallet.sign(sig)) for s, sig in zip(
-                    self.subscriptions,
-                    self.subscriptionKeys)
-        ] + [
-            SignedStreamId(
-                source=p.id.source,
-                author=p.id.author,
-                stream=p.id.stream,
-                target=p.id.target,
-                publish=True,
-                subscribe=True,
-                signature=sig,  # doesn't the server need my pubkey?
-                signed=self.wallet.sign(sig)) for p, sig in zip(
-                    self.publications,
-                    self.publicationKeys)]
+        # self.signedStreamIds = [
+        #    SignedStreamId(
+        #        source=s.id.source,
+        #        author=s.id.author,
+        #        stream=s.id.stream,
+        #        target=s.id.target,
+        #        publish=False,
+        #        subscribe=True,
+        #        signature=sig,  # doesn't the server need my pubkey?
+        #        signed=self.wallet.sign(sig)) for s, sig in zip(
+        #            self.subscriptions,
+        #            self.subscriptionKeys)
+        # ] + [
+        #    SignedStreamId(
+        #        source=p.id.source,
+        #        author=p.id.author,
+        #        stream=p.id.stream,
+        #        target=p.id.target,
+        #        publish=True,
+        #        subscribe=True,
+        #        signature=sig,  # doesn't the server need my pubkey?
+        #        signed=self.wallet.sign(sig)) for p, sig in zip(
+        #            self.publications,
+        #            self.publicationKeys)]
         logging.info('checked in with Satori', color='green')
 
     def verifyCaches(self) -> bool:
@@ -220,9 +226,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
         # TODO: if it's missing create it
         # also include checking our subscriptions
-        for stream in set(self.publications):
+        for stream in set(self.subscriptions):
             cache = self.cacheOf(stream.id)
-            self.asyncThread.runAsync(cache, task=validateCache)
+            # self.asyncThread.runAsync(cache, task=validateCache)
         for stream in set(self.publications):
             cache = self.cacheOf(stream.id)
             self.asyncThread.runAsync(cache, task=validateCache)

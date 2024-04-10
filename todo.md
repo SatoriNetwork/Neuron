@@ -240,6 +240,9 @@ DONE neuron - remove view of the pinning feature (not sure it works)
 DONE neuron - automatically delete subscriptions and predictive streams for unsanctioned streams
 
 neuron - run the synergy script on startup to test.
+neuron - rebuild base image with new stuff
+neuron, central - inspect subscriptions again.
+central - rewrite the process of choosing streams to predict.
 
 -- P2P options --
 

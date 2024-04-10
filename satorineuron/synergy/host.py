@@ -53,7 +53,6 @@ import select
 import signal
 # import socket
 import sqlite3
-import sqlite3.dbapi2
 import subprocess
 import sys
 import threading

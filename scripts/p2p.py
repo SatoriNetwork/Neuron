@@ -98,7 +98,7 @@ class SseTimeoutFailure(Exception):
 #            writer.close()
 #            await writer.wait_closed()
 #
-#class requests:
+# class requests:
 #    ''' works: this could allow us to avoid using 3rd party package requests '''
 #    @staticmethod
 #    def get(url: str) -> t.Any:
@@ -210,6 +210,7 @@ class UDPRelay():
     ### HANDLERS ###
 
     async def handleNeuronMessage(self, message: str):
+        print('handleNeuronMessage', message)
         msg = SynergyMsg.fromJson(message)
         await self.maybeAddPeer(msg.ip)
         await self.speak(
@@ -225,6 +226,7 @@ class UDPRelay():
         await self.relayToNeuron(data=data, ip=address[0], port=address[1])
 
     async def relayToNeuron(self, data: bytes, ip: str, port: int):
+        print('replaying to neuron', data, ip)
         try:
             async with self.session.post(
                     UDPRelay.satoriUrl('/message'),
