@@ -105,7 +105,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.startRelay()
         self.buildEngine()
-        # self.startSynergyEngine()
+        self.startSynergyEngine()
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
@@ -177,13 +177,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptions = [
             Stream.fromMap(x)
             for x in json.loads(self.details.subscriptions)]
-        for v in self.subscriptions:
-            logging.debug(v, color='magenta')
         self.publications = [
             Stream.fromMap(x)
             for x in json.loads(self.details.publications)]
-        for v in self.publications:
-            logging.debug(v, color='yellow')
         self.caches = {
             x.streamId: disk.Cache(id=x.streamId)
             for x in set(self.subscriptions + self.publications)}

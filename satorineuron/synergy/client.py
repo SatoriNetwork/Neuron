@@ -19,7 +19,7 @@ class SynergyRestClient(object):
         *args, **kwargs
     ):
         super(SynergyRestClient, self).__init__(*args, **kwargs)
-        self.url = url or 'https://satorinet.io:3300'
+        self.url = url or 'https://satorinet.io:24602'
 
     def getChallenge(self):
         print(self.url + '/challenge')
@@ -37,9 +37,9 @@ class SynergyClient:
         self.wallet = wallet
         self.pubkey = wallet.publicKey
         self.connect_event = threading.Event()
-        self.setup_handlers()
+        self.setupHandlers()
 
-    def setup_handlers(self):
+    def setupHandlers(self):
         @self.sio.event
         def connect():
             self.onConnect()
@@ -121,13 +121,14 @@ class SynergyClient:
         pass
 
     def disconnect(self):
+        logging.info('Disconnected...')
         self.sio.disconnect()
 
     def reconnect(self):
         logging.info('Attempting to reconnect...')
         self.connect()
 
-    def run_forever(self):
+    def runForever(self):
         # Initiates the connection and enters the event loop
         self.connect()
         try:
@@ -139,15 +140,15 @@ class SynergyClient:
 
 # if __name__ == "__main__":
 #    client = SynergyClient(
-#        url='http://localhost:3300',
+#        url='http://localhost:24602',
 #        wallet=RavencoinWallet(
 #            config.walletPath('wallet.yaml'),
 #            reserve=0.01,
 #            isTestnet=True)())
-#    # client.run_forever()
+#    # client.runForever()
 #
 #    # Run the client in a separate thread
-#    client_thread = threading.Thread(target=client.run_forever)
+#    client_thread = threading.Thread(target=client.runForever)
 #    client_thread.start()
 #
 #    # Wait for the connection to be established

@@ -16,36 +16,43 @@ def chooseRandomUnusedPortWitninDynamicRange():
     return 24600
 
 
+# class SynergyManager():
+#    def __init__(self, wallet: Wallet):
+#        self.wallet = wallet
+#        self.pubkey = wallet.publicKey
+#        self.channel = SynergyChannel(StreamId(
+#            source='satori', stream='neuron', target='synergy', author='satori'), ip='37.19.210.29')
+#        import threading
+#        threading.Thread(target=self.main).start()
+#
+#    def main(self):
+#        import time
+#        while True:
+#            time.sleep(10)
+#            self.channel.send(data='hello world')
+
+
 class SynergyManager():
     def __init__(self, wallet: Wallet):
         self.wallet = wallet
         self.pubkey = wallet.publicKey
-        self.channel = SynergyChannel(StreamId(
-            source='satori', stream='neuron', target='synergy', author='satori'), ip='37.19.210.29')
-        import threading
-        threading.Thread(target=self.main).start()
-
-    def main(self):
-        import time
-        while True:
-            time.sleep(10)
-            self.channel.send(data='hello world')
-
-
-class SynergyManager2():
-    def __init__(self, wallet: Wallet):
-        self.wallet = wallet
-        self.pubkey = wallet.publicKey
         self.synergy = SynergyClient(
-            url='http://localhost:3300',
+            url='https://satorinet.io:24602',
             router=self.handleMessage,
-            wallet=RavencoinWallet(
-                config.walletPath('wallet.yaml'),
-                reserve=0.01,
-                isTestnet=True)())
+            wallet=RavencoinWallet(config.walletPath('wallet.yaml'))())
         self.channels: dict[str, SynergyChannel] = {
             # localport: SynergyChannel
         }
+        self.runForever()
+
+    def runForever(self):
+        import threading
+        self.synergyThread = threading.Thread(target=self.synergy.runForever)
+        self.synergyThread.start()
+        # testing
+        # import time
+        # time.sleep(30)
+        # self.synergy.ping("Hello, World!")
 
     def connectToPeer(self, streamId: StreamId):
         ''' this can be called to initiate the connection to a peer '''

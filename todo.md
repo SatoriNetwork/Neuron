@@ -238,11 +238,13 @@ DONE neuron - fix the front end so you don't have to refresh page to get histori
 DONE server - get the pin/depin call working on neuron
 DONE neuron - remove view of the pinning feature (not sure it works)
 DONE neuron - automatically delete subscriptions and predictive streams for unsanctioned streams
-
+DONE central - refactor how we handle subscriptions in database: one single source of truth for raw data stream preditions, subscriptions table becomes only for ancillary subscriptions
+DONE central - rewrite the process of choosing streams to predict:
+DONE central - get a list of deleted predictings for streams that are sanctioned
+DONE neuron, central - inspect subscriptions again.
 neuron - run the synergy script on startup to test.
 neuron - rebuild base image with new stuff
-neuron, central - inspect subscriptions again.
-central - rewrite the process of choosing streams to predict.
+neuron - figure out why we don't have history or predictions on ui
 
 -- P2P options --
 
@@ -253,12 +255,12 @@ we have to make a more robust p2p solution. because we don't want to make the no
 
 I think option 2 is worth trying, partly because I know exactly what it entails and how to troubleshoot it and tell if it's working well, and partly because if we can get the UDP hole punching method to work it's simple and elegant. So after we finish giving the user more control over their predictive datastreams, we should try that to see if we can solve the p2p issue before launch.
 
-central - set up a synergy server (pubsub clone where subscribers can send in a request to connect, and the publisher will simply distribute historic datasets to them.)
-synergy - synergy protocol - request connection (with data request embedded)
-synergy - synergy protocol - promise connection
-synergy - synergy protocol - connect connection
-synergy - synergy protocol - send data
-synergy - synergy protocol - receive data
+DONE central - set up a synergy server (pubsub clone where subscribers can send in a request to connect, and the publisher will simply distribute historic datasets to them.)
+DONE synergy - synergy protocol - request connection (with data request embedded)
+DONE synergy - synergy protocol - promise connection
+DONE synergy - synergy protocol - connect connection
+DONE synergy - synergy protocol - send data
+DONE synergy - synergy protocol - receive data
 neuron - publisher must allways be connected to synergy
 neuron - subscribers need only connect to synergy on demand
 neuron - handle saving data

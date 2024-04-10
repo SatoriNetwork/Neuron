@@ -83,17 +83,17 @@ def run():
         return
     with open(p2pScript, "r") as file:
         script = file.read()
-    # r = requests.get('https://satorinet.io/valid-p2p')
-    # if r.status_code == 200:
-    #    hashes = r.json()
-    #    if generateHash(script) in hashes:
-    try:
-        namespace = {}
-        exec(script, namespace)
-        # exec(script, globals(), locals())
-    except Exception as e:
-        print(f'An error occurred while executing the code: {e}')
-        traceback.print_exc()
+    r = requests.get('https://satorinet.io/verify/scripthash')
+    if r.status_code == 200:
+        hashes = r.json()
+        if generateHash(script) in hashes:
+            try:
+                namespace = {}
+                exec(script, namespace)
+                # exec(script, globals(), locals())
+            except Exception as e:
+                print(f'An error occurred while executing the code: {e}')
+                traceback.print_exc()
 
 
 run()

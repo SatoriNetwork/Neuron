@@ -151,28 +151,28 @@
                     </div>
                   </td>
                 -->
-                <td id="td-{{streamOverview.hashed}}-source" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
+                <td id="td-{{streamOverview.hashed}}-source" onclick="scrollOrJumpToTop();setData(chartOne, {{ streamOverview.predictions }});setData(chartTwo, {{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction | default(null, false)}}, {{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.source }}</h6>
                   </div>
                 </td>
-                <td id="td-{{streamOverview.hashed}}-stream" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
+                <td id="td-{{streamOverview.hashed}}-stream" onclick="scrollOrJumpToTop();setData(chartOne, {{ streamOverview.predictions }});setData(chartTwo, {{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction | default('null', false)}}, {{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.stream }}</h6>
                   </div>
                 </td>
-                <td id="td-{{streamOverview.hashed}}-target" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
+                <td id="td-{{streamOverview.hashed}}-target" onclick="scrollOrJumpToTop();setData(chartOne, {{ streamOverview.predictions }});setData(chartTwo, {{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction | default('null', false)}}, {{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.target }}</h6>
                   </div>
                 </td>
-                <td id="td-{{streamOverview.hashed}}-value" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
+                <td id="td-{{streamOverview.hashed}}-value" onclick="scrollOrJumpToTop();setData(chartOne, {{ streamOverview.predictions }});setData(chartTwo, {{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction | default('null', false)}}, {{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <!-- we don't give this color yet because the indication is ambiguous - is it late or on time? or is it accurate or way off? -->
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.value }}</h6>
                   </div>
                 </td>
-                <td id="td-{{streamOverview.hashed}}-prediction" onclick="scrollOrJumpToTop();setData(chartOne,{{ streamOverview.predictions }});setData(chartTwo,{{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction}},{{streamOverview.predictions}});">
+                <td id="td-{{streamOverview.hashed}}-prediction" onclick="scrollOrJumpToTop();setData(chartOne, {{ streamOverview.predictions }});setData(chartTwo, {{streamOverview.errs}});setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction | default('null', false)}}, {{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.prediction }}</h6>
                   </div>
@@ -1267,7 +1267,9 @@
         addDataChartThree('', data[i], null, predictions.length-data.length+i >= 0 ? predictions[predictions.length-data.length+i] : null);
       }
     }
-    addDataChartThree('next', null, prediction, null);
+    if (prediction != false) {
+      addDataChartThree('next', null, prediction, null);
+    }
   }
   
   var ctx = document.getElementById("chart-bars").getContext("2d");
