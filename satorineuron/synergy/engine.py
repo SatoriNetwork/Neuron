@@ -45,7 +45,7 @@ class SynergyManager():
             # localport: SynergyChannel
         }
         self.runForever()
-        self.testing()
+        # self.testing()
 
     def testing(self):
         # testing

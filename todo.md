@@ -246,11 +246,13 @@ DONE neuron - rebuild base image with new stuff
 neuron - run the synergy script on startup to test.
 neuron - figure out why we don't have history or predictions on ui
 
-neuron - host p2p file doesn't recognize when neuron is up
-neuron - host p2p file probably doesn't return to a waiting state if neuron goes down
+DONE neuron - host p2p file doesn't recognize when neuron is up
+DONE neuron - host p2p file probably doesn't return to a waiting state if neuron goes down
 
 neuron - disk cache isn't able to added missing datastreams on the fly
 neuron - synergy author not found error should retry later?
+
+neuron - publish stream isn't loaded or relayed
 
 -- P2P options --
 

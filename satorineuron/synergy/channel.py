@@ -127,7 +127,7 @@ class SynergyPublisher(SynergyChannel):
     def __init__(self, streamId: StreamId, ip: str):
         super().__init__(streamId, ip)
         self.ts: str = datetimeToTimestamp(earliestDate())
-        self.thread = None
+        self.running = False
         # self.main()
 
     def receive(self, message: bytes):
@@ -139,7 +139,7 @@ class SynergyPublisher(SynergyChannel):
             ts = message.decode()
         if isValidTimestamp(ts):
             self.ts = ts
-            if self.thread is None:
+            if not self.running:
                 self.main()
 
     def main(self):
@@ -165,8 +165,7 @@ class SynergyPublisher(SynergyChannel):
                 return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
             return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
 
-        # wait for the subscriber to be ready (or trigger only on msg)
-        # time.sleep(15)
+        self.running = True
         while self.ts != self.disk.cache.index[-1]:
             ts = self.ts
             time.sleep(0.33)  # cool down
@@ -177,3 +176,4 @@ class SynergyPublisher(SynergyChannel):
             self.send(observation.toJson())
             if self.ts == ts:
                 self.ts = observation.time
+        self.running = False

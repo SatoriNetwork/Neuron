@@ -159,13 +159,20 @@ class UDPRelay():
                                 self.handleNeuronMessage(
                                     line.decode('utf-8')[5:].strip()))
             except asyncio.TimeoutError:
-                greyPrint("SSE connection timed out...")
-                await self.shutdown()
-                raise SseTimeoutFailure()
+                greyPrint("Neuron connection timed out...")
+                # await self.shutdown()
+                self.running = False
+                # raise SseTimeoutFailure()
             except aiohttp.ClientConnectionError:
-                await self.shutdown()
+                greyPrint("Neuron connection error...")
+                self.running = False
+                # await self.shutdown()
+                # raise SseTimeoutFailure()
             except aiohttp.ClientError:
-                await self.shutdown()
+                greyPrint("Neuron error...")
+                self.running = False
+                # await self.shutdown()
+                # raise SseTimeoutFailure()
 
     def createSocket(self) -> socket.socket:
         def bind(localPort: int) -> t.Union[socket.socket, None]:
@@ -187,10 +194,10 @@ class UDPRelay():
                 # Ensure we await the async handlePeerMessage method:
                 await self.handlePeerMessage(data, address)
             except asyncio.CancelledError:
-                print('listenTo task cancelled')
+                greyPrint('listenTo task cancelled')
                 break
             except Exception as e:
-                print(f'listenTo error: {e}')
+                greyPrint(f'listenTo error: {e}')
                 break
 
     ### SPEAK ###
@@ -256,7 +263,7 @@ class UDPRelay():
             try:
                 await self.socketListener
             except asyncio.CancelledError:
-                print('Socket listener task cancelled successfully.')
+                greyPrint('Socket listener task cancelled successfully.')
 
     async def cancelNeuronListener(self):
         if self.neuronListener:
@@ -264,7 +271,7 @@ class UDPRelay():
             try:
                 await self.neuronListener
             except asyncio.CancelledError:
-                print('Neuron listener task cancelled successfully.')
+                greyPrint('Neuron listener task cancelled successfully.')
 
     async def shutdown(self):
         self.running = False
@@ -272,7 +279,7 @@ class UDPRelay():
         await self.cancelSocketListener()
         await self.cancelNeuronListener()
         self.socket.close()
-        print('UDPRelay shutdown complete.')
+        greyPrint('UDPRelay shutdown complete.')
 
 
 async def main():
@@ -292,23 +299,30 @@ async def main():
                     notified = True
             await asyncio.sleep(1)
 
-    await waitForNeuron()
-    udpRelay = UDPRelay()
-    await udpRelay.run()
-    print("Satori P2P Relay is running. Press Ctrl+C to stop.")
-    try:
-        while True:
-            await asyncio.sleep(3600)
-            # testing
-            # udpRelay.addPeer('192.168.0.1')
-            # await asyncio.sleep(60)
-            # udpRelay.addPeer('192.168.0.2')
-    except KeyboardInterrupt:
-        pass
-    finally:
-        await udpRelay.shutdown()
+    while True:
+        await waitForNeuron()
+        udpRelay = UDPRelay()
+        await udpRelay.run()
+        greyPrint("Satori P2P Relay is running. Press Ctrl+C to stop.")
+        try:
+            while True:
+                await asyncio.sleep(3)
+                if not udpRelay.running:
+                    raise Exception('udpRelay not running')
+                # testing
+                # udpRelay.addPeer('192.168.0.1')
+                # await asyncio.sleep(60)
+                # udpRelay.addPeer('192.168.0.2')
+        except KeyboardInterrupt:
+            pass
+        except Exception as e:
+            pass
+        except SseTimeoutFailure:
+            pass
+        finally:
+            await udpRelay.shutdown()
 
 try:
     asyncio.run(main())
 except KeyboardInterrupt:
-    print('Interrupted by user')
+    greyPrint('Interrupted by user')
