@@ -56,6 +56,7 @@ class SynergySubscriber(SynergyChannel):
         print('received message:', message)
         observation = SingleObservation.fromMessage(message)
         if observation.isValid:
+            print('putting', observation.toJson())
             self.inbox.put(observation)
 
     def main(self):

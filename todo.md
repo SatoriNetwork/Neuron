@@ -243,16 +243,13 @@ DONE central - rewrite the process of choosing streams to predict:
 DONE central - get a list of deleted predictings for streams that are sanctioned
 DONE neuron, central - inspect subscriptions again.
 DONE neuron - rebuild base image with new stuff
-neuron - run the synergy script on startup to test.
-neuron - figure out why we don't have history or predictions on ui
-
 DONE neuron - host p2p file doesn't recognize when neuron is up
 DONE neuron - host p2p file probably doesn't return to a waiting state if neuron goes down
+DONE neuron - publish stream isn't loaded or relayed
 
+neuron - on checkin why am I not getting streams assigned to predict
+neuron - figure out why we don't have history or predictions on ui
 neuron - disk cache isn't able to added missing datastreams on the fly
-neuron - synergy author not found error should retry later?
-
-neuron - publish stream isn't loaded or relayed
 
 -- P2P options --
 
@@ -269,11 +266,13 @@ DONE synergy - synergy protocol - promise connection
 DONE synergy - synergy protocol - connect connection
 DONE synergy - synergy protocol - send data
 DONE synergy - synergy protocol - receive data
-neuron - publisher must allways be connected to synergy
-neuron - subscribers need only connect to synergy on demand
-neuron - handle saving data
-server - make an end point for verifying p2p script hash
+DONE neuron - publisher must allways be connected to synergy
+DONE neuron - subscribers need only connect to synergy on demand
+DONE server - make an end point for verifying p2p script hash
+neuron - handle saving data - test
 neuron - recreate the installer using the abstractor
+neuron - run the synergy script on startup to test.
+neuron - synergy author not found error should retry later?
 
 -- p2p end --
 
