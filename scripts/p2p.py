@@ -24,7 +24,7 @@ import typing as t
 import socket
 import asyncio
 import json
-# import requests  # ==2.31.0
+import requests  # ==2.31.0
 import aiohttp  # ==3.8.4
 
 
@@ -197,7 +197,7 @@ class UDPRelay():
 
     async def speak(self, remoteIp: str, remotePort: int, data: bytes = b'punch'):
         greyPrint(f'sending to {remoteIp}:{remotePort} {data}')
-        await self.loop.sock_sendto(data, (remoteIp, remotePort))
+        await self.loop.sock_sendto(self.socket, data, (remoteIp, remotePort))
 
     async def maybeAddPeer(self, ip: str):
         if ip not in self.peers:

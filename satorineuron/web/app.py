@@ -767,8 +767,8 @@ def modelUpdates():
         updateTime = thisThreadsTime
         if start.engine is not None:
             for model in start.engine.models:
-                #logging.debug('model', model.dataset.dropna(
-                #).iloc[-20:].loc[:, (model.variable.source, model.variable.author, model.variable.stream, model.variable.target)], color='yellow')
+                # logging.debug('model', model.dataset.dropna(
+                # ).iloc[-20:].loc[:, (model.variable.source, model.variable.author, model.variable.stream, model.variable.target)], color='yellow')
                 listeners.append(
                     model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model)))
             while True:
@@ -1096,12 +1096,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     logging.debug(request.json, color='yellow')
     if ((
-                request.json.get('vaultPredictors') > 0 or
-                request.json.get('vaultOracles') > 0 or
-                request.json.get('vaultCreators') > 0 or
-                request.json.get('vaultManagers') > 0) and
-                start.vault is not None and start.vault.isDecrypted
-            ):
+        request.json.get('vaultPredictors') > 0 or
+        request.json.get('vaultOracles') > 0 or
+        request.json.get('vaultCreators') > 0 or
+        request.json.get('vaultManagers') > 0) and
+        start.vault is not None and start.vault.isDecrypted
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
@@ -1322,6 +1322,12 @@ def publsihMeta():
 ###############################################################################
 ## UDP communication ##########################################################
 ###############################################################################
+
+
+@app.route('/udp/ping', methods=['GET'])
+def udpPing():
+    ''' tells p2p script we're up and running '''
+    return 'ok', 200
 
 
 @app.route('/udp/ports', methods=['GET'])

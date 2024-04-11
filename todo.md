@@ -246,6 +246,12 @@ DONE neuron - rebuild base image with new stuff
 neuron - run the synergy script on startup to test.
 neuron - figure out why we don't have history or predictions on ui
 
+neuron - host p2p file doesn't recognize when neuron is up
+neuron - host p2p file probably doesn't return to a waiting state if neuron goes down
+
+neuron - disk cache isn't able to added missing datastreams on the fly
+neuron - synergy author not found error should retry later?
+
 -- P2P options --
 
 we have to make a more robust p2p solution. because we don't want to make the node operator change port settings, and we have to find a solution that handles nat traversal we can't use most available options, perhaps even including IPFS and  BitTorrent. I think there are basically 2 options:

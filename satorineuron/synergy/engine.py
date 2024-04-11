@@ -57,10 +57,16 @@ class SynergyManager():
             target='price',
             author='03b4127dd21b6ee0528cb4126dbdcb093e50a04e00c7209f867995265d4d9a5c37',
         ))
-        while True:
-            time.sleep(30)
-            for channel in self.channels.values():
-                channel.send('hello world')
+
+        def pinging():
+            while True:
+                time.sleep(30)
+                for channel in self.channels.values():
+                    channel.send('hello world')
+
+        import threading
+        self.connThread = threading.Thread(target=pinging)
+        self.connThread.start()
 
     def runForever(self):
         import threading
