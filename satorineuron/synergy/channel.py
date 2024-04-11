@@ -133,13 +133,13 @@ class SynergyPublisher(SynergyChannel):
     def receive(self, message: bytes):
         ''' message will be the timestamp after which to start sending data '''
         print('received message:', message)
-        if isinstance(message, bytes):
-            ts = message.decode()
         if isinstance(message, str):
             ts = message
+        elif isinstance(message, bytes):
+            ts = message.decode()
         if isValidTimestamp(ts):
             self.ts = ts
-            if self.thread is not None:
+            if self.thread is None:
                 self.main()
 
     def main(self):
