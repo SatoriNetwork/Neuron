@@ -242,8 +242,8 @@ DONE central - refactor how we handle subscriptions in database: one single sour
 DONE central - rewrite the process of choosing streams to predict:
 DONE central - get a list of deleted predictings for streams that are sanctioned
 DONE neuron, central - inspect subscriptions again.
+DONE neuron - rebuild base image with new stuff
 neuron - run the synergy script on startup to test.
-neuron - rebuild base image with new stuff
 neuron - figure out why we don't have history or predictions on ui
 
 -- P2P options --
