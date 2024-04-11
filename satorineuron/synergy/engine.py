@@ -44,6 +44,23 @@ class SynergyManager():
             # localport: SynergyChannel
         }
         self.runForever()
+        self.testing()
+
+    def testing(self):
+        # testing
+        import time
+        time.sleep(30)
+        self.synergy.ping("Hello, World!")
+        self.connectToPeer(StreamId(
+            source='satori',
+            stream='test',
+            target='price',
+            author='03b4127dd21b6ee0528cb4126dbdcb093e50a04e00c7209f867995265d4d9a5c37',
+        ))
+        while True:
+            time.sleep(30)
+            for channel in self.channels.values():
+                channel.send('hello world')
 
     def runForever(self):
         import threading
@@ -56,19 +73,10 @@ class SynergyManager():
 
     def connectToPeer(self, streamId: StreamId):
         ''' this can be called to initiate the connection to a peer '''
-        self.handleMessage(SynergyProtocol(
-            source=streamId.source,
-            stream=streamId.stream,
-            target=streamId.target,
-            author=streamId.author,
-            subscriber=self.pubkey,
-            subscriberPort=None,
-            subscriberIp=None,
-            authorPort=None,
-            authorIp=None,
-        ))
+        self.handleMessage(SynergyProtocol.fromStreamId(streamId, self.pubkey))
 
     def handleMessage(self, msg: SynergyProtocol):
+        print('handleMessage:', msg.toJson())
         if not msg.completed:
             msg = self.buildMessage(msg)
             self.synergy.send(msg.toJson())
@@ -77,10 +85,13 @@ class SynergyManager():
 
     def buildMessage(self, msg: SynergyProtocol):
         ''' completes the next part of the msg and returns '''
+        print('buildMessage:', msg.toJson())
         if msg.subscriber == self.pubkey and msg.subscriberIp is None:
+            print('buildMessage:', 1)
             msg.subscriberPort = chooseRandomUnusedPortWitninDynamicRange()
             return msg
         if msg.author == self.pubkey:
+            print('buildMessage:', 2)
             msg.authorPort = chooseRandomUnusedPortWitninDynamicRange()
             self.createChannel(msg)
             return msg
@@ -88,6 +99,7 @@ class SynergyManager():
 
     def createChannel(self, msg: SynergyProtocol):
         ''' completes the next part of the msg and returns '''
+        print('createChannel:', msg.toJson())
         if msg.author == self.pubkey:
             self.channels[msg.subscriberIp] = SynergyPublisher(
                 streamId=msg.streamId,
@@ -99,6 +111,7 @@ class SynergyManager():
 
     def passMessage(self, remoteIp: str, message: bytes):
         ''' passes a message down to the correct channel '''
+        print('passMessage:', remoteIp, message.decode('utf-8'))
         conn = self.channels.get(remoteIp)
         if conn is not None:
             conn.receive(message)

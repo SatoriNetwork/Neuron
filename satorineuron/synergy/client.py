@@ -58,12 +58,13 @@ class SynergyClient:
 
         @self.sio.on('message')
         def onMessage(data):
+            message = data.get('message')
             try:
-                msg = SynergyProtocol.fromJson(data)
+                msg = SynergyProtocol.fromJson(message)
                 self.router(msg)
             except Exception as e:
                 logging.error('error parsing synergy message:',
-                              data, e, color='red')
+                              message, e, color='red')
 
     def onConnect(self):
         print('connection established')

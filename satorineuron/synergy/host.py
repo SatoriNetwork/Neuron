@@ -72,7 +72,8 @@ import xml
 def generateHash(inputStr: str) -> str:
     '''Generates a SHA-256 hash for the given string.'''
     # hashlib requires bytes-like object.
-    return hashlib.sha256(inputStr.encode('utf-8')).hexdigest()
+    # return hashlib.sha256(inputStr.encode('utf-8')).hexdigest()
+    return 'abc'
 
 
 def run():
