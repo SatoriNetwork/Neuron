@@ -27,6 +27,7 @@ class SynergyChannel(Cached):
     def __init__(self, streamId: StreamId, ip: str):
         self.streamId = streamId
         self.ip = ip
+        self.send('punch')
 
     def send(self, data: str):
         ''' sends data to the peer '''
