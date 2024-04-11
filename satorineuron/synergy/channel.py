@@ -52,6 +52,7 @@ class SynergySubscriber(SynergyChannel):
 
     def receive(self, message: bytes):
         ''' message that will contain data to save, add to inbox '''
+        print('received message:', message)
         observation = SingleObservation.fromMessage(message)
         if observation.isValid:
             self.inbox.put(observation)
@@ -125,13 +126,20 @@ class SynergyPublisher(SynergyChannel):
     def __init__(self, streamId: StreamId, ip: str):
         super().__init__(streamId, ip)
         self.ts: str = datetimeToTimestamp(earliestDate())
-        self.main()
+        self.thread = None
+        # self.main()
 
     def receive(self, message: bytes):
         ''' message will be the timestamp after which to start sending data '''
-        ts = message.decode()
+        print('received message:', message)
+        if isinstance(message, bytes):
+            ts = message.decode()
+        if isinstance(message, str):
+            ts = message
         if isValidTimestamp(ts):
             self.ts = ts
+            if self.thread is not None:
+                self.main()
 
     def main(self):
         ''' send the data to the subscriber '''
@@ -156,6 +164,8 @@ class SynergyPublisher(SynergyChannel):
                 return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
             return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
 
+        # wait for the subscriber to be ready (or trigger only on msg)
+        # time.sleep(15)
         while self.ts != self.disk.cache.index[-1]:
             ts = self.ts
             time.sleep(0.33)  # cool down

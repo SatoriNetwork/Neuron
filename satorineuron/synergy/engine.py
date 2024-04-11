@@ -8,6 +8,7 @@ from satorilib.api.wallet import RavencoinWallet
 from satorineuron import config
 from satorineuron.synergy.client import SynergyClient
 from satorineuron.synergy.channel import SynergyChannel, SynergyPublisher, SynergySubscriber
+from satorilib.api.time import datetimeToTimestamp, earliestDate
 
 
 def chooseRandomUnusedPortWitninDynamicRange():
@@ -60,9 +61,9 @@ class SynergyManager():
 
         def pinging():
             while True:
-                time.sleep(30)
+                time.sleep(60)
                 for channel in self.channels.values():
-                    channel.send('hello world')
+                    channel.send(datetimeToTimestamp(earliestDate()))
 
         import threading
         self.connThread = threading.Thread(target=pinging)
