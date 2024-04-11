@@ -20,9 +20,9 @@ sdist/
 var/
 !config/.gitkeep
 data/*
-#config/autosecure.yaml
-#config/manifest.yaml
-#config/relay.yaml
+config/autosecure.yaml
+config/manifest.yaml
+config/relay.yaml
 !data/.gitkeep
 models/*
 models/.gitkeep
