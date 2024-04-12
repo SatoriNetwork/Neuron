@@ -9,19 +9,21 @@ running hash and if it doesn't the subscriber will send a message to the server
 with the lastest good hash received. it will ignore incoming data until it 
 receives that hash.
 '''
-
+from typing import Union
 import time
 import threading
 import pandas as pd
 from queue import Queue, Empty
+from satorilib import logging
 from satorilib.concepts import StreamId
 from satorilib.api.disk import Cached
 from satorilib.api.hash import hashRow
 from satorilib.api.time import datetimeToTimestamp, earliestDate, isValidTimestamp
-from satorineuron.synergy.domain import SingleObservation, SynergyMsg
+from satorineuron.synergy.domain.objects import Vesicle, SingleObservation, ObservationRequest
+from satorineuron.synergy.domain.envelope import Envelope, Vesicle
 
 
-class SynergyChannel(Cached):
+class Axon(Cached):
     ''' get messages from the peer and send messages to them '''
 
     def __init__(self, streamId: StreamId, ip: str):
@@ -29,17 +31,23 @@ class SynergyChannel(Cached):
         self.ip = ip
         self.send('punch')
 
-    def send(self, data: str):
+    def send(self, data: Vesicle):
         ''' sends data to the peer '''
         from satorineuron.init.start import getStart
-        getStart().udpQueue.put(SynergyMsg(ip=self.ip, data=data).toJson())
+        getStart().udpQueue.put(Envelope(ip=self.ip, vesicle=data).toJson)
 
-    def receive(self, message: bytes):
+    def receive(self, message: bytes) -> Union[Vesicle, None]:
         '''Handle incoming messages. Must be implemented by subclasses.'''
-        pass
+        print('received message:', message)
+        vesicle = None
+        try:
+            vesicle = Vesicle.build(message)
+        except Exception as e:
+            logging.debug('unable to prase peer message:', e, message)
+        return vesicle
 
 
-class SynergySubscriber(SynergyChannel):
+class SynapseSubscriber(Axon):
     ''' 
     get messages from the peer and send messages to them, takes messages and 
     saves the data to disk using Cached, if there's a problem it sends a message
@@ -53,11 +61,11 @@ class SynergySubscriber(SynergyChannel):
 
     def receive(self, message: bytes):
         ''' message that will contain data to save, add to inbox '''
-        print('received message:', message)
-        observation = SingleObservation.fromMessage(message)
-        if observation.isValid:
-            print('putting', observation.toJson())
-            self.inbox.put(observation)
+        vesicle: Vesicle = super().receive(message)
+        if not isinstance(vesicle, SingleObservation) or not vesicle.isValid:
+            return  # unable to parse
+        # here we can extract some context or something from vesicle.context
+        self.inbox.put(vesicle)
 
     def main(self):
         ''' send the data to the subscriber '''
@@ -67,11 +75,12 @@ class SynergySubscriber(SynergyChannel):
     def processObservations(self):
         ''' save them all to disk '''
 
-        def lastTime():
+        def lastTime() -> str:
             if self.disk.cache.empty:
+                print('sending beginning of time...')
                 return datetimeToTimestamp(earliestDate())
-            else:
-                return self.disk.cache.index[-1]
+            print('sending latest...')
+            return self.disk.cache.index[-1]
 
         def save(observation: SingleObservation):
             ''' save the data to disk, if anything goes wrong request a time '''
@@ -105,19 +114,34 @@ class SynergySubscriber(SynergyChannel):
                     observationHash=observation.hash)
             if not success:
                 validateCache()
-                self.send(lastTime())
+                self.send(ObservationRequest(time=lastTime()))
                 clearQueue()
                 # success, df = self.disk.verifyHashesReturnLastGood()
                 # if isinstance(df, pd.DataFrame) and len(df) > 0:
                 #    self.send(df.index[-1])
 
+        def handle(observation: SingleObservation):
+            if observation.isFirst:
+                if (
+                    observation.time == self.disk.cache.index[0] and
+                    observation.data == str(self.disk.cache.iloc[0].value) and
+                    observation.hash == self.disk.cache.iloc[0].hash
+                ):
+                    self.disk.overwriteClean()
+                    self.send(ObservationRequest(time=lastTime()))
+                else:
+                    self.disk.clear()
+                    self.send(ObservationRequest(time='', first=True))
+            else:
+                save(observation)
+
         if self.inbox.empty():
-            self.send(lastTime())
+            self.send(ObservationRequest(time='', first=True))
         while True:
-            save(self.inbox.get())
+            handle(self.inbox.get())
 
 
-class SynergyPublisher(SynergyChannel):
+class SynapsePublisher(Axon):
     ''' 
     get messages from the peer and send messages to them. the message will 
     contain the last known good data. this publisher will then take that as a
@@ -129,17 +153,27 @@ class SynergyPublisher(SynergyChannel):
         super().__init__(streamId, ip)
         self.ts: str = datetimeToTimestamp(earliestDate())
         self.running = False
+        self.first = self.disk.cache.index[0] if not self.disk.cache.empty else None
         # self.main()
 
     def receive(self, message: bytes):
         ''' message will be the timestamp after which to start sending data '''
-        print('received message:', message)
-        if isinstance(message, str):
-            ts = message
-        elif isinstance(message, bytes):
-            ts = message.decode()
-        if isValidTimestamp(ts):
-            self.ts = ts
+        if len(self.disk.cache.index) == 0:
+            return  # nothing to send
+        vesicle: Vesicle = super().receive(message)
+        if not isinstance(vesicle, ObservationRequest) or not vesicle.isValid:
+            return
+        ts = vesicle.time
+        if vesicle.isValid:
+            if isValidTimestamp(ts):
+                self.ts = vesicle.time
+            elif vesicle.first:
+                self.ts = datetimeToTimestamp(earliestDate())
+            elif vesicle.latest and len(self.disk.cache.index) > 1:
+                self.ts = self.disk.cache.index[-2]
+            elif vesicle.middle:
+                middle_index = len(self.disk.cache.index) // 2
+                self.ts = self.disk.cache.index[middle_index]
             if not self.running:
                 self.main()
 
@@ -163,8 +197,16 @@ class SynergyPublisher(SynergyChannel):
             if (row.shape[0] == 0):
                 raise Exception('no data')
             if (row.shape[0] == 1):
-                return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
-            return SingleObservation(row.index[0], row['value'].values[0], row['hash'].values[0])
+                return SingleObservation(
+                    time=row.index[0],
+                    data=row['value'].values[0],
+                    hash=row['hash'].values[0],
+                    isFrist=self.first == row.index[0])
+            return SingleObservation(
+                time=row.index[0],
+                data=row['value'].values[0],
+                hash=row['hash'].values[0],
+                isFrist=self.first == row.index[0])
 
         self.running = True
         while self.ts != self.disk.cache.index[-1]:
@@ -174,7 +216,7 @@ class SynergyPublisher(SynergyChannel):
                 observation = getObservationAfter(ts)
             except Exception as _:
                 break
-            self.send(observation.toJson())
+            self.send(observation)
             if self.ts == ts:
                 self.ts = observation.time
         self.running = False

@@ -19,16 +19,17 @@ from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context
-from satorineuron import VERSION, MOTO, config
-from satorineuron import logging
-from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
-from satorineuron.web import forms
-from satorilib.concepts.structs import StreamId, StreamOverviews, StreamOverview
+from satorilib.concepts.structs import StreamId, StreamOverviews
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timestampToSeconds
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName
+from satorineuron import VERSION, MOTO, config
+from satorineuron import logging
+from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
+from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
+from satorineuron.synergy.domain.envelope import Envelope
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
 ###############################################################################
@@ -1343,7 +1344,8 @@ def udpStream():
     def event_stream():
         while True:
             message = start.udpQueue.get()
-            yield 'data:' + message + '\n\n'
+            if isinstance(message, Envelope):
+                yield 'data:' + message.toJson + '\n\n'
 
     return Response(
         stream_with_context(event_stream()),
@@ -1359,7 +1361,7 @@ def udpMessage():
     # localPort = int(request.headers.get('localPort'))
     # print('udpMessage', data, 'from', remoteIp, remotePort, 'to', localPort)
     if any(v is None for v in [remoteIp, data]):
-        return 'fail'
+        return 'fail', 400
     start.synergy.passMessage(remoteIp, message=data)
     return 'ok', 200
 

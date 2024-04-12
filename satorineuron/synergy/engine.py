@@ -1,5 +1,5 @@
 ''' manages all synergy connections and messages '''
-
+import threading
 from satorilib import logging
 from satorilib.concepts import StreamId
 from satorilib.synergy import SynergyProtocol
@@ -7,7 +7,7 @@ from satorilib.api.wallet import Wallet
 from satorilib.api.wallet import RavencoinWallet
 from satorineuron import config
 from satorineuron.synergy.client import SynergyClient
-from satorineuron.synergy.channel import SynergyChannel, SynergyPublisher, SynergySubscriber
+from satorineuron.synergy.channel import Axon, SynapsePublisher, SynapseSubscriber
 from satorilib.api.time import datetimeToTimestamp, earliestDate
 
 
@@ -21,7 +21,7 @@ def chooseRandomUnusedPortWitninDynamicRange():
 #    def __init__(self, wallet: Wallet):
 #        self.wallet = wallet
 #        self.pubkey = wallet.publicKey
-#        self.channel = SynergyChannel(StreamId(
+#        self.channel = Axon(StreamId(
 #            source='satori', stream='neuron', target='synergy', author='satori'), ip='37.19.210.29')
 #        import threading
 #        threading.Thread(target=self.main).start()
@@ -34,18 +34,23 @@ def chooseRandomUnusedPortWitninDynamicRange():
 
 
 class SynergyManager():
-    def __init__(self, wallet: Wallet):
+    def __init__(self, wallet: Wallet, onConnect: callable = None):
         self.wallet = wallet
         self.pubkey = wallet.publicKey
         self.synergy = SynergyClient(
             url='https://satorinet.io:24602',
             router=self.handleMessage,
-            wallet=RavencoinWallet(config.walletPath('wallet.yaml'))())
-        self.channels: dict[str, SynergyChannel] = {
-            # localport: SynergyChannel
+            wallet=RavencoinWallet(config.walletPath('wallet.yaml'))(),
+            onConnected=onConnect)
+        self.channels: dict[str, Axon] = {
+            # localport: Axon
         }
         self.runForever()
         # self.testing()
+
+    @property
+    def isConnected(self) -> bool:
+        return self.synergy.isConnected
 
     def testing(self):
         # testing
@@ -65,12 +70,10 @@ class SynergyManager():
                 for channel in self.channels.values():
                     channel.send(datetimeToTimestamp(earliestDate()))
 
-        import threading
         self.connThread = threading.Thread(target=pinging)
         self.connThread.start()
 
     def runForever(self):
-        import threading
         self.synergyThread = threading.Thread(target=self.synergy.runForever)
         self.synergyThread.start()
         # testing
@@ -83,7 +86,7 @@ class SynergyManager():
         self.handleMessage(SynergyProtocol.fromStreamId(streamId, self.pubkey))
 
     def handleMessage(self, msg: SynergyProtocol):
-        print('handleMessage:', msg.toJson())
+        # print('handleMessage:', msg.toJson())
         if not msg.completed:
             msg = self.buildMessage(msg)
             self.synergy.send(msg.toJson())
@@ -92,13 +95,13 @@ class SynergyManager():
 
     def buildMessage(self, msg: SynergyProtocol):
         ''' completes the next part of the msg and returns '''
-        print('buildMessage:', msg.toJson())
+        # print('buildMessage:', msg.toJson())
         if msg.subscriber == self.pubkey and msg.subscriberIp is None:
-            print('buildMessage:', 1)
+            # print('buildMessage:', 1)
             msg.subscriberPort = chooseRandomUnusedPortWitninDynamicRange()
             return msg
         if msg.author == self.pubkey:
-            print('buildMessage:', 2)
+            # print('buildMessage:', 2)
             msg.authorPort = chooseRandomUnusedPortWitninDynamicRange()
             self.createChannel(msg)
             return msg
@@ -108,11 +111,11 @@ class SynergyManager():
         ''' completes the next part of the msg and returns '''
         print('createChannel:', msg.toJson())
         if msg.author == self.pubkey:
-            self.channels[msg.subscriberIp] = SynergyPublisher(
+            self.channels[msg.subscriberIp] = SynapsePublisher(
                 streamId=msg.streamId,
                 ip=msg.subscriberIp)
         elif msg.subscriber == self.pubkey:
-            self.channels[msg.authorIp] = SynergySubscriber(
+            self.channels[msg.authorIp] = SynapseSubscriber(
                 streamId=msg.streamId,
                 ip=msg.authorIp)
 

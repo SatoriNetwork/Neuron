@@ -27,7 +27,7 @@ class SynergyRestClient(object):
 
 
 class SynergyClient:
-    def __init__(self, url, wallet: Wallet, router: callable = None):
+    def __init__(self, url, wallet: Wallet, router: callable = None, onConnected: callable = None):
         self.sio = socketio.Client(
             reconnection=True,
             reconnection_attempts=5,
@@ -36,7 +36,8 @@ class SynergyClient:
         self.router = router or SynergyClient.defaultRouter
         self.wallet = wallet
         self.pubkey = wallet.publicKey
-        self.connect_event = threading.Event()
+        self.connected = threading.Event()
+        self.onConnected = onConnected
         self.setupHandlers()
 
     def setupHandlers(self):
@@ -66,13 +67,19 @@ class SynergyClient:
                 logging.error('error parsing synergy message:',
                               message, e, color='red')
 
+    @property
+    def isConnected(self) -> bool:
+        return self.connected.isSet()
+
     def onConnect(self):
         print('connection established')
-        self.connect_event.set()
+        self.connected.set()
+        if self.onConnected:
+            self.onConnected()
 
     def onDisconnect(self):
         print('disconnected from server')
-        self.connect_event.clear()
+        self.connected.clear()
 
     @staticmethod
     def defaultRouter(msg: SynergyProtocol):
@@ -98,7 +105,7 @@ class SynergyClient:
             self.reconnect()
 
     def send(self, payload):
-        if self.connect_event.is_set():
+        if self.connected.is_set():
             try:
                 self.sio.emit('message', payload)
             except Exception as e:
@@ -108,7 +115,7 @@ class SynergyClient:
             logging.warning('Connection not established. Message not sent.')
 
     def ping(self, payload):
-        if self.connect_event.is_set():
+        if self.connected.is_set():
             try:
                 self.sio.emit('ping', payload)
             except Exception as e:

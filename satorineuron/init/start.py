@@ -64,7 +64,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
         self.pubsub: SatoriPubSubConn = None
-        self.synergy: SynergyManager
+        self.synergy: SynergyManager = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
@@ -177,9 +177,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptions = [
             Stream.fromMap(x)
             for x in json.loads(self.details.subscriptions)]
+        logging.debug(self.subscriptions, color='yellow')
         self.publications = [
             Stream.fromMap(x)
             for x in json.loads(self.details.publications)]
+        logging.debug(self.publications, color='magenta')
         self.caches = {
             x.streamId: disk.Cache(id=x.streamId)
             for x in set(self.subscriptions + self.publications)}
@@ -281,11 +283,23 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def startSynergyEngine(self):
         ''' establish a synergy connection '''
         if self.wallet:
-            self.synergy = SynergyManager(wallet=self.wallet)
+            self.synergy = SynergyManager(
+                wallet=self.wallet,
+                onConnect=self.syncDatasets)
             logging.info(
                 'connected to Satori p2p network', color='green')
         else:
             raise Exception('wallet not open yet.')
+
+    def syncDatasets(self):
+        ''' establish a synergy connection '''
+        if self.synergy and self.synergy.isConnected:
+            for stream in self.subscriptions:
+                # logging.info(
+                #    'connected to Satori p2p network', color='green')
+                self.synergy.connectToPeer(stream.streamId)
+        # else:
+        #    raise Exception('synergy not created or not connected.')
 
     def pause(self, timeout: int = 60):
         ''' pause the engine. '''
