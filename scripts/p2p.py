@@ -65,7 +65,7 @@ class Vesicle():
 class Punch(Vesicle):
     ''' initial punch is False, response punch is True '''
 
-    def __init__(self, punch: bool = False):
+    def __init__(self, punch: bool = False, **_kwargs):
         super().__init__()
         self.punch = punch
 

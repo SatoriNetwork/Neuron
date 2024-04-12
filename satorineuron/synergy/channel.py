@@ -212,7 +212,7 @@ class SynapsePublisher(Axon):
                     hash=row['hash'].values[0],
                     isFrist=self.first == row.index[0])
             logging.debug(
-                'first', self.first, row.index[0], self.first == row.index[0], color='yellow')
+                'first', self.first, row.index[0], self.first == row.index[0], color='magenta')
             return SingleObservation(
                 time=row.index[0],
                 data=row['value'].values[0],
