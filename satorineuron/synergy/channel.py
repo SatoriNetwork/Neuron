@@ -90,12 +90,11 @@ class SynapseSubscriber(Axon):
                 if self.disk.cache.empty:
                     return ''
                 else:
-                    logging.debug(
-                        'getting  hash', self.disk.cache.iloc[-1].hash, color='yellow')
                     return self.disk.cache.iloc[-1].hash
 
             def validateCache():
-                success, _ = self.disk.validateAllHashes()
+                success, df = self.disk.validateAllHashes()
+                print(df)
                 if not success:
                     self.disk.saveHashes()
 
@@ -116,6 +115,8 @@ class SynapseSubscriber(Axon):
                     value=observation.data,
                     observationHash=observation.hash)
                 if not success:
+                    logging.debug('not success',
+                                  observation.hash, color='red')
                     validateCache()
                     self.send(lastTime())
                     clearQueue()
@@ -135,9 +136,12 @@ class SynapseSubscriber(Axon):
                     observation.data == str(self.disk.cache.iloc[0].value) and
                     observation.hash == self.disk.cache.iloc[0].hash
                 ):
+                    logging.debug('overwriting!',
+                                  observation.hash, color='red')
                     self.disk.overwriteClean()
                     self.send(lastTime())
                 else:
+                    logging.debug('clearing!', observation.hash, color='red')
                     self.disk.clear()
                     self.send(ObservationRequest(time='', first=True))
             else:

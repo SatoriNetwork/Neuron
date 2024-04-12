@@ -250,7 +250,8 @@ DONE neuron - publish stream isn't loaded or relayed
 neuron - on checkin why am I not getting streams assigned to predict
 neuron - figure out why we don't have history or predictions on ui
 neuron - disk cache isn't able to added missing datastreams on the fly
-
+neuron - download where you left off.
+neuron - clear only what is wrong in download.
 -- P2P options --
 
 we have to make a more robust p2p solution. because we don't want to make the node operator change port settings, and we have to find a solution that handles nat traversal we can't use most available options, perhaps even including IPFS and  BitTorrent. I think there are basically 2 options:
