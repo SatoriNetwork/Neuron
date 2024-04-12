@@ -316,22 +316,22 @@ class UDPRelay():
 
     async def handlePeerMessage(self, data: bytes, address: t.Tuple[str, int]):
         greyPrint(f'Received {data} from {address[0]}:{address[1]}')
-        dataObj = None
-        try:
-            dataObj = Punch.fromMessage(data)
-        except Exception as e:
-            greyPrint(f'error parsing message: {e}')
-        if isinstance(dataObj, Punch):
-            if not dataObj.isPunched:
-                await self.maybeAddPeer(address[0])
-                await self.speak(
-                    remoteIp=address[0],
-                    remotePort=UDPRelay.PORT,
-                    data=Punch(True).toJson)
-                return
-            if dataObj.isPunched:
-                greyPrint(f'connection to {address[0]} established!')
-                return
+        # dataObj = None
+        # try:
+        #    dataObj = Punch.fromMessage(data)
+        # except Exception as e:
+        #    greyPrint(f'error parsing message: {e}')
+        # if isinstance(dataObj, Punch):
+        #    if not dataObj.isPunched:
+        #        await self.maybeAddPeer(address[0])
+        #        await self.speak(
+        #            remoteIp=address[0],
+        #            remotePort=UDPRelay.PORT,
+        #            data=Punch(True).toJson)
+        #        return
+        #    if dataObj.isPunched:
+        #        greyPrint(f'connection to {address[0]} established!')
+        #        return
         await self.relayToNeuron(data=data, ip=address[0], port=address[1])
 
     async def relayToNeuron(self, data: bytes, ip: str, port: int):
