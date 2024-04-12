@@ -159,12 +159,13 @@ class SingleObservation(Vesicle):
 
     @property
     def isValid(self):
-        return (
-            isinstance(self.data, str) and
-            isinstance(self.hash, str) and
-            isinstance(self.isFirst, bool) and
-            isinstance(self.isLatest, bool) and
-            isValidTimestamp(self.time))
+        return ((isinstance(self.data, str) or
+                isinstance(self.data, float) or
+                isinstance(self.data, int)) and
+                isinstance(self.hash, str) and
+                isinstance(self.isFirst, bool) and
+                isinstance(self.isLatest, bool) and
+                isValidTimestamp(self.time))
 
     def toDataFrame(self) -> pd.DataFrame:
         df = pd.DataFrame({

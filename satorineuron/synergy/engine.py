@@ -121,7 +121,6 @@ class SynergyManager():
 
     def passMessage(self, remoteIp: str, message: bytes):
         ''' passes a message down to the correct channel '''
-        print('passMessage:', remoteIp, message.decode('utf-8'))
         conn = self.channels.get(remoteIp)
         if conn is not None:
             conn.receive(message)

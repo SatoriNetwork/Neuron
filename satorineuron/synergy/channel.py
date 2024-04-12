@@ -38,7 +38,7 @@ class Axon(Cached):
 
     def receive(self, message: bytes) -> Union[Vesicle, None]:
         '''Handle incoming messages. Must be implemented by subclasses.'''
-        print('received message:', message)
+        logging.debug('received message:', message, color='teal')
         vesicle = None
         try:
             vesicle = Vesicle.build(message)
@@ -63,6 +63,7 @@ class SynapseSubscriber(Axon):
         ''' message that will contain data to save, add to inbox '''
         vesicle: Vesicle = super().receive(message)
         if not isinstance(vesicle, SingleObservation) or not vesicle.isValid:
+            logging.error('peer msg failure', type(vesicle), vesicle.isValid)
             return  # unable to parse
         # here we can extract some context or something from vesicle.context
         self.inbox.put(vesicle)
@@ -89,7 +90,9 @@ class SynapseSubscriber(Axon):
                 if self.disk.cache.empty:
                     return ''
                 else:
-                    return self.disk.cache.iloc[[-1]].hash
+                    logging.debug(
+                        'getting  hash', self.disk.cache.iloc[-1].hash, color='yellow')
+                    return self.disk.cache.iloc[-1].hash
 
             def validateCache():
                 success, _ = self.disk.validateAllHashes()
@@ -106,19 +109,23 @@ class SynapseSubscriber(Axon):
             if hashRow(
                 priorRowHash=lastHash(),
                 ts=observation.time,
-                value=observation.data,
+                value=str(observation.data),
             ) == observation.hash:
                 success, _, _, = self.disk.appendByAttributes(
                     timestamp=observation.time,
                     value=observation.data,
                     observationHash=observation.hash)
-            if not success:
-                validateCache()
-                self.send(ObservationRequest(time=lastTime()))
-                clearQueue()
-                # success, df = self.disk.verifyHashesReturnLastGood()
-                # if isinstance(df, pd.DataFrame) and len(df) > 0:
-                #    self.send(df.index[-1])
+                if not success:
+                    validateCache()
+                    self.send(ObservationRequest(time=lastTime()))
+                    clearQueue()
+                    # success, df = self.disk.verifyHashesReturnLastGood()
+                    # if isinstance(df, pd.DataFrame) and len(df) > 0:
+                    #    self.send(df.index[-1])
+            else:
+                logging.debug('doing nothing', color='teal')
+                # self.disk.overwriteClean()
+                # self.send(ObservationRequest(time=lastTime()))
 
         def handle(observation: SingleObservation):
             if observation.isFirst:
@@ -197,11 +204,15 @@ class SynapsePublisher(Axon):
             if (row.shape[0] == 0):
                 raise Exception('no data')
             if (row.shape[0] == 1):
+                logging.debug(
+                    'first', self.first, row.index[0], self.first == row.index[0], color='yellow')
                 return SingleObservation(
                     time=row.index[0],
                     data=row['value'].values[0],
                     hash=row['hash'].values[0],
                     isFrist=self.first == row.index[0])
+            logging.debug(
+                'first', self.first, row.index[0], self.first == row.index[0], color='yellow')
             return SingleObservation(
                 time=row.index[0],
                 data=row['value'].values[0],
