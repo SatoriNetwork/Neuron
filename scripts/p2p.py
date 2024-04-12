@@ -327,7 +327,7 @@ class UDPRelay():
                 await self.speak(
                     remoteIp=address[0],
                     remotePort=UDPRelay.PORT,
-                    data=Punch(data=True).toJson)
+                    data=Punch(True).toJson)
                 return
             if dataObj.isPunched:
                 greyPrint(f'connection to {address[0]} established!')
