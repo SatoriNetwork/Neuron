@@ -34,7 +34,7 @@ class Axon(Cached):
     def send(self, data: Vesicle):
         ''' sends data to the peer '''
         from satorineuron.init.start import getStart
-        getStart().udpQueue.put(Envelope(ip=self.ip, vesicle=data).toJson)
+        getStart().udpQueue.put(Envelope(ip=self.ip, vesicle=data))
 
     def receive(self, message: bytes) -> Union[Vesicle, None]:
         '''Handle incoming messages. Must be implemented by subclasses.'''
