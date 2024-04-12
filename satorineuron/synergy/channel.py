@@ -210,14 +210,14 @@ class SynapsePublisher(Axon):
                     time=row.index[0],
                     data=row['value'].values[0],
                     hash=row['hash'].values[0],
-                    isFrist=self.first == row.index[0])
+                    isFirst=self.first == row.index[0])
             logging.debug(
                 'first', self.first, row.index[0], self.first == row.index[0], color='magenta')
             return SingleObservation(
                 time=row.index[0],
                 data=row['value'].values[0],
                 hash=row['hash'].values[0],
-                isFrist=self.first == row.index[0])
+                isFirst=self.first == row.index[0])
 
         self.running = True
         while self.ts != self.disk.cache.index[-1]:
