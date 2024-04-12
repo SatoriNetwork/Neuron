@@ -19,7 +19,7 @@ from satorilib.concepts import StreamId
 from satorilib.api.disk import Cached
 from satorilib.api.hash import hashRow
 from satorilib.api.time import datetimeToTimestamp, earliestDate, isValidTimestamp
-from satorineuron.synergy.domain.objects import Vesicle, SingleObservation, ObservationRequest
+from satorineuron.synergy.domain.objects import Vesicle, Punch, SingleObservation, ObservationRequest
 from satorineuron.synergy.domain.envelope import Envelope, Vesicle
 
 
@@ -29,7 +29,7 @@ class Axon(Cached):
     def __init__(self, streamId: StreamId, ip: str):
         self.streamId = streamId
         self.ip = ip
-        self.send('punch')
+        self.send(Punch())
 
     def send(self, data: Vesicle):
         ''' sends data to the peer '''
