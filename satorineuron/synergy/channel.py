@@ -76,12 +76,12 @@ class SynapseSubscriber(Axon):
     def processObservations(self):
         ''' save them all to disk '''
 
-        def lastTime() -> str:
+        def lastTime() -> ObservationRequest:
             if self.disk.cache.empty:
                 print('sending beginning of time...')
-                return datetimeToTimestamp(earliestDate())
+                return ObservationRequest(time='', first=True)
             print('sending latest...')
-            return self.disk.cache.index[-1]
+            return ObservationRequest(time=self.disk.cache.index[-1])
 
         def save(observation: SingleObservation):
             ''' save the data to disk, if anything goes wrong request a time '''
@@ -117,7 +117,7 @@ class SynapseSubscriber(Axon):
                     observationHash=observation.hash)
                 if not success:
                     validateCache()
-                    self.send(ObservationRequest(time=lastTime()))
+                    self.send(lastTime())
                     clearQueue()
                     # success, df = self.disk.verifyHashesReturnLastGood()
                     # if isinstance(df, pd.DataFrame) and len(df) > 0:
@@ -125,17 +125,18 @@ class SynapseSubscriber(Axon):
             else:
                 logging.debug('doing nothing', color='teal')
                 # self.disk.overwriteClean()
-                # self.send(ObservationRequest(time=lastTime()))
+                # self.send(lastTime())
 
         def handle(observation: SingleObservation):
-            if observation.isFirst:
+            logging.debug('handling:', observation.hash, color='green')
+            if not self.disk.cache.empty and observation.isFirst:
                 if (
                     observation.time == self.disk.cache.index[0] and
                     observation.data == str(self.disk.cache.iloc[0].value) and
                     observation.hash == self.disk.cache.iloc[0].hash
                 ):
                     self.disk.overwriteClean()
-                    self.send(ObservationRequest(time=lastTime()))
+                    self.send(lastTime())
                 else:
                     self.disk.clear()
                     self.send(ObservationRequest(time='', first=True))
