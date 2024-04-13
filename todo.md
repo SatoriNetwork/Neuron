@@ -273,10 +273,10 @@ DONE synergy - synergy protocol - receive data
 DONE neuron - publisher must allways be connected to synergy
 DONE neuron - subscribers need only connect to synergy on demand
 DONE server - make an end point for verifying p2p script hash
-neuron - handle saving data - test
-neuron - recreate the installer using the abstractor
-neuron - run the synergy script on startup to test.
-neuron - synergy author not found error should retry later?
+DONE neuron - handle saving data - test
+DONE neuron - recreate the installer using the abstractor
+DONE neuron - run the synergy script on startup to test.
+DONE neuron - synergy author not found error should retry later? - on restart
 
 -- p2p end --
 
