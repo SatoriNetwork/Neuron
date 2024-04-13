@@ -69,23 +69,22 @@ class SynergyClient:
         return self.connected.isSet()
 
     def onConnect(self):
-        print('connection established')
+        logging.info('connection established')
         self.connected.set()
         if self.onConnected:
             self.onConnected()
 
     def onDisconnect(self):
-        print('disconnected from server')
+        logging.info('disconnected from server')
         self.connected.clear()
 
     @staticmethod
     def defaultRouter(msg: SynergyProtocol):
-        print('Routing message:', msg)
+        logging.info('Routing message:', msg)
 
     def connect(self):
         '''connect to the server with a challenge and signature'''
         challenge = SynergyRestClient(url=self.url).getChallenge()
-        print('challenge:', challenge)
         signature = self.wallet.authPayload(
             challenge=challenge,
             asDict=True)['signature']
@@ -140,4 +139,4 @@ class SynergyClient:
             self.sio.wait()
         except KeyboardInterrupt:
             self.disconnect()
-            print('Disconnected by user')
+            logging.info('Disconnected by user')
