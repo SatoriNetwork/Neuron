@@ -19,7 +19,7 @@ from satorilib.concepts import StreamId
 from satorilib.api.disk import Cached
 from satorilib.api.hash import hashRow
 from satorilib.api.time import datetimeToTimestamp, earliestDate, isValidTimestamp
-from satorineuron.synergy.domain.objects import Vesicle, Punch, SingleObservation, ObservationRequest
+from satorineuron.synergy.domain.objects import Vesicle, Ping, SingleObservation, ObservationRequest
 from satorineuron.synergy.domain.envelope import Envelope, Vesicle
 
 
@@ -29,7 +29,7 @@ class Axon(Cached):
     def __init__(self, streamId: StreamId, ip: str):
         self.streamId = streamId
         self.ip = ip
-        self.send(Punch())
+        self.send(Ping())
 
     def send(self, data: Vesicle):
         ''' sends data to the peer '''
@@ -114,7 +114,7 @@ class SynapseSubscriber(Axon):
                     value=observation.data,
                     observationHash=observation.hash)
                 if success:
-                    return 
+                    return
             logging.debug('error during pull', color='teal')
             validateCache()
             self.send(lastTime())
@@ -142,8 +142,12 @@ class SynapseSubscriber(Axon):
 
         if self.inbox.empty():
             self.send(ObservationRequest(time='', first=True))
+        i = 0
         while True:
             handle(self.inbox.get())
+            i += 1
+            if i % 50 == 0:
+                self.send(Ping())
 
 
 class SynapsePublisher(Axon):
@@ -159,6 +163,7 @@ class SynapsePublisher(Axon):
         self.ts: str = datetimeToTimestamp(earliestDate())
         self.running = False
         self.first = self.disk.cache.index[0] if not self.disk.cache.empty else None
+        self.sentCountWithoutPing = 0
         # self.main()
 
     def receive(self, message: bytes):
@@ -166,6 +171,9 @@ class SynapsePublisher(Axon):
         if len(self.disk.cache.index) == 0:
             return  # nothing to send
         vesicle: Vesicle = super().receive(message)
+        if isinstance(vesicle, Ping):
+            self.sentCountWithoutPing = 0
+            return
         if not isinstance(vesicle, ObservationRequest) or not vesicle.isValid:
             return
         ts = vesicle.time
@@ -218,7 +226,8 @@ class SynapsePublisher(Axon):
                 isFirst=self.first == row.index[0])
 
         self.running = True
-        while self.ts != self.disk.cache.index[-1]:
+        self.sentCountWithoutPing = 0
+        while self.ts != self.disk.cache.index[-1] or self.sentCountWithoutPing < 500:
             ts = self.ts
             time.sleep(0.33)  # cool down
             try:
@@ -226,6 +235,7 @@ class SynapsePublisher(Axon):
             except Exception as _:
                 break
             self.send(observation)
+            self.sentCountWithoutPing = self.sentCountWithoutPing + 1
             if self.ts == ts:
                 self.ts = observation.time
         self.running = False

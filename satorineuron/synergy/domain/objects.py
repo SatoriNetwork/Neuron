@@ -40,8 +40,8 @@ class Vesicle():
         name = Vesicle.getClassNameFor(msg)
         if name == '':
             return Vesicle(**msg)
-        if name == 'Punch':
-            return Punch(**msg)
+        if name == 'Ping':
+            return Ping(**msg)
         if name == 'SingleObservation':
             return SingleObservation(**msg)
         if name == 'ObservationRequest':
@@ -51,8 +51,8 @@ class Vesicle():
     def toObject(self) -> 'Vesicle':
         if self.className == '':
             return Vesicle(**self.toDict)
-        if self.className == 'Punch':
-            return Punch(**self.toDict)
+        if self.className == 'Ping':
+            return Ping(**self.toDict)
         if self.className == 'SingleObservation':
             return SingleObservation(**self.toDict)
         if self.className == 'ObservationRequest':
@@ -73,28 +73,28 @@ class Vesicle():
         return json.dumps(self.toDict)
 
 
-class Punch(Vesicle):
-    ''' initial punch is False, response punch is True '''
+class Ping(Vesicle):
+    ''' initial ping is False, response ping is True '''
 
-    def __init__(self, punch: bool = False, **_kwargs):
+    def __init__(self, ping: bool = False, **_kwargs):
         super().__init__()
-        self.punch = punch
+        self.ping = ping
 
     @staticmethod
-    def empty() -> 'Punch':
-        return Punch()
+    def empty() -> 'Ping':
+        return Ping()
 
     @staticmethod
-    def fromMessage(msg: bytes) -> 'Punch':
-        obj = Punch(**json.loads(msg.decode()
-                    if isinstance(msg, bytes) else msg))
-        if obj.className == Punch.empty().className:
+    def fromMessage(msg: bytes) -> 'Ping':
+        obj = Ping(**json.loads(msg.decode()
+                                if isinstance(msg, bytes) else msg))
+        if obj.className == Ping.empty().className:
             return obj
         raise Exception('invalid object')
 
     @property
     def toDict(self):
-        return {'punch': self.punch, **super().toDict}
+        return {'ping': self.ping, **super().toDict}
 
     @property
     def toJson(self):
@@ -102,11 +102,11 @@ class Punch(Vesicle):
 
     @property
     def isValid(self):
-        return isinstance(self.punch, bool)
+        return isinstance(self.ping, bool)
 
     @property
-    def isPunched(self):
-        return self.punch
+    def isPinged(self):
+        return self.ping
 
 
 class SingleObservation(Vesicle):

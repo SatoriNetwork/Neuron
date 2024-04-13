@@ -31,7 +31,7 @@ import aiohttp  # ==3.8.4
 ### CLASSES (coped from satorineuron.synergy.domain) ###
 
 # don't forget to use t.Dict in place of dict and t.Union inplace of Union
-# don't forget to comment out the references to Vesicle objects other than Punch
+# don't forget to comment out the references to Vesicle objects other than Ping
 
 class Vesicle():
     ''' 
@@ -62,28 +62,28 @@ class Vesicle():
         return json.dumps(self.toDict)
 
 
-class Punch(Vesicle):
-    ''' initial punch is False, response punch is True '''
+class Ping(Vesicle):
+    ''' initial ping is False, response ping is True '''
 
-    def __init__(self, punch: bool = False, **_kwargs):
+    def __init__(self, ping: bool = False, **_kwargs):
         super().__init__()
-        self.punch = punch
+        self.ping = ping
 
     @staticmethod
-    def empty() -> 'Punch':
-        return Punch()
+    def empty() -> 'Ping':
+        return Ping()
 
     @staticmethod
-    def fromMessage(msg: bytes) -> 'Punch':
-        obj = Punch(**json.loads(msg.decode()
-                    if isinstance(msg, bytes) else msg))
-        if obj.className == Punch.empty().className:
+    def fromMessage(msg: bytes) -> 'Ping':
+        obj = Ping(**json.loads(msg.decode()
+                                if isinstance(msg, bytes) else msg))
+        if obj.className == Ping.empty().className:
             return obj
         raise Exception('invalid object')
 
     @property
     def toDict(self):
-        return {'punch': self.punch, **super().toDict}
+        return {'ping': self.ping, **super().toDict}
 
     @property
     def toJson(self):
@@ -91,11 +91,11 @@ class Punch(Vesicle):
 
     @property
     def isValid(self):
-        return isinstance(self.punch, bool)
+        return isinstance(self.ping, bool)
 
     @property
-    def isPunched(self):
-        return self.punch
+    def isResponse(self):
+        return self.ping
 
 
 class Envelope():
@@ -300,7 +300,7 @@ class UDPRelay():
             await self.addPeer(ip)
 
     async def addPeer(self, ip: str):
-        await self.speak(ip, UDPRelay.PORT, data=Punch().toJson)
+        await self.speak(ip, UDPRelay.PORT, data=Ping().toJson)
         self.peers.append(ip)
 
     ### HANDLERS ###
@@ -316,20 +316,21 @@ class UDPRelay():
 
     async def handlePeerMessage(self, data: bytes, address: t.Tuple[str, int]):
         greyPrint(f'Received {data} from {address[0]}:{address[1]}')
-        # dataObj = None
+        # # no need to ping back - it has issues anyway
+        # ping = None
         # try:
-        #    dataObj = Punch.fromMessage(data)
+        #    ping = Ping.fromMessage(data)
         # except Exception as e:
         #    greyPrint(f'error parsing message: {e}')
-        # if isinstance(dataObj, Punch):
-        #    if not dataObj.isPunched:
+        # if isinstance(ping, Ping):
+        #    if not ping.isResponse:
         #        await self.maybeAddPeer(address[0])
         #        await self.speak(
         #            remoteIp=address[0],
         #            remotePort=UDPRelay.PORT,
-        #            data=Punch(True).toJson)
+        #            data=Ping(True).toJson)
         #        return
-        #    if dataObj.isPunched:
+        #    if ping.isResponse:
         #        greyPrint(f'connection to {address[0]} established!')
         #        return
         await self.relayToNeuron(data=data, ip=address[0], port=address[1])
