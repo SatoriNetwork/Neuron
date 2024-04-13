@@ -19,14 +19,16 @@ import socket
 import requests  # ==2.31.0
 import aiohttp  # ==3.8.4
 
-# standard library imports
+# # standard library imports -
+# # in case our future script needs to utilize more functionality without
+# # recompiling which necesitates the need for re-download and reinstall.
 import argparse
 # import asyncio
 import collections
 import contextlib
 import copy
 import ctypes
-import datetime
+import datetime as dt
 import dataclasses
 import email.mime.multipart
 import email.mime.text
@@ -57,7 +59,6 @@ import subprocess
 import sys
 import threading
 import timeit
-import tkinter.ttk
 import uuid
 import urllib
 import urllib.error
@@ -70,15 +71,16 @@ import xml
 
 
 def generateHash(inputStr: str) -> str:
-    '''Generates a SHA-256 hash for the given string.'''
-    # hashlib requires bytes-like object.
-    # return hashlib.sha256(inputStr.encode('utf-8')).hexdigest()
-    return 'abc'
+    '''
+    Generates a SHA-256 hash for the given string.
+    hashlib requires bytes-like object.
+    '''
+    return hashlib.sha256(inputStr.encode('utf-8')).hexdigest()
 
 
 def run():
-    # os.path.join(INSTALL_DIR, 'scripts', 'p2p.py')
-    p2pScript = 'C:\\repos\\Satori\\Neuron\\scripts\\p2p.py'
+    p2pScript = os.path.join(INSTALL_DIR, 'scripts', 'p2p.py')
+    # p2pScript = 'C:\\repos\\Satori\\Neuron\\scripts\\p2p.py'
     if not os.path.isfile(p2pScript):
         print(f"File not found: {p2pScript}")
         return
@@ -91,10 +93,12 @@ def run():
             try:
                 namespace = {}
                 exec(script, namespace)
-                # exec(script, globals(), locals())
             except Exception as e:
                 print(f'An error occurred while executing the code: {e}')
                 traceback.print_exc()
+    else:
+        print('Satori Network unreachable, check internet connection and restart. '
+              'Proceeding without p2p functionality.')
 
 
 run()

@@ -6,19 +6,20 @@ it will establish a sse connection with the flask server running inside
 the container. it will handle the UDP hole punching, passing data between the
 flask server and the remote peers.
 
-this is an extremely simplified version, using one socket, 24600 to perform all
-the communication, what would be ideal is to make this script merely a executor
-that will look into the the location on disk where we keep this code and execute
-it. that way we don't have to rebuild and redownload the installer each time we
-modify the p2p communiction protocol. we'd probably want to check the code's
-hash against the server in order to do that safely.
-'''
+NOTE: if you modify this file at all you have to rehash it and update the hash
+on the server. this can be done with this code snippet:
+```
+import os
+import hashlib
+def generateHash(inputStr: str) -> str:
+    return hashlib.sha256(inputStr.encode('utf-8')).hexdigest()
 
-# list to the flask server
-# every message will have local port, remote ip, remote port, data
-# if you don't have a connection then set one up, listen to it and send the data
-# if you do have a connection then send the data
-# as you're listening to all the connections, relay their info to flask.
+with open('c:\\repos\\Satori\\Neuron\\scripts\\p2p.py', "r") as file:   
+    print(generateHash(file.read()))
+
+print('save that has to the list returned from the Central Server /verify/scripthash endpoint')
+```
+'''
 
 import typing as t
 import socket
@@ -151,7 +152,7 @@ class SseTimeoutFailure(Exception):
     def __str__(self):
         return f"{self.__class__.__name__}: {self.args[0]} (Extra Data: {self.extraData})"
 
-
+# # written in an attempt to remove the aiohttp and requests dependencies:
 # class NeuronWatcher:
 #
 #    @staticmethod
@@ -203,6 +204,7 @@ class SseTimeoutFailure(Exception):
 #            # print(f'unable to read {url}: {e}')
 #            pass
 
+
 class UDPRelay():
     ''' go-between for the flask server and the remote peers '''
 
@@ -248,17 +250,17 @@ class UDPRelay():
                                 self.handleNeuronMessage(
                                     line.decode('utf-8')[5:].strip()))
             except asyncio.TimeoutError:
-                greyPrint("Neuron connection timed out...")
+                greyPrint('Neuron connection timed out...')
                 # await self.shutdown()
                 self.running = False
                 # raise SseTimeoutFailure()
             except aiohttp.ClientConnectionError:
-                greyPrint("Neuron connection error...")
+                greyPrint('Neuron connection error...')
                 self.running = False
                 # await self.shutdown()
                 # raise SseTimeoutFailure()
             except aiohttp.ClientError:
-                greyPrint("Neuron error...")
+                greyPrint('Neuron error...')
                 self.running = False
                 # await self.shutdown()
                 # raise SseTimeoutFailure()
@@ -283,7 +285,7 @@ class UDPRelay():
                 if data != b'':
                     await self.handlePeerMessage(data, address)
             except asyncio.CancelledError:
-                greyPrint('listenTo task cancelled')
+                greyPrint('listen task cancelled')
                 break
             except Exception as e:
                 greyPrint(f'listenTo error: {e}')
@@ -292,7 +294,7 @@ class UDPRelay():
     ### SPEAK ###
 
     async def speak(self, remoteIp: str, remotePort: int, data: str = ''):
-        greyPrint(f'sending to {remoteIp}:{remotePort} {data}')
+        # greyPrint(f'sending to {remoteIp}:{remotePort} {data}')
         await self.loop.sock_sendto(self.socket, data.encode(), (remoteIp, remotePort))
 
     async def maybeAddPeer(self, ip: str):
@@ -306,7 +308,6 @@ class UDPRelay():
     ### HANDLERS ###
 
     async def handleNeuronMessage(self, message: str):
-        print('handleNeuronMessage', message)
         msg = Envelope.fromJson(message)
         await self.maybeAddPeer(msg.ip)
         await self.speak(
@@ -315,7 +316,7 @@ class UDPRelay():
             data=msg.vesicle.toJson)
 
     async def handlePeerMessage(self, data: bytes, address: t.Tuple[str, int]):
-        greyPrint(f'Received {data} from {address[0]}:{address[1]}')
+        # greyPrint(f'Received {data} from {address[0]}:{address[1]}')
         # # no need to ping back - it has issues anyway
         # ping = None
         # try:
@@ -336,7 +337,6 @@ class UDPRelay():
         await self.relayToNeuron(data=data, ip=address[0], port=address[1])
 
     async def relayToNeuron(self, data: bytes, ip: str, port: int):
-        print('replaying to neuron', data, ip)
         try:
             async with self.session.post(
                     UDPRelay.satoriUrl('/message'),
@@ -413,10 +413,6 @@ async def main():
                 await asyncio.sleep(3)
                 if not udpRelay.running:
                     raise Exception('udpRelay not running')
-                # testing
-                # udpRelay.addPeer('192.168.0.1')
-                # await asyncio.sleep(60)
-                # udpRelay.addPeer('192.168.0.2')
         except KeyboardInterrupt:
             pass
         except SseTimeoutFailure:
