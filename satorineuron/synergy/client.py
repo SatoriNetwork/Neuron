@@ -7,8 +7,6 @@ import threading
 from urllib.parse import quote_plus
 from satorilib import logging
 from satorilib.api.wallet import Wallet
-from satorilib.api.wallet import RavencoinWallet
-from satorineuron import config
 from satorilib.synergy import SynergyProtocol
 
 
@@ -22,7 +20,6 @@ class SynergyRestClient(object):
         self.url = url or 'https://satorinet.io:24602'
 
     def getChallenge(self):
-        print(self.url + '/challenge')
         return requests.get(self.url + '/challenge').text
 
 
@@ -55,7 +52,7 @@ class SynergyClient:
 
         @self.sio.on('response')
         def onResponse(data):
-            print('synergy response:', data)
+            logging.info('synergy response:', data)
 
         @self.sio.on('message')
         def onMessage(data):
@@ -144,33 +141,3 @@ class SynergyClient:
         except KeyboardInterrupt:
             self.disconnect()
             print('Disconnected by user')
-
-
-# if __name__ == "__main__":
-#    client = SynergyClient(
-#        url='http://localhost:24602',
-#        wallet=RavencoinWallet(
-#            config.walletPath('wallet.yaml'),
-#            reserve=0.01,
-#            isTestnet=True)())
-#    # client.runForever()
-#
-#    # Run the client in a separate thread
-#    client_thread = threading.Thread(target=client.runForever)
-#    client_thread.start()
-#
-#    # Wait for the connection to be established
-#    time.sleep(30)  # Adjust this based on how quickly your client connects
-#
-#    # Send a message
-#    client.ping("Hello, World!")
-#
-#    # Keep the main thread alive to maintain the client connection
-#    # You can use a more sophisticated condition for running here based on your application's needs
-#    try:
-#        while True:
-#            time.sleep(1)
-#    except KeyboardInterrupt:
-#        client.disconnect()
-#        print('Disconnected by user')
-#

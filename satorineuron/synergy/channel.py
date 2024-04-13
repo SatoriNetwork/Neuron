@@ -38,7 +38,7 @@ class Axon(Cached):
 
     def receive(self, message: bytes) -> Union[Vesicle, None]:
         '''Handle incoming messages. Must be implemented by subclasses.'''
-        logging.debug('received message:', message, color='teal')
+        logging.info('received synapse message:', message, color='grey')
         vesicle = None
         try:
             vesicle = Vesicle.build(message)

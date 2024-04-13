@@ -15,7 +15,6 @@ class GetHistory(object):
 
     def getNext(self, *args, **kwargs):
         self.i += 1
-        print(self.value)
         return self.value
 
     def isDone(self, *args, **kwargs):
@@ -46,7 +45,6 @@ class GetHistory(object):
         return None
     def getNext(self, *args, **kwargs):
         self.i += 1
-        print(self.value)
         return self.value
     def isDone(self, *args, **kwargs):
         return self.i > 3
