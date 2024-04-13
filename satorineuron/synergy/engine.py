@@ -124,5 +124,3 @@ class SynergyManager():
         conn = self.channels.get(remoteIp)
         if conn is not None:
             conn.receive(message)
-        else:
-            logging.debug('how? we have no channel for them.', color='magenta')

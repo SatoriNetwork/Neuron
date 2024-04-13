@@ -63,7 +63,8 @@ class SynapseSubscriber(Axon):
         ''' message that will contain data to save, add to inbox '''
         vesicle: Vesicle = super().receive(message)
         if not isinstance(vesicle, SingleObservation) or not vesicle.isValid:
-            logging.error('peer msg failure', type(vesicle), vesicle.isValid)
+            logging.error('peer msg failure', type(
+                vesicle), vesicle.isValid, message)
             return  # unable to parse
         # here we can extract some context or something from vesicle.context
         self.inbox.put(vesicle)
@@ -78,9 +79,7 @@ class SynapseSubscriber(Axon):
 
         def lastTime() -> ObservationRequest:
             if self.disk.cache.empty:
-                print('sending beginning of time...')
                 return ObservationRequest(time='', first=True)
-            print('sending latest...')
             return ObservationRequest(time=self.disk.cache.index[-1])
 
         def validateCache():
@@ -115,26 +114,22 @@ class SynapseSubscriber(Axon):
                     observationHash=observation.hash)
                 if success:
                     return
-            logging.debug('error during pull', color='teal')
             validateCache()
             self.send(lastTime())
             clearQueue()
 
         def handle(observation: SingleObservation):
-            logging.debug('handling:', observation.hash, color='green')
             if not self.disk.cache.empty and observation.isFirst:
                 if (
                     observation.time == self.disk.cache.index[0] and
                     str(observation.data) == str(self.disk.cache.iloc[0].value) and
                     observation.hash == self.disk.cache.iloc[0].hash
                 ):
-                    logging.debug('overwriting!',
-                                  observation.hash, color='red')
+
                     # self.disk.overwriteClean()
                     validateCache()
                     self.send(lastTime())
                 else:
-                    logging.debug('clearing!', observation.hash, color='red')
                     self.disk.clear()
                     self.send(ObservationRequest(time='', first=True))
             else:
@@ -210,15 +205,11 @@ class SynapsePublisher(Axon):
             if (row.shape[0] == 0):
                 raise Exception('no data')
             if (row.shape[0] == 1):
-                logging.debug(
-                    'first', self.first, row.index[0], self.first == row.index[0], color='yellow')
                 return SingleObservation(
                     time=row.index[0],
                     data=row['value'].values[0],
                     hash=row['hash'].values[0],
                     isFirst=self.first == row.index[0])
-            logging.debug(
-                'first', self.first, row.index[0], self.first == row.index[0], color='magenta')
             return SingleObservation(
                 time=row.index[0],
                 data=row['value'].values[0],

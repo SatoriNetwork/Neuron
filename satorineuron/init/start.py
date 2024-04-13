@@ -64,7 +64,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
         self.pubsub: SatoriPubSubConn = None
-        self.synergy: SynergyManager = None
+        self.synergy: Union[SynergyManager, None] = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
