@@ -221,7 +221,7 @@ class UDPRelay():
 
     @staticmethod
     def satoriUrl(endpoint='') -> str:
-        return 'http://localhost:24601/udp' + endpoint
+        return 'http://localhost:24601/synapse' + endpoint
 
     ### INIT ###
 
@@ -410,7 +410,7 @@ async def main():
         greyPrint("Satori P2P Relay is running. Press Ctrl+C to stop.")
         try:
             while True:
-                await asyncio.sleep(3)
+                await asyncio.sleep(3600)
                 if not udpRelay.running:
                     raise Exception('udpRelay not running')
         except KeyboardInterrupt:

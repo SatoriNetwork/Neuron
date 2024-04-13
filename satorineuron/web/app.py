@@ -1325,19 +1325,19 @@ def publsihMeta():
 ###############################################################################
 
 
-@app.route('/udp/ping', methods=['GET'])
+@app.route('/synapse/ping', methods=['GET'])
 def udpPing():
     ''' tells p2p script we're up and running '''
     return 'ok', 200
 
 
-@app.route('/udp/ports', methods=['GET'])
+@app.route('/synapse/ports', methods=['GET'])
 def udpPorts():
     ''' receives data from udp relay '''
     return str(start.peer.gatherChannels())
 
 
-@app.route('/udp/stream')
+@app.route('/synapse/stream')
 def udpStream():
     ''' here we listen for messages from the synergy engine '''
 
@@ -1352,7 +1352,7 @@ def udpStream():
         content_type='text/event-stream')
 
 
-@app.route('/udp/message', methods=['POST'])
+@app.route('/synapse/message', methods=['POST'])
 def udpMessage():
     ''' receives data from udp relay '''
     data = request.data
