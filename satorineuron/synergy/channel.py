@@ -83,6 +83,11 @@ class SynapseSubscriber(Axon):
             print('sending latest...')
             return ObservationRequest(time=self.disk.cache.index[-1])
 
+        def validateCache():
+            success, df = self.disk.validateAllHashes()
+            if not success:
+                self.disk.removeItAndAfter(df.index[-1])
+
         def save(observation: SingleObservation):
             ''' save the data to disk, if anything goes wrong request a time '''
 
@@ -91,12 +96,6 @@ class SynapseSubscriber(Axon):
                     return ''
                 else:
                     return self.disk.cache.iloc[-1].hash
-
-            def validateCache():
-                success, df = self.disk.validateAllHashes()
-                print(df)
-                if not success:
-                    self.disk.saveHashes()
 
             def clearQueue():
                 try:
@@ -114,31 +113,26 @@ class SynapseSubscriber(Axon):
                     timestamp=observation.time,
                     value=observation.data,
                     observationHash=observation.hash)
-                if not success:
-                    logging.debug('not success',
-                                  observation.hash, color='red')
-                    validateCache()
-                    self.send(lastTime())
-                    clearQueue()
-                    # success, df = self.disk.verifyHashesReturnLastGood()
-                    # if isinstance(df, pd.DataFrame) and len(df) > 0:
-                    #    self.send(df.index[-1])
-            else:
-                logging.debug('doing nothing', color='teal')
-                # self.disk.overwriteClean()
-                # self.send(lastTime())
+                if success:
+                    return 
+            logging.debug('error during pull', color='teal')
+            validateCache()
+            self.send(lastTime())
+            clearQueue()
 
         def handle(observation: SingleObservation):
+
             logging.debug('handling:', observation.hash, color='green')
             if not self.disk.cache.empty and observation.isFirst:
                 if (
                     observation.time == self.disk.cache.index[0] and
-                    observation.data == str(self.disk.cache.iloc[0].value) and
+                    str(observation.data) == str(self.disk.cache.iloc[0].value) and
                     observation.hash == self.disk.cache.iloc[0].hash
                 ):
                     logging.debug('overwriting!',
                                   observation.hash, color='red')
-                    self.disk.overwriteClean()
+                    # self.disk.overwriteClean()
+                    validateCache()
                     self.send(lastTime())
                 else:
                     logging.debug('clearing!', observation.hash, color='red')
