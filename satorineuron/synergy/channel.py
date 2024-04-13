@@ -121,7 +121,6 @@ class SynapseSubscriber(Axon):
             clearQueue()
 
         def handle(observation: SingleObservation):
-
             logging.debug('handling:', observation.hash, color='green')
             if not self.disk.cache.empty and observation.isFirst:
                 if (
