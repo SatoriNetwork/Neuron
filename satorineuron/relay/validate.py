@@ -340,7 +340,7 @@ class RelayStreamHistorySaver(Cached):
         self.disk.append(Observation.parse({
             'topic': self.id.topic(),
             'data': value
-        }).df.copy())
+        }).df.copy(), hashThis=True)
 
     def pin(self, path: str = None):
         ''' pins the data to ipfs, returns pin address '''

@@ -33,12 +33,14 @@ class Axon(Cached):
 
     def send(self, data: Vesicle):
         ''' sends data to the peer '''
+        logging.debug('sending synapse message:', data.toDict, color='yellow')
         from satorineuron.init.start import getStart
         getStart().udpQueue.put(Envelope(ip=self.ip, vesicle=data))
 
     def receive(self, message: bytes) -> Union[Vesicle, None]:
         '''Handle incoming messages. Must be implemented by subclasses.'''
-        logging.info('received synapse message:', message, color='grey')
+        logging.info('received synapse message:',
+                     message.decode(), color='grey')
         vesicle = None
         try:
             vesicle = Vesicle.build(message)
@@ -125,7 +127,6 @@ class SynapseSubscriber(Axon):
                     str(observation.data) == str(self.disk.cache.iloc[0].value) and
                     observation.hash == self.disk.cache.iloc[0].hash
                 ):
-
                     # self.disk.overwriteClean()
                     validateCache()
                     self.send(lastTime())
@@ -218,7 +219,7 @@ class SynapsePublisher(Axon):
 
         self.running = True
         self.sentCountWithoutPing = 0
-        while self.ts != self.disk.cache.index[-1] or self.sentCountWithoutPing < 500:
+        while self.ts != self.disk.cache.index[-1] and self.sentCountWithoutPing < 500:
             ts = self.ts
             time.sleep(0.33)  # cool down
             try:
@@ -226,7 +227,7 @@ class SynapsePublisher(Axon):
             except Exception as _:
                 break
             self.send(observation)
-            self.sentCountWithoutPing = self.sentCountWithoutPing + 1
+            self.sentCountWithoutPing += 1
             if self.ts == ts:
                 self.ts = observation.time
         self.running = False

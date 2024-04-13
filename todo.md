@@ -280,6 +280,9 @@ DONE neuron - synergy author not found error should retry later? - on restart
 
 -- p2p end --
 
+neuron - refactor data management - entire cache/disk system
+neuron - refactor data management - make models beholden to cache
+
 -- Prep for launch --
 
 all - reissue SATORI to be 8 decimal places, handle everywhere

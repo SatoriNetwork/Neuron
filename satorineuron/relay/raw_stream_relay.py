@@ -127,7 +127,7 @@ class RawStreamRelayEngine(Cached):
         ''' relays data to pubsub '''
         from satorineuron.init.start import getStart
         logging.info(
-            'outgoing realtime relay:',
+            'outgoing message:',
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
             data, timestamp, print=True)
         getStart().pubsub.publish(
@@ -140,7 +140,7 @@ class RawStreamRelayEngine(Cached):
         self.latest[stream.streamId.topic()] = data
         self.streamId = stream.streamId  # required by Cache
         success, timestamp, observationHash = self.disk.appendByAttributes(
-            value=data)
+            value=data, hashThis=True)
         return success, timestamp, observationHash
 
     def callRelay(self, streams: list[Stream]) -> bool:
