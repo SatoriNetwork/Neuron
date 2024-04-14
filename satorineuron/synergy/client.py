@@ -48,7 +48,7 @@ class SynergyClient:
 
         @self.sio.on('error')
         def onError(data):
-            logging.error('synergy error:', data, color='red')
+            logging.info('synergy error:', data)
 
         @self.sio.on('response')
         def onResponse(data):

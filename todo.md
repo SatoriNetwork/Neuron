@@ -251,9 +251,13 @@ DONE neuron - figure out why we don't have history or predictions on ui
 DONE neuron - download where you left off.
 DONE neuron - clear only what is wrong in download.
 
-neuron - disk cache isn't able to added missing datastreams on the fly
-
 central - fix predictions not being noticed? or something. payments arent going for predictions right now
+DONE central - are predictions being produced? yes
+DONE central - are predictions being produced with new neuron? no
+central - why aren't predictions being counted? predictors query perhaps
+neuron - fix predictions not being produced
+DONE central - save the time
+DONE central - save history first
 
 -- P2P options --
 
@@ -282,6 +286,7 @@ DONE neuron - synergy author not found error should retry later? - on restart
 
 neuron - refactor data management - entire cache/disk system
 neuron - refactor data management - make models beholden to cache
+neuron - disk cache isn't able to added missing datastreams on the fly
 
 -- Prep for launch --
 
