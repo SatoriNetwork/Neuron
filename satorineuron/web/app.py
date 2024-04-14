@@ -1328,7 +1328,7 @@ def publsihMeta():
 @app.route('/synapse/ping', methods=['GET'])
 def udpPing():
     ''' tells p2p script we're up and running '''
-    return 'OK', 200
+    return 'ok', 200
 
 
 @app.route('/synapse/ports', methods=['GET'])

@@ -178,15 +178,14 @@ class requests:
             return response.read().decode('utf-8')
 
 
-class UDPRelay():
+class Synapse():
     ''' go-between for the flask server and the remote peers '''
 
     PORT = 24600
 
     def __init__(self):
-        self.socketListener = None
+        self.running = False
         self.neuronListener = None
-        self.neuronReachable = False
         self.peers: t.List[str] = []
         self.socket: socket.socket = self.createSocket()
         self.run()
@@ -199,59 +198,35 @@ class UDPRelay():
 
     def run(self):
         ''' runs forever '''
+        self.running = True
         self.initNeuronListener()
-        self.initSocketListener()
 
     def initNeuronListener(self):
-        self.neuronListener = threading.Thread(
-            target=self.manageNeuronListener)
+        self.neuronListener = threading.Thread(target=self.listenToNeuron)
         self.neuronListener.start()
 
     def initSocketListener(self):
-        self.socketListener = threading.Thread(target=self.listenTo)
-        self.socketListener.start()
+        self.listenToSocket()
 
-    def manageNeuronListener(self):
-        def waitForNeuron():
-            notified = False
-            while True:
-                try:
-                    r = requests.get(UDPRelay.satoriUrl('/ping'))
-                    if r == 'OK':
-                        if notified:
-                            greyPrint(
-                                'established connection to Satori Neuron')
-                        return
-                except Exception as _:
-                    if not notified:
-                        greyPrint('waiting for Satori Neuron')
-                        notified = True
-                time.sleep(1)
-
-        while True:
-            waitForNeuron()
-            try:
-                self.createNeuronListener()
-                raise Exception('udpRelay not running')
-            except KeyboardInterrupt:
-                pass
-            except SseTimeoutFailure:
-                pass
-            except Exception as e:
-                greyPrint(f'neuron listener error: {e}')
-            finally:
-                self.shutdown()
-
-    def createNeuronListener(self):
+    def listenToNeuron(self):
         try:
-            request = urllib.request.Request(UDPRelay.satoriUrl('/stream'))
+            request = urllib.request.Request(Synapse.satoriUrl('/stream'))
             with urllib.request.urlopen(request) as response:
                 for line in response:
+                    if not self.running:
+                        break
                     decoded = line.decode('utf-8')
                     if decoded.startswith('data:'):
                         self.handleNeuronMessage(decoded[5:].strip())
+        except KeyboardInterrupt:
+            pass
+        except SseTimeoutFailure:
+            pass
         except Exception as e:
+            pass
+        finally:
             greyPrint(f'neuron listener error: {e}')
+            self.shutdown()
 
     def createSocket(self) -> socket.socket:
         def bind(localPort: int) -> t.Union[socket.socket, None]:
@@ -264,15 +239,18 @@ class UDPRelay():
                 greyPrint(f'unable to bind to port {localPort}, {e}')
                 raise Exception('unable to create socket')
 
-        return bind(UDPRelay.PORT)
+        return bind(Synapse.PORT)
 
-    def listenTo(self):
-        try:
-            data, address = self.socket.recvfrom(1024)
-            if data != b'':
-                self.handlePeerMessage(data, address)
-        except Exception as e:
-            greyPrint(f'peer listener error: {e}')
+    def listenToSocket(self):
+        while self.running:
+            try:
+                data, address = self.socket.recvfrom(1024)
+                if data != b'':
+                    self.handlePeerMessage(data, address)
+            except Exception as e:
+                greyPrint(f'peer listener error: {e}')
+                break
+        self.shutdown()
 
     ### SPEAK ###
 
@@ -285,7 +263,7 @@ class UDPRelay():
             self.addPeer(ip)
 
     def addPeer(self, ip: str):
-        self.speak(ip, UDPRelay.PORT, data=Ping().toJson)
+        self.speak(ip, Synapse.PORT, data=Ping().toJson)
         self.peers.append(ip)
 
     ### HANDLERS ###
@@ -295,7 +273,7 @@ class UDPRelay():
         self.maybeAddPeer(msg.ip)
         self.speak(
             remoteIp=msg.ip,
-            remotePort=UDPRelay.PORT,
+            remotePort=Synapse.PORT,
             data=msg.vesicle.toJson)
 
     def handlePeerMessage(self, data: bytes, address: t.Tuple[str, int]):
@@ -311,7 +289,7 @@ class UDPRelay():
         #        self.maybeAddPeer(address[0])
         #        self.speak(
         #            remoteIp=address[0],
-        #            remotePort=UDPRelay.PORT,
+        #            remotePort=Synapse.PORT,
         #            data=Ping(True).toJson)
         #        return
         #    if ping.isResponse:
@@ -322,12 +300,13 @@ class UDPRelay():
     def relayToNeuron(self, data: bytes, ip: str, port: int):
         try:
             response = requests.post(
-                UDPRelay.satoriUrl('/message'),
+                Synapse.satoriUrl('/message'),
                 data=data,
                 headers={
                     'Content-Type': 'application/octet-stream',
                     'remoteIp': ip})
-            response.raise_for_status()
+            if response != 'ok':
+                raise Exception(response)
         except Exception as e:
             greyPrint(
                 'unable to relay message to neuron: error: '
@@ -336,18 +315,36 @@ class UDPRelay():
     ### SHUTDOWN ###
 
     def shutdown(self):
+        self.running = False
         self.socket.close()
-        greyPrint('UDPRelay shutdown complete.')
+        self.neuronListener.join()
+        greyPrint('Synapse shutdown complete.')
 
 
-def main():
-    udpRelay = None
+def waitForNeuron():
+    notified = False
     while True:
         try:
-            if udpRelay is None:
-                greyPrint("Satori P2P Relay is running. Press Ctrl+C to stop.")
-                udpRelay = UDPRelay()
-            time.sleep(3600)
+            r = requests.get(Synapse.satoriUrl('/ping'))
+            if r == 'ok':
+                if notified:
+                    greyPrint(
+                        'established connection to Satori Neuron')
+                return
+        except Exception as _:
+            if not notified:
+                greyPrint('waiting for Satori Neuron')
+                notified = True
+        time.sleep(1)
+
+
+def runSynapse():
+    while True:
+        waitForNeuron()
+        try:
+            greyPrint("Satori P2P Relay is running. Press Ctrl+C to stop.")
+            synapse = Synapse()
+            synapse.listenToSocket()
         except KeyboardInterrupt:
             pass
         except SseTimeoutFailure:
@@ -355,15 +352,9 @@ def main():
         except Exception as _:
             pass
         finally:
-            udpRelay.shutdown()
-            udpRelay = None
-
-
-def runSynapse():
-    try:
-        main()
-    except KeyboardInterrupt:
-        print('Interrupted by user')
+            greyPrint('Satori P2P Relay is shutting down.')
+            synapse.shutdown()
+            time.sleep(5)
 
 
 if __name__ == '__main__':
