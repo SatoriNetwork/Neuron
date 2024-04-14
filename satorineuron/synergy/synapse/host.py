@@ -72,7 +72,7 @@ import urllib.request
 import xml
 
 
-# INSTALL_DIR = os.path.join(os.environ.get('APPDATA', 'C:\\'), 'Satori')
+INSTALL_DIR = os.path.join(os.environ.get('APPDATA', 'C:\\'), 'Satori')
 
 
 def generateHash(inputStr: str) -> str:
@@ -83,8 +83,8 @@ def generateHash(inputStr: str) -> str:
     return hashlib.sha256(inputStr.encode('utf-8')).hexdigest()
 
 
-def run():
-    p2pScript = os.path.join(INSTALL_DIR, 'scripts', 'p2p.py')
+def run(installDir: str = None):
+    p2pScript = os.path.join(installDir or INSTALL_DIR, 'scripts', 'p2p.py')
     # p2pScript = 'C:\\repos\\Satori\\Neuron\\scripts\\p2p.py'
     if not os.path.isfile(p2pScript):
         print(f"File not found: {p2pScript}")
