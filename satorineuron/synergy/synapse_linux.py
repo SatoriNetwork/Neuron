@@ -232,7 +232,6 @@ class Synapse():
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
                 sock.bind(('0.0.0.0', localPort))
-                sock.setblocking(False)
                 return sock
             except Exception as e:
                 greyPrint(f'unable to bind to port {localPort}, {e}')
