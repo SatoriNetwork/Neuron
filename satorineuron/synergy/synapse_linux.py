@@ -228,6 +228,15 @@ class Synapse():
             self.shutdown()
 
     def createSocket(self) -> socket.socket:
+        def waitBeforeRaise(seconds: int):
+            '''
+            if this errors, but the neuron is reachable, it will immediately 
+            try again, and mostlikely fail for the same reason, such as perhaps
+            the port is bound elsewhere. So in order to avoid continual 
+            attempts and printouts we'll wait here before raising
+            '''
+            time.sleep(seconds)
+
         def bind(localPort: int) -> t.Union[socket.socket, None]:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
@@ -235,6 +244,7 @@ class Synapse():
                 return sock
             except Exception as e:
                 greyPrint(f'unable to bind to port {localPort}, {e}')
+                waitBeforeRaise(60)
                 raise Exception('unable to create socket')
 
         return bind(Synapse.PORT)
@@ -245,8 +255,7 @@ class Synapse():
                 data, address = self.socket.recvfrom(1024)
                 if data != b'':
                     self.handlePeerMessage(data, address)
-            except Exception as e:
-                greyPrint(f'peer listener error: {e}')
+            except Exception as _:
                 break
         self.shutdown()
 
@@ -314,9 +323,17 @@ class Synapse():
 
     def shutdown(self):
         self.running = False
-        self.socket.close()
-        self.neuronListener.join()
-        greyPrint('Synapse shutdown complete.')
+        if self.socket:
+            greyPrint('closing socket')
+            self.socket.close()
+            self.socket = None
+        if (
+            self.neuronListener != None and
+            threading.current_thread() != self.neuronListener
+        ):
+            greyPrint('closing neuron listener')
+            self.neuronListener.join()
+            self.neuronListener = None
 
 
 def waitForNeuron():
@@ -336,11 +353,11 @@ def waitForNeuron():
         time.sleep(1)
 
 
-def runSynapse():
+def main():
     while True:
         waitForNeuron()
         try:
-            greyPrint("Satori P2P Relay is running. Press Ctrl+C to stop.")
+            greyPrint("Satori P2P is running. Press Ctrl+C to stop.")
             synapse = Synapse()
             synapse.listenToSocket()
         except KeyboardInterrupt:
@@ -350,9 +367,17 @@ def runSynapse():
         except Exception as _:
             pass
         finally:
-            greyPrint('Satori P2P Relay is shutting down.')
+            greyPrint('Satori P2P is shutting down')
             synapse.shutdown()
             time.sleep(5)
+
+
+def runSynapse():
+    try:
+        greyPrint('Synapse started')
+        main()
+    except KeyboardInterrupt:
+        greyPrint('Synapse exited by user')
 
 
 if __name__ == '__main__':
