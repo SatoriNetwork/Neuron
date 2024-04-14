@@ -19,11 +19,12 @@ relays messages from peers to the neuron.
 '''
 
 import typing as t
-import socket
 import time
 import threading
 import json
+import socket
 import urllib.request
+import urllib.parse
 
 
 ### CLASSES (coped from satorineuron.synergy.domain) ###
@@ -149,79 +150,32 @@ class SseTimeoutFailure(Exception):
     def __str__(self):
         return f"{self.__class__.__name__}: {self.args[0]} (Extra Data: {self.extraData})"
 
-# # written in an attempt to remove the aiohttp and requests dependencies:
 
-
-class NeuronWatcher:
+class requests:
+    '''
+    simple wrapper for urllib to mimic requests.get and requests.post api.
+    made so we could remove our dependancy on reuqests library and still use 
+    the same api.
+    '''
+    @staticmethod
+    def get(url: str) -> str:
+        ''' Using urllib.request to open a URL and read the response '''
+        with urllib.request.urlopen(url) as response:
+            return response.read().decode('utf-8')
 
     @staticmethod
-    def createNeuronListener(self):
-
-        try:
-            req = urllib.request.Request(UDPRelay.satoriUrl('/stream'))
-            with urllib.request.urlopen(req) as response:
-                for line in response:
-                    if line.startswith(b'data:'):
-                        self.handleNeuronMessage(
-                            line.decode('utf-8')[5:].strip())
-        except urllib.error.URLError as e:
-            print(f'Connection error: {e}')
-            self.running = False
-        except urllib.error.HTTPError as e:
-            print(f'HTTP error: {e}')
-            self.running = False
-        except Exception as e:
-            print(f'Unexpected error: {e}')
-            self.running = False
-
-    def createNeuronListener(self):
-        import asyncio
-        import http.client
-        from urllib.parse import urlparse
-        url = UDPRelay.satoriUrl('/stream')
-        parsed_url = urlparse(url)
-        host = parsed_url.hostname
-        port = parsed_url.port or (443 if parsed_url.scheme == 'https' else 80)
-        path = parsed_url.path
-
-        reader, writer = asyncio.open_connection(
-            host, port, ssl=(parsed_url.scheme == 'https'))
-        request_header = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
-        writer.write(request_header.encode('utf-8'))
-
-        try:
-            while True:  # You might want to implement a proper breaking condition
-                line = reader.readline()
-                if line.startswith(b'data:'):
-                    asyncio.create_task(self.handleNeuronMessage(
-                        line.decode('utf-8')[5:].strip()))
-
-        except asyncio.TimeoutError:
-            print("SSE connection timed out...")
-            self.shutdown()
-            raise
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            self.shutdown()
-        finally:
-            writer.close()
-            writer.wait_closed()
-
-# class requests:
-#    ''' works: this could allow us to avoid using 3rd party package requests '''
-#    @staticmethod
-#    def get(url: str) -> t.Any:
-#        import urllib.request
-#        ''' Using urllib.request to open a URL and read the response '''
-#        try:
-#            with urllib.request.urlopen(url) as response:
-#                content = response.read()
-#            # Decoding the content to a string, assuming it's encoded in UTF-8
-#            content_as_string = content.decode('utf-8')
-#            return content_as_string
-#        except Exception as e:
-#            # print(f'unable to read {url}: {e}')
-#            pass
+    def post(url: str, data: bytes, headers: dict = None) -> str:
+        ''' Using urllib to post with an API similar to requests.post '''
+        headers = headers or {}
+        # If data is a dictionary, encode it into bytes using urllib.parse.urlencode
+        if isinstance(data, dict):
+            data = urllib.parse.urlencode(data).encode('utf-8')
+        elif isinstance(data, str):
+            data = data.encode('utf-8')
+        request = urllib.request.Request(
+            url, data=data, headers=headers, method='POST')
+        with urllib.request.urlopen(request) as response:
+            return response.read().decode('utf-8')
 
 
 class UDPRelay():
@@ -235,6 +189,7 @@ class UDPRelay():
         self.neuronReachable = False
         self.peers: t.List[str] = []
         self.socket: socket.socket = self.createSocket()
+        self.run()
 
     @staticmethod
     def satoriUrl(endpoint='') -> str:
@@ -248,14 +203,12 @@ class UDPRelay():
         self.initSocketListener()
 
     def initNeuronListener(self):
-        self.cancelNeuronListener()
         self.neuronListener = threading.Thread(
-            target=self.createNeuronListener)
+            target=self.manageNeuronListener)
         self.neuronListener.start()
 
     def initSocketListener(self):
-        self.socketListener = threading.Thread(
-            target=self.listenTo, args=(self.socket,))
+        self.socketListener = threading.Thread(target=self.listenTo)
         self.socketListener.start()
 
     def manageNeuronListener(self):
@@ -264,14 +217,14 @@ class UDPRelay():
             while True:
                 try:
                     r = requests.get(UDPRelay.satoriUrl('/ping'))
-                    if r.status_code == 200:
+                    if r == 'OK':
                         if notified:
                             greyPrint(
                                 'established connection to Satori Neuron')
                         return
                 except Exception as _:
                     if not notified:
-                        greyPrint('waiting for Satori Neuron to start')
+                        greyPrint('waiting for Satori Neuron')
                         notified = True
                 time.sleep(1)
 
@@ -291,21 +244,14 @@ class UDPRelay():
 
     def createNeuronListener(self):
         try:
-            with requests.get(UDPRelay.satoriUrl('/stream'), stream=True) as response:
-                if response.status_code == 200:
-                    for line in response.iter_lines():
-                        if line.startswith(b'data:'):
-                            self.handleNeuronMessage(
-                                line.decode('utf-8')[5:].strip())
-                else:
-                    greyPrint(
-                        f'Failed to connect, status code {response.status_code}')
-        except requests.Timeout as _:
-            greyPrint('Neuron connection timed out...')
-        except requests.ConnectionError as _:
-            greyPrint('Neuron connection error...')
-        except requests.RequestException as _:
-            greyPrint('Neuron error...')
+            request = urllib.request.Request(UDPRelay.satoriUrl('/stream'))
+            with urllib.request.urlopen(request) as response:
+                for line in response:
+                    decoded = line.decode('utf-8')
+                    if decoded.startswith('data:'):
+                        self.handleNeuronMessage(decoded[5:].strip())
+        except Exception as e:
+            greyPrint(f'neuron listener error: {e}')
 
     def createSocket(self) -> socket.socket:
         def bind(localPort: int) -> t.Union[socket.socket, None]:
@@ -320,25 +266,19 @@ class UDPRelay():
 
         return bind(UDPRelay.PORT)
 
-    def listenTo(self, sock: socket.socket):
-        while self.neuronReachable:
-            try:
-                data, address = self.loop.sock_recvfrom(sock, 1024)
-                if data != b'':
-                    self.handlePeerMessage(data, address)
-            except asyncio.CancelledError:
-                greyPrint('listen task cancelled')
-                break
-            except Exception as e:
-                greyPrint(f'listenTo error: {e}')
-                break
+    def listenTo(self):
+        try:
+            data, address = self.socket.recvfrom(1024)
+            if data != b'':
+                self.handlePeerMessage(data, address)
+        except Exception as e:
+            greyPrint(f'peer listener error: {e}')
 
     ### SPEAK ###
 
     def speak(self, remoteIp: str, remotePort: int, data: str = ''):
         # greyPrint(f'sending to {remoteIp}:{remotePort} {data}')
-        self.loop.sock_sendto(self.socket, data.encode(),
-                              (remoteIp, remotePort))
+        self.socket.sendto(data.encode(), (remoteIp, remotePort))
 
     def maybeAddPeer(self, ip: str):
         if ip not in self.peers:
@@ -401,22 +341,22 @@ class UDPRelay():
 
 
 def main():
-    udpRelay = UDPRelay()
-    udpRelay.run()
-    greyPrint("Satori P2P Relay is running. Press Ctrl+C to stop.")
-    try:
-        while True:
+    udpRelay = None
+    while True:
+        try:
+            if udpRelay is None:
+                greyPrint("Satori P2P Relay is running. Press Ctrl+C to stop.")
+                udpRelay = UDPRelay()
             time.sleep(3600)
-            if not udpRelay.running:
-                raise Exception('udpRelay not running')
-    except KeyboardInterrupt:
-        pass
-    except SseTimeoutFailure:
-        pass
-    except Exception as _:
-        pass
-    finally:
-        udpRelay.shutdown()
+        except KeyboardInterrupt:
+            pass
+        except SseTimeoutFailure:
+            pass
+        except Exception as _:
+            pass
+        finally:
+            udpRelay.shutdown()
+            udpRelay = None
 
 
 def runSynapse():
