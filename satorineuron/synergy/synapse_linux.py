@@ -223,9 +223,8 @@ class Synapse():
         except SseTimeoutFailure:
             pass
         except Exception as e:
-            pass
-        finally:
             greyPrint(f'neuron listener error: {e}')
+        finally:
             self.shutdown()
 
     def createSocket(self) -> socket.socket:
