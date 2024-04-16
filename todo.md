@@ -250,6 +250,15 @@ DONE neuron - on checkin why am I not getting streams assigned to predict
 DONE neuron - figure out why we don't have history or predictions on ui
 DONE neuron - download where you left off.
 DONE neuron - clear only what is wrong in download.
+DONE central - are predictions being produced? yes
+DONE central - are predictions being produced with new neuron? no
+DONE central - save the time
+DONE central - save history first
+DONE central - fix double history glitch that has always existed
+DONE central - fix predictions not being noticed? or something. payments arent going for predictions right now
+DONE central - why aren't predictions being counted? predictors query perhaps - they are
+DONE neuron - fix predictions not being produced:
+DONE neuron - dataset not being produced properly - false alarm - dedupe
 
 -- P2P options --
 
@@ -273,18 +282,9 @@ DONE neuron - handle saving data - test
 DONE neuron - recreate the installer using the abstractor
 DONE neuron - run the synergy script on startup to test.
 DONE neuron - synergy author not found error should retry later? - on restart
-
+neuron - look out for packet empty queue error, might be fixed now
 -- p2p end --
 
-DONE central - are predictions being produced? yes
-DONE central - are predictions being produced with new neuron? no
-DONE central - save the time
-DONE central - save history first
-DONE central - fix double history glitch that has always existed
-central - fix predictions not being noticed? or something. payments arent going for predictions right now
-central - why aren't predictions being counted? predictors query perhaps
-neuron - fix predictions not being produced:
-neuron - dataset not being produced properly
 neuron - refactor data management - entire cache/disk system
 neuron - refactor data management - make models beholden to cache
 neuron - disk cache isn't able to added missing datastreams on the fly
