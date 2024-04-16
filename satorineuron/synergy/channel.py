@@ -39,7 +39,7 @@ class Axon(Cached):
 
     def receive(self, message: bytes) -> Union[Vesicle, None]:
         '''Handle incoming messages. Must be implemented by subclasses.'''
-        #logging.info('received synapse message:',
+        # logging.info('received synapse message:',
         #             message.decode(), color='grey')
         vesicle = None
         try:
@@ -89,7 +89,7 @@ class SynapseSubscriber(Axon):
             if not success:
                 self.disk.removeItAndAfter(df.index[-1])
 
-        def save(observation: SingleObservation):
+        def save(observation: SingleObservation) -> bool:
             ''' save the data to disk, if anything goes wrong request a time '''
 
             def lastHash():
@@ -115,10 +115,11 @@ class SynapseSubscriber(Axon):
                     value=observation.data,
                     observationHash=observation.hash)
                 if success:
-                    return
+                    return True
             validateCache()
             self.send(lastTime())
             clearQueue()
+            return False
 
         def handle(observation: SingleObservation):
             if not self.disk.cache.empty and observation.isFirst:
@@ -134,7 +135,9 @@ class SynapseSubscriber(Axon):
                     self.disk.clear()
                     self.send(ObservationRequest(time='', first=True))
             else:
-                save(observation)
+                if save(observation) and observation.isLatest:
+                    from satorineuron.init.start import getStart
+                    getStart().repullFor(self.streamId)
 
         if self.inbox.empty():
             self.send(ObservationRequest(time='', first=True))
@@ -159,6 +162,7 @@ class SynapsePublisher(Axon):
         self.ts: str = datetimeToTimestamp(earliestDate())
         self.running = False
         self.first = self.disk.cache.index[0] if not self.disk.cache.empty else None
+        self.last = self.disk.cache.index[-1] if not self.disk.cache.empty else None
         self.sentCountWithoutPing = 0
         # self.main()
 
@@ -196,6 +200,20 @@ class SynapsePublisher(Axon):
 
         def getObservationAfter(timestamp: str) -> SingleObservation:
             ''' get the next observation after the time '''
+            def isLatest(index):
+                '''
+                updates the last index if we've reached what we thought 
+                might be the last index
+                '''
+                if index == self.last:
+                    if self.last is not None and not self.disk.cache.empty:
+                        self.last = self.disk.cache.index[-1]
+                        if index == self.last:
+                            return True
+                    else:
+                        self.last = None
+                return False
+
             after = self.disk.getObservationAfter(timestamp)
             if (
                 after is None or
@@ -205,17 +223,13 @@ class SynapsePublisher(Axon):
             row = after.loc[after.index > timestamp].head(1)
             if (row.shape[0] == 0):
                 raise Exception('no data')
-            if (row.shape[0] == 1):
-                return SingleObservation(
-                    time=row.index[0],
-                    data=row['value'].values[0],
-                    hash=row['hash'].values[0],
-                    isFirst=self.first == row.index[0])
+            # if (row.shape[0] == 1): # same as else:
             return SingleObservation(
                 time=row.index[0],
                 data=row['value'].values[0],
                 hash=row['hash'].values[0],
-                isFirst=self.first == row.index[0])
+                isFirst=row.index[0] == self.first,
+                isLatest=isLatest(row.index[0]))
 
         self.running = True
         self.sentCountWithoutPing = 0

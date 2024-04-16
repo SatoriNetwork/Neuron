@@ -391,3 +391,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             task=autosecureLoop,
             interval=60*60*6,
             delay=10)
+
+    def repullFor(self, streamId: StreamId):
+        for model in self.engine.models:
+            if model.variable == streamId:
+                model.inputsUpdated.on_next(True)
+            else:
+                for target in model.targets:
+                    if target == streamId:
+                        model.inputsUpdated.on_next(True)

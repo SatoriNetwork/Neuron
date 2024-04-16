@@ -140,3 +140,7 @@ class SynergyClient:
         except KeyboardInterrupt:
             self.disconnect()
             logging.info('Disconnected by user')
+        except Exception as e:
+            logging.error('Satori Synergy error:', e, print=True)
+            self.disconnect()
+            self.reconnect()
