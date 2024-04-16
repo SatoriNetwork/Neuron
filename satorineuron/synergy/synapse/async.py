@@ -14,13 +14,14 @@ import hashlib
 def generateHash(inputStr: str) -> str:
     return hashlib.sha256(inputStr.encode('utf-8')).hexdigest()
 
-with open('c:\\repos\\Satori\\Neuron\\scripts\\p2p.py', "r") as file:   
+with open('c:\\repos\\Satori\\Neuron\\scripts\\p2p.py', "r") as file:
     print(generateHash(file.read()))
 
 print('save that has to the list returned from the Central Server /verify/scripthash endpoint')
 ```
 '''
 
+import time
 import typing as t
 import socket
 import asyncio
@@ -35,8 +36,8 @@ import aiohttp  # ==3.8.4
 # don't forget to comment out the references to Vesicle objects other than Ping
 
 class Vesicle():
-    ''' 
-    any object sent over the wire to a peer must inhereit from this so it's 
+    '''
+    any object sent over the wire to a peer must inhereit from this so it's
     guaranteed to be convertable to dict so we can have nested dictionaries
     then convert them all to json once at the end (rather than nested json).
 
@@ -257,6 +258,15 @@ class UDPRelay():
             self.broke.set()
 
     def createSocket(self) -> socket.socket:
+        def waitBeforeRaise(seconds: int):
+            '''
+            if this errors, but the neuron is reachable, it will immediately 
+            try again, and mostlikely fail for the same reason, such as perhaps
+            the port is bound elsewhere. So in order to avoid continual 
+            attempts and printouts we'll wait here before raising
+            '''
+            time.sleep(seconds)
+
         def bind(localPort: int) -> t.Union[socket.socket, None]:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
@@ -265,6 +275,7 @@ class UDPRelay():
                 return sock
             except Exception as e:
                 greyPrint(f'unable to bind to port {localPort}, {e}')
+                waitBeforeRaise(60)
                 raise Exception('unable to create socket')
 
         return bind(UDPRelay.PORT)
