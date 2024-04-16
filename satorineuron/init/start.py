@@ -395,8 +395,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def repullFor(self, streamId: StreamId):
         for model in self.engine.models:
             if model.variable == streamId:
+                logging.debug('UPDATING MODEL', streamId, color='yellow')
                 model.inputsUpdated.on_next(True)
             else:
                 for target in model.targets:
                     if target == streamId:
+                        logging.debug('UPDATING MODEL TARGET',
+                                      streamId, color='yellow')
                         model.inputsUpdated.on_next(True)
