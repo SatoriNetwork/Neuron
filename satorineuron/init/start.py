@@ -296,8 +296,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' establish a synergy connection '''
         if self.synergy and self.synergy.isConnected:
             for stream in self.subscriptions:
-                # logging.info(
-                #    'connected to Satori p2p network', color='green')
+                logging.info('stream', stream, color='green')
                 self.synergy.connectToPeer(stream.streamId)
         # else:
         #    raise Exception('synergy not created or not connected.')

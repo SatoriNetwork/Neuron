@@ -217,7 +217,7 @@ class UDPRelay():
         self.session = aiohttp.ClientSession()
         self.socket: socket.socket = self.createSocket()
         self.loop = asyncio.get_event_loop()
-        self.running = False
+        self.broke = asyncio.Event()
 
     @staticmethod
     def satoriUrl(endpoint='') -> str:
@@ -227,7 +227,6 @@ class UDPRelay():
 
     async def run(self):
         ''' runs forever '''
-        self.running = True
         await self.initNeuronListener()
         await self.initSocketListener()
 
@@ -237,7 +236,7 @@ class UDPRelay():
 
     async def initSocketListener(self):
         await self.cancelSocketListener()
-        self.socketListener = asyncio.create_task(self.listenTo(self.socket))
+        self.socketListener = asyncio.create_task(self.listenToSocket())
 
     async def createNeuronListener(self):
         timeout = aiohttp.ClientTimeout(total=None, sock_read=None)
@@ -251,19 +250,11 @@ class UDPRelay():
                                     line.decode('utf-8')[5:].strip()))
             except asyncio.TimeoutError:
                 greyPrint('Neuron connection timed out...')
-                # await self.shutdown()
-                self.running = False
-                # raise SseTimeoutFailure()
-            except aiohttp.ClientConnectionError:
-                greyPrint('Neuron connection error...')
-                self.running = False
-                # await self.shutdown()
-                # raise SseTimeoutFailure()
+            except aiohttp.ClientConnectionError as e:
+                greyPrint(f'Neuron connection error... {e}')
             except aiohttp.ClientError:
                 greyPrint('Neuron error...')
-                self.running = False
-                # await self.shutdown()
-                # raise SseTimeoutFailure()
+            self.broke.set()
 
     def createSocket(self) -> socket.socket:
         def bind(localPort: int) -> t.Union[socket.socket, None]:
@@ -278,18 +269,19 @@ class UDPRelay():
 
         return bind(UDPRelay.PORT)
 
-    async def listenTo(self, sock: socket.socket):
-        while self.running:
+    async def listenToSocket(self):
+        while not self.broke.is_set():
             try:
-                data, address = await self.loop.sock_recvfrom(sock, 1024)
+                data, address = await self.loop.sock_recvfrom(self.socket, 1024)
                 if data != b'':
                     await self.handlePeerMessage(data, address)
             except asyncio.CancelledError:
                 greyPrint('listen task cancelled')
                 break
             except Exception as e:
-                greyPrint(f'listenTo error: {e}')
+                greyPrint(f'listenToSocket error: {e}')
                 break
+        self.broke.set()
 
     ### SPEAK ###
 
@@ -378,7 +370,6 @@ class UDPRelay():
                 greyPrint('Neuron listener task cancelled successfully.')
 
     async def shutdown(self):
-        self.running = False
         await self.session.close()
         await self.cancelSocketListener()
         await self.cancelNeuronListener()
@@ -409,10 +400,8 @@ async def main():
         await udpRelay.run()
         greyPrint("Satori P2P Relay is running. Press Ctrl+C to stop.")
         try:
-            while True:
-                await asyncio.sleep(3600)
-                if not udpRelay.running:
-                    raise Exception('udpRelay not running')
+            await udpRelay.broke.wait()
+            raise Exception('udpRelay not running')
         except KeyboardInterrupt:
             pass
         except SseTimeoutFailure:
