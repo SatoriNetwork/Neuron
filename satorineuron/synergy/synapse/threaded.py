@@ -160,8 +160,11 @@ class requests:
     @staticmethod
     def get(url: str) -> str:
         ''' Using urllib.request to open a URL and read the response '''
-        with urllib.request.urlopen(url) as response:
-            return response.read().decode('utf-8')
+        try:
+            with urllib.request.urlopen(url, timeout=10) as response:
+                return response.read().decode('utf-8')
+        except Exception as _:
+            return ''
 
     @staticmethod
     def post(url: str, data: bytes, headers: dict = None) -> str:

@@ -283,12 +283,13 @@ DONE neuron - recreate the installer using the abstractor
 DONE neuron - run the synergy script on startup to test.
 DONE neuron - synergy author not found error should retry later? - on restart
 neuron - look out for packet empty queue error, might be fixed now
+neuron - gotta test mapping the port 24600 - maybe we can put the synapse inside.
+
 -- p2p end --
 
 neuron - refactor data management - entire cache/disk system
 neuron - refactor data management - make models beholden to cache
 neuron - disk cache isn't able to added missing datastreams on the fly
-
 -- Prep for launch --
 
 all - reissue SATORI to be 8 decimal places, handle everywhere

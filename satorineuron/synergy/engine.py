@@ -80,10 +80,14 @@ class SynergyManager():
     def createChannel(self, msg: SynergyProtocol):
         ''' completes the next part of the msg and returns '''
         if msg.author == self.pubkey:
+            logging.info(
+                'creating channel to new subscribing peer:', msg, color='green')
             self.channels[msg.subscriberIp] = SynapsePublisher(
                 streamId=msg.streamId,
                 ip=msg.subscriberIp)
         elif msg.subscriber == self.pubkey:
+            logging.info('creating channel to new publishing peer:',
+                         msg, color='green')
             self.channels[msg.authorIp] = SynapseSubscriber(
                 streamId=msg.streamId,
                 ip=msg.authorIp)

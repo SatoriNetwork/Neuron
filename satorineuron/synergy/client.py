@@ -23,6 +23,19 @@ class SynergyRestClient(object):
         return requests.get(self.url + '/challenge').text
 
 
+# TODO: this seems to have some kind of silent failure after it's been
+# connected for a while. don't know if it's the server or the client, or even
+# if it's just a problem with the synapse. so we need to troubleshoot this, if
+# it's the client we could increase hte reconnection_attempts - perhaps it runs
+# out of reconnection attempts after 10 minutes or so. Or we could add a heart
+# beat, but the server is supposed to heart beat the client every 25 seconds
+# anyway. Or we could explicitly reconnect to the server every 10 minutes or so.
+# we already added a reconnect call after .wait(), and I don't think that solved
+# the problem, though I didn't get any error on this end anymore (was getting
+# the empty packet queue error before). Perhaps it was solved on this end but
+# another problem still exists on the synapse? that is one explanation. so we
+# need to print out more logs about whats going on exactly.
+
 class SynergyClient:
     def __init__(self, url, wallet: Wallet, router: callable = None, onConnected: callable = None):
         self.sio = socketio.Client(
