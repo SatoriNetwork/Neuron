@@ -1,4 +1,3 @@
-# todo create config if no config present, use config if config present
 from typing import Union
 import os
 import json
@@ -104,7 +103,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.isDebug:
             return
         self.startRelay()
-        # self.buildEngine()
+        self.buildEngine()
         self.startSynergyEngine()
 
     def createRelayValidation(self):
@@ -223,11 +222,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             if not success:
                 cache.saveHashes()
 
-        # TODO: if it's missing create it
-        # also include checking our subscriptions
-        for stream in set(self.subscriptions):
-            cache = self.cacheOf(stream.id)
-            # self.asyncThread.runAsync(cache, task=validateCache)
         for stream in set(self.publications):
             cache = self.cacheOf(stream.id)
             self.asyncThread.runAsync(cache, task=validateCache)

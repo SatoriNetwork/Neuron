@@ -257,7 +257,7 @@ class Synapse():
             try:
                 data, address = self.socket.recvfrom(1024)
                 if data != b'':
-                    greyPrint(f'RECEIVED: {data}, {address}')
+                    #greyPrint(f'RECEIVED: {data}, {address}')
                     self.handlePeerMessage(data, address)
             except Exception as _:
                 break
@@ -266,7 +266,7 @@ class Synapse():
     ### SPEAK ###
 
     def speak(self, remoteIp: str, remotePort: int, data: str = ''):
-        greyPrint(f'SENDING: {data} {remoteIp}:{remotePort} ')
+        #greyPrint(f'SENDING: {data} {remoteIp}:{remotePort} ')
         self.socket.sendto(data.encode(), (remoteIp, remotePort))
 
     def maybeAddPeer(self, ip: str):
