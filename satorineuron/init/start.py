@@ -104,7 +104,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.isDebug:
             return
         self.startRelay()
-        self.buildEngine()
+        # self.buildEngine()
         self.startSynergyEngine()
 
     def createRelayValidation(self):
