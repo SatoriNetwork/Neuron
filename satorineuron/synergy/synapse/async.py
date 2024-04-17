@@ -388,25 +388,20 @@ class UDPRelay():
         greyPrint('UDPRelay shutdown complete.')
 
 
-def waitForNeuron():
-    notified = False
+def silentlyWaitForNeuron():
     while True:
         try:
             r = requests.get(UDPRelay.satoriUrl('/ping'))
             if r.status_code == 200:
-                if notified:
-                    greyPrint('established connection to Satori Neuron')
                 return
         except Exception as _:
-            if not notified:
-                greyPrint('waiting for Satori Neuron to start')
-                notified = True
+            pass
         time.sleep(1)
 
 
 async def main():
 
-    async def waitForNeuronAsync():
+    async def waitForNeuron():
         notified = False
         while True:
             try:
@@ -422,7 +417,7 @@ async def main():
             await asyncio.sleep(1)
 
     while True:
-        await waitForNeuronAsync()
+        await waitForNeuron()
         udpRelay = UDPRelay()
         await udpRelay.run()
         greyPrint("Satori P2P Relay is running. Press Ctrl+C to stop.")
