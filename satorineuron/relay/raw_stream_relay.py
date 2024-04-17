@@ -246,7 +246,7 @@ class RawStreamRelayEngine(Cached):
                                                  self._cadence(stream))
                         for stream in self.streams])
                 except Exception as e:
-                    logging.debug(
+                    logging.error(
                         '\n err ',
                         e, color='red')
                     # wait till the next second

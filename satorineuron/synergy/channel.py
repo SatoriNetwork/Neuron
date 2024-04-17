@@ -45,7 +45,7 @@ class Axon(Cached):
         try:
             vesicle = Vesicle.build(message)
         except Exception as e:
-            logging.debug('unable to prase peer message:', e, message)
+            logging.error('unable to prase peer message:', e, message)
         return vesicle
 
 

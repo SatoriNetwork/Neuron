@@ -381,7 +381,6 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
             if result.msg == 'creating partial, need feeSatsReserved.':
                 responseJson = start.server.requestSimplePartial(
                     network=network)
-                logging.debug(responseJson, color='yellow')
                 result = myWallet.typicalNeuronTransaction(
                     sweep=sendSatoriForm.sweep.data,
                     amount=sendSatoriForm.amount.data or 0,
@@ -699,7 +698,6 @@ def pinDepinStream():
         'target': s.get('target'),
         # 'client': start.wallet.publicKey, # gets this from authenticated call
     }
-    logging.debug('payload', payload, color='magenta')
     success, result = start.server.pinDepinStream(stream=payload)
     # return 'pinned' 'depinned' based on server response
     if success:
@@ -778,8 +776,8 @@ def modelUpdates():
                     return Response('data: oldCall\n\n', mimetype='text/event-stream')
                 yield data
         else:
-            logging.debug('yeilding once', len(
-                str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
+            # logging.debug('yeilding once', len(
+            #     str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
             yield "data: " + str(StreamOverviews.demo()).replace("'", '"') + "\n\n"
 
     return Response(update(), mimetype='text/event-stream')
@@ -837,7 +835,6 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
     myWallet.get(allWalletInfo=False)
     myWallet.setAlias(alias)
     start.server.updateWalletAlias(alias)
-    logging.debug('update_wallet_alias', alias, color='yellow')
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
@@ -1009,15 +1006,15 @@ def vote():
                     'oracles': 0,
                     'creators': 0,
                     'managers': 0})}
-        logging.debug('x', x, color='yellow')
+        # logging.debug('x', x, color='yellow')
         return x
 
     def getStreams(wallet):
         # todo convert result to the strucutre the template expects:
         # [ {'cols': 'value'}]
         streams = start.server.getSanctionVote(wallet, start.vault)
-        logging.debug('streams', [
-                      s for s in streams if s['oracle_alias'] is not None], color='yellow')
+        #logging.debug('streams', [
+        #              s for s in streams if s['oracle_alias'] is not None], color='yellow')
         return streams
         # return []
         # return [{
@@ -1076,7 +1073,7 @@ def vote():
 
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
 def voteSubmitManifestWallet():
-    logging.debug(request.json, color='yellow')
+    # logging.debug(request.json, color='yellow')
     if (
         request.json.get('walletPredictors') > 0 or
         request.json.get('walletOracles') > 0 or
@@ -1095,7 +1092,7 @@ def voteSubmitManifestWallet():
 
 @app.route('/vote/submit/manifest/vault', methods=['POST'])
 def voteSubmitManifestVault():
-    logging.debug(request.json, color='yellow')
+    # logging.debug(request.json, color='yellow')
     if ((
             request.json.get('vaultPredictors') > 0 or
             request.json.get('vaultOracles') > 0 or
@@ -1115,7 +1112,7 @@ def voteSubmitManifestVault():
 
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
 def voteSubmitSanctionWallet():
-    logging.debug(request.json, color='yellow')
+    # logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
     # zip(walletStreamIds, walletVotes)
     # {'walletStreamIds': [None], 'walletVotes': [1]}
@@ -1135,7 +1132,7 @@ def voteSubmitSanctionWallet():
 
 @app.route('/vote/submit/sanction/vault', methods=['POST'])
 def voteSubmitSanctionVault():
-    logging.debug(request.json, color='yellow')
+    # logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
     # zip(walletStreamIds, walletVotes)
     if (
@@ -1158,7 +1155,7 @@ def voteSubmitSanctionVault():
 
 @app.route('/vote/remove_all/sanction', methods=['GET'])
 def voteRemoveAllSanction():
-    logging.debug(request.json, color='yellow')
+    # logging.debug(request.json, color='yellow')
     start.server.removeSanctionVote(wallet=start.getWallet(network='test'))
     if (start.vault is not None and start.vault.isDecrypted):
         start.server.removeSanctionVote(start.vaul)
@@ -1326,19 +1323,19 @@ def publsihMeta():
 
 
 @app.route('/synapse/ping', methods=['GET'])
-def udpPing():
+def synapsePing():
     ''' tells p2p script we're up and running '''
     return 'ok', 200
 
 
 @app.route('/synapse/ports', methods=['GET'])
-def udpPorts():
+def synapsePorts():
     ''' receives data from udp relay '''
     return str(start.peer.gatherChannels())
 
 
 @app.route('/synapse/stream')
-def udpStream():
+def synapseStream():
     ''' here we listen for messages from the synergy engine '''
 
     def event_stream():
@@ -1353,13 +1350,12 @@ def udpStream():
 
 
 @app.route('/synapse/message', methods=['POST'])
-def udpMessage():
+def synapseMessage():
     ''' receives data from udp relay '''
     data = request.data
     remoteIp = request.headers.get('remoteIp')
     # remotePort = int(request.headers.get('remotePort')) #not needed at this time
     # localPort = int(request.headers.get('localPort'))
-    # print('udpMessage', data, 'from', remoteIp, remotePort, 'to', localPort)
     if any(v is None for v in [remoteIp, data]):
         return 'fail', 400
     start.synergy.passMessage(remoteIp, message=data)

@@ -233,6 +233,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             ''' filter down to prediciton publications '''
             return [s for s in streams if s.predicting is not None]
 
+        logging.info('starting AI Engine...', color='green')
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
             publications=predictionStreams(self.publications))
@@ -330,7 +331,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if result.msg == 'creating partial, need feeSatsReserved.':
                     responseJson = self.server.requestSimplePartial(
                         network=network)
-                    logging.debug(responseJson, color='yellow')
                     # account for fee
                     if amount > 1:
                         amount -= 1
@@ -389,11 +389,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def repullFor(self, streamId: StreamId):
         for model in self.engine.models:
             if model.variable == streamId:
-                logging.debug('UPDATING MODEL', streamId, color='yellow')
                 model.inputsUpdated.on_next(True)
             else:
                 for target in model.targets:
                     if target == streamId:
-                        logging.debug('UPDATING MODEL TARGET',
-                                      streamId, color='yellow')
                         model.inputsUpdated.on_next(True)
