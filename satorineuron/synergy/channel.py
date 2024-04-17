@@ -19,8 +19,8 @@ from satorilib.concepts import StreamId
 from satorilib.api.disk import Cached
 from satorilib.api.hash import hashRow
 from satorilib.api.time import datetimeToTimestamp, earliestDate, isValidTimestamp
-from satorineuron.synergy.domain.objects import Vesicle, Ping, SingleObservation, ObservationRequest
-from satorineuron.synergy.domain.envelope import Envelope, Vesicle
+from satorineuron.synergy.domain.objects import Vesicle, SingleObservation, ObservationRequest
+from satorisynapse import Envelope, Ping
 
 
 class Axon(Cached):

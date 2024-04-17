@@ -294,6 +294,8 @@ neuron - refactor data management - make models beholden to cache
 neuron - disk cache isn't able to added missing datastreams on the fly
 central - still having some kind of issue on new downloads - doesn't assign streams or doesn't show them on neuron since they don't have 20 observations or something idk - figure it out.
 install - must rebuild all to get rid of double 'waiting on satori' printout
+DONE neuron - make synapse a pip installable module - just the async and threaded scripts
+neuron - put python evrmore on pip
 
 -- Prep for launch --
 

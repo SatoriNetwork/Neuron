@@ -3,22 +3,11 @@ import json
 import pandas as pd
 import datetime as dt
 from satorilib.api.time import isValidTimestamp
+from satorisynapse import Vesicle as SynapseVesicle
+from satorisynapse import Ping
 
 
-class Vesicle():
-    ''' 
-    any object sent over the wire to a peer must inhereit from this so it's 
-    guaranteed to be convertable to dict so we can have nested dictionaries
-    then convert them all to json once at the end (rather than nested json).
-
-    in the future we could use this as a place to hold various kinds of context
-    to support advanced protocol features.
-    '''
-
-    def __init__(self, className: str = None, **kwargs):
-        self.className = className or self.__class__.__name__
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+class Vesicle(SynapseVesicle):
 
     @staticmethod
     def asDict(msg: Union[bytes, str, dict]) -> str:
@@ -59,57 +48,9 @@ class Vesicle():
             return ObservationRequest(**self.toDict)
         raise Exception('invalid object')
 
-    @property
-    def toDict(self):
-        return {
-            'className': self.className,
-            **{
-                key: value
-                for key, value in self.__dict__.items()
-                if key != 'className'}}
-
-    @property
-    def toJson(self):
-        return json.dumps(self.toDict)
-
-
-class Ping(Vesicle):
-    ''' initial ping is False, response ping is True '''
-
-    def __init__(self, ping: bool = False, **_kwargs):
-        super().__init__()
-        self.ping = ping
-
-    @staticmethod
-    def empty() -> 'Ping':
-        return Ping()
-
-    @staticmethod
-    def fromMessage(msg: bytes) -> 'Ping':
-        obj = Ping(**json.loads(msg.decode()
-                                if isinstance(msg, bytes) else msg))
-        if obj.className == Ping.empty().className:
-            return obj
-        raise Exception('invalid object')
-
-    @property
-    def toDict(self):
-        return {'ping': self.ping, **super().toDict}
-
-    @property
-    def toJson(self):
-        return json.dumps(self.toDict)
-
-    @property
-    def isValid(self):
-        return isinstance(self.ping, bool)
-
-    @property
-    def isPinged(self):
-        return self.ping
-
 
 class SingleObservation(Vesicle):
+
     def __init__(
         self,
         time: Union[str, int, float, dt.datetime],
@@ -181,6 +122,7 @@ class SingleObservation(Vesicle):
 
 
 class ObservationRequest(Vesicle):
+
     def __init__(
         self,
         time: str,
