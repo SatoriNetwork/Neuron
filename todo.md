@@ -1,5 +1,6 @@
+# TODO List
 
-DONE remove row number cache design from disk, add in regular old cache design
+- [x] remove row number cache design from disk, add in regular old cache design
 DONE move scheduler up to the engine level, cycle through all datasets.
 DONE make sure we clear out any bad data at all times.
 DONE move the cache out of the topic, and up to the startDag singleton, then make everything pull from the same cache, such DONE as the relay stuff, rendezvous stuff, and engine, anything that uses the Disk object currently.
@@ -34,6 +35,7 @@ DONE something broke in responding to requests?
 DONE follow newData: save, trigger prediction, save that prediction, publish
 DONE we should show predictions on the dashboard
 DONE release alpha Jan 1
+
 ---
 
 DONE have it make a prediction and broadcast it on startup
@@ -283,13 +285,14 @@ DONE neuron - recreate the installer using the abstractor
 DONE neuron - run the synergy script on startup to test.
 DONE neuron - synergy author not found error should retry later? - on restart
 neuron - look out for packet empty queue error, might be fixed now
-neuron - gotta test mapping the port 24600 - maybe we can put the synapse inside.
+DONE neuron - gotta test mapping the port 24600 - maybe we can put the synapse inside. no good.
 
 -- p2p end --
 
 neuron - refactor data management - entire cache/disk system
 neuron - refactor data management - make models beholden to cache
 neuron - disk cache isn't able to added missing datastreams on the fly
+
 -- Prep for launch --
 
 all - reissue SATORI to be 8 decimal places, handle everywhere
