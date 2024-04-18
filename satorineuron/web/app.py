@@ -620,7 +620,7 @@ def dashboard():
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
     streamOverviews = (
         [model.miniOverview() for model in start.engine.models]
-        if start.engine is not None else StreamOverviews.demo())
+        if start.engine is not None else [])  # StreamOverviews.demo()
     return render_template('dashboard.html', **getResp({
         'wallet': start.wallet,
         'vaultBalanceAmount': start.vault.balanceAmount if start.vault is not None else 0,
@@ -1095,12 +1095,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-            request.json.get('vaultPredictors') > 0 or
-            request.json.get('vaultOracles') > 0 or
-            request.json.get('vaultCreators') > 0 or
-            request.json.get('vaultManagers') > 0) and
-            start.vault is not None and start.vault.isDecrypted
-        ):
+                request.json.get('vaultPredictors') > 0 or
+                request.json.get('vaultOracles') > 0 or
+                request.json.get('vaultCreators') > 0 or
+                request.json.get('vaultManagers') > 0) and
+                start.vault is not None and start.vault.isDecrypted
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
