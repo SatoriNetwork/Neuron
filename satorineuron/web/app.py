@@ -1326,6 +1326,8 @@ def publsihMeta():
 @app.route('/synapse/ping', methods=['GET'])
 def synapsePing():
     ''' tells p2p script we're up and running '''
+    if start.wallet is None:
+        return 'fail', 400
     if start.synergy is not None:
         return 'ready', 200
     return 'ok', 200
