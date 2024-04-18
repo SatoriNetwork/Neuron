@@ -4,7 +4,10 @@
 
 FROM satorinet/satorineuron:base
 
-RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
+RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
+COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
+COPY Synapse/setup.py /Satori/Synapse/setup.py
+COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
 COPY Lib/satorilib /Satori/Lib/satorilib
 COPY Lib/setup.py /Satori/Lib/setup.py
 COPY Lib/requirements.txt /Satori/Lib/requirements.txt
@@ -20,6 +23,7 @@ COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
 COPY Neuron/setup.py /Satori/Neuron/setup.py
 COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
 
+RUN chmod -R 777 /Satori/Synapse
 RUN chmod -R 777 /Satori/Lib
 RUN chmod -R 777 /Satori/Wallet
 RUN chmod -R 777 /Satori/Engine
@@ -44,9 +48,9 @@ CMD ["bash"]
 # description: Miner environment and software for the Satori Network
 
 # RUN OPTIONS
-# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 ./start.sh
-# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 bash
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Users\jorda\AppData\Roaming\Satori\Neuron:/Satori/Neuron -v C:\Users\jorda\AppData\Roaming\Satori\Lib:/Satori/Lib -v C:\Users\jorda\AppData\Roaming\Satori\Wallet:/Satori/Wallet -v C:\Users\jorda\AppData\Roaming\Satori\Engine:/Satori/Engine --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 bash
-# docker run --rm -it --name satorineuron -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:v1 bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Neuron:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 ./start.sh
+# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Neuron:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:v1 bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Users\jorda\AppData\Roaming\Satori\Neuron:/Satori/Neuron -v C:\Users\jorda\AppData\Roaming\Satori\Synapse:/Satori/Synapse -v C:\Users\jorda\AppData\Roaming\Satori\Lib:/Satori/Lib -v C:\Users\jorda\AppData\Roaming\Satori\Wallet:/Satori/Wallet -v C:\Users\jorda\AppData\Roaming\Satori\Engine:/Satori/Engine --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 bash
 # docker run --rm -it --name satorineuron satorinet/satorineuron:v1 bash
 # docker exec -it satorineuron bash

@@ -1,5 +1,5 @@
 from satorineuron.synergy.domain.objects import SingleObservation
-from satorineuron.synergy.domain.envelope import Envelope
+from satorisynapse import Envelope
 from satorilib.api.time import now, datetimeToTimestamp
 ts = datetimeToTimestamp(now())
 obs = SingleObservation(time=ts, data='data', hash='hash')

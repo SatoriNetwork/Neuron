@@ -54,7 +54,6 @@ websockets==10.4 # import websocket; websocket.WebSocket()
 
 # needed for Synergy connection
 python-socketio[client]==5.11.2
-satorisynapse
 
 ## needed? for old view
 #IPython==8.7.0  # 7.23.0

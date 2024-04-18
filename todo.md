@@ -286,6 +286,9 @@ DONE neuron - run the synergy script on startup to test.
 DONE neuron - synergy author not found error should retry later? - on restart
 DONE neuron - look out for packet empty queue error, might be fixed now
 DONE neuron - gotta test mapping the port 24600 - maybe we can put the synapse inside. no good.
+neuron - get UI to start sooner
+neuron - show that you're building models
+neuron - also give people the ability to auto send directly to their vault by changing the 'address' in wallet
 
 -- p2p end --
 
@@ -293,9 +296,9 @@ neuron - refactor data management - entire cache/disk system
 neuron - refactor data management - make models beholden to cache
 neuron - disk cache isn't able to added missing datastreams on the fly
 central - still having some kind of issue on new downloads - doesn't assign streams or doesn't show them on neuron since they don't have 20 observations or something idk - figure it out.
-install - must rebuild all to get rid of double 'waiting on satori' printout
+DONE install - must rebuild all to get rid of double 'waiting on satori' printout
 DONE neuron - make synapse a pip installable module - just the async and threaded scripts
-neuron - put python evrmore on pip
+DONE neuron - put python evrmore on pip
 
 -- Prep for launch --
 

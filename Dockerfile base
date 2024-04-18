@@ -27,6 +27,7 @@ RUN apt-get install -y cmake
 
 # todo: maybe just move all this to the code part.
 RUN mkdir /Satori
+RUN mkdir /Satori/Synapse
 RUN mkdir /Satori/Lib
 RUN mkdir /Satori/Wallet
 RUN mkdir /Satori/Engine
@@ -37,6 +38,9 @@ RUN mkdir /Satori/Neuron/wallet
 RUN mkdir /Satori/Neuron/config
 RUN mkdir /Satori/Neuron/uploaded
 RUN mkdir /Satori/Neuron/predictions
+COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
+COPY Synapse/setup.py /Satori/Synapse/setup.py
+COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
 COPY Lib/satorilib /Satori/Lib/satorilib
 COPY Lib/setup.py /Satori/Lib/setup.py
 COPY Lib/requirements.txt /Satori/Lib/requirements.txt
@@ -52,11 +56,13 @@ COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
 COPY Neuron/setup.py /Satori/Neuron/setup.py
 COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
 
+RUN chmod -R 777 /Satori/Synapse
 RUN chmod -R 777 /Satori/Lib
 RUN chmod -R 777 /Satori/Wallet
 RUN chmod -R 777 /Satori/Engine
 RUN chmod -R 777 /Satori/Neuron
 
+RUN cd /Satori/Synapse && python setup.py develop
 RUN cd /Satori/Lib && python setup.py develop
 RUN cd /Satori/Wallet && python setup.py develop
 RUN cd /Satori/Engine && python setup.py develop
@@ -81,8 +87,8 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # \Satori> docker build --no-cache -t satorinet/satorineuron:base .
 
 # RUN OPTIONS
-# docker run --rm -it --name satorineuron -p 24601:24601 -p 24602:4001 -p 24603:5001 -p 24604:23384 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=dockerdev satorinet/satorineuron:base bash
-# docker run --rm -it --name satorineuron -p 24601:24601 -p 24602:4001 -p 24603:5001 -p 24604:23384 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=prod satorinet/satorineuron:base ./start.sh
-# docker run --rm -it --name satorineuron -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:base bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=dockerdev satorinet/satorineuron:base bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env SATORI_RUN_MODE=prod satorinet/satorineuron:base ./start.sh
+# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse  -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:base bash
 # docker run --rm -it --name satorineuron satorinet/satorineuron:base bash
 # docker exec -it satorineuron bash

@@ -14,6 +14,7 @@ import webbrowser
 import time
 import traceback
 import pandas as pd
+import threading
 from queue import Queue
 from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
@@ -24,12 +25,12 @@ from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timestampToSeconds
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName
+from satorisynapse import Envelope
 from satorineuron import VERSION, MOTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
-from satorineuron.synergy.domain.envelope import Envelope
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
 ###############################################################################
@@ -65,7 +66,7 @@ while True:
                 'dockerdev': 'ws://192.168.0.10:3000',
             }[MODE],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
-        start.start()
+        threading.Thread(target=start.start, daemon=True).start()
         logging.info('Satori Neuron started!', color='green')
         break
     except ConnectionError as e:
@@ -1013,7 +1014,7 @@ def vote():
         # todo convert result to the strucutre the template expects:
         # [ {'cols': 'value'}]
         streams = start.server.getSanctionVote(wallet, start.vault)
-        #logging.debug('streams', [
+        # logging.debug('streams', [
         #              s for s in streams if s['oracle_alias'] is not None], color='yellow')
         return streams
         # return []
@@ -1099,7 +1100,7 @@ def voteSubmitManifestVault():
             request.json.get('vaultCreators') > 0 or
             request.json.get('vaultManagers') > 0) and
             start.vault is not None and start.vault.isDecrypted
-            ):
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
@@ -1325,6 +1326,8 @@ def publsihMeta():
 @app.route('/synapse/ping', methods=['GET'])
 def synapsePing():
     ''' tells p2p script we're up and running '''
+    if start.synergy is not None:
+        return 'ready', 200
     return 'ok', 200
 
 

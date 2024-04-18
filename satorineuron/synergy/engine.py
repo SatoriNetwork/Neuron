@@ -5,32 +5,11 @@ from satorilib.concepts import StreamId
 from satorilib.synergy import SynergyProtocol
 from satorilib.api.wallet import Wallet
 from satorilib.api.wallet import RavencoinWallet
+from satorilib.api.time import datetimeToTimestamp, earliestDate
+from satorisynapse.lib.domain import SYNAPSE_PORT
 from satorineuron import config
 from satorineuron.synergy.client import SynergyClient
 from satorineuron.synergy.channel import Axon, SynapsePublisher, SynapseSubscriber
-from satorilib.api.time import datetimeToTimestamp, earliestDate
-
-
-def chooseRandomUnusedPortWitninDynamicRange():
-    # actaully at this point we have to choose the same one specified in the
-    # p2p script, so we've hard coded this just as we hardcoded 24601
-    return 24600
-
-
-# class SynergyManager():
-#    def __init__(self, wallet: Wallet):
-#        self.wallet = wallet
-#        self.pubkey = wallet.publicKey
-#        self.channel = Axon(StreamId(
-#            source='satori', stream='neuron', target='synergy', author='satori'), ip='37.19.210.29')
-#        import threading
-#        threading.Thread(target=self.main).start()
-#
-#    def main(self):
-#        import time
-#        while True:
-#            time.sleep(10)
-#            self.channel.send(data='hello world')
 
 
 class SynergyManager():
@@ -69,10 +48,10 @@ class SynergyManager():
     def buildMessage(self, msg: SynergyProtocol):
         ''' completes the next part of the msg and returns '''
         if msg.subscriber == self.pubkey and msg.subscriberIp is None:
-            msg.subscriberPort = chooseRandomUnusedPortWitninDynamicRange()
+            msg.subscriberPort = SYNAPSE_PORT
             return msg
         if msg.author == self.pubkey:
-            msg.authorPort = chooseRandomUnusedPortWitninDynamicRange()
+            msg.authorPort = SYNAPSE_PORT
             self.createChannel(msg)
             return msg
         raise Exception('invalid message state')
