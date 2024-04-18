@@ -289,7 +289,7 @@ DONE neuron - gotta test mapping the port 24600 - maybe we can put the synapse i
 neuron - get UI to start sooner
 neuron - show that you're building models
 neuron - also give people the ability to auto send directly to their vault by changing the 'address' in wallet
-
+neuron - everytime we get a message from pubsub about new data we should trigger a possible resync from the author if the data is disconnected
 -- p2p end --
 
 neuron - refactor data management - entire cache/disk system
