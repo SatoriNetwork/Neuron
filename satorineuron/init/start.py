@@ -103,8 +103,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.isDebug:
             return
         self.startRelay()
-        self.buildEngine()
         self.startSynergyEngine()
+        self.buildEngine()
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
@@ -283,7 +283,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 wallet=self.wallet,
                 onConnect=self.syncDatasets)
             logging.info(
-                'connected to Satori p2p network', color='green')
+                'connected to Satori p2p network', color='magenta')
         else:
             raise Exception('wallet not open yet.')
 

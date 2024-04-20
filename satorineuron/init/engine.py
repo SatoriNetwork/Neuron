@@ -25,6 +25,9 @@ def establishConnection(pubkey: str, key: str, url: str = None):
             if response.startswith('{"topic":') or response.startswith('{"data":'):
                 logging.info('received message:', response, print=True)
                 getStart().engine.data.newData.on_next(Observation.parse(response))
+
+                # REFACTOR - SEE NOTES ON PAPER
+
         # furthermore, shouldn't we do more than route it to the correct models?
         # like, shouldn't we save it to disk, compress if necessary, pin, and
         # report the pin to the satori server? like so:

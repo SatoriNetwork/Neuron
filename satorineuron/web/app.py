@@ -1095,12 +1095,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-                request.json.get('vaultPredictors') > 0 or
-                request.json.get('vaultOracles') > 0 or
-                request.json.get('vaultCreators') > 0 or
-                request.json.get('vaultManagers') > 0) and
-                start.vault is not None and start.vault.isDecrypted
-            ):
+        request.json.get('vaultPredictors') > 0 or
+        request.json.get('vaultOracles') > 0 or
+        request.json.get('vaultCreators') > 0 or
+        request.json.get('vaultManagers') > 0) and
+        start.vault is not None and start.vault.isDecrypted
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
@@ -1326,10 +1326,13 @@ def publsihMeta():
 @app.route('/synapse/ping', methods=['GET'])
 def synapsePing():
     ''' tells p2p script we're up and running '''
-    if start.wallet is None:
+    # if start.wallet is None:
+    #    return 'fail', 400
+    # if start.synergy is not None:
+    #    return 'ready', 200
+    # return 'ok', 200
+    if start.synergy is None:
         return 'fail', 400
-    if start.synergy is not None:
-        return 'ready', 200
     return 'ok', 200
 
 

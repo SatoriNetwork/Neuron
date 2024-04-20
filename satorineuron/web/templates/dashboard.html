@@ -137,6 +137,15 @@
               </tr>
             </thead>
             <tbody id="updating_table">
+              {% if streamOverviews|length == 0 %}
+              <tr>
+                <td colspan="5">
+                  <div >
+                    <h6 class="mb-0 text-center text-sm">Starting Engine, loading models...</h6>
+                  </div>
+                </td>
+              </tr>
+              {% endif %}
               {% for streamOverview in streamOverviews %}
               <tr id="tr-{{streamOverview.hashed}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" style='cursor:pointer;'>
                 <!--
@@ -313,7 +322,7 @@
   }
 </script>
 <br id='oraclesbr'>
-<div class="row mb-0">
+<div class="row mb-0" style="{% if relayStreams|length == 0 %}display:none;{% endif %};">
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
@@ -1445,7 +1454,8 @@
         borderWidth: 3,
         backgroundColor: "transparent",
         fill: true,
-        data: [50, 40, 300, 220, 500, 250, 400, 230, 500, null],
+        data: [null],
+        //data: [50, 40, 300, 220, 500, 250, 400, 230, 500, null],
       }, {
         label: "future prediction",
         tension: .2,
@@ -1457,7 +1467,8 @@
         borderWidth: 0,
         backgroundColor: "rgba(246, 176, 66, .8)",
         fill: true,
-        data: [null, null, null, null, null, null, null, null, null, 450],
+        data: [null],
+        //data: [null, null, null, null, null, null, null, null, null, 450],
       }, {
         label: "predictions",
         tension: .2,
@@ -1469,7 +1480,8 @@
         borderWidth: 3,
         backgroundColor: "transparent",
         fill: true,
-        data: [50-5, 40-2, 300+16, 220-20, 500-35, 250-65, 400-25, 230-10, 500+10, null],
+        data: [null],
+        //data: [50-5, 40-2, 300+16, 220-20, 500-35, 250-65, 400-25, 230-10, 500+10, null],
       }],
     },
     options: {
