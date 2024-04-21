@@ -58,6 +58,7 @@ class SingleObservation(Vesicle):
         hash: Union[str,  None],
         isFirst: bool = False,
         isLatest: bool = False,
+        priorTime: Union[str, None] = None,
         **_kwargs
     ):
         super().__init__()
@@ -66,6 +67,7 @@ class SingleObservation(Vesicle):
         self.hash = hash
         self.isFirst = isFirst
         self.isLatest = isLatest
+        self.priorTime = priorTime
 
     @staticmethod
     def empty() -> 'SingleObservation':
@@ -88,6 +90,7 @@ class SingleObservation(Vesicle):
             'hash': self.hash,
             'isFirst': self.isFirst,
             'isLatest': self.isLatest,
+            'priorTime': self.priorTime,
             **super().toDict}
 
     @property

@@ -1267,8 +1267,10 @@
   function setDataChartThree(data, prediction, predictions) {
     removeAllData(chartThree);
     let labels = [];
+    console.log(data.length, predictions.length);
     for (var i=0; i<data.length; i++) {
       let x = data[i];
+      console.log(x);
       labels.push('');
       if (labels.length == data.length){
         addDataChartThree('now', data[i], null, predictions.length-data.length+i >= 0 ? predictions[predictions.length-data.length+i] : null);
@@ -1442,7 +1444,8 @@
   var chartThree = new Chart(ctx3, {
     type: "line",
     data: {
-      labels: ["", "", "", "", "", "", "", "", "", "Next"],
+      labels: ["", ],
+      //labels: ["", "", "", "", "", "", "", "", "", "Next"],
       datasets: [{
         label: "observations",
         tension: .2,

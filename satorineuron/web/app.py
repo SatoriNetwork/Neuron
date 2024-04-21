@@ -1095,12 +1095,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-        request.json.get('vaultPredictors') > 0 or
-        request.json.get('vaultOracles') > 0 or
-        request.json.get('vaultCreators') > 0 or
-        request.json.get('vaultManagers') > 0) and
-        start.vault is not None and start.vault.isDecrypted
-        ):
+            request.json.get('vaultPredictors') > 0 or
+            request.json.get('vaultOracles') > 0 or
+            request.json.get('vaultCreators') > 0 or
+            request.json.get('vaultManagers') > 0) and
+            start.vault is not None and start.vault.isDecrypted
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
@@ -1333,7 +1333,7 @@ def synapsePing():
     # return 'ok', 200
     if start.synergy is None:
         return 'fail', 400
-    return 'ok', 200
+    return 'ready', 200
 
 
 @app.route('/synapse/ports', methods=['GET'])
@@ -1350,6 +1350,7 @@ def synapseStream():
         while True:
             message = start.udpQueue.get()
             if isinstance(message, Envelope):
+                print('outgoing', message.toJson)
                 yield 'data:' + message.toJson + '\n\n'
 
     return Response(
@@ -1361,6 +1362,7 @@ def synapseStream():
 def synapseMessage():
     ''' receives data from udp relay '''
     data = request.data
+    print('data:', data)
     remoteIp = request.headers.get('remoteIp')
     # remotePort = int(request.headers.get('remotePort')) #not needed at this time
     # localPort = int(request.headers.get('localPort'))

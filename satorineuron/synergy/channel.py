@@ -59,17 +59,24 @@ class SynapseSubscriber(Axon):
     def __init__(self, streamId: StreamId, ip: str):
         super().__init__(streamId, ip)
         self.inbox = Queue()
+        self.requested: dict[str, bool] = {}
         self.main()
 
     def receive(self, message: bytes):
         ''' message that will contain data to save, add to inbox '''
         vesicle: Vesicle = super().receive(message)
         if not isinstance(vesicle, SingleObservation) or not vesicle.isValid:
+            # 2024-04-20 15:37:07,419 - ERROR - peer msg failure <class 'satorisynapse.lib.domain.Ping'> True b'{"className": "Ping", "ping": false}'
             logging.error('peer msg failure', type(
                 vesicle), vesicle.isValid, message)
             return  # unable to parse
         # here we can extract some context or something from vesicle.context
         self.inbox.put(vesicle)
+
+    def request(self, observationRequest: ObservationRequest):
+        ''' request the last known good hash from the peer '''
+        self.requested[observationRequest.time] = False
+        self.send(observationRequest)
 
     def main(self):
         ''' send the data to the subscriber '''
@@ -85,9 +92,9 @@ class SynapseSubscriber(Axon):
             return ObservationRequest(time=self.disk.cache.index[-1])
 
         def validateCache():
-            success, df = self.disk.validateAllHashes()
-            if not success:
-                self.disk.removeItAndAfter(df.index[-1])
+            logging.debug('validating', color='magenta')
+            self.disk.modifyBasedValidation(
+                *self.disk.performValidation(entire=True))
 
         def save(observation: SingleObservation) -> bool:
             ''' save the data to disk, if anything goes wrong request a time '''
@@ -110,42 +117,52 @@ class SynapseSubscriber(Axon):
                 ts=observation.time,
                 value=str(observation.data),
             ) == observation.hash:
-                success, _, _, = self.disk.appendByAttributes(
+                if observation.priorTime in self.requested and self.requested[observation.priorTime] == False:
+                    self.requested[observation.priorTime] = True
+                cachedResult = self.disk.appendByAttributes(
                     timestamp=observation.time,
                     value=observation.data,
                     observationHash=observation.hash)
-                if success:
+                logging.debug('saved observation:',
+                              cachedResult.success, cachedResult.validated, color='magenta')
+                if cachedResult.success and cachedResult.validated:
                     return True
+            elif self.requested.get(observation.priorTime, False):
+                self.requested[observation.priorTime] = False
+            logging.debug('failed:', lastHash(), observation.time,
+                          str(observation.data), color='magenta')
             validateCache()
-            self.send(lastTime())
-            clearQueue()
+            self.request(lastTime())
+            self.clearIt = clearQueue()
             return False
 
         def handle(observation: SingleObservation):
-            if not self.disk.cache.empty and observation.isFirst:
+            if observation.isFirst and not self.disk.cache.empty:
                 if (
                     observation.time == self.disk.cache.index[0] and
                     str(observation.data) == str(self.disk.cache.iloc[0].value) and
                     observation.hash == self.disk.cache.iloc[0].hash
                 ):
-                    # self.disk.overwriteClean()
                     validateCache()
-                    self.send(lastTime())
+                    self.request(lastTime())
                 else:
                     self.disk.clear()
-                    self.send(ObservationRequest(time='', first=True))
+                    self.request(ObservationRequest(time='', first=True))
             else:
+                if observation.priorTime in self.requested and self.requested[observation.priorTime] == True:
+                    # ignore, we've already received an answer on to this request
+                    return
                 if save(observation) and observation.isLatest:
                     from satorineuron.init.start import getStart
                     getStart().repullFor(self.streamId)
 
         if self.inbox.empty():
-            self.send(ObservationRequest(time='', first=True))
+            self.request(ObservationRequest(time='', first=True))
         i = 0
         while True:
             handle(self.inbox.get())
             i += 1
-            if i % 50 == 0:
+            if i % 100 == 0:
                 self.send(Ping())
 
 
@@ -229,13 +246,14 @@ class SynapsePublisher(Axon):
                 data=row['value'].values[0],
                 hash=row['hash'].values[0],
                 isFirst=row.index[0] == self.first,
-                isLatest=isLatest(row.index[0]))
+                isLatest=isLatest(row.index[0]),
+                priorTime=timestamp)
 
         self.running = True
         self.sentCountWithoutPing = 0
         while self.ts != self.disk.cache.index[-1] and self.sentCountWithoutPing < 500:
             ts = self.ts
-            time.sleep(0.33)  # cool down
+            time.sleep(.1)  # cool down
             try:
                 observation = getObservationAfter(ts)
             except Exception as _:

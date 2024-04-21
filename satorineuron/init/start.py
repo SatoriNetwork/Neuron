@@ -287,11 +287,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         else:
             raise Exception('wallet not open yet.')
 
+    def syncDataset(self, streamId: StreamId):
+        ''' establish a synergy connection '''
+        if self.synergy and self.synergy.isConnected:
+            for stream in self.subscriptions:
+                if streamId == stream.streamId:
+                    logging.info('resyncing stream:', stream, print=True)
+                    self.synergy.connectToPeer(stream.streamId)
+        # else:
+        #    raise Exception('synergy not created or not connected.')
+
     def syncDatasets(self):
         ''' establish a synergy connection '''
         if self.synergy and self.synergy.isConnected:
             for stream in self.subscriptions:
-                logging.info('stream', stream, color='green')
                 self.synergy.connectToPeer(stream.streamId)
         # else:
         #    raise Exception('synergy not created or not connected.')
@@ -387,10 +396,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             delay=10)
 
     def repullFor(self, streamId: StreamId):
-        for model in self.engine.models:
-            if model.variable == streamId:
-                model.inputsUpdated.on_next(True)
-            else:
-                for target in model.targets:
-                    if target == streamId:
-                        model.inputsUpdated.on_next(True)
+        if self.engine is not None:
+            for model in self.engine.models:
+                if model.variable == streamId:
+                    model.inputsUpdated.on_next(True)
+                else:
+                    for target in model.targets:
+                        if target == streamId:
+                            model.inputsUpdated.on_next(True)

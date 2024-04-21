@@ -14,6 +14,7 @@ import requests
 from functools import partial
 from satorilib.concepts.structs import Stream, StreamId
 from satorilib.api.disk import Cached
+from satorilib.api.disk.cache import CachedResult
 from satorilib import logging
 
 
@@ -136,12 +137,10 @@ class RawStreamRelayEngine(Cached):
             time=timestamp,
             observationHash=observationHash)
 
-    def save(self, stream: Stream, data: str = None):
+    def save(self, stream: Stream, data: str = None) -> CachedResult:
         self.latest[stream.streamId.topic()] = data
         self.streamId = stream.streamId  # required by Cache
-        success, timestamp, observationHash = self.disk.appendByAttributes(
-            value=data, hashThis=True)
-        return success, timestamp, observationHash
+        return self.disk.appendByAttributes(value=data, hashThis=True)
 
     def callRelay(self, streams: list[Stream]) -> bool:
         '''
@@ -156,17 +155,13 @@ class RawStreamRelayEngine(Cached):
             for stream in streams:
                 hookResult = RawStreamRelayEngine.callHook(stream, result)
                 if hookResult is not None:
-                    (
-                        success,
-                        timestamp,
-                        observationHash,
-                    ) = self.save(stream, data=hookResult)
-                    if success:
+                    cachedResult = self.save(stream, data=hookResult)
+                    if cachedResult.success:
                         self.relay(
                             stream,
                             data=hookResult,
-                            timestamp=timestamp,
-                            observationHash=observationHash)
+                            timestamp=cachedResult.time,
+                            observationHash=cachedResult.hash)
                         successes.append(True)
                     else:
                         # log or flash message or something...
