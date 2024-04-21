@@ -321,13 +321,13 @@ def relay():
     '''
 
     # def accept_submittion(data: dict):
-    #    if not start.relayValidation.valid_relay(data):
+    #    if not start.relayValidation.validRelay(data):
     #        return 'Invalid payload. here is an example: {"source": "satori", "name": "nameOfSomeAPI", "target": "optional", "data": 420}', 400
-    #    if not start.relayValidation.stream_claimed(
+    #    if not start.relayValidation.streamClaimed(
     #        name=data.get('name'),
     #        target=data.get('target')
     #    ):
-    #        save = start.relayValidation.register_stream(
+    #        save = start.relayValidation.registerStream(
     #            data=data)
     #        if save == False:
     #            return 'Unable to register stream with server', 500
@@ -1350,7 +1350,6 @@ def synapseStream():
         while True:
             message = start.udpQueue.get()
             if isinstance(message, Envelope):
-                print('outgoing', message.toJson)
                 yield 'data:' + message.toJson + '\n\n'
 
     return Response(
@@ -1362,7 +1361,6 @@ def synapseStream():
 def synapseMessage():
     ''' receives data from udp relay '''
     data = request.data
-    print('data:', data)
     remoteIp = request.headers.get('remoteIp')
     # remotePort = int(request.headers.get('remotePort')) #not needed at this time
     # localPort = int(request.headers.get('localPort'))

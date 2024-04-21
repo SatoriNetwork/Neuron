@@ -5,7 +5,6 @@ from satorilib.concepts import StreamId
 from satorilib.synergy import SynergyProtocol
 from satorilib.api.wallet import Wallet
 from satorilib.api.wallet import RavencoinWallet
-from satorilib.api.time import datetimeToTimestamp, earliestDate
 from satorisynapse.lib.domain import SYNAPSE_PORT
 from satorineuron import config
 from satorineuron.synergy.client import SynergyClient
@@ -58,15 +57,17 @@ class SynergyManager():
 
     def createChannel(self, msg: SynergyProtocol):
         ''' completes the next part of the msg and returns '''
-        if msg.author == self.pubkey:
+        if msg.author == self.pubkey and (self.channels.get(msg.subscriberIp) is None or not self.channels[msg.subscriberIp].running):
             logging.info(
-                'creating channel to new subscribing peer:', msg, color='green')
+                'creating channel to new subscribing peer for stream:',
+                f'{msg.stream}.{msg.target}', color='green')
             self.channels[msg.subscriberIp] = SynapsePublisher(
                 streamId=msg.streamId,
                 ip=msg.subscriberIp)
         elif msg.subscriber == self.pubkey:
-            logging.info('creating channel to new publishing peer:',
-                         msg, color='green')
+            logging.info(
+                'creating channel to new publishing peer:',
+                f'{msg.stream}.{msg.target}', color='green')
             self.channels[msg.authorIp] = SynapseSubscriber(
                 streamId=msg.streamId,
                 ip=msg.authorIp)

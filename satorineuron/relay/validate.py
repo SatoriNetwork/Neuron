@@ -36,7 +36,7 @@ class ValidateRelayStream(object):
             r"(?P<path>\/.*?)?"
             r"(?P<query>\?.*)?$")
 
-    def stream_claimed(self, name: str, source: str = 'satori', target: str = None):
+    def streamClaimed(self, name: str, source: str = 'satori', target: str = None):
         from satorineuron.init.start import getStart
         streamId = StreamId(
             source=source,
@@ -57,7 +57,7 @@ class ValidateRelayStream(object):
         self.claimed.add(streamId)
         return True
 
-    def register_stream(self, data: dict):
+    def registerStream(self, data: dict):
         from satorineuron.init.start import getStart
         streamId = StreamId(
             source=data.get('source', 'satori'),
@@ -80,7 +80,7 @@ class ValidateRelayStream(object):
             'cadence': data.get('cadence'),
             'offset': data.get('offset'),
             'datatype': data.get('datatype'),
-            'url': data.get('url'),
+            'url': data.get('url', ''),
             'tags': data.get('tags'),
             'description': data.get('description'),
         })
@@ -89,7 +89,7 @@ class ValidateRelayStream(object):
             return r.text
         return False
 
-    def subscribe_to_stream(self, data: dict):
+    def subscribeToStream(self, data: dict):
         '''
         the reasoning behind this is: if we want to provide the ipfs pins for
         this datastream automatically we ought to just subscribe to it and save
@@ -119,7 +119,7 @@ class ValidateRelayStream(object):
             return r.text
         return False
 
-    def save_local(self, data: dict):
+    def saveLocal(self, data: dict):
         from satorineuron.init.start import getStart
         streamId = StreamId(
             source=data.get('source', 'satori'),
@@ -138,7 +138,7 @@ class ValidateRelayStream(object):
                     'history': data.get('history'),
                 }}})
 
-    def valid_relay(self, data: dict):
+    def validRelay(self, data: dict):
         return (
             data.get('source', 'satori') == 'satori' and
             isinstance(data.get('name'), str) and
@@ -147,33 +147,37 @@ class ValidateRelayStream(object):
             0 < len(data.get('target')) < 255 and
             isinstance(data.get('data'), (str, int, float, dict, list)))
 
-    def invalid_url(self, url):
-        return (
+    def validUrl(self, url):
+        return url == '' or (
             (url.startswith('ipfs') or url.startswith('http')) and
             re.compile(self.regexURL).match(url) is None)
 
-    def test_call(self, data: dict):
-        def is_valid_json(x):
+    def testCall(self, data: dict):
+        def isValidJson(x):
             try:
                 json.loads(x)
                 return True
             except Exception as _:
                 return False
 
+        if data.get('uri') is None or data.get('uri').strip() == '':
+            r = requests.Response()
+            r.status_code = 200
+            return r
         if data.get('payload') is None:
             method = partial(requests.get)
         else:
-            if is_valid_json(data.get('payload')):
+            if isValidJson(data.get('payload')):
                 method = partial(requests.post, json=data.get('payload'))
             else:
                 method = partial(requests.post, data=data.get('payload'))
         if data.get('headers') not in ['', None]:
-            if is_valid_json(data.get('headers')):
+            if isValidJson(data.get('headers')):
                 r = method(
                     data.get('uri'),
                     headers=json.loads(data.get('headers')),)
             elif (
-                not is_valid_json(data.get('headers')) and
+                not isValidJson(data.get('headers')) and
                 "'" in data.get('headers') and
                 '"' not in data.get('headers')
             ):
@@ -189,10 +193,10 @@ class ValidateRelayStream(object):
             return r
         return False
 
-    def invalid_hook(self, hook: str):
-        return not (hook or 'def postRequestHook(').startswith('def postRequestHook(')
+    def validHook(self, hook: str):
+        return (hook or 'def postRequestHook(').startswith('def postRequestHook(')
 
-    def test_hook(self, data: dict, text: requests.Response):
+    def testHook(self, data: dict, text: requests.Response):
         hookFunction = postRequestHookForNone
         if data.get('hook') is not None:
             try:
@@ -210,7 +214,7 @@ class ValidateRelayStream(object):
             return None  # ret could return boolean, so return None if failure
         return ret
 
-    def test_history(self, data: dict):
+    def testHistory(self, data: dict):
         historyInstance = None
         if data.get('history') is not None:
             try:
@@ -229,7 +233,7 @@ class ValidateRelayStream(object):
                 return True  # return nextValue? no, just tell is no err.
         return None
 
-    def save_history(self, data: dict):
+    def saveHistory(self, data: dict):
         '''
         unlike testing, here we actually get all the history and save it to disk
         but only if there is no data on disk for this stream already.

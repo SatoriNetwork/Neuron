@@ -8,6 +8,7 @@ Alternatively, one can relay through the API. This example shows how to do so.
 import time
 import json
 import requests
+from satorilib import logging
 
 
 class RelayStreamExample:
@@ -79,12 +80,12 @@ class RelayStreamExample:
         while True:
             value = self.call()
             if value is None:
-                print('No data returned from API')
+                logging.info('No data returned from API')
             else:
                 if self.passToNode(value).status_code == 200:
-                    print('Relay successful')
+                    logging.info('Relay successful')
                 else:
-                    print('Relay failed')
+                    logging.info('Relay failed')
             time.sleep(self.cadence)
 
 

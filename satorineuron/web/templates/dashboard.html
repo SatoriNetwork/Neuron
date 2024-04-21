@@ -692,33 +692,25 @@
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="nameDescription();">
                 <div class="tight text-format-table-header">*
-                  {% if darkmode %}{{ newRelayStream.name.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.name.label }}
-                  {% endif %}
+                  {{ newRelayStream.name.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="nameDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.name(size=32, class_="tight form-control dark-colors", placeholder="BTC1HR") }}
-                    {% else %}{{ newRelayStream.name(size=32, class_="tight form-control", placeholder="BTC1HR") }}
-                    {% endif %}
+                    {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
                   </div>
                 </div>
               </div>
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="targetDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.target.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.target.label }}
-                  {% endif %}
+                  {{ newRelayStream.target.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="targetDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.target(size=32, class_="tight form-control dark-colors", placeholder="Close") }}
-                    {% else %}{{ newRelayStream.target(size=32, class_="tight form-control", placeholder="Close") }}
-                    {% endif %}
+                    {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Close") }}
                   </div>
                 </div>
               </div>
@@ -726,9 +718,7 @@
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="cadenceDescription();">
                 <div class="tight text-format-table-header">*
-                  {% if darkmode %}{{ newRelayStream.cadence.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.cadence.label }}
-                  {% endif %}
+                  {{ newRelayStream.cadence.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="cadenceDescription();">
@@ -742,9 +732,7 @@
                     <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
                     <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span> 
                     <input type="number" id="secondCadence" name="secondCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
-                    {% if darkmode %}{{ newRelayStream.cadence(size=32, class_="tight form-control dark-colors", placeholder="3600", style="display:none;", id="cadence") }}
-                    {% else %}{{ newRelayStream.cadence(size=32, class_="tight form-control", placeholder="3600", style="display:none;", id="cadence") }}
-                    {% endif %}
+                    {{ newRelayStream.cadence(size=32, class_="tight form-control" +(" dark-colors" if darkmode else ""), placeholder="3600", style="display:none;", id="cadence") }}
                     <script>
                       function enforceIntegerValue(inputField, minimum, maximum) {
                         if (inputField.value < minimum) {
@@ -796,9 +784,7 @@
               </div>
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="offsetDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.offset.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.offset.label }}
-                  {% endif %}
+                  {{ newRelayStream.offset.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="offsetDescription();">
@@ -810,9 +796,7 @@
                     <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
                     <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span> 
                     <input type="number" id="secondOffset" name="secondOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
-                    {% if darkmode %}{{ newRelayStream.offset(size=32, class_="tight form-control dark-colors", placeholder="108000", style="display:none;", id="offset") }}
-                    {% else %}{{ newRelayStream.offset(size=32, class_="tight form-control", placeholder="108000", style="display:none;", id="offset") }}
-                    {% endif %}
+                    {{ newRelayStream.offset(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="108000", style="display:none;", id="offset") }}
                     <script>
                       function calculateOffset() {
                         const hourOffsetInput = document.getElementById('hourOffset');
@@ -845,34 +829,26 @@
             </div>
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="urlDescription();">
-                <div class="tight text-format-table-header">*
-                  {% if darkmode %}{{ newRelayStream.url.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.url.label }}
-                  {% endif %}
+                <div class="tight text-format-table-header">
+                  {{ newRelayStream.url.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="urlDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.url(size=32, class_="tight form-control dark-colors", placeholder="https://finance.yahoo.com/bitcoin") }}
-                    {% else %}{{ newRelayStream.url(size=32, class_="tight form-control", placeholder="https://finance.yahoo.com/bitcoin") }}
-                    {% endif %}
+                    {{ newRelayStream.url(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin") }}
                   </div>
                 </div>
               </div>
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="datatypeDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.datatype.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.datatype.label }}
-                  {% endif %}
+                  {{ newRelayStream.datatype.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="datatypeDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.datatype(size=32, class_="tight form-control dark-colors", placeholder="float") }}
-                    {% else %}{{ newRelayStream.datatype(size=32, class_="tight form-control", placeholder="float") }}
-                    {% endif %}
+                    {{ newRelayStream.datatype(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="float") }}
                   </div>
                 </div>
               </div>
@@ -880,33 +856,25 @@
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="uriDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.uri.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.uri.label }}
-                  {% endif %}
+                  {{ newRelayStream.uri.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="uriDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.uri(size=32, class_="tight form-control dark-colors", placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
-                    {% else %}{{ newRelayStream.uri(size=32, class_="tight form-control", placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
-                    {% endif %}
+                    {{ newRelayStream.uri(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
                   </div>
                 </div>
               </div>
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="tagsDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.tags.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.tags.label }}
-                  {% endif %}
+                  {{ newRelayStream.tags.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="tagsDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.tags(size=32, class_="tight form-control dark-colors", placeholder="bitcoin, 1hr") }}
-                    {% else %}{{ newRelayStream.tags(size=32, class_="tight form-control", placeholder="bitcoin, 1hr") }}
-                    {% endif %}
+                    {{ newRelayStream.tags(size=32, class_="tight form-control"+(" dark-colors" if darkmode else ""), placeholder="bitcoin, 1hr") }}
                   </div>
                 </div>
               </div> 
@@ -914,33 +882,25 @@
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="headersDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.headers.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.headers.label }}
-                  {% endif %}
+                  {{ newRelayStream.headers.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="headersDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.headers(size=32, class_="tight form-control dark-colors", placeholder="Accept: application/json") }}
-                    {% else %}{{ newRelayStream.headers(size=32, class_="tight form-control", placeholder="Accept: application/json") }}
-                    {% endif %}
+                    {{ newRelayStream.headers(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
                   </div>
                 </div>
               </div>
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="descriptionDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.description.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.description.label }}
-                  {% endif %}
+                  {{ newRelayStream.description.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="descriptionDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.description(size=32, class_="tight form-control dark-colors", placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
-                    {% else %}{{ newRelayStream.description(size=32, class_="tight form-control", placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
-                    {% endif %}
+                    {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
                   </div>
                 </div>
               </div>         
@@ -948,17 +908,13 @@
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="payloadDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.payload.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.payload.label }}
-                  {% endif %}
+                  {{ newRelayStream.payload.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="payloadDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.payload(size=32, class_="tight form-control dark-colors", placeholder="Accept: application/json") }}
-                    {% else %}{{ newRelayStream.payload(size=32, class_="tight form-control", placeholder="Accept: application/json") }}
-                    {% endif %}
+                    {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
                   </div>
                 </div>
               </div>
@@ -1054,33 +1010,25 @@
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="hookDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.hook.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.hook.label }}
-                  {% endif %}
+                  {{ newRelayStream.hook.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="hookDescription();" onclick="hookCreation();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder dark-colors", placeholder=placeholderPostRequestHook )}}
-                    {% else %}{{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder", placeholder=placeholderPostRequestHook) }}
-                    {% endif %}
+                    {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
                   </div>
                 </div>
               </div>
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="historyDescription();">
                 <div class="tight text-format-table-header">
-                  {% if darkmode %}{{ newRelayStream.history.label(class="dark-colors") }}
-                  {% else %}{{ newRelayStream.history.label }}
-                  {% endif %}
+                  {{ newRelayStream.history.label(class=("dark-colors" if darkmode else "")) }}
                 </div>
               </div>
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="historyDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder dark-colors", placeholder=placeholderGetHistory, id="historyCode") }}
-                    {% else %}{{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder", placeholder=placeholderGetHistory, id="historyCode") }}
-                    {% endif %}
+                    {{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderGetHistory, id="historyCode") }}
                   </div>
                 </div>
               </div>
@@ -1447,7 +1395,7 @@
       labels: ["", ],
       //labels: ["", "", "", "", "", "", "", "", "", "Next"],
       datasets: [{
-        label: "observations",
+        label: "observation",
         tension: .2,
         borderWidth: 0,
         pointRadius: 0,
@@ -1473,7 +1421,7 @@
         data: [null],
         //data: [null, null, null, null, null, null, null, null, null, 450],
       }, {
-        label: "predictions",
+        label: "prediction",
         tension: .2,
         borderWidth: 0,
         pointRadius: 0,

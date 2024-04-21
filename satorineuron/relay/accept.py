@@ -16,6 +16,7 @@ def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
             continue
         data['name'] = data.get('stream', '')
         data['source'] = data.get('source', 'satori')
+        data['url'] = data.get('url', '') or ''
         if data.get('hook') is None or data.get('hook') == '':
             msg, status = generateHookFromTarget(data.get('target', ''))
             if status == 200:
@@ -47,14 +48,14 @@ def _registerDataStreamMock(start: 'StartupDag', data: dict):
 
 
 def acceptRelaySubmission(start: 'StartupDag', data: dict):
-    if not start.relayValidation.valid_relay(data):
+    data['url'] = data.get('url', '') or ''
+    if not start.relayValidation.validRelay(data):
         return 'Invalid payload. here is an example: {"source": "satori", "name": "nameOfSomeAPI", "target": "optional", "data": 420}', 400
-    if not start.relayValidation.stream_claimed(
+    if not start.relayValidation.streamClaimed(
         name=data.get('name'),
         target=data.get('target')
     ):
-        save = start.relayValidation.register_stream(
-            data=data)
+        save = start.relayValidation.registerStream(data=data)
         if save == False:
             return 'Unable to register stream with server', 500
         # get pubkey, recreate connection...
@@ -72,40 +73,41 @@ def acceptRelaySubmission(start: 'StartupDag', data: dict):
 
 
 def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
+    data['url'] = data.get('url', '') or ''
     if len(start.relay.streams) >= 50:
         return ['relay stream limit reached'], 400
     if data.get('uri') is None:
         data['uri'] = data.get('url')
     if data.get('target') is None:
         data['target'] = ''
-    if start.relayValidation.invalid_url(data.get('url')):
+    if not start.relayValidation.validUrl(data.get('url')):
         return ['Url is an invalid URL'], 400
-    if start.relayValidation.invalid_url(data.get('uri')):
+    if not start.relayValidation.validUrl(data.get('uri')):
         return ['Url is an invalid URI'], 400
-    if start.relayValidation.invalid_hook(data.get('hook')):
+    if not start.relayValidation.validHook(data.get('hook')):
         return ['Invalid hook. Start with "def postRequestHook(r):"'], 400
     msgs = []
-    if data.get('history') is not None and start.relayValidation.invalid_url(data.get('history')):
+    if data.get('history') is not None and not start.relayValidation.validUrl(data.get('history')):
         msgs.append(
             'Warning: unable to validate History field as a valid URL. Saving anyway.')
-    # if start.relayValidation.stream_claimed(name=data.get('name'), target=data.get('target')):
+    # if start.relayValidation.streamClaimed(name=data.get('name'), target=data.get('target')):
     #    badForm = data
     #    flash('You have already created a stream by this name.')
     #    return redirect('/dashboard')
-    result = start.relayValidation.test_call(data)
+    result = start.relayValidation.testCall(data)
     if result == False:
         msgs.append('Unable to call uri. Check your uri and headers.')
         return msgs, 400
     hookResult = None
     if data.get('hook') is not None and data.get('hook').lstrip().startswith('def postRequestHook('):
-        hookResult = start.relayValidation.test_hook(data, result)
+        hookResult = start.relayValidation.testHook(data, result)
         if hookResult == None:
             msgs.append('Invalid hook. Unable to execute.')
             return msgs, 400
     hasHistory = data.get('history') is not None and data.get(
         'history').lstrip().startswith('class GetHistory(')
     if hasHistory:
-        historyResult = start.relayValidation.test_history(data)
+        historyResult = start.relayValidation.testHistory(data)
         if historyResult == False:
             msgs.append('Invalid history. Unable to execute.')
             return msgs, 400
@@ -127,17 +129,17 @@ def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
             logging.error(e)
 
     # attempt to save to server.
-    save = start.relayValidation.register_stream(data=data)
+    save = start.relayValidation.registerStream(data=data)
 
     # we no longer use ipfs.
     # subscribe to save ipfs automatically
-    # subscribed = start.relayValidation.subscribe_to_stream(data=data)
+    # subscribed = start.relayValidation.subscribeToStream(data=data)
 
-    start.relayValidation.save_local(data)
+    start.relayValidation.saveLocal(data)
     if hasHistory:
         try:
             # this can take a very long time - will flask/browser timeout?
-            start.relayValidation.save_history(data)
+            start.relayValidation.saveHistory(data)
         except Exception as e:
             logging.error(e)
             msgs.append(

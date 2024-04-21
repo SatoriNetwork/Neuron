@@ -54,7 +54,8 @@ class RelayStreamForm(FlaskForm):
     # location of API
     url = StringField(
         'Url',
-        validators=[URL(), InputRequired()])
+        #validators=[URL()] # don't validate as a URL because '' is valid too.
+        )
     # location of API + details or credentials like API key
     uri = StringField(
         'Uri',

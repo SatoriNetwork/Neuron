@@ -62,7 +62,7 @@ class RawStreamRelayEngine(Cached):
         return True
 
     @staticmethod
-    def call(stream: Stream):
+    def call(stream: Stream) -> Union[requests.Response, None]:
         ''' calls API and relays data to pubsub '''
 
         def is_valid_json(x):
@@ -72,6 +72,10 @@ class RawStreamRelayEngine(Cached):
             except Exception as _:
                 return False
 
+        if stream.uri is None or stream.uri.strip() == '':
+            r = requests.Response()
+            r.status_code = 200
+            return r
         if stream.payload is None:
             method = partial(requests.get)
         else:

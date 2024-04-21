@@ -67,8 +67,8 @@ class SynapseSubscriber(Axon):
         vesicle: Vesicle = super().receive(message)
         if not isinstance(vesicle, SingleObservation) or not vesicle.isValid:
             # 2024-04-20 15:37:07,419 - ERROR - peer msg failure <class 'satorisynapse.lib.domain.Ping'> True b'{"className": "Ping", "ping": false}'
-            logging.error('peer msg failure', type(
-                vesicle), vesicle.isValid, message)
+            # logging.error('peer msg failure', type(
+            #    vesicle), vesicle.isValid, message)
             return  # unable to parse
         # here we can extract some context or something from vesicle.context
         self.inbox.put(vesicle)
@@ -92,7 +92,6 @@ class SynapseSubscriber(Axon):
             return ObservationRequest(time=self.disk.cache.index[-1])
 
         def validateCache():
-            logging.debug('validating', color='magenta')
             self.disk.modifyBasedValidation(
                 *self.disk.performValidation(entire=True))
 
@@ -123,14 +122,10 @@ class SynapseSubscriber(Axon):
                     timestamp=observation.time,
                     value=observation.data,
                     observationHash=observation.hash)
-                logging.debug('saved observation:',
-                              cachedResult.success, cachedResult.validated, color='magenta')
                 if cachedResult.success and cachedResult.validated:
                     return True
             elif self.requested.get(observation.responseTo, False):
                 self.requested[observation.responseTo] = False
-            logging.debug('failed:', lastHash(), observation.time,
-                          str(observation.data), color='magenta')
             validateCache()
             self.request(lastTime())
             self.clearIt = clearQueue()
@@ -221,6 +216,13 @@ class SynapsePublisher(Axon):
     def runUntilFinished(self):
         ''' send the data to the subscriber '''
 
+        def coolDown():
+            '''
+            mainly so that we don't get too far ahead of the subscriber, as 
+            they must validate and save the data sequentially
+            '''
+            time.sleep(.375)
+
         def getObservationAfter(timestamp: str) -> SingleObservation:
             ''' get the next observation after the time '''
             def isLatest(index):
@@ -259,7 +261,7 @@ class SynapsePublisher(Axon):
         self.sentCountWithoutPing = 0
         while self.ts != self.disk.cache.index[-1] and self.sentCountWithoutPing < 500:
             ts = self.ts
-            time.sleep(.375)  # cool down
+            coolDown()
             try:
                 observation = getObservationAfter(ts)
             except Exception as _:
