@@ -117,8 +117,8 @@ class SynapseSubscriber(Axon):
                 ts=observation.time,
                 value=str(observation.data),
             ) == observation.hash:
-                if observation.priorTime in self.requested and self.requested[observation.priorTime] == False:
-                    self.requested[observation.priorTime] = True
+                if observation.responseTo in self.requested and self.requested[observation.responseTo] == False:
+                    self.requested[observation.responseTo] = True
                 cachedResult = self.disk.appendByAttributes(
                     timestamp=observation.time,
                     value=observation.data,
@@ -127,8 +127,8 @@ class SynapseSubscriber(Axon):
                               cachedResult.success, cachedResult.validated, color='magenta')
                 if cachedResult.success and cachedResult.validated:
                     return True
-            elif self.requested.get(observation.priorTime, False):
-                self.requested[observation.priorTime] = False
+            elif self.requested.get(observation.responseTo, False):
+                self.requested[observation.responseTo] = False
             logging.debug('failed:', lastHash(), observation.time,
                           str(observation.data), color='magenta')
             validateCache()
@@ -149,7 +149,7 @@ class SynapseSubscriber(Axon):
                     self.disk.clear()
                     self.request(ObservationRequest(time='', first=True))
             else:
-                if observation.priorTime in self.requested and self.requested[observation.priorTime] == True:
+                if observation.responseTo in self.requested and self.requested[observation.responseTo] == True and observation.hash in self.disk.cache.hash.values:
                     # ignore, we've already received an answer on to this request
                     return
                 if save(observation) and observation.isLatest:
@@ -181,6 +181,7 @@ class SynapsePublisher(Axon):
         self.first = self.disk.cache.index[0] if not self.disk.cache.empty else None
         self.last = self.disk.cache.index[-1] if not self.disk.cache.empty else None
         self.sentCountWithoutPing = 0
+        self.respondingTo = None
         # self.main()
 
     def receive(self, message: bytes):
@@ -195,13 +196,18 @@ class SynapsePublisher(Axon):
             return
         ts = vesicle.time
         if vesicle.isValid:
+            self.pause = 3
             if isValidTimestamp(ts):
+                self.respondingTo = vesicle.time
                 self.ts = vesicle.time
             elif vesicle.first:
+                self.respondingTo = 'frst'
                 self.ts = datetimeToTimestamp(earliestDate())
             elif vesicle.latest and len(self.disk.cache.index) > 1:
+                self.respondingTo = 'latest'
                 self.ts = self.disk.cache.index[-2]
             elif vesicle.middle:
+                self.respondingTo = 'middle'
                 middle_index = len(self.disk.cache.index) // 2
                 self.ts = self.disk.cache.index[middle_index]
             if not self.running:
@@ -247,13 +253,13 @@ class SynapsePublisher(Axon):
                 hash=row['hash'].values[0],
                 isFirst=row.index[0] == self.first,
                 isLatest=isLatest(row.index[0]),
-                priorTime=timestamp)
+                responseTo=self.respondingTo)
 
         self.running = True
         self.sentCountWithoutPing = 0
         while self.ts != self.disk.cache.index[-1] and self.sentCountWithoutPing < 500:
             ts = self.ts
-            time.sleep(.1)  # cool down
+            time.sleep(.375)  # cool down
             try:
                 observation = getObservationAfter(ts)
             except Exception as _:
@@ -262,4 +268,7 @@ class SynapsePublisher(Axon):
             self.sentCountWithoutPing += 1
             if self.ts == ts:
                 self.ts = observation.time
+            if self.pause > 1:
+                time.sleep(self.pause)
+                self.pause /= 2
         self.running = False

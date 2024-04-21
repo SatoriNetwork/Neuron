@@ -58,7 +58,7 @@ class SingleObservation(Vesicle):
         hash: Union[str,  None],
         isFirst: bool = False,
         isLatest: bool = False,
-        priorTime: Union[str, None] = None,
+        responseTo: Union[str, None] = None,
         **_kwargs
     ):
         super().__init__()
@@ -67,7 +67,7 @@ class SingleObservation(Vesicle):
         self.hash = hash
         self.isFirst = isFirst
         self.isLatest = isLatest
-        self.priorTime = priorTime
+        self.responseTo = responseTo
 
     @staticmethod
     def empty() -> 'SingleObservation':
@@ -88,9 +88,9 @@ class SingleObservation(Vesicle):
             'time': self.time,
             'data': self.data,
             'hash': self.hash,
-            'isFirst': self.isFirst,
-            'isLatest': self.isLatest,
-            'priorTime': self.priorTime,
+            **({'isFirst': self.isFirst} if self.isFirst is not False else {}),
+            **({'isLatest': self.isLatest} if self.isLatest is not False else {}),
+            **({'responseTo': self.responseTo} if self.responseTo is not None else {}),
             **super().toDict}
 
     @property
