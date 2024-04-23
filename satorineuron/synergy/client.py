@@ -109,7 +109,7 @@ class SynergyClient:
                 f'&signature={quote_plus(signature)}')
             self.sio.connect(connection_url)
         except socketio.exceptions.ConnectionError as e:
-            logging.error('Failed to connect to server: %s', e)
+            logging.error('Failed to connect to Synergy.', e)
             time.sleep(30)
             self.reconnect()
 
@@ -118,17 +118,18 @@ class SynergyClient:
             try:
                 self.sio.emit('message', payload)
             except Exception as e:
-                logging.error('Failed to send message: %s', e)
+                logging.error('Failed to send message.', e)
                 self.reconnect()
         else:
-            logging.warning('Connection not established. Message not sent.')
+            logging.warning(
+                'Connection to Synergy not established. Message not sent.')
 
     def ping(self, payload):
         if self.connected.is_set():
             try:
                 self.sio.emit('ping', payload)
             except Exception as e:
-                logging.error('Failed to send message: %s', e)
+                logging.error('Failed to send message.', e)
                 self.reconnect()
         else:
             logging.warning('Connection not established. Message not sent.')

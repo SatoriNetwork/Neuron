@@ -18,10 +18,10 @@ class SynergyManager():
         self.synergy = SynergyClient(
             url='https://satorinet.io:24602',
             router=self.handleMessage,
-            wallet=RavencoinWallet(config.walletPath('wallet.yaml'))(),
+            wallet=wallet,
             onConnected=onConnect)
         self.channels: dict[str, Axon] = {
-            # localport: Axon
+            # remoteIp: Axon
         }
         self.runForever()
 
