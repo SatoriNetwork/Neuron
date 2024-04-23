@@ -99,11 +99,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.autosecure()
         self.checkin()
         self.verifyCaches()
+        self.startSynergyEngine()
         self.pubsubConnect()
         if self.isDebug:
             return
         self.startRelay()
-        self.startSynergyEngine()
         self.buildEngine()
 
     def createRelayValidation(self):
