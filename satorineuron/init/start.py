@@ -1,5 +1,6 @@
 from typing import Union
 import os
+import time
 import json
 import threading
 from reactivex.subject import BehaviorSubject
@@ -70,6 +71,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptions: list[Stream] = []
         self.asyncThread: AsyncThread = AsyncThread()
         self.udpQueue: Queue = Queue()
+        self.restartThread = self.asyncThread.repeatRun(
+            task=self.start,
+            interval=60*60*24)
 
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         ''' returns the reference to the cache of a stream '''
@@ -93,11 +97,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def start(self):
         ''' start the satori engine. '''
+        # while True:
         self.createRelayValidation()
         self.openWallet()
         self.openVault()
-        self.autosecure()
         self.checkin()
+        self.autosecure()
         self.verifyCaches()
         self.startSynergyEngine()
         self.pubsubConnect()
@@ -105,6 +110,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.startRelay()
         self.buildEngine()
+        # time.sleep(60*4)
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
@@ -326,7 +332,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def autosecure(self):
 
         def executeAutosecure(wallet: Union[RavencoinWallet, EvrmoreWallet], network: str):
-            import time
             entry = wallet.getAutosecureEntry()
             if entry is None:
                 return
@@ -390,10 +395,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if wallet is not None and wallet.shouldAutosecure():
                     executeAutosecure(wallet, network)
 
-        self.autosecureThread = self.asyncThread.repeatRun(
-            task=autosecureLoop,
-            interval=60*60*6,
-            delay=10)
+        autosecureLoop()
 
     def repullFor(self, streamId: StreamId):
         if self.engine is not None:

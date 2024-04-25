@@ -66,7 +66,7 @@ while True:
                 'dockerdev': 'ws://192.168.0.10:3000',
             }[MODE],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
-        threading.Thread(target=start.start, daemon=True).start()
+        # threading.Thread(target=start.start, daemon=True).start()
         logging.info('Satori Neuron started!', color='green')
         break
     except ConnectionError as e:
@@ -1095,11 +1095,11 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-            request.json.get('vaultPredictors') > 0 or
-            request.json.get('vaultOracles') > 0 or
-            request.json.get('vaultCreators') > 0 or
-            request.json.get('vaultManagers') > 0) and
-            start.vault is not None and start.vault.isDecrypted
+                request.json.get('vaultPredictors') > 0 or
+                request.json.get('vaultOracles') > 0 or
+                request.json.get('vaultCreators') > 0 or
+                request.json.get('vaultManagers') > 0) and
+                start.vault is not None and start.vault.isDecrypted
             ):
         start.server.submitMaifestVote(
             start.vault,
@@ -1332,7 +1332,7 @@ def synapsePing():
     #    return 'ready', 200
     # return 'ok', 200
     if start.synergy is None:
-        return 'fail', 400
+        return 'fail', 201
     return 'ready', 200
 
 
