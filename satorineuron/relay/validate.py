@@ -7,6 +7,7 @@ from functools import partial
 from satorilib.concepts.structs import Observation, StreamId
 from satorilib.api import hash
 from satorilib.api.disk import Cached
+from satorilib.api.time import nowStr
 from satorineuron import config
 from satorineuron import logging
 from satorineuron.relay.history import GetHistory
@@ -306,7 +307,7 @@ class RelayStreamHistorySaver(Cached):
         columns = []
         if isinstance(values, list) and len(values) > 0:
             if all([isinstance(v, str) for v in values]):
-                index = [str(dt.datetime.utcnow()) for _ in values]
+                index = [nowStr() for _ in values]
                 columns = [self.id.target or '']
             elif all([isinstance(v, list) and len(v) == 2 for v in values]):
                 index = [v[0] for v in values]

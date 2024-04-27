@@ -9,18 +9,20 @@ import threading
 import time
 import datetime as dt
 
+
 class DataManager:
-    
+
     def __init__(self):
         self.updates = {}
-        self.availableInputs = [0,1,2,3,4,5,6,7,8,9]
+        self.availableInputs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.helperTextCounter = 0
-        
+
     def runSubscriber(self, models):
-        self.helperTextCounter += 1 # only one stream updates 
+        self.helperTextCounter += 1  # only one stream updates
         if self.helperTextCounter not in self.availableInputs:
             self.helperTextCounter = 1
-        self.updates[self.helperTextCounter] = str(dt.datetime.utcnow().second)
+        self.updates[self.helperTextCounter] = str(
+            dt.datetime.now(dt.UTC).second)
         for model in models:
             if self.helperTextCounter in model.inputs:
                 model.inputsUpdated = True
@@ -38,12 +40,12 @@ class DataManager:
             model.newAvailableInputs.append(newInput)
             print(f'runScholar - {model.name()}: {model.inputs}')
 
-                
+
 class ModelManager:
-    
+
     def __init__(self, name, inputs):
         self.targetKey = name
-        self.inputs = [1,2,3]
+        self.inputs = [1, 2, 3]
         self.model = None
         self.prediction = None
         self.updates = {}
@@ -53,7 +55,7 @@ class ModelManager:
         self.predictionUpdated = False
         self.newAvailableInputs = []
 
-    def name(self): 
+    def name(self):
         return self.targetKey
 
     def runPredictor(self, data):
@@ -65,28 +67,29 @@ class ModelManager:
                 self.modelUpdated = False
             if self.inputsUpdated:
                 self.inputsUpdated = False
-            self.prediction = str(dt.datetime.utcnow().second)
+            self.prediction = str(dt.datetime.now(dt.UTC).second)
             self.predictionUpdated = True
             for i in self.inputs:
                 self.updates[i] = data.updates.get(i)
-            print(f'{self.targetKey} using: {self.model} with: {self.updates} prediction: {self.prediction}')
+            print(
+                f'{self.targetKey} using: {self.model} with: {self.updates} prediction: {self.prediction}')
 
     def runExplorer(self, data):
         if self.newAvailableInputs != []:
             self.inputs = self.inputs + self.newAvailableInputs
             self.newAvailableInputs = []
-            self.model = str(dt.datetime.utcnow())
+            self.model = str(dt.datetime.now(dt.UTC)).split('+')[0]
             self.modelUpdated = True
             print(f'{self.targetKey} runExplorer')
 
-    
+
 class Learner:
 
     def __init__(
         self,
-        data:DataManager=None,
-        model:ModelManager=None,
-        models:'set(ModelManager)'=None,
+        data: DataManager = None,
+        model: ModelManager = None,
+        models: 'set(ModelManager)' = None,
     ):
         '''
         data - a DataManager for the data
@@ -114,7 +117,7 @@ class Learner:
                 time.sleep(x)
 
             while True:
-                #rest()
+                # rest()
                 self.data.runSubscriber(self.models)
 
         def publisher():
@@ -128,7 +131,7 @@ class Learner:
                 time.sleep(x)
 
             while True:
-                #rest()
+                # rest()
                 self.data.runPublisher(self.models)
 
         def scholar():
@@ -142,10 +145,10 @@ class Learner:
                 time.sleep(x)
 
             while True:
-                #rest()
+                # rest()
                 self.data.runScholar(self.models)
 
-        def predictor(model:ModelManager):
+        def predictor(model: ModelManager):
             ''' loop for producing predictions '''
 
             def rest():
@@ -156,12 +159,12 @@ class Learner:
                 time.sleep(x)
 
             while True:
-                #rest()
+                # rest()
                 model.runPredictor(self.data)
 
-        def explorer(model:ModelManager):
+        def explorer(model: ModelManager):
             ''' loop for producing models '''
-        
+
             def rest():
                 x = 13
                 if x == -1:
@@ -170,19 +173,22 @@ class Learner:
                 time.sleep(x)
 
             while True:
-                #rest()
+                # rest()
                 model.runExplorer(self.data)
 
         threads = {}
-        threads['subscriber'] = threading.Thread(target=subscriber, daemon=True)
+        threads['subscriber'] = threading.Thread(
+            target=subscriber, daemon=True)
         threads['publisher'] = threading.Thread(target=publisher, daemon=True)
         threads['scholar'] = threading.Thread(target=scholar, daemon=True)
         predictions = {}
         scores = {}
         inputs = {}
         for model in self.models:
-            threads[f'{model.targetKey}.predictor'] = threading.Thread(target=predictor, args=[model], daemon=True)
-            threads[f'{model.targetKey}.explorer'] = threading.Thread(target=explorer, args=[model], daemon=True)
+            threads[f'{model.targetKey}.predictor'] = threading.Thread(
+                target=predictor, args=[model], daemon=True)
+            threads[f'{model.targetKey}.explorer'] = threading.Thread(
+                target=explorer, args=[model], daemon=True)
             predictions[model.targetKey] = ''
             scores[model.targetKey] = ''
             inputs[model.targetKey] = []
@@ -194,14 +200,15 @@ class Learner:
         while threading.active_count() > 0:
             time.sleep(0)
 
+
 # python .\tests\scratch\interprocess.py
 learner = Learner(
     data=DataManager(),
     models={
-        ModelManager(name='A', inputs=[1,2,3]),
-        ModelManager(name='B', inputs=[2,3,4]),
-        ModelManager(name='C', inputs=[3,5,6])
-        }
-    )
+        ModelManager(name='A', inputs=[1, 2, 3]),
+        ModelManager(name='B', inputs=[2, 3, 4]),
+        ModelManager(name='C', inputs=[3, 5, 6])
+    }
+)
 
 learner.run()

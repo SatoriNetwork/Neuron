@@ -292,15 +292,17 @@ neuron - also give people the ability to auto send directly to their vault by ch
 neuron - everytime we get a message from pubsub about new data we should trigger a possible resync from the author if the data is disconnected
 -- p2p end --
 
-neuron - refactor data management - entire cache/disk system
-neuron - refactor data management - make models beholden to cache
-neuron - disk cache isn't able to added missing datastreams on the fly
-central - still having some kind of issue on new downloads - doesn't assign streams or doesn't show them on neuron since they don't have 20 observations or something idk - figure it out.
+DONE central - still having some kind of issue on new downloads - doesn't assign streams or doesn't show them on neuron since they don't have 20 observations or something idk - figure it out.
 DONE install - must rebuild all to get rid of double 'waiting on satori' printout
 DONE neuron - make synapse a pip installable module - just the async and threaded scripts
 DONE neuron - put python evrmore on pip
 
 -- Prep for launch --
+
+1. divisibility on rvn and evr to 8 dec
+2. build clone of network on test.satorinet.io
+3. test extensively
+4. build NFT for launch
 
 all - reissue SATORI to be 8 decimal places, handle everywhere
 
@@ -327,6 +329,10 @@ central - better frontend experience - llm lite
 -- Launch --
 
 -- Nice --
+
+neuron - refactor data management - entire cache/disk system
+neuron - refactor data management - make models beholden to cache
+neuron - disk cache isn't able to added missing datastreams on the fly
 
 all - complete stream pinning service:
 server - add pinned status to checkin payload
