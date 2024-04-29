@@ -53,7 +53,7 @@ class Streamr():
             f'"source":"{self.source}",'
             f'"source":"{self.author}",'
             f'"stream":"{self.stream}",'
-            '"time":"' + str(dt.datetime.now(dt.UTC)).split('+')[0] + '",'
+            '"time":"' + str(dt.datetime.utcnow()).split('+')[0] + '",'
             '"observation":' + str(key) + ','
             '"content":' + content + '}')
 

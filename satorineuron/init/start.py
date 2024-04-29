@@ -174,7 +174,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def checkin(self):
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
         self.details = CheckinDetails(self.server.checkin())
-        # logging.debug(self.details, color='magenta')
+        logging.debug(self.details, color='magenta')
         self.key = self.details.key
         self.idKey = self.details.idKey
         self.subscriptionKeys = self.details.subscriptionKeys
@@ -182,11 +182,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptions = [
             Stream.fromMap(x)
             for x in json.loads(self.details.subscriptions)]
-        # logging.debug(self.subscriptions, color='yellow')
+        logging.debug(self.subscriptions, color='yellow')
         self.publications = [
             Stream.fromMap(x)
             for x in json.loads(self.details.publications)]
-        # logging.debug(self.publications, color='magenta')
+        logging.debug(self.publications, color='magenta')
         self.caches = {
             x.streamId: disk.Cache(id=x.streamId)
             for x in set(self.subscriptions + self.publications)}

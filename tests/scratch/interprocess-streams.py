@@ -24,7 +24,7 @@ class DataManager:
         if self.helperTextCounter not in self.availableInputs:
             self.helperTextCounter = 1
         self.updates[self.helperTextCounter] = str(
-            dt.datetime.now(dt.UTC).second)
+            dt.datetime.utcnow().second)
         for model in models:
             if self.helperTextCounter in model.inputs:
                 model.inputsUpdated.on_next(True)
@@ -66,7 +66,7 @@ class ModelManager:
 
     def runPredictor(self, data):
         def makePrediction():
-            self.prediction = str(dt.datetime.now(dt.UTC).second)
+            self.prediction = str(dt.datetime.utcnow().second)
             self.predictionUpdated.on_next([self.targetKey, self.prediction])
             for i in self.inputs:
                 self.updates[i] = data.updates.get(i)
@@ -90,7 +90,7 @@ class ModelManager:
 
         def explore(x):
             self.inputs.append(x)
-            self.model = str(dt.datetime.now(dt.UTC)).split('+')[0]
+            self.model = str(dt.datetime.utcnow()).split('+')[0]
             print(f'{self.targetKey} runExplorer')
             self.newAvailableInput.on_next(None)
             self.modelUpdated.on_next(True)
