@@ -286,10 +286,11 @@ DONE neuron - run the synergy script on startup to test.
 DONE neuron - synergy author not found error should retry later? - on restart
 DONE neuron - look out for packet empty queue error, might be fixed now
 DONE neuron - gotta test mapping the port 24600 - maybe we can put the synapse inside. no good.
-neuron - get UI to start sooner
-neuron - show that you're building models
+DONE neuron - get UI to start sooner
+DONE neuron - show that you're building models
 neuron - also give people the ability to auto send directly to their vault by changing the 'address' in wallet
 neuron - everytime we get a message from pubsub about new data we should trigger a possible resync from the author if the data is disconnected
+
 -- p2p end --
 
 DONE central - still having some kind of issue on new downloads - doesn't assign streams or doesn't show them on neuron since they don't have 20 observations or something idk - figure it out.

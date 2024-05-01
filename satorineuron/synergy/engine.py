@@ -57,7 +57,10 @@ class SynergyManager():
 
     def createChannel(self, msg: SynergyProtocol):
         ''' completes the next part of the msg and returns '''
-        if msg.author == self.pubkey and (self.channels.get(msg.subscriberIp) is None or not self.channels[msg.subscriberIp].running):
+        if msg.author == self.pubkey and (
+                self.channels.get(msg.subscriberIp) is None or
+                (isinstance(self.channels[msg.subscriberIp], SynapsePublisher)
+                 and not self.channels[msg.subscriberIp].running)):
             logging.info(
                 'creating channel to new subscribing peer for stream:',
                 f'{msg.stream}.{msg.target}', color='green')
