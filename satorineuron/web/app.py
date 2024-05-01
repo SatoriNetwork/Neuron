@@ -556,6 +556,8 @@ def removeStreamByPost():
 
     removeRelayStream = json.loads(request.get_json())
     return accept_submittion(removeRelayStream)
+
+
 ###############################################################################
 ## Routes - dashboard #########################################################
 ###############################################################################
@@ -621,6 +623,9 @@ def dashboard():
     streamOverviews = (
         [model.miniOverview() for model in start.engine.models]
         if start.engine is not None else [])  # StreamOverviews.demo()
+    start.wallet.get(allWalletInfo=False)
+    if start.vault is not None:
+        start.vault.get(allWalletInfo=False)
     return render_template('dashboard.html', **getResp({
         'wallet': start.wallet,
         'vaultBalanceAmount': start.vault.balanceAmount if start.vault is not None else 0,

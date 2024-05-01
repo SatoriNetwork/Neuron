@@ -305,6 +305,8 @@ DONE neuron - put python evrmore on pip
 3. test extensively
 4. build NFT for launch
 
+installer - I think we should visit the installer again before launch to give it the ability to shutdown or restart the node, that way we can update the docker image from within the docker image
+
 all - reissue SATORI to be 8 decimal places, handle everywhere
 
 central - test the average cadence query

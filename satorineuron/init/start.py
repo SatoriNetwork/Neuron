@@ -44,6 +44,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def __init__(self, *args, urlServer: str = None, urlPubsub: str = None, isDebug: bool = False):
         super(StartupDag, self).__init__(*args)
+        self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
         self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
         self.urlServer: str = urlServer
@@ -69,11 +70,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
-        self.asyncThread: AsyncThread = AsyncThread()
         self.udpQueue: Queue = Queue()
-        self.restartThread = self.asyncThread.repeatRun(
-            task=self.start,
-            interval=60*60*24)
+        while True:
+            if self.asyncThread.loop is not None:
+                self.restartThread = self.asyncThread.repeatRun(
+                    task=self.start,
+                    interval=60*60*24)
+                break
+            print('waiting for main loop to start')
+            time.sleep(1)
 
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         ''' returns the reference to the cache of a stream '''
@@ -174,7 +179,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def checkin(self):
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
         self.details = CheckinDetails(self.server.checkin())
-        logging.debug(self.details, color='magenta')
+        # logging.debug(self.details, color='magenta')
         self.key = self.details.key
         self.idKey = self.details.idKey
         self.subscriptionKeys = self.details.subscriptionKeys
@@ -182,11 +187,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptions = [
             Stream.fromMap(x)
             for x in json.loads(self.details.subscriptions)]
-        logging.debug(self.subscriptions, color='yellow')
+        # logging.debug(self.subscriptions, color='yellow')
         self.publications = [
             Stream.fromMap(x)
             for x in json.loads(self.details.publications)]
-        logging.debug(self.publications, color='magenta')
+        # logging.debug(self.publications, color='magenta')
         self.caches = {
             x.streamId: disk.Cache(id=x.streamId)
             for x in set(self.subscriptions + self.publications)}
@@ -330,6 +335,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info('AI engine unpaused', color='green')
 
     def autosecure(self):
+        ''' automatically send funds to the vault on startup '''
 
         def executeAutosecure(wallet: Union[RavencoinWallet, EvrmoreWallet], network: str):
             entry = wallet.getAutosecureEntry()
