@@ -4,7 +4,7 @@ import pandas as pd
 import datetime as dt
 from satorilib.api.time import isValidTimestamp
 from satorisynapse import Vesicle as SynapseVesicle
-from satorisynapse import Ping
+from satorisynapse import Ping, Signal
 
 
 class Vesicle(SynapseVesicle):
@@ -31,6 +31,8 @@ class Vesicle(SynapseVesicle):
             return Vesicle(**msg)
         if name == 'Ping':
             return Ping(**msg)
+        if name == 'Signal':
+            return Signal(**msg)
         if name == 'SingleObservation':
             return SingleObservation(**msg)
         if name == 'ObservationRequest':
@@ -42,6 +44,8 @@ class Vesicle(SynapseVesicle):
             return Vesicle(**self.toDict)
         if self.className == 'Ping':
             return Ping(**self.toDict)
+        if self.className == 'Signal':
+            return Signal(**self.toDict)
         if self.className == 'SingleObservation':
             return SingleObservation(**self.toDict)
         if self.className == 'ObservationRequest':

@@ -25,7 +25,7 @@ from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timestampToSeconds
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName
-from satorisynapse import Envelope
+from satorisynapse import Envelope, Signal
 from satorineuron import VERSION, MOTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
@@ -225,6 +225,18 @@ def pause(timeout):
 def unpause():
     start.unpause()
     return redirect(url_for('dashboard'))
+
+
+@app.route('/restart', methods=['GET'])
+def restart():
+    start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+    return 'Satori Neuron is attempting to restart. Please wait a few minutes then refresh the page...', 200
+
+
+@app.route('/shutdown', methods=['GET'])
+def shutdown():
+    start.udpQueue.put(Envelope(ip='', vesicle=Signal(shutdown=True)))
+    return 'Satori Neuron is shutting down. Please wait a few minutes then refresh the page...', 200
 
 
 @app.route('/mode/light', methods=['GET'])
@@ -1100,12 +1112,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-                request.json.get('vaultPredictors') > 0 or
-                request.json.get('vaultOracles') > 0 or
-                request.json.get('vaultCreators') > 0 or
-                request.json.get('vaultManagers') > 0) and
-                start.vault is not None and start.vault.isDecrypted
-            ):
+        request.json.get('vaultPredictors') > 0 or
+        request.json.get('vaultOracles') > 0 or
+        request.json.get('vaultCreators') > 0 or
+        request.json.get('vaultManagers') > 0) and
+        start.vault is not None and start.vault.isDecrypted
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
