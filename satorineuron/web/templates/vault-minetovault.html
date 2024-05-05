@@ -53,7 +53,7 @@
     }
   }
   function enableMinetovault(network) {
-    fetch('/enable_minetovault/' + network, { method: 'GET' })
+    fetch('/mine_to_vault/enable/' + network, { method: 'GET' })
     .then(response => {
         if (response.ok) {
             console.log("MineToVault enabled");
@@ -64,7 +64,7 @@
     .catch(error => console.error('Error:', error));
   }
   function disableMinetovault(network) {
-    fetch('/disable_minetovault/' + network, { method: 'GET' })
+    fetch('/mine_to_vault/disable/' + network, { method: 'GET' })
     .then(response => {
         if (response.ok) {
             console.log("MineToVault disabled");

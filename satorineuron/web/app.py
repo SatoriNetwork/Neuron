@@ -1008,36 +1008,40 @@ def disableAutosecure(network: str = 'main'):
     return 'OK', 200
 
 
-@app.route('/enable_minetovault/<network>', methods=['GET'])
+@app.route('/mine_to_vault/enable/<network>', methods=['GET'])
 def enableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to enable minetovault.')
         return redirect('/dashboard')
-    # tell the network to mine to the vault address:
-    # endpoint requires:
-    # 1. signature from the wallet
-    # 2. signature from the vault
-    mineToAddress = start.getVault(network=network).address
-    start.server.enableMineToVault(
+    # the network portion should be whatever network I'm on.
+    vault = start.getVault(network=network)
+    mineToAddress = vault.address
+    success, result = start.server.enableMineToVault(
         walletSignature=start.getWallet(network=network).sign(mineToAddress),
-        vaultSignature=start.getVault(network=network).sign(mineToAddress),
-    )
-    return 'OK', 200
+        vaultSignature=vault.sign(mineToAddress),
+        vaultPubkey=vault.publicKey,
+        address=mineToAddress)
+    if success:
+        return 'OK', 200
+    return f'Failed to enable minetovault: {result}', 400
 
 
-@app.route('/disable_minetovault/<network>', methods=['GET'])
+@app.route('/mine_to_vault/disable/<network>', methods=['GET'])
 def disableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to disable minetovault.')
         return redirect('/dashboard')
-    # find the entry in the minetovault config of this wallet's nework address
-    # remove it, save the config
-    config.put(
-        'minetovault',
-        data={
-            k: v for k, v in config.get('minetovault').items()
-            if k != start.getWallet(network=network).address})
-    return 'OK', 200
+    vault = start.getVault(network=network)
+    wallet = start.getWallet(network=network)
+    mineToAddress = wallet.address
+    success, result = start.server.disableMineToVault(
+        walletSignature=wallet.sign(mineToAddress),
+        vaultSignature=vault.sign(mineToAddress),
+        vaultPubkey=vault.publicKey,
+        address=mineToAddress)
+    if success:
+        return 'OK', 200
+    return f'Failed to disable minetovault: {result}', 400
 
 
 @app.route('/vote', methods=['GET', 'POST'])
