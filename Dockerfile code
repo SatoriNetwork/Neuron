@@ -4,7 +4,7 @@
 
 FROM satorinet/satorineuron:base
 
-RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
+#RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
 COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
 COPY Synapse/setup.py /Satori/Synapse/setup.py
 COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
