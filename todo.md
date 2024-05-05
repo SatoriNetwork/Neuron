@@ -261,6 +261,10 @@ DONE central - fix predictions not being noticed? or something. payments arent g
 DONE central - why aren't predictions being counted? predictors query perhaps - they are
 DONE neuron - fix predictions not being produced:
 DONE neuron - dataset not being produced properly - false alarm - dedupe
+DONE central - still having some kind of issue on new downloads - doesn't assign streams or doesn't show them on neuron since they don't have 20 observations or something idk - figure it out.
+DONE install - must rebuild all to get rid of double 'waiting on satori' printout
+DONE neuron - make synapse a pip installable module - just the async and threaded scripts
+DONE neuron - put python evrmore on pip
 
 -- P2P options --
 
@@ -288,27 +292,25 @@ DONE neuron - look out for packet empty queue error, might be fixed now
 DONE neuron - gotta test mapping the port 24600 - maybe we can put the synapse inside. no good.
 DONE neuron - get UI to start sooner
 DONE neuron - show that you're building models
-neuron - also give people the ability to auto send directly to their vault by changing the 'address' in wallet
-neuron - everytime we get a message from pubsub about new data we should trigger a possible resync from the author if the data is disconnected
+DONE neuron - everytime we get a message from pubsub about new data we should trigger a possible resync from the author if the data is disconnected
 
 -- p2p end --
 
-DONE central - still having some kind of issue on new downloads - doesn't assign streams or doesn't show them on neuron since they don't have 20 observations or something idk - figure it out.
-DONE install - must rebuild all to get rid of double 'waiting on satori' printout
-DONE neuron - make synapse a pip installable module - just the async and threaded scripts
-DONE neuron - put python evrmore on pip
-
 -- Prep for launch --
 
-1. divisibility on rvn and evr to 8 dec
+0. DONE - divisibility on rvn to 8 dec
+1. divisibility on evr to 8 dec
 2. build clone of network on test.satorinet.io
 3. test extensively
 4. build NFT for launch
 
-installer - I think we should visit the installer again before launch to give it the ability to shutdown or restart the node, that way we can update the docker image from within the docker image
+DONE installer - I think we should visit the installer again before launch to give it the ability to shutdown or restart the node, that way we can update the docker image from within the docker image
+
+neuron - on ui fix divisibility so it's at most 8 places
+
+neuron - also give people the ability to auto send directly to their vault by changing the 'address' in wallet. investigate this - any issues with changing that address? anywhere I rely on the pubkey matching that address? might be best to make a new address field and pay to it if its not null.
 
 beta - make a commemorative NFT
-neuron - on ui fix divisibility so it's at most 8 places
 all - reissue SATORI to be 8 decimal places, handle everywhere
 
 central - test the average cadence query
@@ -334,6 +336,8 @@ central - better frontend experience - llm lite
 -- Launch --
 
 -- Nice --
+
+neuron - on ui give restart/shutdown ability? why?  we only need to trigger it programmatically right now.
 
 neuron - refactor data management - entire cache/disk system
 neuron - refactor data management - make models beholden to cache

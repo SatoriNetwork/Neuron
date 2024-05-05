@@ -995,12 +995,47 @@ def enableAutosecure(network: str = 'main', retainInWallet: int = 0):
 
 @app.route('/disable_autosecure/<network>', methods=['GET'])
 def disableAutosecure(network: str = 'main'):
+    if start.vault is None:
+        flash('Must unlock your vault to disable autosecure.')
+        return redirect('/dashboard')
     # find the entry in the autosecure config of this wallet's nework address
     # remove it, save the config
     config.put(
         'autosecure',
         data={
             k: v for k, v in config.get('autosecure').items()
+            if k != start.getWallet(network=network).address})
+    return 'OK', 200
+
+
+@app.route('/enable_minetovault/<network>', methods=['GET'])
+def enableMineToVault(network: str = 'main'):
+    if start.vault is None:
+        flash('Must unlock your vault to enable minetovault.')
+        return redirect('/dashboard')
+    # tell the network to mine to the vault address:
+    # endpoint requires:
+    # 1. signature from the wallet
+    # 2. signature from the vault
+    mineToAddress = start.getVault(network=network).address
+    start.server.enableMineToVault(
+        walletSignature=start.getWallet(network=network).sign(mineToAddress),
+        vaultSignature=start.getVault(network=network).sign(mineToAddress),
+    )
+    return 'OK', 200
+
+
+@app.route('/disable_minetovault/<network>', methods=['GET'])
+def disableMineToVault(network: str = 'main'):
+    if start.vault is None:
+        flash('Must unlock your vault to disable minetovault.')
+        return redirect('/dashboard')
+    # find the entry in the minetovault config of this wallet's nework address
+    # remove it, save the config
+    config.put(
+        'minetovault',
+        data={
+            k: v for k, v in config.get('minetovault').items()
             if k != start.getWallet(network=network).address})
     return 'OK', 200
 

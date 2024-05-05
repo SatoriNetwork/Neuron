@@ -100,6 +100,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return self.ravencoinWallet
         return self.evrmoreWallet
 
+    def getVault(self, test: bool = False, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
+        if test or self.networkIsTest(network):
+            return self.ravencoinVault
+        return self.evrmoreVault
+
     def start(self):
         ''' start the satori engine. '''
         # while True:
@@ -342,7 +347,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             if entry is None:
                 return
             amount = wallet.balanceAmount - entry.get('retain', 0)
-            if amount > 0:
+            if amount > wallet.reserveAmount:
                 result = wallet.typicalNeuronTransaction(
                     amount=amount,
                     address=entry.get('address'),

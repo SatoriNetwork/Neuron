@@ -1,0 +1,51 @@
+{% block content %}
+<div class="row mb-0">
+    <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+      <div class="card {% if darkmode %}dark-colors{% endif %}" onclick="describeVault();">
+        <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+        </div>
+        <center>
+          <p id='explainVault' class="mb-1 {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>
+            The Vault is an encrypted wallet
+            <br>
+            <br>
+            YOU MUST REMEMBER YOUR PASSWORD, THERE IS NO WAY TO RETRIEVE IT
+            <br>
+            <br>
+          </p>
+        </center>
+      </div>
+    </div>
+  </div>
+  <script>
+    function describeVault() {
+      var shortDescription = (
+        "The vault is an encrypted wallet" +
+        "<br>" +
+        "<br>" +
+        "YOU MUST REMEMBER YOUR PASSWORD, THERE IS NO WAY TO RETRIEVE IT" +
+        "<br>" +
+        "<br>" )
+      var longDescription = (
+        "The vault is an encrypted wallet" +
+        "<br>" +
+        "<br>" +
+        "Your main wallet is used to authenticate you to the network and as such is not encrypted. If it were, you would need to provide the decryption password each time your machine attempt to authenticate itself on the Satori network." +
+        "<br>" +
+        "<br>" +
+        "You can transfer SATORI tokens from your wallet to your vault to for safe keeping." +
+        "<br>" +
+        "<br>" +
+        "Since the vault is encrypted with a password you must remember it or you will not be able to access the assets in your vault." +
+        "<br>" +
+        "<br>" )
+      if (document.getElementById('explainVault').innerHTML == longDescription) {
+        document.getElementById('explainVault').innerHTML = shortDescription;
+      } else {
+        document.getElementById('explainVault').innerHTML = longDescription;
+      }
+    }
+  </script>
+  
+
+{% endblock %}
