@@ -945,6 +945,7 @@ def vault():
             'network': 'test',  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
+            'minedtovault': start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
@@ -955,6 +956,7 @@ def vault():
         'image': '',
         'network': 'test',  # change to main when ready
         'autosecured': False,
+        'minedtovault': start.server.minedToVault(),
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
