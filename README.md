@@ -16,19 +16,7 @@ The SatoriNeuron repository is the Miner. It houses the Satori AI Engine, a User
 
 ### Current State
 
-Satori in the final stages of its initial, prototypical development phase. An alpha release is anticipated for Q3 of 2023 and Satori will have a soft launch and beta release Q1 of 2024.
-
-### Getting Started
-
-If you want to run the code you can...
-
-0. fork and clone this repo
-1. download, install, and run docker
-2. you can mount your local code with this command:  
-    - `docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron --env SATORI_RUN_MODE=prod satorinet/satorineuron:v1 ./start.sh`
-    - notice `c:\repos\Satori\Neuron` should be your local path to this repository
-    - notice `--env SATORI_RUN_MODE=prod` indicates that it'll talk to the official servers at satorinet.io
-    - while  `--env SATORI_RUN_MODE=dockerdev` indicates that it'll talk to locally running servers which we will opensource eventually.
+Satori in the final stages of its initial, prototypical development phase. An alpha release occured on January 1st 2024. Satori entered Beta by March of 2024 and the offical mainnet launch is scheduled for July 1st 2024.
 
 ### How to get involved
 

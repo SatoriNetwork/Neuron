@@ -42,13 +42,23 @@ class SingletonMeta(type):
 class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ''' a DAG of startup tasks. '''
 
-    def __init__(self, *args, urlServer: str = None, urlPubsub: str = None, isDebug: bool = False):
+    def __init__(
+        self,
+        *args,
+        mode: str = 'dev',
+        urlServer: str = None,
+        urlPubsub: str = None,
+        urlSynergy: str = None,
+        isDebug: bool = False
+    ):
         super(StartupDag, self).__init__(*args)
+        self.mode = mode
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
         self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
         self.urlServer: str = urlServer
         self.urlPubsub: str = urlPubsub
+        self.urlSynergy: str = urlSynergy
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
         self.ravencoinWallet: RavencoinWallet
@@ -86,24 +96,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def vault(self) -> RavencoinWallet:
-        return self.ravencoinVault
+        return self.evrmoreVault if self.mode == 'prodx' else self.ravencoinVault
 
     @property
     def wallet(self) -> RavencoinWallet:
-        return self.ravencoinWallet
+        return self.evrmoreWallet if self.mode == 'prodx' else self.ravencoinWallet
 
     def networkIsTest(self, network: str = None) -> bool:
         return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn')
 
-    def getWallet(self, test: bool = False, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        if test or self.networkIsTest(network):
-            return self.ravencoinWallet
-        return self.evrmoreWallet
+    def getWallet(self, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
+        return self.ravencoinWallet
+        #if self.networkIsTest(network) or (network is None and self.mode != 'prod'):
+        #   return self.ravencoinWallet
+        #return self.evrmoreWallet
 
-    def getVault(self, test: bool = False, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        if test or self.networkIsTest(network):
-            return self.ravencoinVault
-        return self.evrmoreVault
+    def getVault(self, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
+        return self.ravencoinVault
+        #if self.networkIsTest(network) or (network is None and self.mode != 'prod'):
+        #    return self.ravencoinVault
+        #return self.evrmoreVault
 
     def start(self):
         ''' start the satori engine. '''
@@ -131,10 +143,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             config.walletPath('wallet.yaml'),
             reserve=0.01,
             isTestnet=self.networkIsTest('ravencoin'))()
-        self.evrmoreWallet = EvrmoreWallet(
-            config.walletPath('wallet.yaml'),
-            reserve=0.01,
-            isTestnet=self.networkIsTest('evrmore'))()
+        #self.evrmoreWallet = EvrmoreWallet(
+        #    config.walletPath('wallet.yaml'),
+        #    reserve=0.01,
+        #    isTestnet=self.networkIsTest('evrmore'))()
         logging.info('opened wallet', color='green')
 
     def closeVault(self):
@@ -157,12 +169,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     isTestnet=self.networkIsTest('ravencoin'),
                     password=password,
                 )()
-                # self.evrmoreVault = EvrmoreWallet(
+                #self.evrmoreVault = EvrmoreWallet(
                 #    vaultPath,
                 #    reserve=0.01,
                 #    isTestnet=self.networkIsTest('evrmore'),
                 #    password=password,
-                # )()
+                #)()
             else:  # create it if we're allowed to
                 if create:
                     self.ravencoinVault = RavencoinWallet(
@@ -296,6 +308,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' establish a synergy connection '''
         if self.wallet:
             self.synergy = SynergyManager(
+                url=self.urlSynergy,
                 wallet=self.wallet,
                 onConnect=self.syncDatasets)
             logging.info(

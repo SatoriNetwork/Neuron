@@ -13,11 +13,20 @@ from satorilib.asynchronous import AsyncThread
 class StartupDagStruct(object):
     ''' a DAG of startup tasks. '''
 
-    def __init__(self, urlServer: str = None, urlPubsub: str = None, *args):
+    def __init__(
+        self,
+        mode: str = None,
+        urlServer: str = None,
+        urlPubsub: str = None,
+        urlSynergy: str = None,
+        *args
+    ):
         super(StartupDagStruct, self).__init__(*args)
         self.workingUpdates: BehaviorSubject = None
+        self.mode: str = None
         self.urlServer: str = None
         self.urlPubsub: str = None
+        self.urlSynergy: str = None
         self.paused: bool = None
         self.pauseThread: Union[threading.Thread, None] = None
         self.ravencoinWallet: RavencoinWallet = None

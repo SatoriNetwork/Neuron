@@ -304,17 +304,28 @@ DONE neuron - everytime we get a message from pubsub about new data we should tr
 3. test extensively
 4. build NFT for launch
 
+DONE all - reissue SATORI to be 8 decimal places, handle everywhere
 DONE installer - I think we should visit the installer again before launch to give it the ability to shutdown or restart the node, that way we can update the docker image from within the docker image
 DONE neuron - also give people the ability to auto send directly to their vault by changing the 'address' in wallet. investigate this - any issues with changing that address? anywhere I rely on the pubkey matching that address? might be best to make a new address field and pay to it if its not null.
 
 DONE central - download ui should show docker to set it as running on docker step
 DONE central - download ui should show step 3 as setting up vault, and mine to vault
 
+DONE central - clone mainnet server to testnet server
+central - disable distributions on testnet
+central - setup/fix certs for testnet
+neuron - test connecting to testnet
+neuron - keep everything working off testnet till we have two working clones
+neuron - switch mainnet to mainnet
+
 neuron - on ui fix divisibility so it's at most 8 places
+neuron - setup dev distinction
+central - setup restart signal
+central - verify amounts match for distributions
+central - prodx to prod
 
 
 beta - make a commemorative NFT
-all - reissue SATORI to be 8 decimal places, handle everywhere
 
 central - test the average cadence query
 central - derived cadence as well from history table

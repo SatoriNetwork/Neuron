@@ -11,13 +11,9 @@ from satorilib.synergy import SynergyProtocol
 
 
 class SynergyRestClient(object):
-    def __init__(
-        self,
-        url: str = None,
-        *args, **kwargs
-    ):
+    def __init__(self, url, *args, **kwargs):
         super(SynergyRestClient, self).__init__(*args, **kwargs)
-        self.url = url or 'https://satorinet.io:24602'
+        self.url = url
 
     def getChallenge(self):
         return requests.get(self.url + '/challenge').text
@@ -37,7 +33,13 @@ class SynergyRestClient(object):
 # need to print out more logs about whats going on exactly.
 
 class SynergyClient:
-    def __init__(self, url, wallet: Wallet, router: callable = None, onConnected: callable = None):
+    def __init__(
+        self,
+        url,
+        wallet: Wallet,
+        router: callable = None,
+        onConnected: callable = None
+    ):
         self.sio = socketio.Client(
             reconnection=True,
             reconnection_attempts=5,
