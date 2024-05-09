@@ -45,7 +45,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updateTime = 0
 updateQueue = Queue()
-MODE = os.environ.get('ENV', 'dev')
+MODE = os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev'))
 CORS(app, origins=[{
     'local': 'http://192.168.0.10:5002',
     'dev': 'http://localhost:5002',
