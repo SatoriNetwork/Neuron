@@ -45,12 +45,12 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updateTime = 0
 updateQueue = Queue()
-MODE = os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev'))
+ENV = os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev'))
 CORS(app, origins=[{
     'local': 'http://192.168.0.10:5002',
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
-    'prod': 'https://satorinet.io'}[MODE]])
+    'prod': 'https://satorinet.io'}[ENV]])
 
 
 ###############################################################################
@@ -59,22 +59,22 @@ CORS(app, origins=[{
 while True:
     try:
         start = StartupDag(
-            mode=MODE,
+            env=ENV,
             urlServer={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://satorinet.io'}[MODE],
+                'prod': 'https://satorinet.io'}[ENV],
             urlPubsub={
                 'local': 'ws://192.168.0.10:3000',
                 'dev': 'ws://localhost:3000',
                 'test': 'ws://test.satorinet.io:3000',
-                'prod': 'ws://satorinet.io:3000'}[MODE],
+                'prod': 'ws://satorinet.io:3000'}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
-                'prod': 'https://satorinet.io:24602'}[MODE],
+                'prod': 'https://satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info('Satori Neuron started!', color='green')

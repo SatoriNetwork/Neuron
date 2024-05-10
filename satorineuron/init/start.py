@@ -45,14 +45,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def __init__(
         self,
         *args,
-        mode: str = 'dev',
+        env: str = 'dev',
         urlServer: str = None,
         urlPubsub: str = None,
         urlSynergy: str = None,
         isDebug: bool = False
     ):
         super(StartupDag, self).__init__(*args)
-        self.mode = mode
+        self.env = env
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
         self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
@@ -96,26 +96,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def vault(self) -> RavencoinWallet:
-        return self.evrmoreVault if self.mode == 'prodx' else self.ravencoinVault
+        return self.evrmoreVault if self.env == 'prodx' else self.ravencoinVault
 
     @property
     def wallet(self) -> RavencoinWallet:
-        return self.evrmoreWallet if self.mode == 'prodx' else self.ravencoinWallet
+        return self.evrmoreWallet if self.env == 'prodx' else self.ravencoinWallet
 
     def networkIsTest(self, network: str = None) -> bool:
         return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn')
 
     def getWallet(self, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
         return self.ravencoinWallet
-        #if self.networkIsTest(network) or (network is None and self.mode != 'prod'):
+        # if self.networkIsTest(network) or (network is None and self.env != 'prod'):
         #   return self.ravencoinWallet
-        #return self.evrmoreWallet
+        # return self.evrmoreWallet
 
     def getVault(self, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
         return self.ravencoinVault
-        #if self.networkIsTest(network) or (network is None and self.mode != 'prod'):
+        # if self.networkIsTest(network) or (network is None and self.env != 'prod'):
         #    return self.ravencoinVault
-        #return self.evrmoreVault
+        # return self.evrmoreVault
 
     def start(self):
         ''' start the satori engine. '''
@@ -143,7 +143,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             config.walletPath('wallet.yaml'),
             reserve=0.01,
             isTestnet=self.networkIsTest('ravencoin'))()
-        #self.evrmoreWallet = EvrmoreWallet(
+        # self.evrmoreWallet = EvrmoreWallet(
         #    config.walletPath('wallet.yaml'),
         #    reserve=0.01,
         #    isTestnet=self.networkIsTest('evrmore'))()
@@ -169,12 +169,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     isTestnet=self.networkIsTest('ravencoin'),
                     password=password,
                 )()
-                #self.evrmoreVault = EvrmoreWallet(
+                # self.evrmoreVault = EvrmoreWallet(
                 #    vaultPath,
                 #    reserve=0.01,
                 #    isTestnet=self.networkIsTest('evrmore'),
                 #    password=password,
-                #)()
+                # )()
             else:  # create it if we're allowed to
                 if create:
                     self.ravencoinVault = RavencoinWallet(

@@ -15,7 +15,7 @@ class StartupDagStruct(object):
 
     def __init__(
         self,
-        mode: str = None,
+        env: str = None,
         urlServer: str = None,
         urlPubsub: str = None,
         urlSynergy: str = None,
@@ -23,7 +23,7 @@ class StartupDagStruct(object):
     ):
         super(StartupDagStruct, self).__init__(*args)
         self.workingUpdates: BehaviorSubject = None
-        self.mode: str = None
+        self.env: str = None
         self.urlServer: str = None
         self.urlPubsub: str = None
         self.urlSynergy: str = None
