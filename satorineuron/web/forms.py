@@ -54,8 +54,8 @@ class RelayStreamForm(FlaskForm):
     # location of API
     url = StringField(
         'Url',
-        #validators=[URL()] # don't validate as a URL because '' is valid too.
-        )
+        # validators=[URL()] # don't validate as a URL because '' is valid too.
+    )
     # location of API + details or credentials like API key
     uri = StringField(
         'Uri',
@@ -101,3 +101,10 @@ class VaultPassword(FlaskForm):
         'Password',
         validators=[InputRequired(), Length(min=8, max=256)])
     submit = SubmitField('Unlock')
+
+
+class ChatPrompt(FlaskForm):
+    prompt = StringField(
+        'prompt',
+        validators=[InputRequired(), Length(min=8)])
+    submit = SubmitField('Ask')

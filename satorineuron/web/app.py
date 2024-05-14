@@ -32,6 +32,7 @@ from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateH
 from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
+import satorineuron.chat as chat
 
 ###############################################################################
 ## Globals ####################################################################
@@ -840,6 +841,63 @@ def workingUpdatesEnd():
     return 'ok', 200
 
 
+@app.route('/chat', methods=['GET'])
+def chatPage():
+    def presentChatForm():
+        '''
+        this function could be used to fill a form with the current
+        configuration for a stream in order to edit it.
+        '''
+        chatForm = forms.ChatPrompt(formdata=request.form)
+        chatForm.prompt.data = ''
+        return chatForm
+
+    return render_template('chat-page.html', **getResp({
+        'title': 'Chat',
+        'chatForm': presentChatForm()}))
+
+
+@app.route('/chat/session', methods=['POST'])
+def chatSession():
+    def query(chatForm: str = ''):
+        prompt = chatForm.prompt.data
+        print(prompt, type(prompt))
+        for words in chat.session(message=prompt):
+            print('words', words['message']['content'])
+            start.chatUpdates.on_next(words)
+
+    query(forms.ChatPrompt(formdata=request.form))
+    return 'ok', 200
+
+
+@app.route('/chat/updates')
+def chatUpdates():
+    def update():
+        try:
+            print('cahtUpdates called try ')
+            yield 'data: \n\n'
+            print('cahtUpdates called set up listeners')
+            messages = []
+            listeners = []
+            listeners.append(start.chatUpdates.subscribe(
+                lambda x: messages.append(x) if x is not None else None))
+            # todo change this while loop to a queue
+            while True:
+                print('while')
+                time.sleep(1)
+                if len(messages) > 0:
+                    msg = messages.pop(0)
+                    text = msg['message']['content']
+                    print('text', text)
+                    yield "data: " + str(text) + "\n\n"
+                    if msg['done']:
+                        break
+        except Exception as e:
+            logging.error('chatUpdates error:', e, print=True)
+    print('cahtUpdates called')
+    return Response(update(), mimetype='text/event-stream')
+
+
 @app.route('/remove_wallet_alias/<network>')
 def removeWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.getWallet(network=network)
@@ -1163,12 +1221,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-        request.json.get('vaultPredictors') > 0 or
-        request.json.get('vaultOracles') > 0 or
-        request.json.get('vaultCreators') > 0 or
-        request.json.get('vaultManagers') > 0) and
-        start.vault is not None and start.vault.isDecrypted
-        ):
+                request.json.get('vaultPredictors') > 0 or
+                request.json.get('vaultOracles') > 0 or
+                request.json.get('vaultCreators') > 0 or
+                request.json.get('vaultManagers') > 0) and
+                start.vault is not None and start.vault.isDecrypted
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={

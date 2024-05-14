@@ -56,6 +56,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
         self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
+        self.chatUpdates: BehaviorSubject = BehaviorSubject(None)
         self.urlServer: str = urlServer
         self.urlPubsub: str = urlPubsub
         self.urlSynergy: str = urlSynergy
