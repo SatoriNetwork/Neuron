@@ -343,9 +343,24 @@ PLAN
             central - designation in voting logic
             central - designation in mining logic
         Deploy Mainnet
+            external - make a separate wallet for the association so we don't co-mingle funds
+            central - set the audit, wallet and other stuff to use that wallet
             external - divisibility on evr to 8 dec
             neuron - switch mainnet to mainnet
         Commemorative NFT on RVN
+            DONE external - generate on some platform (rvn or opensea or something)
+            DONE external - create artwork
+            DONE external - host ipfs of artwork
+            DONE lib - add ability to generate eth private keys locally
+            DONE central - add eth address to database
+            DONE central - add beta contributor to wallet
+            DONE central - add rewarded to wallet
+            DONE central - endpoint
+            DONE central - manage
+            neuron - at least show the ETH address in their vault
+            neuron - make 'claim' beta reward in UI (send eth address)
+            neuron - pass private key to central (upon checkin? upon open vault)
+            central - snapshot - set them to beta=1 june 30th
     After Launch
         Improve Engine
             More Algorithms

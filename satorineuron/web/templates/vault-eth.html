@@ -1,0 +1,34 @@
+{% block content %}
+<div class="row mb-0" style='padding-bottom:1rem;'>
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %} text-center">
+        <p style='padding-top:2rem;'>
+          <br/>
+          <div id='ethAddress'>{{ ethAddress }}</div>
+          <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">your ethereum/polygon address</p>
+        </p>
+      </div>
+      <hr class="dark horizontal my-3">
+      <center>
+        <p id="showKeyEth" class="cursor-pointer danger text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('sensitiveKeyEth').style.display='block';document.getElementById('showKeyEth').style.display='none';">
+          Show private key and seed words
+        </p>
+        <div id="sensitiveKeyEth" style="display: none; margin-left:2rem; margin-right:2rem;">
+          <p class="cursor-pointer text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom:1rem;" onclick="document.getElementById('showKeyEth').style.display='block';document.getElementById('sensitiveKeyEth').style.display='none';">Hide private key and seed words</p>
+          PRIVATE KEY:<br>{{ ethPrivateKey }}
+          <br>
+          <br>
+          SEED WORDS:<br>{{ ethWords }}
+          <br>
+          <br>
+        </div>
+      </center>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
