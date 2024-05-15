@@ -300,7 +300,7 @@ DONE neuron - everytime we get a message from pubsub about new data we should tr
 
 0. DONE - divisibility on rvn to 8 dec
 1. divisibility on evr to 8 dec
-2. build clone of network on test.satorinet.io
+2. DONE build clone of network on test.satorinet.io
 3. test extensively
 4. build NFT for launch
 
@@ -310,19 +310,51 @@ DONE neuron - also give people the ability to auto send directly to their vault 
 
 DONE central - download ui should show docker to set it as running on docker step
 DONE central - download ui should show step 3 as setting up vault, and mine to vault
-
 DONE central - clone mainnet server to testnet server
+DONE central - disable distributions on testnet
+DONE central - setup/fix certs for testnet
+DONE neuron - test connecting to testnet
+DONE neuron - keep everything working off testnet till we have two working clones
+DONE neuron - setup dev distinction
+DONE vault - allow for automatic send of tokens to their vault (needed for vps users especially, advanced autosecure?)
+
+PLAN
+    Before Launch
+        Wrapped Token
+            test and deploy contract
+            add eth address to database
+            neuron - ui for wrapping token
+            neuron - ui for unwrapping token
+            neruon - call endpoints
+            central - endpoints
+            central - logic to wrap tokens
+            central - logic to unwrap tokens
+        Affiliate Mining
+            central - endpoint to specify
+            central - how does it go from link to database? must just put their alias in the neuron
+            neuron - ui to specify
+            neuron - call endpoint
+            central - endpoint
+            central - database to track
+            central - logic to avoid circular relationships
+            neuron - ui for failure
+            central - designation in minting manifest
+            central - designation in voting table
+            central - designation in voting logic
+            central - designation in mining logic
+        Deploy Mainnet
+            external - divisibility on evr to 8 dec
+            neuron - switch mainnet to mainnet
+        Commemorative NFT on RVN
+    After Launch
+        Improve Engine
+            More Algorithms
+            Better Exploration of Correlations
+        Decentralized Chat Feature
 
 neuron - troubleshoot setting up a stream with the urls from wilsql
 
-central - disable distributions on testnet
-central - setup/fix certs for testnet
-neuron - test connecting to testnet
-neuron - keep everything working off testnet till we have two working clones
-neuron - switch mainnet to mainnet
-
 neuron - on ui fix divisibility so it's at most 8 places
-neuron - setup dev distinction
 central - setup restart signal
 central - verify amounts match for distributions
 central - prodx to prod
@@ -345,7 +377,7 @@ central - we will need an admin dashboard to track the activity of the network
 
 central - setup additional electrumx server for evr
 
-vault - allow for automatic send of tokens to their vault (needed for vps users especially, advanced autosecure?)
+
 
 central - better frontend experience - llm lite
 
