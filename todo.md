@@ -312,6 +312,9 @@ DONE central - download ui should show docker to set it as running on docker ste
 DONE central - download ui should show step 3 as setting up vault, and mine to vault
 
 DONE central - clone mainnet server to testnet server
+
+neuron - troubleshoot setting up a stream with the urls from wilsql
+
 central - disable distributions on testnet
 central - setup/fix certs for testnet
 neuron - test connecting to testnet
@@ -347,6 +350,21 @@ vault - allow for automatic send of tokens to their vault (needed for vps users 
 central - better frontend experience - llm lite
 
 -- Launch --
+
+-- Query Providers --
+
+This is a top down approach to providing llm support across the network (usually to the website). Here's what we'd need to do to get this done in the minimalist way:
+
+since the LLM runs too slowly when the neuron is doing it's normal behavior we need to break the neuron into 2 running modes: predictive, and responsive. in the responsive mode we slim down all things, even making a slimmer dashboard, and no extra threads: we make a copy of app.py with very little stuff, that checks in with the server indicating this responsive mode. We would run the ollama service in the background in this mode. We would connect to a copy of the pubsub network. when the machine is busy producing an answer we would either indicate we are busy if it's a push system or more likely, we would simply pull from the queries availble when we are available. we would need to incentivize this behavior so we would make a new designation for payments, and the voting mechanism and everything.
+
+so...
+1. make a copy of synergy so we can issue queries directly to neurons and get responses as they are generated
+2. slim down version of the neuron with a minimal UI (maybe even cli if we don't need the wallet available in this mode). This simple version runs the ollama service and checks in with the server as a chat node.
+3. create designation on server as chat nodes, and make a payment scheme for them (is it a category or is it a sanctioned stream or something?)
+
+I see this entire 'service' as a necessary eventuality, so maybe we should build the most basic version of this soon. we will need to translate the knowledge the network generates into aggregated english concepts, so if we build this peice and evolve them together perhaps they can meet in the middle.
+
+neuron - make a new slimmed down version of app.py, a new designation for queries in the pubsub and a new mode of running to answer queries, must tell server when available and when not available for a query, or it's first come first serve.
 
 -- Nice --
 

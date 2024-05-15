@@ -45,15 +45,15 @@
             {% if paused %} <!-- server should tell us if we're paused or not... hit endpoint, refresh page. -->
             <li class="nav-item pe-2 d-flex align-items-center">
               <a href="{{ url_for('unpause') }}" class="nav-link text-body p-0">
-                <i class="fa fa-pause cursor-pointer"></i>
-                <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Paused</span>
-              </a>
+                <i class="fa fa-play cursor-pointer"></i>
+                <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Unpause</span></a>
             </li>
             {% else %}
             <li class="nav-item dropdown pe-2 d-flex align-items-center">
               <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonPause" data-bs-toggle="dropdown" aria-expanded="false">
                 <!--<i class="fa fa-play cursor-pointer"></i>-->
-                <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Running</span>
+                <i class="fa fa-pause cursor-pointer"></i>
+                <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Pause</span>
               </a>
               <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButtonPause">
                 <li class="mb-2">

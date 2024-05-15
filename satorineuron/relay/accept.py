@@ -24,7 +24,9 @@ def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
         # msg, status = _registerDataStreamMock(start, data=data)
         msg, status = registerDataStream(start, data=data, restart=False)
         statuses.append(status)
-        start.workingUpdates.on_next(
+        # start.workingUpdates.on_next(
+        #    f"{data['stream']}{data['target']} - {'success' if status == 200 else msg}")
+        start.workingUpdates.put(
             f"{data['stream']}{data['target']} - {'success' if status == 200 else msg}")
     failures = [str(i) for i, s in enumerate(statuses) if s != 200]
     if len(failures) == 0:

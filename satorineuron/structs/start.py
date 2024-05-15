@@ -22,7 +22,8 @@ class StartupDagStruct(object):
         *args
     ):
         super(StartupDagStruct, self).__init__(*args)
-        self.workingUpdates: BehaviorSubject = None
+        self.workingUpdates: Queue = None
+        self.chatUpdates: Queue = None
         self.env: str = None
         self.urlServer: str = None
         self.urlPubsub: str = None

@@ -32,7 +32,7 @@ from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateH
 from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
-import satorineuron.chat as chat
+
 
 ###############################################################################
 ## Globals ####################################################################
@@ -127,6 +127,7 @@ def getResp(resp: Union[dict, None] = None) -> dict:
     return {
         'v': VERSION,
         'm': MOTO,
+        'paused': start.paused,
         'darkmode': darkmode,
         'title': 'Satori',
         **(resp or {})}
@@ -668,15 +669,15 @@ def dashboard():
             for stream in start.relay.streams]
          if start.relay is not None else []),
 
-        'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'): 
+        'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'):
     '''
     called and given the response each time
     the endpoint for this data stream is hit.
-    returns the value of the observaiton 
+    returns the value of the observaiton
     as a string, integer or double.
     if empty string is returned the observation
     is not relayed to the network.
-    '''                    
+    '''
     if response.text != '':
         return float(response.json().get('Close', -1.0))
     return -1.0
@@ -703,7 +704,7 @@ def dashboard():
         return None
 
     def getAll(self):
-        ''' 
+        '''
         if getAll returns a list or pandas DataFrame
         then getNext is never called
         '''
@@ -817,27 +818,32 @@ def workingUpdates():
     def update():
         try:
             yield 'data: \n\n'
-            messages = []
-            listeners = []
-            listeners.append(start.workingUpdates.subscribe(
-                lambda x: messages.append(x) if x is not None else None))
+            # messages = []
+            # listeners = []
+            # listeners.append(start.workingUpdates.subscribe(
+            #    lambda x: messages.append(x) if x is not None else None))
             while True:
-                time.sleep(1)
-                if len(messages) > 0:
-                    msg = messages.pop(0)
-                    if msg == 'working_updates_end':
-                        break
-                    yield "data: " + str(msg).replace("'", '"') + "\n\n"
+                msg = start.workingUpdates.get()
+                if msg == 'working_updates_end':
+                    break
+                yield "data: " + str(msg).replace("'", '"') + "\n\n"
+                # time.sleep(1)
+                # if len(messages) > 0:
+                #    msg = messages.pop(0)
+                #    if msg == 'working_updates_end':
+                #        break
+                #    yield "data: " + str(msg).replace("'", '"') + "\n\n"
         except Exception as e:
             logging.error('working_updates error:', e, print=True)
 
-    import time
+    # import time
     return Response(update(), mimetype='text/event-stream')
 
 
 @app.route('/working_updates_end')
 def workingUpdatesEnd():
-    start.workingUpdates.on_next('working_updates_end')
+    # start.workingUpdates.on_next('working_updates_end')
+    start.workingUpdates.put('working_updates_end')
     return 'ok', 200
 
 
@@ -860,11 +866,10 @@ def chatPage():
 @app.route('/chat/session', methods=['POST'])
 def chatSession():
     def query(chatForm: str = ''):
+        import satorineuron.chat as chat
         prompt = chatForm.prompt.data
-        print(prompt, type(prompt))
         for words in chat.session(message=prompt):
-            print('words', words['message']['content'])
-            start.chatUpdates.on_next(words)
+            start.chatUpdates.put(words)
 
     query(forms.ChatPrompt(formdata=request.form))
     return 'ok', 200
@@ -874,28 +879,25 @@ def chatSession():
 def chatUpdates():
     def update():
         try:
-            print('cahtUpdates called try ')
             yield 'data: \n\n'
-            print('cahtUpdates called set up listeners')
-            messages = []
-            listeners = []
-            listeners.append(start.chatUpdates.subscribe(
-                lambda x: messages.append(x) if x is not None else None))
-            # todo change this while loop to a queue
             while True:
-                print('while')
-                time.sleep(1)
-                if len(messages) > 0:
-                    msg = messages.pop(0)
-                    text = msg['message']['content']
-                    print('text', text)
-                    yield "data: " + str(text) + "\n\n"
-                    if msg['done']:
-                        break
+                msg = start.chatUpdates.get()
+                if msg == 'chat_updates_end':
+                    break
+                text = msg['message']['content']
+                yield "data: " + str(text) + "\n\n"
+                if msg['done']:
+                    yield "data: \n\n\n\n"
+                    break
         except Exception as e:
             logging.error('chatUpdates error:', e, print=True)
-    print('cahtUpdates called')
     return Response(update(), mimetype='text/event-stream')
+
+
+@app.route('/chat/updates/end')
+def chatUpdatesEnd():
+    start.chatUpdates.send('chat_updates_end')
+    return 'ok', 200
 
 
 @app.route('/remove_wallet_alias/<network>')
@@ -1221,12 +1223,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-                request.json.get('vaultPredictors') > 0 or
-                request.json.get('vaultOracles') > 0 or
-                request.json.get('vaultCreators') > 0 or
-                request.json.get('vaultManagers') > 0) and
-                start.vault is not None and start.vault.isDecrypted
-            ):
+            request.json.get('vaultPredictors') > 0 or
+            request.json.get('vaultOracles') > 0 or
+            request.json.get('vaultCreators') > 0 or
+            request.json.get('vaultManagers') > 0) and
+            start.vault is not None and start.vault.isDecrypted
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={

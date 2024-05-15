@@ -19,7 +19,7 @@
                           id="prompt",
                           style_="text-align: center; border: 1px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
                           class_="tight form-control" + (" dark-colors" if darkmode else ""),
-                          placeholder="prompt",
+                          placeholder="",
                           autofocus=True,
                           onkeypress="checkEnterChat(event);") }}
                     </div>
@@ -35,7 +35,10 @@
                   </div>
                 </form>
               </div>
-              <p id='chatResponse' class="mb-1 {% if darkmode %}dark-colors{% endif %}"></p>
+              <p id='chatResponse' class="{% if darkmode %}dark-colors{% endif %}"></p>
+              <div id='responseSpinner' style='display: none;'>
+                {% if darkmode %}<img src="{{ url_for('static', filename='img/loading_dark.gif') }}" style="height: 20px; width:20px;" class="loadingThingy">{% else %}<img src="{{ url_for('static', filename='img/loading_light.gif') }}" style="height: 20px; width:20px;" class="loadingThingy">{% endif %}	
+              </div>
             </center>
           </div>
         </div>
@@ -52,7 +55,10 @@
   form.onsubmit = function(event) {
     console.log('sumbitted');
     event.preventDefault();
-    var chatInput = document.getElementById("prompt").value;
+    var chatInput = document.getElementById('prompt').value;
+    document.getElementById('prompt').value = '';
+    document.getElementById('responseSpinner').style.display = 'block';
+    chatResponse.innerHTML += '<br><br>';
     if (chatSession.isClosed == true) {
       setupChatSessionListener();
     }
@@ -62,10 +68,10 @@
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: 'prompt=' + encodeURIComponent(chatInput)
+      body: 'prompt=' + encodeURIComponent(chatInput) // encoding necessary?
     }).then(response => {
       console.log('Message sent');
-      document.getElementById("prompt").value = ''; // Clear input after sending
+      document.getElementById('responseSpinner').style.display = 'none';
     }).catch(error => console.error('Error:', error));
   };
   // Set up an EventSource to listen for messages
