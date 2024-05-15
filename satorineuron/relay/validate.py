@@ -151,7 +151,7 @@ class ValidateRelayStream(object):
     def validUrl(self, url):
         return url == '' or (
             (url.startswith('ipfs') or url.startswith('http')) and
-            re.compile(self.regexURL).match(url) is None)
+            re.compile(self.regexURL).match(url) is not None)
 
     def testCall(self, data: dict):
         def isValidJson(x):
