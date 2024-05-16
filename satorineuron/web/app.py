@@ -1008,6 +1008,13 @@ def vault():
         accept_submittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
         start.vault.get(allWalletInfo=False)
+        from satorilib.api.wallet.eth import EthereumWallet
+        account = EthereumWallet.generateAccount(start.vault._entropy)
+        if start.server.betaStatus()[1].get('value') != 1:
+            claimResult = start.server.betaClaim(account.address)[1]
+            logging.info(
+                'beta NFT not yet claimed. Claiming Beta NFT:',
+                claimResult.get('description'))
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
@@ -1019,6 +1026,8 @@ def vault():
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
+            'ethAddress': account.address,
+            'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
     return render_template('vault.html', **getResp({
         'title': 'Vault',
@@ -1223,12 +1232,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-            request.json.get('vaultPredictors') > 0 or
-            request.json.get('vaultOracles') > 0 or
-            request.json.get('vaultCreators') > 0 or
-            request.json.get('vaultManagers') > 0) and
-            start.vault is not None and start.vault.isDecrypted
-        ):
+                request.json.get('vaultPredictors') > 0 or
+                request.json.get('vaultOracles') > 0 or
+                request.json.get('vaultCreators') > 0 or
+                request.json.get('vaultManagers') > 0) and
+                start.vault is not None and start.vault.isDecrypted
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={

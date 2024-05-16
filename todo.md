@@ -357,9 +357,9 @@ PLAN
             DONE central - add rewarded to wallet
             DONE central - endpoint
             DONE central - manage
-            neuron - at least show the ETH address in their vault
-            neuron - make 'claim' beta reward in UI (send eth address)
-            neuron - pass private key to central (upon checkin? upon open vault)
+            DONE neuron - at least show the ETH address in their vault
+            DONE neuron - make 'claim' atuomatic upon vault enter, if we need to make a button later in UI (send eth address)
+            DONE neuron - pass eth address to central (upon open vault)
             central - snapshot - set them to beta=1 june 30th
     After Launch
         Improve Engine

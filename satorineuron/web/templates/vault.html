@@ -14,11 +14,13 @@
 {% include 'wallet-history.html' %}
 <br id="autosecurebr">
 {% include 'vault-autosecure.html' %}
+
 {% if vaultOpened %}
   <br id="metadatabr">
   {% include 'wallet-meta.html' %}
+  <br id="ethvaultbr">
+  {% include 'vault-eth.html' %}
 {% endif %}
-
 
 {% endblock %}
 

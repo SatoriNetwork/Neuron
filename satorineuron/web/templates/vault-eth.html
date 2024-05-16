@@ -4,6 +4,9 @@
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %} text-center">
         <p style='padding-top:2rem;'>
+          <p class="mb-3 {% if darkmode %}dark-colors{% endif %}">
+            This address has been automatically generated as part of your vault for future smart contract support utilizing Ethereum or Polygon.
+          </p>
           <br/>
           <div id='ethAddress'>{{ ethAddress }}</div>
           <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">your ethereum/polygon address</p>
@@ -12,14 +15,11 @@
       <hr class="dark horizontal my-3">
       <center>
         <p id="showKeyEth" class="cursor-pointer danger text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('sensitiveKeyEth').style.display='block';document.getElementById('showKeyEth').style.display='none';">
-          Show private key and seed words
+          Show private key
         </p>
         <div id="sensitiveKeyEth" style="display: none; margin-left:2rem; margin-right:2rem;">
-          <p class="cursor-pointer text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom:1rem;" onclick="document.getElementById('showKeyEth').style.display='block';document.getElementById('sensitiveKeyEth').style.display='none';">Hide private key and seed words</p>
+          <p class="cursor-pointer text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom:1rem;" onclick="document.getElementById('showKeyEth').style.display='block';document.getElementById('sensitiveKeyEth').style.display='none';">Hide private key</p>
           PRIVATE KEY:<br>{{ ethPrivateKey }}
-          <br>
-          <br>
-          SEED WORDS:<br>{{ ethWords }}
           <br>
           <br>
         </div>
