@@ -1,27 +1,25 @@
 {% extends "basic.html" %}
 {% block content %}
-{% include 'vault-overlay.html' %}
-
-<div id="vaultwarningbr">
-  {% include 'vault-warning.html' %}
-</div>
-<br id="minetovaultbr">
-{% include 'vault-minetovault.html' %}
-<br id='balancebr'>
-{% include 'wallet-functions.html' %}
-<!-- put voting template here -->
-<br id="historybr">
-{% include 'wallet-history.html' %}
-<br id="autosecurebr">
-{% include 'vault-autosecure.html' %}
-
-{% if vaultOpened %}
-  <br id="metadatabr">
-  {% include 'wallet-meta.html' %}
-  <br id="ethvaultbr">
-  {% include 'vault-eth.html' %}
-{% endif %}
-
+  {% if vaultOpened %}
+    <div id="vaultwarningbr">
+      {% include 'vault-warning.html' %}
+    </div>
+    <br id="minetovaultbr">
+    {% include 'vault-minetovault.html' %}
+    <br id='balancebr'>
+    {% include 'wallet-functions.html' %}
+    <!-- put voting template here -->
+    <br id="historybr">
+    {% include 'wallet-history.html' %}
+    <br id="autosecurebr">
+    {% include 'vault-autosecure.html' %}
+    <br id="metadatabr">
+    {% include 'wallet-meta.html' %}
+    <br id="ethvaultbr">
+    {% include 'vault-eth.html' %}
+  {% else %}
+    {% include 'vault-overlay.html' %}
+  {% endif %}
 {% endblock %}
 
 

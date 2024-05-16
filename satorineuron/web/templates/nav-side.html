@@ -144,6 +144,7 @@
         </a>
       </li>
       {% if title=='Vault' %}
+        {% if vaultOpened %}
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('vaultwarningbr');">Warning</a>
       </li>
@@ -159,7 +160,6 @@
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('autosecurebr');">Auto-Secure</a>
       </li>
-        {% if vaultOpened %}
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('metadatabr');">Metadata</a>
       </li>

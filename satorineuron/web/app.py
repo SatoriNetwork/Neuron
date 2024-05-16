@@ -1010,7 +1010,7 @@ def vault():
         start.vault.get(allWalletInfo=False)
         from satorilib.api.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
-        if start.server.betaStatus()[1].get('value') != 1:
+        if start.server.betaStatus()[1].get('value') == 1:
             claimResult = start.server.betaClaim(account.address)[1]
             logging.info(
                 'beta NFT not yet claimed. Claiming Beta NFT:',

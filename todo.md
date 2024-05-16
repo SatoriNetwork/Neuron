@@ -348,6 +348,7 @@ PLAN
             external - divisibility on evr to 8 dec
             neuron - switch mainnet to mainnet
         Commemorative NFT on RVN
+            central - add columns to exiting database
             DONE external - generate on some platform (rvn or opensea or something)
             DONE external - create artwork
             DONE external - host ipfs of artwork
@@ -362,13 +363,23 @@ PLAN
             DONE neuron - pass eth address to central (upon open vault)
             central - snapshot - set them to beta=1 june 30th
     After Launch
+        Create Tutorials
+            how to download
+            how to install
+            how to configure
+            how to setup the vault
+            how to share your affiliate link
+            how to setup a oracle stream
+            how to setup many orcacle streams
+        Improve Mining
+            central - implement competition check
         Improve Engine
             More Algorithms
             Better Exploration of Correlations
         Decentralized Chat Feature
 
 neuron - troubleshoot setting up a stream with the urls from wilsql
-
+neuron - crete intensity level so you can dial down the rate at which it mines
 neuron - on ui fix divisibility so it's at most 8 places
 central - setup restart signal
 central - verify amounts match for distributions
