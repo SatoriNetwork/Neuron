@@ -331,6 +331,8 @@ PLAN
             central - logic to unwrap tokens
         Affiliate Mining
             central - endpoint to specify
+            central - ip association with the referral
+            central - wallet association with the referral
             central - how does it go from link to database? must just put their alias in the neuron
             neuron - ui to specify
             neuron - call endpoint
@@ -348,7 +350,7 @@ PLAN
             external - divisibility on evr to 8 dec
             neuron - switch mainnet to mainnet
         Commemorative NFT on RVN
-            central - add columns to exiting database
+            DONE central - add columns to exiting test database
             DONE external - generate on some platform (rvn or opensea or something)
             DONE external - create artwork
             DONE external - host ipfs of artwork
@@ -361,7 +363,8 @@ PLAN
             DONE neuron - at least show the ETH address in their vault
             DONE neuron - make 'claim' atuomatic upon vault enter, if we need to make a button later in UI (send eth address)
             DONE neuron - pass eth address to central (upon open vault)
-            central - snapshot - set them to beta=1 june 30th
+            central - add columns to exiting main database
+            central - snapshot - set them to beta=1 june 30th MAIN
     After Launch
         Create Tutorials
             how to download

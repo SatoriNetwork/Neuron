@@ -22,7 +22,7 @@ from flask import session, request, render_template
 from flask import Response, stream_with_context
 from satorilib.concepts.structs import StreamId, StreamOverviews
 from satorilib.api.wallet.wallet import TransactionFailure
-from satorilib.api.time import timestampToSeconds
+from satorilib.api.time import timeToSeconds
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName
 from satorisynapse import Envelope, Signal
@@ -663,7 +663,7 @@ def dashboard():
             {
                 **stream.asMap(noneToBlank=True),
                 **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
-                **{'late': start.relay.late(stream.streamId, timestampToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
+                **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
                 **{'cadenceStr': deduceCadenceString(stream.cadence)},
                 **{'offsetStr': deduceOffsetString(stream.offset)}}
             for stream in start.relay.streams]

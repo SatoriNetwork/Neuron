@@ -3,14 +3,15 @@
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %} text-center">
-        <p style='padding-top:2rem;'>
-          <p class="mb-3 {% if darkmode %}dark-colors{% endif %}">
-            This address has been automatically generated as part of your vault for future smart contract support utilizing Ethereum or Polygon.
-          </p>
-          <br/>
-          <div id='ethAddress'>{{ ethAddress }}</div>
-          <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">your ethereum/polygon address</p>
+        <p class="mb-3 {% if darkmode %}dark-colors{% endif %}">
+          This address has been automatically generated as part of your vault for future smart contract support utilizing Ethereum or Polygon.
         </p>
+        <br/>
+        <div id='ethAddress'>{{ ethAddress }}</div>
+        <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">
+          your ethereum/polygon address
+        </p>
+      
       </div>
       <hr class="dark horizontal my-3">
       <center>
