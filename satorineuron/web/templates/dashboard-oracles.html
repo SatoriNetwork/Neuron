@@ -1,0 +1,276 @@
+{% block content %}
+<div class="row mb-0">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-10 col-10">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
+            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
+            Primary datastreams published by this Satori Neuron 
+            </p>
+          </div>
+          <div class="col-lg-2 col-2">
+            <div class="row-container">
+              <!--<p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align: end;/* border-bottom: inset; */font-weight: 600;">
+                CSV: 
+              </p>-->
+              <a href="{{ url_for('relayCsv', filename='download/satori_relay_datastreams_export.csv') }}" target="_blank">
+                <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                  <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>
+                </button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" type="file" id="mergeDatastreamHistory" name="file" accept=".csv" style="display:none;">
+        <script>
+          const fileMergeInput = document.getElementById('mergeDatastreamHistory');
+          var mergeTopic = '';
+          function setMergeHistoryTopic(topic) {
+            mergeTopic = topic;
+          }
+          fileMergeInput.addEventListener('change', () => {
+              const file = fileMergeInput.files[0];
+              const formData = new FormData();
+              formData.append('file', file);
+              showWorking();
+              fetch('/merge_history_csv/' + mergeTopic, {
+                  method: 'POST',
+                  body: formData
+              })
+              .then(response => {
+                console.log(response.status);
+                console.log(response.text);
+                if (response.ok){
+                  console.log('show success message?');
+                } else {
+                  console.log('show failure message?');
+                }
+                hideWorking();
+                fetch('/working_updates_end', {method: 'GET'});
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+              });
+          });
+        </script>
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table id="DataStreamsTable" class="table align-items-center mb-0" style="min-width: 1200px;">
+            <thead>
+            <tr>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream Actions</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">History Actions</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Name</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Value</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Cadence</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Offset</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Datatype</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Description</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Tags</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Url</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Uri</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Headers</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Payload</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Hook</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">History</th>
+            </tr>
+          </thead>
+            <tbody id="updating_table">
+              {% for existingRelayStream in relayStreams %}
+              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
+                <td >
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="edit">
+                      <a href="{{ url_for('editStream', topic=existingRelayStream['topic']) }}" onclick="showWorking();">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+                          <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;">edit</i>
+                        </button>
+                      </a>
+                    </h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="trigger manually">
+                      <a href="{{ url_for('triggerRelay', topic=existingRelayStream['topic']) }}" onclick="showWorking();">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+                          <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;">play_circle_outline</i>
+                        </button>
+                      </a>
+                    </h6>
+                    <h6 class="mb-0 text-lg {% if darkmode %}dark-text{% endif %}" title="remove">
+                      <!--<a href=" url_for('removeStream', source=existingRelayStream['streamId']['source'], stream=existingRelayStream['streamId']['stream'], target=existingRelayStream['streamId']['target']) " onclick="showWorking();">-->
+                      <a href="{{ url_for('removeStream', topic=existingRelayStream['topic']) }}" class="requireConfirmation">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+                          <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">remove_circle_outline</i>
+                        </button>
+                      </a>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-lg {% if darkmode %}dark-text{% endif %}" title="download history">
+                      <a href="{{ url_for('relayHistoryCsv', topic=existingRelayStream['topic']) }}">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+                          <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:12px;">file_download</i>
+                        </button>
+                      </a>
+                    </h6>
+                    <h6 class="mb-0 text-lg {% if darkmode %}dark-text{% endif %}" title="upload additional history">
+                      <!--<button id="mergeDatastreamHistory {{ existingRelayStream['topic'] }}" name="file" accept=".csv" onclick="console.log({{ existingRelayStream['topic'] }});"></button>-->
+                      <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;" type="submit" onclick="setMergeHistoryTopic('{{ existingRelayStream['topic'] }}');document.getElementById('mergeDatastreamHistory').click();">
+                        <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-left:12px;margin-right:24px;">add</i>
+                      </button>
+                    </h6>
+                    <h6 class="mb-0 text-lg {% if darkmode %}dark-text{% endif %}" title="remove history">
+                      <!-- id ... only works on first one-->
+                      <a href="{{ url_for('removeHistoryCsv', topic=existingRelayStream['topic']) }}" class="requireConfirmation">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+                          <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">remove_circle_outline</i>
+                        </button>
+                      </a>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['streamId']['stream'] }}">{{ existingRelayStream['streamId']['stream'] }} </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['streamId']['target'] }}">{{ existingRelayStream['streamId']['target'] }} </h6>
+                  </div>
+                </td>
+                <td >
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm" title="{% if existingRelayStream['late'] %}late{% else %}on time{% endif %}" style="color: {% if existingRelayStream['late'] %}red{% else %}{% if darkmode %}limegreen{% else %}green{% endif %}{% endif %};">{{ existingRelayStream['latest'] }} </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="every {{ existingRelayStream['cadence'] }} seconds">{{ existingRelayStream['cadenceStr'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="offset from midnight UTC by {{ existingRelayStream['offset'] }} seconds">{{ existingRelayStream['offsetStr'] }} </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['datatype'] }}">
+                      {% if existingRelayStream['datatype']|length > 33 %} {{ existingRelayStream['datatype'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['datatype'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['description'] }}">
+                      {% if existingRelayStream['description']|length > 33 %} {{ existingRelayStream['description'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['description'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['tags'] }}">
+                      {% if existingRelayStream['tags']|length > 33 %} {{ existingRelayStream['tags'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['tags'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['url'] }}">
+                      {% if existingRelayStream['url']|length > 33 %} {{ existingRelayStream['url'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['url'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['uri'] }}">
+                      {% if existingRelayStream['uri'] != existingRelayStream['url'] %}
+                        {% if existingRelayStream['uri']|length > 33 %} {{ existingRelayStream['uri'][0:30] + '...' }}
+                        {% else %} {{ existingRelayStream['uri'] }}
+                        {% endif %} 
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['headers'] }}">
+                      {% if existingRelayStream['headers']|length > 33 %} {{ existingRelayStream['headers'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['headers'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['payload'] }}">
+                      {% if existingRelayStream['payload']|length > 33 %} {{ existingRelayStream['payload'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['payload'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td >
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['hook'] }}">
+                      {% if existingRelayStream['hook']|length > 33 %} {{ existingRelayStream['hook'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['hook'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+                <td >
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="{{ existingRelayStream['history'] }}">
+                      {% if existingRelayStream['history']|length > 33 %} {{ existingRelayStream['history'][0:30] + '...' }}
+                      {% else %} {{ existingRelayStream['history'] }}
+                      {% endif %}
+                    </h6>
+                  </div>
+                </td>
+              </tr> 
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.getElementById('DataStreamsTable').addEventListener('click', function(event) {
+    // Check if the clicked element is a link with class 'confirmAction'
+    var target = event.target;
+    while (target && target.nodeName !== "A") {
+        target = target.parentNode;
+        if (!target) return;
+    }
+
+    if (target && target.classList.contains('requireConfirmation')) {
+        event.preventDefault(); // Prevent the default action
+        var confirmAction = confirm("Are you sure you want to proceed?");
+        if (confirmAction) {
+            // User clicked 'OK', navigate to the link
+            window.location.href = target.getAttribute('href');
+            showWorking();
+        } else {
+            // User clicked 'Cancel', do nothing
+            console.log("Action canceled.");
+        }
+    }
+});
+</script>
+{% endblock %}

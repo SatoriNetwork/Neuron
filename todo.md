@@ -331,10 +331,10 @@ PLAN
             central - logic to wrap tokens
             central - logic to unwrap tokens
         Affiliate Mining
-            central - accept pubkey in link, save to session
-            central - ip association with the referral
-            central - wallet association with the referral
-            central - how does it go from link to database? must just put their alias in the neuron
+            DONE central - accept pubkey in link, save to session
+            DONE central - ip association with the referral
+            DONE central - wallet association with the referral
+            neuron - show link in Neuron
             neuron - ui to specify
             neuron - call endpoint
             central - endpoint

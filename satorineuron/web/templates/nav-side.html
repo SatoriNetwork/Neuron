@@ -23,11 +23,16 @@
         <a href='#' onclick="scrollOrJumpTo('top-navbar-title');">Balance</a>
       </li>
       <li class='sub-nav-item'>
+        <a href='#' onclick="scrollOrJumpTo('invitebr');">Invite</a>
+      </li>
+      <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('predictionsbr');">Prediction</a>
       </li>
+        {% if relayStreams|length > 0 %}
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('oraclesbr');">Oracle</a>
       </li>
+        {% endif %}
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('createbr');">Create</a>
       </li>

@@ -1,0 +1,441 @@
+{% block content %}
+<script src="{{ url_for('static', filename='js/plugins/chartjs.min.js') }}"></script>
+{% if darkmode %}
+<script>
+  const lineColor= "rgba(180, 180, 180, .8)";
+</script>
+{% else %}
+<script>
+  const lineColor="rgba(60, 60, 60, .8)";
+</script>
+{% endif %}
+<script>
+  function addData(chart, label, data) {
+    chart.data.labels.push(label);
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.push(data);
+    });
+    chart.update();
+  }
+  function addDataChartThree(label, data, prediction, predictions) {
+    chartThree.data.labels.push(label);
+    chartThree.data.datasets[0].data.push(data);
+    chartThree.data.datasets[1].data.push(prediction);
+    chartThree.data.datasets[2].data.push(predictions);
+    chartThree.update();
+  }
+  function addDataChartOne() {
+    addData(chartOne, '', [1]);
+  }
+
+  function removeData(chart) {
+    chart.data.labels.pop();
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.pop();
+    });
+    chart.update();
+  }
+  function removeAllData(chart) {
+    chart.data.labels = [];
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data = [];
+    });
+    chart.update();
+  }
+  function removeDataChartOne() {
+    removeAllData(chartOne);
+  }
+  function setData(chart, data) {
+    removeAllData(chart);
+    let labels = [];
+    for (let x in data) {
+      labels.push('');
+      if (labels.length == data.length){
+        addData(chart, 'now', data[x]);
+      } else {
+        addData(chart, '', data[x]);
+      }
+    }
+  }
+  function setDataChartThree(data, prediction, predictions) {
+    removeAllData(chartThree);
+    let labels = [];
+    console.log(data.length, predictions.length);
+    for (var i=0; i<data.length; i++) {
+      let x = data[i];
+      console.log(x);
+      labels.push('');
+      if (labels.length == data.length){
+        addDataChartThree('now', data[i], null, predictions.length-data.length+i >= 0 ? predictions[predictions.length-data.length+i] : null);
+      } else {
+        addDataChartThree('', data[i], null, predictions.length-data.length+i >= 0 ? predictions[predictions.length-data.length+i] : null);
+      }
+    }
+    if (prediction != false) {
+      addDataChartThree('next', null, prediction, null);
+    }
+  }
+  
+  var ctx = document.getElementById("chart-bars").getContext("2d");
+  var chartOne = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["", "", "", "", "", "", "Today"],
+      datasets: [{
+        label: "",
+        tension: 0.4,
+        borderWidth: 0,
+        borderRadius: 4,
+        borderSkipped: false,
+        backgroundColor: lineColor,//"rgba(60, 60, 60, .8)",
+        data: [50, 20, 10, 22, 50, 10, 40],
+        maxBarThickness: 4
+      }, ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            suggestedMin: 0,
+            suggestedMax: 500,
+            beginAtZero: true,
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+            color: "#98999a"
+          },
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [5, 5],
+            color: 'rgba(45, 45, 45, .0)'
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+
+
+  var ctx2 = document.getElementById("chart-line").getContext("2d");
+
+  var chartTwo = new Chart(ctx2, {
+    type: "line",
+    data: {
+      labels: ["", "", "", "", "", "", "", "", "Now"],
+      datasets: [{
+        label: "error rate",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointBackgroundColor: "rgba(60, 60, 60, .8)",
+        pointBorderColor: "transparent",
+        borderColor: lineColor,
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [500, 400, 300, 320, 420, 350, 270, 230, 220],
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+            borderDash: [5, 5]
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+
+  var ctx3 = document.getElementById("chart-line-tasks").getContext("2d");
+
+  var chartThree = new Chart(ctx3, {
+    type: "line",
+    data: {
+      labels: ["", ],
+      //labels: ["", "", "", "", "", "", "", "", "", "Next"],
+      datasets: [{
+        label: "observation",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointBackgroundColor: "rgba(60, 60, 60, .8)",
+        pointBorderColor: "transparent",
+        borderColor: lineColor,
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [null],
+        //data: [50, 40, 300, 220, 500, 250, 400, 230, 500, null],
+      }, {
+        label: "future prediction",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 3,
+        pointBackgroundColor: "rgba(246, 176, 66, .8)",
+        pointBorderColor: "rgba(246, 176, 66, .8)",
+        borderColor: "rgba(246, 176, 66, .8)",
+        borderWidth: 0,
+        backgroundColor: "rgba(246, 176, 66, .8)",
+        fill: true,
+        data: [null],
+        //data: [null, null, null, null, null, null, null, null, null, 450],
+      }, {
+        label: "prediction",
+        tension: .2,
+        borderWidth: 0,
+        pointRadius: 0,
+        pointBackgroundColor: "rgba(246, 176, 66, .8)",
+        pointBorderColor: "transparent",
+        borderColor: "rgba(246, 176, 66, .8)",
+        borderWidth: 3,
+        backgroundColor: "transparent",
+        fill: true,
+        data: [null],
+        //data: [50-5, 40-2, 300+16, 220-20, 500-35, 250-65, 400-25, 230-10, 500+10, null],
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+      scales: {
+        y: {
+          grid: {
+            drawBorder: false,
+            display: true,
+            drawOnChartArea: true,
+            drawTicks: false,
+            borderDash: [1, 0],
+            color: 'rgba(180, 180, 180, .2)'
+          },
+          ticks: {
+            display: true,
+            padding: 10,
+            color: '#98999a',
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+        x: {
+          grid: {
+            drawBorder: false,
+            display: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+            borderDash: [5, 5]
+          },
+          ticks: {
+            display: true,
+            color: '#98999a',
+            padding: 10,
+            font: {
+              size: 14,
+              weight: 300,
+              style: 'normal',
+              lineHeight: 2
+            },
+          }
+        },
+      },
+    },
+  });
+  var table_output = document.getElementById("updating_table");
+  var table_update = new EventSource("/model-updates");
+  table_update.onmessage = function (e) {
+    function viewOnClick(streamOverview) {
+      return function () {
+        scrollOrJumpToTop();
+        setData(chartOne, streamOverview.predictions);
+        setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
+        setData(chartTwo, streamOverview.errs);
+      }
+    }
+    if (e.data == "close") {
+      table_update.close();
+    } else if (e.data == "redundantCall") {
+      console.log('redundantCalled');
+    } else {
+      let streamOverview = JSON.parse(e.data);
+      console.log('streamOverview');
+      console.log(streamOverview);
+      console.log(streamOverview.predictions);
+      console.log(streamOverview.prediction);
+      // find the table row for this stream and update it
+      let tdIcon = document.getElementById("td-" + streamOverview.hashed + "-icon");
+      let tdSource = document.getElementById("td-" + streamOverview.hashed + "-source");
+      let tdStream = document.getElementById("td-" + streamOverview.hashed + "-stream");
+      let tdTarget = document.getElementById("td-" + streamOverview.hashed + "-target");
+      let tdValue = document.getElementById("td-" + streamOverview.hashed + "-value");
+      let tdPrediction = document.getElementById("td-" + streamOverview.hashed + "-prediction");
+      //tdIcon.onclick = viewOnClick(streamOverview);
+      tdSource.onclick = viewOnClick(streamOverview);
+      tdStream.onclick = viewOnClick(streamOverview);
+      tdTarget.onclick = viewOnClick(streamOverview);
+      tdValue.onclick = viewOnClick(streamOverview);
+      tdPrediction.onclick = viewOnClick(streamOverview);
+      tdIcon.innerHTML = `<div class="d-flex px-3 py-1">
+        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream('` + streamOverview.source + `', '` + streamOverview.author + `', '` + streamOverview.stream + `', '` + streamOverview.target + `', '` + streamOverview.hashed + `');">
+          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+            <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
+          </button>
+        </h6>
+      </div>`
+      tdSource.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.source + `</h6></div>`
+      tdStream.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.stream + `</h6></div>`
+      tdTarget.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.target + `</h6></div>`
+      tdValue.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.value + `</h6></div>`
+      tdPrediction.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview.prediction) + `</h6></div>`
+      //let myRow = document.getElementById("tr-" + streamOverview.hashed);
+      //myRow.onclick = function() {
+      //  scrollOrJumpToTop();
+      //  setData(chartOne, streamOverview.predictions);
+      //  setData(chartTwo, streamOverview.errs);
+      //  setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
+      //};
+      //myRow.innerHTML = `
+      //    <td class="td-`+streamOverview.hashed+`">
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview.source + `, ` + streamOverview.author + `, ` + streamOverview.stream + `, ` + streamOverview.target + `, ` + streamOverview.hashed+`);">
+      //          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
+      //            <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
+      //          </button>
+      //        </h6>
+      //      </div>
+      //    </td>
+      //    <td class="td-`+streamOverview.hashed+`">
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.source + `</h6>
+      //      </div>
+      //    </td>
+      //    <td>
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.stream + `</h6>
+      //      </div>
+      //    </td>
+      //    <td>
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.target + `</h6>
+      //      </div>
+      //    </td>
+      //    <td>
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.value + `</h6>
+      //      </div>
+      //    </td>
+      //    <td>
+      //      <div class="d-flex px-3 py-1">
+      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview.prediction) + `</h6>
+      //      </div>
+      //    </td>`;
+    }
+  };
+  function predictionOrEmptyString(p) {
+    if (p == 'null') {
+      return '';
+    }
+    if (p === null) {
+      return '';
+    }
+    return p;
+    }
+</script>
+
+{% endblock %}
