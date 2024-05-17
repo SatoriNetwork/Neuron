@@ -317,6 +317,7 @@ DONE neuron - test connecting to testnet
 DONE neuron - keep everything working off testnet till we have two working clones
 DONE neuron - setup dev distinction
 DONE vault - allow for automatic send of tokens to their vault (needed for vps users especially, advanced autosecure?)
+DONE central - only have video on homepage
 
 PLAN
     Before Launch
@@ -330,7 +331,7 @@ PLAN
             central - logic to wrap tokens
             central - logic to unwrap tokens
         Affiliate Mining
-            central - endpoint to specify
+            central - accept pubkey in link, save to session
             central - ip association with the referral
             central - wallet association with the referral
             central - how does it go from link to database? must just put their alias in the neuron
@@ -363,7 +364,8 @@ PLAN
             DONE neuron - at least show the ETH address in their vault
             DONE neuron - make 'claim' atuomatic upon vault enter, if we need to make a button later in UI (send eth address)
             DONE neuron - pass eth address to central (upon open vault)
-            central - add columns to exiting main database
+            DONE central - add columns to exiting main database
+            DONE central - test entire process
             central - snapshot - set them to beta=1 june 30th MAIN
     After Launch
         Create Tutorials
@@ -406,8 +408,6 @@ central - we will need an admin dashboard to track the activity of the network
 
 central - setup additional electrumx server for evr
 
-
-
 central - better frontend experience - llm lite
 
 -- Launch --
@@ -419,6 +419,7 @@ This is a top down approach to providing llm support across the network (usually
 since the LLM runs too slowly when the neuron is doing it's normal behavior we need to break the neuron into 2 running modes: predictive, and responsive. in the responsive mode we slim down all things, even making a slimmer dashboard, and no extra threads: we make a copy of app.py with very little stuff, that checks in with the server indicating this responsive mode. We would run the ollama service in the background in this mode. We would connect to a copy of the pubsub network. when the machine is busy producing an answer we would either indicate we are busy if it's a push system or more likely, we would simply pull from the queries availble when we are available. we would need to incentivize this behavior so we would make a new designation for payments, and the voting mechanism and everything.
 
 so...
+
 1. make a copy of synergy so we can issue queries directly to neurons and get responses as they are generated
 2. slim down version of the neuron with a minimal UI (maybe even cli if we don't need the wallet available in this mode). This simple version runs the ollama service and checks in with the server as a chat node.
 3. create designation on server as chat nodes, and make a payment scheme for them (is it a category or is it a sanctioned stream or something?)
