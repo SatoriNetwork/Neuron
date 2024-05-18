@@ -198,7 +198,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def checkin(self):
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
-        self.details = CheckinDetails(self.server.checkin())
+        try:
+            referrer = open(
+                config.root('config', 'referral.txt'),
+                mode='r').read().strip()
+        except Exception as _:
+            referrer = None
+        self.details = CheckinDetails(self.server.checkin(referrer=referrer))
         # logging.debug(self.details, color='magenta')
         self.key = self.details.key
         self.idKey = self.details.idKey

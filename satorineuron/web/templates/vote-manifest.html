@@ -224,7 +224,7 @@
                   </div>
                 </td>
                 {% elif vault is not none and vault.isEncrypted %}
-                <td colspan="4">
+                <td colspan="5">
                     <form action="/vote" method="POST">
                       {{ vaultPasswordForm.hidden_tag() }}
                       {{ vaultPasswordForm.csrf_token }}

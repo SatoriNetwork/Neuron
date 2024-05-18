@@ -1235,11 +1235,11 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-                request.json.get('vaultPredictors') > 0 or
-                request.json.get('vaultOracles') > 0 or
-                request.json.get('vaultInviters') > 0 or
-                request.json.get('vaultCreators') > 0 or
-                request.json.get('vaultManagers') > 0) and
+                int(request.json.get('vaultPredictors')) > 0 or
+                int(request.json.get('vaultOracles')) > 0 or
+                int(request.json.get('vaultInviters')) > 0 or
+                int(request.json.get('vaultCreators')) > 0 or
+                int(request.json.get('vaultManagers')) > 0) and
                 start.vault is not None and start.vault.isDecrypted
             ):
         start.server.submitMaifestVote(
