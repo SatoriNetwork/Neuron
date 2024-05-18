@@ -48,6 +48,7 @@
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}"></th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription("predictors")'>Predictors</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription("oracles")'>Oracles</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription("inviters")'>Inviters</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription("creators")'>Creators</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" onmouseover='updateMintingManifestDescription("managers")'>Managers</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}"></th>
@@ -72,6 +73,11 @@
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['inviters']*100) | round | int }} %</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['creators']*100) | round | int }} %</h6>
                   </div>
                 </td>
@@ -83,7 +89,7 @@
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 id="communityPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (communityVotes['predictors']*100 + communityVotes['oracles']*100 + communityVotes['creators']*100 + communityVotes['managers']*100) | round | int }} %</h6>
+                    <h6 id="communityPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (communityVotes['predictors']*100 + communityVotes['oracles']*100 + communityVotes['inviters']*100 + communityVotes['creators']*100 + communityVotes['managers']*100) | round | int }} %</h6>
                   </div>
                 </td>
               </tr> 
@@ -120,6 +126,17 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
+                          <input id="walletVoteInviters" name="walletVoteInviters" placeholder="{{ (walletVotes['inviters']*100) | round | int }}" value="{{ (walletVotes['inviters']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
                           <input id="walletVoteCreators" name="walletVoteCreators" placeholder="{{ (walletVotes['creators']*100) | round | int }}" value="{{ (walletVotes['creators']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
                         </div>
                       </div>
@@ -139,7 +156,7 @@
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 id="walletPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (walletVotes['predictors']*100 + walletVotes['oracles']*100 + walletVotes['creators']*100 + walletVotes['managers']*100) | round | int }} %</h6>
+                    <h6 id="walletPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (walletVotes['predictors']*100 + walletVotes['oracles']*100 + walletVotes['inviters']*100 + walletVotes['creators']*100 + walletVotes['managers']*100) | round | int }} %</h6>
                   </div>
                 </td>
               </tr> 
@@ -168,6 +185,17 @@
                       <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
                         <div class="input-group input-group-outline">
                           <input id="vaultVoteOracles" name="vaultVoteOracles" placeholder="{{ (vaultVotes['oracles']*100) | round | int }}" value="{{ (vaultVotes['oracles']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="vaultVoteInviters" name="vaultVoteInviters" placeholder="{{ (vaultVotes['inviters']*100) | round | int }}" value="{{ (vaultVotes['inviters']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestVaultVotes();saveManifestVotesVault();">
                         </div>
                       </div>
                     </h6>
@@ -215,7 +243,7 @@
                 {% endif %}
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 id="vaultPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (vaultVotes['predictors']*100 + vaultVotes['oracles']*100 + vaultVotes['creators']*100 + vaultVotes['managers']*100) | round | int }} %</h6>
+                    <h6 id="vaultPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (vaultVotes['predictors']*100 + vaultVotes['oracles']*100 + vaultVotes['inviters']*100 + vaultVotes['creators']*100 + vaultVotes['managers']*100) | round | int }} %</h6>
                   </div>
                 </td>
               </tr> 
@@ -250,6 +278,7 @@
       document.getElementById('walletPercent').innerHTML = '100 %';
       document.getElementById('walletVotePredictors').value = parseInt(parseInt(document.getElementById('walletVotePredictors').value) / total * 100);
       document.getElementById('walletVoteOracles').value = parseInt(parseInt(document.getElementById('walletVoteOracles').value) / total * 100);
+      document.getElementById('walletVoteInviters').value = parseInt(parseInt(document.getElementById('walletVoteInviters').value) / total * 100);
       document.getElementById('walletVoteCreators').value = parseInt(parseInt(document.getElementById('walletVoteCreators').value) / total * 100);
       document.getElementById('walletVoteManagers').value = parseInt(parseInt(document.getElementById('walletVoteManagers').value) / total * 100);
       updateWalletTotal();
@@ -263,6 +292,7 @@
       document.getElementById('vaultPercent').innerHTML = '100 %';
       document.getElementById('vaultVotePredictors').value = parseInt(parseInt(document.getElementById('vaultVotePredictors').value) / total * 100);
       document.getElementById('vaultVoteOracles').value = parseInt(parseInt(document.getElementById('vaultVoteOracles').value) / total * 100);
+      document.getElementById('vaultVoteInviters').value = parseInt(parseInt(document.getElementById('vaultVoteInviters').value) / total * 100);
       document.getElementById('vaultVoteCreators').value = parseInt(parseInt(document.getElementById('vaultVoteCreators').value) / total * 100);
       document.getElementById('vaultVoteManagers').value = parseInt(parseInt(document.getElementById('vaultVoteManagers').value) / total * 100);
       updateVaultTotal();
@@ -274,6 +304,8 @@
       document.getElementById('mintingManifestDescription').innerHTML = 'Predictors are Satori Neurons that predict raw datastreams and publish those predictions for free.';
     } else if (activity == 'oracles') {
       document.getElementById('mintingManifestDescription').innerHTML = 'Oracles are Satori Neurons that publish raw data streams desribing or tracking some aspect of the real world.';
+    } else if (activity == 'inviters') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Inviters are those that have onboarded Predictors and Oracles.';
     } else if (activity == 'creators') {
       document.getElementById('mintingManifestDescription').innerHTML = 'Creators are developers that earn bounties from the Development Fund.';
     } else if (activity == 'managers') {
@@ -286,6 +318,7 @@
     document.getElementById('walletPercent').innerHTML = (
       parseInt(document.getElementById('walletVotePredictors').value) + 
       parseInt(document.getElementById('walletVoteOracles').value) + 
+      parseInt(document.getElementById('walletVoteInviters').value) + 
       parseInt(document.getElementById('walletVoteCreators').value) + 
       parseInt(document.getElementById('walletVoteManagers').value)) + ' %';
   }
@@ -294,32 +327,37 @@
       document.getElementById('vaultPercent').innerHTML = (
         parseInt(document.getElementById('vaultVotePredictors').value) + 
         parseInt(document.getElementById('vaultVoteOracles').value) + 
+        parseInt(document.getElementById('vaultVoteInviters').value) + 
         parseInt(document.getElementById('vaultVoteCreators').value) + 
         parseInt(document.getElementById('vaultVoteManagers').value)) + ' %';
     } catch (error) {
       document.getElementById('vaultPercent').innerHTML = 0 + ' %';
     }
   }
-  ////showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});
+  ////showManifestSave({{ walletVotes['predictors'] }},{{ walletVotes['oracles'] }},{{ walletVotes['inviters'] }},{{ walletVotes['creators'] }},{{ walletVotes['managers'] }}, {{ vaultVotes['predictors'] }},{{ vaultVotes['oracles'] }},{{ vaultVotes['inviters'] }},{{ vaultVotes['creators'] }},{{ vaultVotes['managers'] }});
   //function showManifestSave(
-  //  walletPredictors, walletOracles, walletCreators, walletManagers,
-  //  vaultPredictors, vaultOracles, vaultCreators, vaultManagers,
+  //  walletPredictors, walletOracles, walletInviters, walletCreators, walletManagers,
+  //  vaultPredictors, vaultOracles, vaultInviters, vaultCreators, vaultManagers,
   //) {
   //  console.log(walletPredictors);
   //  console.log(walletOracles);
+  //  console.log(walletInviters);
   //  console.log(walletCreators);
   //  console.log(walletManagers);
   //  console.log(vaultPredictors);
   //  console.log(vaultOracles);
+  //  console.log(vaultInviters);
   //  console.log(vaultCreators);
   //  console.log(vaultManagers);
   //  if (
   //    document.getElementById('walletVotePredictors').value != walletPredictors ||
   //    document.getElementById('walletVoteOracles').value != walletOracles ||
+  //    document.getElementById('walletVoteInviters').value != walletInviters ||
   //    document.getElementById('walletVoteCreators').value != walletCreators ||
   //    document.getElementById('walletVoteManagers').value != walletManagers ||
   //    document.getElementById('vaultVotePredictors').value != vaultPredictors ||
   //    document.getElementById('vaultVoteOracles').value != vaultOracles ||
+  //    document.getElementById('vaultVoteInviters').value != vaultInviters ||
   //    document.getElementById('vaultVoteCreators').value != vaultCreators ||
   //    document.getElementById('vaultVoteManagers').value != vaultManagers) {
   //    document.getElementById('manifestSubmit').style.display = 'block';
@@ -336,6 +374,7 @@
         body: JSON.stringify({
           walletPredictors: parseInt(document.getElementById('walletVotePredictors').value),
           walletOracles: parseInt(document.getElementById('walletVoteOracles').value),
+          walletInviters: parseInt(document.getElementById('walletVoteInviters').value),
           walletCreators: parseInt(document.getElementById('walletVoteCreators').value),
           walletManagers: parseInt(document.getElementById('walletVoteManagers').value)})})
     .then(response => {
@@ -354,6 +393,7 @@
         body: JSON.stringify({
           vaultPredictors: document.getElementById('vaultVotePredictors').value,
           vaultOracles: document.getElementById('vaultVoteOracles').value,
+          vaultInviters: document.getElementById('vaultVoteInviters').value,
           vaultCreators: document.getElementById('vaultVoteCreators').value,
           vaultManagers: document.getElementById('vaultVoteManagers').value})})
     .then(response => {

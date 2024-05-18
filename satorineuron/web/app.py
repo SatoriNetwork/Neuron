@@ -1142,6 +1142,7 @@ def vote():
                 if start.vault is not None and start.vault.isDecrypted else {
                     'predictors': 0,
                     'oracles': 0,
+                    'inviters': 0,
                     'creators': 0,
                     'managers': 0})}
         # logging.debug('x', x, color='yellow')
@@ -1215,6 +1216,7 @@ def voteSubmitManifestWallet():
     if (
         request.json.get('walletPredictors') > 0 or
         request.json.get('walletOracles') > 0 or
+        request.json.get('walletInviters') > 0 or
         request.json.get('walletCreators') > 0 or
         request.json.get('walletManagers') > 0
     ):
@@ -1223,6 +1225,7 @@ def voteSubmitManifestWallet():
             votes={
                 'predictors': request.json.get('walletPredictors', 0),
                 'oracles': request.json.get('walletOracles', 0),
+                'inviters': request.json.get('walletInviters', 0),
                 'creators': request.json.get('walletCreators', 0),
                 'managers': request.json.get('walletManagers', 0)})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
@@ -1234,6 +1237,7 @@ def voteSubmitManifestVault():
     if ((
                 request.json.get('vaultPredictors') > 0 or
                 request.json.get('vaultOracles') > 0 or
+                request.json.get('vaultInviters') > 0 or
                 request.json.get('vaultCreators') > 0 or
                 request.json.get('vaultManagers') > 0) and
                 start.vault is not None and start.vault.isDecrypted
@@ -1243,6 +1247,7 @@ def voteSubmitManifestVault():
             votes={
                 'predictors': request.json.get('vaultdictors', 0),
                 'oracles': request.json.get('vaultOracles', 0),
+                'inviters': request.json.get('vaultInviters', 0),
                 'creators': request.json.get('vaultreators', 0),
                 'managers': request.json.get('vaultanagers', 0)})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
