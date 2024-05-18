@@ -334,17 +334,20 @@ PLAN
             DONE central - accept pubkey in link, save to session
             DONE central - ip association with the referral
             DONE central - wallet association with the referral
-            neuron - show link in Neuron
-            neuron - ui to specify
-            neuron - call endpoint
-            central - endpoint
-            central - database to track
-            central - logic to avoid circular relationships
-            neuron - ui for failure
-            central - designation in minting manifest
-            central - designation in voting table
-            central - designation in voting logic
-            central - designation in mining logic
+            DONE neuron - show link in Neuron
+            DONE neuron - ui to specify
+            DONE neuron - call endpoint
+            DONE central - endpoint
+            DONE central - database to track
+            DONE central - logic to avoid circular relationships
+            DONE central - designation in minting manifest
+            DONE central - designation in voting table
+            DONE central - designation in voting logic
+            DONE central - designation in mining logic
+            neuron - test voting
+            central - test distribution
+            central - manually rebuild tables in database test
+            central - manually rebuild tables in database prod
         Deploy Mainnet
             external - make a separate wallet for the association so we don't co-mingle funds
             central - set the audit, wallet and other stuff to use that wallet
