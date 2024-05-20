@@ -321,6 +321,12 @@ DONE central - only have video on homepage
 
 PLAN
     Before Launch
+        Banking
+            accounts for The Satori Association
+        Infrastructure
+            setup backup electurmx servers for RVN and EVR
+        Legal
+            Ulas and other disclaimer/aggreement documents
         Wrapped Token
             test and deploy contract
             add eth address to database
@@ -345,6 +351,7 @@ PLAN
             DONE central - designation in voting logic
             DONE central - designation in mining logic
             DONE neuron - test voting
+            inform community
             central - test distribution
             DONE central - manually rebuild tables in database test
             central - manually rebuild tables in database prod
