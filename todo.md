@@ -351,10 +351,10 @@ PLAN
             DONE central - designation in voting logic
             DONE central - designation in mining logic
             DONE neuron - test voting
-            inform community
+            DONE inform community
             central - test distribution
             DONE central - manually rebuild tables in database test
-            central - manually rebuild tables in database prod
+            DONE central - manually rebuild tables in database prod
         Deploy Mainnet
             external - make a separate wallet for the association so we don't co-mingle funds
             central - set the audit, wallet and other stuff to use that wallet

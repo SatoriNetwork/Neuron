@@ -975,7 +975,7 @@ def presentSendSatoriTransactionform(formData):
     forms = importlib.reload(forms)
     sendSatoriTransaction = forms.SendSatoriTransaction(formdata=formData)
     sendSatoriTransaction.address.data = ''
-    sendSatoriTransaction.amount.data = ''
+    sendSatoriTransaction.amount.data = 0
     return sendSatoriTransaction
 
 
