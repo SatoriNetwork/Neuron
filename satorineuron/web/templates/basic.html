@@ -27,20 +27,21 @@
     </div>
     <div id="working_messages" class="container-for-center vertical-center" style="padding-left: 0px;position: relative;margin-left: 12%;margin-top: 20%;"><p id="working_message"></p></div>
 	</div>
-    <!--{ % include 'loader.html' %}-->
-    <!--{ % include 'header.html' % }-->
-    {% include 'nav-side.html' %}
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-      {% include 'header.html' %}
-      <div class="container-fluid py-4">
-        {% include 'flash.html' %}
-        {% block content %}
-        {% endblock %}
-        {% include 'footer.html' %}
-      </div>
-    </main>
-    <!--{ % include 'settings.html' % }-->
-    {% include 'scripts.html' %}
+  <!--{ % include 'loader.html' %}-->
+  <!--{ % include 'header.html' % }-->
+  {% include 'nav-side.html' %}
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    {% include 'header.html' %}
+    <div class="container-fluid py-4">
+      {% include 'flash.html' %}
+      {% block content %}
+      {% endblock %}
+      <!--{ % include 'footer.html' % }-->
+      {% include 'footer-nav.html' %}
+    </div>
+  </main>
+  <!--{ % include 'settings.html' % }-->
+  {% include 'scripts.html' %}
 	<script>
 		function showWorking() {
 			document.getElementById("working").style.display = "block";

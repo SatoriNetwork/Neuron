@@ -24,7 +24,7 @@ from satorilib.concepts.structs import StreamId, StreamOverviews
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timeToSeconds
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
-from satorilib.utils import getRandomName
+from satorilib.utils import getRandomName, getRandomQuote
 from satorisynapse import Envelope, Signal
 from satorineuron import VERSION, MOTO, config
 from satorineuron import logging
@@ -658,6 +658,7 @@ def dashboard():
         'paused': start.paused,
         'newRelayStream': present_stream_form(),
         'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
+        'quote': getRandomQuote(),
         'relayStreams':  # example stream +
         ([
             {

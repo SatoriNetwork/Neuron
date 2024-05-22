@@ -1,0 +1,25 @@
+{% block content %}
+<div class="row align-items-center justify-content-lg-between" style="margin-top:1rem;">
+  <div class="col-lg-6 mb-lg-0 mb-4">
+    <div class="copyright text-center text-sm text-muted text-lg-start">
+      © <script>
+        document.write(new Date().getFullYear())
+      </script>
+      made with <i class="fa fa-heart"></i> by
+      <a href="https://satorinet.io" class="font-weight-bold" target="_blank">The Satori Association</a>
+      for a future by design
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <ul class="nav nav-footer justify-content-end">
+      <li class="nav-item">
+        {% if quote is defined %}
+          <div class="text-muted" style='font-style:italic;opacity:.4;' title='{{ quote[1] }}'>{{ quote[0] }}</div>
+        {% else %}
+        <a href="https://cpb-us-w2.wpmucdn.com/u.osu.edu/dist/5/25851/files/2016/02/taoteching-Stephen-Mitchell-translation-v9deoq.pdf" class="nav-link text-muted" target="_blank" style='font-style:italic;opacity:.4;'>Let your workings remain a mystery, just show people the results.</a>
+        {% endif %}
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
