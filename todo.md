@@ -321,6 +321,8 @@ DONE central - only have video on homepage
 
 PLAN
     Before Launch
+        Glitches
+            neuron or central - send all fails somewhere
         Banking
             accounts for The Satori Association
         Infrastructure
@@ -329,7 +331,7 @@ PLAN
             Ulas and other disclaimer/aggreement documents
         Wrapped Token
             test and deploy contract
-            add eth address to database
+            DONE add eth address to database
             neuron - ui for wrapping token
             neuron - ui for unwrapping token
             neruon - call endpoints
