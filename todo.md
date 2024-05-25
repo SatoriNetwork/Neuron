@@ -324,7 +324,9 @@ PLAN
         App
             DONE simple one
         Glitches
-            neuron or central - send all fails somewhere
+            DONE neuron or central - send all fails somewhere
+            DONE footer nav
+            DONE SSL issue?
         Banking
             accounts for The Satori Association
         Infrastructure
