@@ -129,13 +129,15 @@
 			document.getElementById("address").value != "" && 
       document.getElementById("address").value.startsWith(document.getElementById("walletAddress").innerHTML[0]) && 
       document.getElementById("address").value.length == document.getElementById("walletAddress").innerHTML.length && 
-			(document.getElementById("amount").value > 0 || document.getElementById("sweep").checked));
+			(document.getElementById("sweep").checked || document.getElementById("amount").value > 0));
 	}
   function sweepEverything() {
     if (document.getElementById('sweep').checked) {
-      document.getElementById('amount').style.display = 'none';
+      //document.getElementById('amount').style.display = 'none';
+      document.getElementById('amount').readOnly = true;
     } else {
-      document.getElementById('amount').style.display = '';
+      //document.getElementById('amount').style.display = '';
+      document.getElementById('amount').readOnly = false;
     }
 	}
   function enforceDivisibility() {

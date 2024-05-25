@@ -322,7 +322,7 @@ DONE central - only have video on homepage
 PLAN
     Before Launch
         App
-            simple one
+            DONE simple one
         Glitches
             neuron or central - send all fails somewhere
         Banking

@@ -621,3 +621,21 @@ td:last-child {
   border-color: var(--bs-navbar-toggler-border-color);
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
+/* Hide the footer by default */
+.mobile-footer {
+  display: none;
+}
+
+/* Show the footer only when the screen width is less than 512px */
+@media (max-width: 1199px) {
+  .mobile-footer {
+    display: block;
+  }
+}
+
+input[readonly] {
+  background-color: #a0a0a0; /* Light grey background #f0f0f0*/
+  color: #a0a0a0;           /* Grey text color #6c757d*/
+  cursor: not-allowed;      /* Not-allowed cursor to indicate non-editable field */
+  border: 1px solid #0e040a; /* Optional: style the border to match your form #ced4da*/
+}
