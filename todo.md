@@ -326,22 +326,7 @@ PLAN
         Glitches
             DONE neuron or central - send all fails somewhere
             DONE footer nav
-            DONE SSL issue?
-        Banking
-            accounts for The Satori Association
-        Infrastructure
-            setup backup electurmx servers for RVN and EVR
-        Legal
-            Ulas and other disclaimer/aggreement documents
-        Wrapped Token
-            test and deploy contract
-            DONE add eth address to database
-            neuron - ui for wrapping token
-            neuron - ui for unwrapping token
-            neruon - call endpoints
-            central - endpoints
-            central - logic to wrap tokens
-            central - logic to unwrap tokens
+            DONE SSL redirect issue
         Affiliate Mining
             DONE central - accept pubkey in link, save to session
             DONE central - ip association with the referral
@@ -358,15 +343,10 @@ PLAN
             DONE central - designation in mining logic
             DONE neuron - test voting
             DONE inform community
-            central - test distribution
+            DONE central - test distribution
             DONE central - manually rebuild tables in database test
             DONE central - manually rebuild tables in database prod
-        Deploy Mainnet
-            external - make a separate wallet for the association so we don't co-mingle funds
-            central - set the audit, wallet and other stuff to use that wallet
-            external - divisibility on evr to 8 dec
-            neuron - switch mainnet to mainnet
-        Commemorative NFT on RVN
+        Commemorative NFT on polygon
             DONE central - add columns to exiting test database
             DONE external - generate on some platform (rvn or opensea or something)
             DONE external - create artwork
@@ -383,6 +363,47 @@ PLAN
             DONE central - add columns to exiting main database
             DONE central - test entire process
             central - snapshot - set them to beta=1 june 30th MAIN
+        Banking
+            accounts for The Satori Association
+        Infrastructure
+            setup backup electurmx servers for RVN and EVR
+        Legal
+            Ulas and other disclaimer/aggreement documents
+        Wrapped Token
+            Contract
+                design contract
+                    ERC20 Basics
+                    make sure it requires for an address to specify evr address upon burn
+                test and deploy contract
+            Eth setup
+                DONE add eth address to database
+                create address for holding evr wrapped tokens
+                create address for holding wrapped tokens
+                create owner address for contract
+                ipfs the icon 256x256
+                get on Uniswap
+                get on metamask swap
+                get on tokenlist
+                get on coingecko
+                get on coinmarketcap
+            neuron - include short tutorial video
+            neuron - ui for wrapping token
+                specify amount,
+                only available in vault,
+                display fee - 1 satori
+                submit
+            neuron - ui for unwrapping token
+                enter eth burn transaction id
+                submit
+            neruon - call endpoints
+            central - endpoints
+            central - logic to wrap tokens
+            central - logic to unwrap tokens
+        Deploy Mainnet
+            external - make a separate wallet for the association so we don't co-mingle funds
+            central - set the audit, wallet and other stuff to use that wallet
+            external - divisibility on evr to 8 dec
+            neuron - switch mainnet to mainnet
     After Launch
         Create Tutorials
             how to download
