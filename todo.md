@@ -376,11 +376,13 @@ PLAN
                     make sure it requires for an address to specify evr address upon burn
                 test and deploy contract
             Eth setup
-                DONE add eth address to database
+                DONE central - ipfs the icon 256x256 - bafybeiaggbts7bm3qniaemu7dvbzoqjyvcylosjevnvsewiz2hahxbgyoi
+                DONE central - add eth address to database
+                central - send eth address to central
+                central - save eht address from neurons
                 create address for holding evr wrapped tokens
                 create address for holding wrapped tokens
                 create owner address for contract
-                ipfs the icon 256x256
                 get on Uniswap
                 get on metamask swap
                 get on tokenlist
