@@ -92,6 +92,10 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # BUILD PROCESS:
 # copy to and run from ../ (cd ..)
 # \Satori> docker build --no-cache -t satorinet/satorineuron:base .
+# OR
+# \Satori> docker buildx create --use
+# \Satori> docker buildx build --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:base --push .
+# delete the base one after you push it, we just need it local
 
 # RUN OPTIONS
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env ENV=local satorinet/satorineuron:base bash
