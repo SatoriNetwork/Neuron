@@ -46,7 +46,7 @@ CMD ["bash"]
 # \Satori> docker build --no-cache -t satorinet/satorineuron:v1 .; docker push satorinet/satorineuron:v1
 # OR
 # \Satori> docker buildx create --use
-# \Satori> docker buildx build --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:base --push .
+# \Satori> docker buildx build --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:v1 --push .
 
 # description: Miner environment and software for the Satori Network
 
