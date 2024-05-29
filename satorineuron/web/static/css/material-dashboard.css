@@ -962,7 +962,7 @@ progress {
   --bs-gutter-y: 16rem;
 }
 
-@media (min-width: 400px) {
+@media (min-width: 300px) {
   .col-xs {
     flex: 1 0 0%;
   }
