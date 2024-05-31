@@ -147,6 +147,7 @@ dmypy.json
 *node_modules
 *.txt
 !requirements.txt
+!legal/*.txt
 predictions/
 .vscode
 .elixir_ls
