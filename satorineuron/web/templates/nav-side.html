@@ -90,6 +90,11 @@
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('aliasbr');">Alias</a>
       </li>
+        {% if vaultIsSetup %}
+      <li class='sub-nav-item'>
+        <a href='#' onclick="scrollOrJumpTo('walletlockbr');">Lock</a>
+      </li>
+        {% endif %}
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('historybr');">Transaction History</a>
       </li>

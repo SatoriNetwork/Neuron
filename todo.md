@@ -323,6 +323,8 @@ PLAN
     Before Launch
         App
             DONE simple one
+        Neuron
+            make optional wallet lock
         Glitches
             DONE neuron or central - send all fails somewhere
             DONE footer nav

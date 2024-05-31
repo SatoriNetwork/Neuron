@@ -1,0 +1,89 @@
+{% block content %}
+<div class="row mb-0" style='padding-bottom:1rem;'>
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-9 col-sm-9 mb-xl-0">
+          <p class="mb-1 {% if darkmode %}dark-colors{% endif %} text-center" style='padding-top:3rem;'></span>
+            Require the vault password to unlock the wallet screen?
+        </div>
+        <div class="col-xl-3 col-sm-3 mb-xl-0" style='margin-top:.5rem;'>
+          <div class="text-center pt-1">
+            <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Wallet Lock</h4>
+          </div>
+        </div>
+      </div>
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-9 col-sm-9 mb-xl-0 mb-4 mb-1 {% if darkmode %}dark-colors{% endif %} text-center">
+            <p style='padding-top:2rem;'>
+              Check the box to require the vault password to unlock your wallet screen.
+            </br>
+            </br>
+            </p>
+        </div>
+        <div class="col-xl-3 col-sm-3 mb-xl-0">
+          <center>
+            <style>
+              input::placeholder {
+                color: #ADB5BD;
+              }
+            </style>
+            <input id="walletlockCheckbox" type="checkbox" class="tight {% if darkmode %}dark-colors{% endif %}" style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;" onclick="walletlockDescription();enableDisableWalletlock();"{% if walletlockEnabled %}checked{% endif %}>
+            <p id='walletlockToggle' class="mb-1 text-center {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>{% if walletlockEnabled %}ENABLED{% else %}NOT ENABLED{% endif %}</p>
+          </center>
+        </div>
+      </div>
+      <hr class="dark horizontal my-0">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-9 col-sm-9 mb-xl-0">
+          <p class="text-sm mb-2 {% if darkmode %}dark-colors{% endif %} text-center"><span class="text-success text-sm font-weight-bolder"></span>
+            <i>For maximum security please enable the "Mine-to-Vault" setting within your vault.</i>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function enableDisableWalletlock() {
+    if (document.getElementById("walletlockCheckbox").checked){
+      enableWalletlock();
+    } else {
+      disableWalletlock();
+    }
+  }
+  function enableWalletlock() {
+    fetch('/wallet_lock/enable', { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+            console.log("WalletLock enabled");
+            document.getElementById("walletlockCheckbox").checked = true;
+            walletlockDescription();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function disableWalletlock() {
+    fetch('/wallet_lock/disable', { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+            console.log("WalletLock disabled");
+            document.getElementById("walletlockCheckbox").checked = false;
+            walletlockDescription();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function walletlockDescription() {
+    if (document.getElementById("walletlockCheckbox").checked){
+      document.getElementById("walletlockToggle").innerHTML = "ENABLED";
+    } else {
+      document.getElementById("walletlockToggle").innerHTML = "NOT ENABLED";
+    }
+  }
+</script>
+{% endblock %}
+
+
+
+

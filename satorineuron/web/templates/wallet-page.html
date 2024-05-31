@@ -1,14 +1,22 @@
 {% extends "basic.html" %}
 {% block content %}
-<div id='balancebr'></div>
-{% include 'wallet-functions.html' %}
-<br id="aliasbr">
-{% include 'wallet-alias.html' %}
-<br id="historybr">
-{% include 'wallet-history.html' %}
-<br id="metadatabr">
-{% include 'wallet-meta.html' %}
-{% include 'footer-on-front.html' %}
+  {% if unlocked %}
+    <div id='balancebr'></div>
+    {% include 'wallet-functions.html' %}
+    <br id="aliasbr">
+    {% include 'wallet-alias.html' %}
+    {% if vaultIsSetup %}
+      <br id="walletlockbr">
+      {% include 'wallet-lockoption.html' %}
+    {% endif %}
+    <br id="historybr">
+    {% include 'wallet-history.html' %}
+    <br id="metadatabr">
+    {% include 'wallet-meta.html' %}
+    {% include 'footer-on-front.html' %}
+  {% else %}
+    {% include 'wallet-lock.html' %}
+  {% endif %}
 {% endblock %}
 
 

@@ -935,15 +935,49 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@app.route('/wallet/<network>')
-@closeVault
+@app.route('/wallet/<network>', methods=['GET', 'POST'])  # @closeVault
 def wallet(network: str = 'main'):
+    def accept_submittion(passwordForm):
+        _rvn, _evr = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+        # if rvn is None or not rvn.isEncrypted:
+        #    flash('unable to open vault')
+
     myWallet = start.getWallet(network=network)
     myWallet.get(allWalletInfo=False)
     alias = myWallet.alias or start.server.getWalletAlias()
+    if config.get().get('wallet lock'):
+        if request.method == 'POST':
+            accept_submittion(forms.VaultPassword(formdata=request.form))
+        if start.vault is not None and not start.vault.isEncrypted:
+            return render_template('wallet-page.html', **getResp({
+                'title': 'Wallet',
+                'walletIcon': 'wallet',
+                'vaultIsSetup': start.vault is not None,
+                'unlocked': True,
+                'walletlockEnabled': True,
+                'network': network,
+                'image': getQRCode(myWallet.address),
+                'wallet': myWallet,
+                'exampleAlias': getRandomName(),
+                'alias': alias,
+                'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+        return render_template('wallet-page.html', **getResp({
+            'title': 'Wallet',
+            'walletIcon': 'wallet',
+            'vaultIsSetup': start.vault is not None,
+            'unlocked': False,
+            'walletlockEnabled': True,
+            'network': network,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
+        'vaultIsSetup': start.vault is not None,
+        'unlocked': True,
+        'walletlockEnabled': False,
         'network': network,
         'image': getQRCode(myWallet.address),
         'wallet': myWallet,
@@ -978,6 +1012,22 @@ def presentSendSatoriTransactionform(formData):
     sendSatoriTransaction.address.data = ''
     sendSatoriTransaction.amount.data = 0
     return sendSatoriTransaction
+
+
+@app.route('/wallet_lock/enable', methods=['GET'])
+def enableWalletLock():
+    # the network portion should be whatever network I'm on.
+    config.add(data={'wallet lock': True})
+    return 'OK', 200
+
+
+@app.route('/wallet_lock/disable', methods=['GET'])
+def disableWalletLock():
+    if start.vault is None:
+        flash('Must unlock your wallet to disable walletlock.')
+        return redirect('/dashboard')
+    config.add(data={'wallet lock': False})
+    return 'OK', 200
 
 
 @app.route('/vault/<network>', methods=['GET', 'POST'])
@@ -1236,13 +1286,13 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-                int(request.json.get('vaultPredictors')) > 0 or
-                int(request.json.get('vaultOracles')) > 0 or
-                int(request.json.get('vaultInviters')) > 0 or
-                int(request.json.get('vaultCreators')) > 0 or
-                int(request.json.get('vaultManagers')) > 0) and
-                start.vault is not None and start.vault.isDecrypted
-            ):
+            int(request.json.get('vaultPredictors')) > 0 or
+            int(request.json.get('vaultOracles')) > 0 or
+            int(request.json.get('vaultInviters')) > 0 or
+            int(request.json.get('vaultCreators')) > 0 or
+            int(request.json.get('vaultManagers')) > 0) and
+            start.vault is not None and start.vault.isDecrypted
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
