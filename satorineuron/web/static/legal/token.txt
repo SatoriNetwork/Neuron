@@ -1,0 +1,66 @@
+TOKEN USE POLICY
+
+1. INTRODUCTION
+
+This Token Use Policy ("Policy") governs the use of tokens ("Tokens") earned and used within the Satori Neuron software ("Software"). By using the Software and participating in the Satori Network, you agree to comply with this Policy.
+
+2. DEFINITIONS
+
+Tokens: Digital units earned and used within the Satori Network.
+Oracle: A user providing valuable data to the network.
+Predictor: A user making predictions about data streams.
+
+3. EARNING TOKENS
+
+Contribution-Based: Tokens are earned by contributing to the Satori Network through:
+Providing valuable data as an oracle.
+Making valuable predictions as a predictor.
+No Guarantee: Earning Tokens is not guaranteed. There is no assurance that a user's machine will produce valuable data or predictions worthy of Tokens. Even if the data or predictions are deemed valuable, there is no guarantee that Tokens will be awarded.
+Discretionary Distribution: The distribution of Tokens is at the sole discretion of The Satori Association. The Satori Association cannot be held liable for granting too many or too few Tokens, or for any other decisions or actions related to Token distribution. Users acknowledge that The Satori Association distributes Tokens according to its own criteria and judgment.
+
+4. USING TOKENS
+
+Voting Rights: Tokens can be used to weight the user's vote in two primary domains:
+Determining the value of data streams provided by oracles.
+Assessing the relative worth and reward of mining activities, including data provision and prediction.
+Personal Property: Tokens are considered the personal property of the user. Users may use their Tokens as they see fit within the guidelines of this Policy. The Satori Association cannot be held liable for any issues related to the use, transfer, loss, or security of Tokens. Even in a case where Tokens are lost due to a security vulnerability in the Software, the responsibility for securing Tokens rests solely with the user. The Satori Association, its creators, financers, or anyone related to the Satori project cannot be held liable for any losses or damages.
+
+5. TOKEN OWNERSHIP
+
+User Rights: Users retain full ownership of their Tokens and can transfer or trade them at their discretion. The Satori Association is not responsible for any uses or misuses of Tokens by users.
+
+6. TOKEN RESTRICTIONS
+
+Compliance: Users must comply with all applicable laws and regulations regarding the use and transfer of Tokens.
+Prohibited Activities: Users must not engage in any activities that manipulate or fraudulently influence the Token economy within the Satori Network.
+
+7. SECURITY AND RISKS
+
+Security Measures: Users are responsible for securing their Tokens and related credentials. The Satori Association implements security measures to protect the network but cannot guarantee complete security.
+Security Recommendations: Users should use strong passwords, enable two-factor authentication, and regularly update their security settings to protect their Tokens.
+Assumption of Risk: By participating in the Satori Network and using Tokens, users acknowledge and accept the inherent risks, including potential loss of Tokens or unauthorized access. The Satori Association cannot be held liable for any losses or damages related to the use or security of Tokens.
+
+8. CENTRALIZED MINING CALCULATIONS
+
+Delegation of Mining Responsibilities: Users acknowledge and consent to the delegation of all mining calculation responsibilities to the Satori Server operated by The Satori Association. Due to the early stage of the Satori Network and the absence of sophisticated blockchain or smart contract systems, mining calculations are conducted in a centralized manner. Users agree that The Satori Association has absolute discretion over these calculations and their outcomes.
+
+9. CHANGES TO THE POLICY
+
+Modifications: This Policy may be updated or modified from time to time. Users will be notified of significant changes through the Software or the Satori Network's official communication channels.
+Acceptance of Changes: Continued use of the Software and participation in the Satori Network constitutes acceptance of the revised Policy.
+
+10. GOVERNING LAW AND DISPUTE RESOLUTION
+
+Swiss Law: This Policy shall be governed by and construed in accordance with the laws of Switzerland.
+Mediation First: Any disputes arising under or in connection with this Policy shall first be attempted to be resolved through mediation. The parties agree to submit the dispute to a mutually agreed-upon mediator in Switzerland. If mediation fails to resolve the dispute, it shall then be resolved in the courts of Switzerland.
+
+11. ENTIRE AGREEMENT
+
+This Policy constitutes the entire agreement between the user and The Satori Association regarding the use of Tokens and supersedes all prior or contemporaneous understandings and agreements, whether written or oral.
+
+12. CONTACT INFORMATION
+
+For any inquiries regarding this Token Use Policy, please contact:
+
+The Satori Association
+legal@satorinet.io

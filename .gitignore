@@ -147,7 +147,7 @@ dmypy.json
 *node_modules
 *.txt
 !requirements.txt
-!legal/*.txt
+!satorineuron/web/static/legal/*.txt
 predictions/
 .vscode
 .elixir_ls
