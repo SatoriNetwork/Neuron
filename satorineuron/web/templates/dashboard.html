@@ -1,6 +1,8 @@
 {% extends "basic.html" %}
 {% block content %}
-
+  {% if firstRun %}
+    {% include 'dashboard-welcome.html' %}
+  {% endif %}
   {% include 'dashboard-balance.html' %}
   <!--<br id='invitebr'>
   include 'dashboard-invite.html' move into balances next to wallet eventually-->

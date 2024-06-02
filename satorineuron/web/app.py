@@ -41,6 +41,7 @@ from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 # development flags
 debug = True
 darkmode = False
+firstRun = True
 badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
@@ -644,6 +645,9 @@ def dashboard():
         return newRelayStream
 
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
+    global firstRun
+    theFirstRun = firstRun
+    firstRun = False
     streamOverviews = (
         [model.miniOverview() for model in start.engine.models]
         if start.engine is not None else [])  # StreamOverviews.demo()
@@ -651,6 +655,7 @@ def dashboard():
     if start.vault is not None:
         start.vault.get(allWalletInfo=False)
     return render_template('dashboard.html', **getResp({
+        'firstRun': theFirstRun,
         'wallet': start.wallet,
         'vaultBalanceAmount': start.vault.balanceAmount if start.vault is not None else 0,
         'streamOverviews': streamOverviews,
@@ -1286,13 +1291,13 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-            int(request.json.get('vaultPredictors')) > 0 or
-            int(request.json.get('vaultOracles')) > 0 or
-            int(request.json.get('vaultInviters')) > 0 or
-            int(request.json.get('vaultCreators')) > 0 or
-            int(request.json.get('vaultManagers')) > 0) and
-            start.vault is not None and start.vault.isDecrypted
-        ):
+                int(request.json.get('vaultPredictors')) > 0 or
+                int(request.json.get('vaultOracles')) > 0 or
+                int(request.json.get('vaultInviters')) > 0 or
+                int(request.json.get('vaultCreators')) > 0 or
+                int(request.json.get('vaultManagers')) > 0) and
+                start.vault is not None and start.vault.isDecrypted
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
