@@ -9,11 +9,11 @@ USER RESPONSIBILITY: The user is solely responsible for any damage to their devi
 2. LIMITATION OF LIABILITY
 
 NO LIABILITY FOR DAMAGES: In no event shall The Satori Association or its affiliates, officers, directors, employees, agents, or licensors be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses, resulting from:
-(i) Your use or inability to use the Software;
-(ii) Any unauthorized access to or use of the Software;
-(iii) Any interruption or cessation of transmission to or from the Software;
-(iv) Any bugs, viruses, trojan horses, or the like that may be transmitted to or through the Software by any third party;
-(v) Any errors or omissions in any content or for any loss or damage incurred as a result of the use of any content posted, emailed, transmitted, or otherwise made available through the Software, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not we have been informed of the possibility of such damage.
+Your use or inability to use the Software;
+Any unauthorized access to or use of the Software;
+Any interruption or cessation of transmission to or from the Software;
+Any bugs, viruses, trojan horses, or the like that may be transmitted to or through the Software by any third party;
+Any errors or omissions in any content or for any loss or damage incurred as a result of the use of any content posted, emailed, transmitted, or otherwise made available through the Software, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not we have been informed of the possibility of such damage.
 
 3. MAXIMUM LIABILITY
 
@@ -34,7 +34,8 @@ SWISS LAW: This Disclaimer of Warranties and Limitation of Liability shall be go
 7. DISPUTE RESOLUTION
 
 MEDIATION FIRST: Any disputes arising under or in connection with this Disclaimer of Warranties and Limitation of Liability shall first be attempted to be resolved through mediation. The parties agree to submit the dispute to a mutually agreed-upon mediator in Switzerland. If mediation fails to resolve the dispute, it shall then be resolved in the courts of Switzerland.
-CONTACT INFORMATION
+
+8. CONTACT INFORMATION
 
 For any inquiries regarding this Disclaimer of Warranties and Limitation of Liability, please contact:
 

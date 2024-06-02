@@ -66,9 +66,17 @@ These ToS shall be governed by and construed in accordance with the laws of Swit
 
 12. DISPUTE RESOLUTION
 
-Any disputes arising under or in connection with these ToS shall first be attempted to be resolved through mediation. The parties agree to submit the dispute to a mutually agreed-upon mediator in Switzerland. If mediation fails to resolve the dispute, it shall then be resolved in the courts of Switzerland.
+Any disputes arising under or in connection with these ToS shall first be attempted to be resolved through mediation. The parties agree to submit the dispute to a mutually agreed-upon mediator in Switzerland. If mediation fails to resolve the dispute, it shall then be resolved in the courts of Switzerland. The costs of mediation shall be shared equally between the parties.
 
-13. CONTACT INFORMATION
+13. INDEMNIFICATION
+
+You agree to indemnify and hold harmless The Satori Association, its affiliates, officers, agents, and employees from any claim or demand, including reasonable attorneys' fees, arising out of your use of the Software, your violation of these ToS, or your violation of any rights of another.
+
+14. ENTIRE AGREEMENT
+
+These ToS constitute the entire agreement between you and The Satori Association regarding the use of the Software and supersede all prior or contemporaneous understandings and agreements, whether written or oral.
+
+15. CONTACT INFORMATION
 
 For support or legal inquiries, please contact:
 
