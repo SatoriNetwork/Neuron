@@ -323,12 +323,15 @@ PLAN
     Before Launch
         App
             DONE simple one
+        Legal
+            DONE Ulas and other disclaimer/aggreement documents
         Neuron
-            make optional wallet lock
+            DONE make optional wallet lock
         Glitches
             DONE neuron or central - send all fails somewhere
             DONE footer nav
             DONE SSL redirect issue
+            central - rework the daily scheduled batch process
         Affiliate Mining
             DONE central - accept pubkey in link, save to session
             DONE central - ip association with the referral
@@ -365,12 +368,10 @@ PLAN
             DONE central - add columns to exiting main database
             DONE central - test entire process
             central - snapshot - set them to beta=1 june 30th MAIN
-        Banking
-            accounts for The Satori Association
+        Scalability
+            central - upgrade database to postgres
         Infrastructure
             setup backup electurmx servers for RVN and EVR
-        Legal
-            Ulas and other disclaimer/aggreement documents
         Wrapped Token
             Contract
                 design contract
@@ -409,6 +410,8 @@ PLAN
             external - divisibility on evr to 8 dec
             neuron - switch mainnet to mainnet
     After Launch
+        Banking
+            accounts for The Satori Association
         Create Tutorials
             how to download
             how to install
