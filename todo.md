@@ -370,8 +370,38 @@ PLAN
             central - snapshot - set them to beta=1 june 30th MAIN
         Scalability
             central - upgrade database to postgres
+            central - revisit the scheduler after postgres as a standalone process since the database is multithreaded now.
         Infrastructure
             setup backup electurmx servers for RVN and EVR
+        Deploy Mainnet
+            external - make a separate wallet for the association so we don't co-mingle funds
+            central - set the audit, wallet and other stuff to use that wallet
+            external - divisibility on evr to 8 dec
+            neuron - switch mainnet to mainnet
+    After Launch
+        Banking
+            accounts for The Satori Association
+        Create Tutorials
+            how to download
+            how to install
+            how to configure
+            how to setup the vault
+            how to share your affiliate link
+            how to setup a oracle stream
+            how to setup many orcacle streams
+        Improve Neuron
+            neuron - health monitor to verify we always connected to server, pubsub, peers / synergy when needed, electrumx when needed.
+            central - health monitor as part of the admin dashboard
+        Improve Mining
+            central - implement competition check
+        Improve Engine
+            More Algorithms
+                engine - use Chronos as a first pass, include it, optionally (depending on how useful it is) as a feature to the data on each datastream
+                engine - take advantage of GPU - run chronos and xgboost on gpu if present
+                engine - take advantage of multiple GPU - does it do this automatically since we're running multiple threads? idk.
+            Better Exploration of Correlations
+        Decentralized Chat Feature
+            description - top down approach, each neuron is running GPT bots which answer questions given the data it knows. questions can be farmed out from the central website to neurons who respond. It's not time for this yet, if ever.
         Wrapped Token
             Contract
                 design contract
@@ -403,29 +433,12 @@ PLAN
             neruon - call endpoints
             central - endpoints
             central - logic to wrap tokens
-            central - logic to unwrap tokens
-        Deploy Mainnet
-            external - make a separate wallet for the association so we don't co-mingle funds
-            central - set the audit, wallet and other stuff to use that wallet
-            external - divisibility on evr to 8 dec
-            neuron - switch mainnet to mainnet
-    After Launch
-        Banking
-            accounts for The Satori Association
-        Create Tutorials
-            how to download
-            how to install
-            how to configure
-            how to setup the vault
-            how to share your affiliate link
-            how to setup a oracle stream
-            how to setup many orcacle streams
-        Improve Mining
-            central - implement competition check
-        Improve Engine
-            More Algorithms
-            Better Exploration of Correlations
-        Decentralized Chat Feature
+            central - logic to unwrap tokens            
+        Setup useful oracles
+            Fred data
+            finanacial data
+            government statistics
+            etc.
 
 neuron - troubleshoot setting up a stream with the urls from wilsql
 neuron - crete intensity level so you can dial down the rate at which it mines
