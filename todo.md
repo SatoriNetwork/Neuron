@@ -327,6 +327,7 @@ PLAN
             DONE Ulas and other disclaimer/aggreement documents
         Neuron
             DONE make optional wallet lock
+            ui message if people try to run it using just docker: to start Satori please double click on the desktop icon or restart your computer.
         Glitches
             DONE neuron or central - send all fails somewhere
             DONE footer nav

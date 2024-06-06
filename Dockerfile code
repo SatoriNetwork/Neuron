@@ -39,7 +39,7 @@ WORKDIR /Satori/Neuron/satorineuron/web
 #ENTRYPOINT [ "python" ]
 #CMD ["python", "./app.py" ]
 # this should be default
-CMD ["bash"]
+CMD ["bash", "./start_from_image.sh"]
 
 # BUILD PROCESS:
 # copy to and run from ../ (cd ..)

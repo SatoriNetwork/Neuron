@@ -23,16 +23,27 @@
             <tbody>
               {% if wallet.transactionHistory %}
                 {% for transaction in wallet.transactionHistory|reverse %}
+                  {% if loop.index <= 3 %}
                 <tr class='yellow-hover'>
                   <td>
                     <a href="https://rvn.cryptoscope.io/tx/?txid={{ transaction.tx_hash }}", target='_blank'>
                       <div class="d-flex px-3 py-1">
-                        <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ transaction.tx_hash }}</h6>
+                        <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ counter }} {{ transaction.tx_hash }}</h6>
                       </div>
                     </a>
                   </td>
                 </tr> 
+                  {% endif %}
                 {% endfor %}
+                <tr class='yellow-hover'>
+                  <td>
+                    <a href="https://rvn.cryptoscope.io/address/?address={{ wallet.address }}", target='_blank'>
+                      <div class="d-flex px-3 py-1">
+                        <h6 class="mb-0 text-sm text-center {% if darkmode %}dark-text{% endif %}">See All Transactions</h6>
+                      </div>
+                    </a>
+                  </td>
+                </tr> 
               {% else %}
               <tr>
                 <td>
