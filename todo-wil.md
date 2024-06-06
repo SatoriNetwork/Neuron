@@ -1,9 +1,9 @@
 # TODO List - AI ENGINE
 
 1. setup environment
-    a. git repos
-    b. workspace
-    c. dev containers
+    a. git repos DONE
+    b. workspace DONE
+    c. dev containers DONE
     d. debug loop
     e. familiarize
 2. integrate chronos + other generic pretrained models
