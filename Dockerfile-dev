@@ -67,11 +67,11 @@ RUN cd /Satori && git clone https://github.com/SatoriNetwork/Lib.git
 RUN cd /Satori && git clone https://github.com/SatoriNetwork/Wallet.git
 RUN cd /Satori && git clone https://github.com/SatoriNetwork/Engine.git
 
-RUN cd /Satori/Synapse && python setup.py develop
-RUN cd /Satori/Lib && python setup.py develop
-RUN cd /Satori/Wallet && python setup.py develop
-# RUN cd /Satori/Engine && python setup.py develop
-# RUN cd /Satori/Neuron && python setup.py develop
+RUN cd /Satori/Synapse && pip install -r requirements.txt && python setup.py develop
+RUN cd /Satori/Lib && pip install -r requirements.txt && python setup.py develop
+RUN cd /Satori/Wallet && pip install -r requirements.txt && python setup.py develop
+RUN cd /Satori/Engine && pip install -r requirements.txt && python setup.py develop
+# RUN cd /Satori/Neuron && pip install -r requirements.txt && python setup.py develop
 
 ## no need for ollama at this time.
 #RUN apt-get install -y curl
@@ -89,7 +89,7 @@ EXPOSE 24601
 #EXPOSE 4001 5001 23384
 #EXPOSE 3000
 
-WORKDIR /Satori/Neuron/satorineuron/web
+# WORKDIR /Satori/Neuron/satorineuron/web
 
 #ENTRYPOINT [ "python" ]
 #CMD ["python", "./app.py" ]

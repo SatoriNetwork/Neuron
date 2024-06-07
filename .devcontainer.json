@@ -13,9 +13,6 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
-	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	// "postCreateCommand": "",
-
 	"customizations": {
 		"vscode": {
 			// Add the IDs of extensions you want installed when the container is created.
@@ -25,4 +22,7 @@
 
 	"workspaceFolder": "/Satori",
 	"workspaceMount": "source=${localWorkspaceFolder},target=/Satori/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+
+	// Uncomment the next line to run commands after the container is created - for example installing curl.
+	"postCreateCommand": "cd /Satori/Neuron && pip install -r requirements.txt && python setup.py develop",
 }
