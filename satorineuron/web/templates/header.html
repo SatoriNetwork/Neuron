@@ -180,13 +180,19 @@
         </li>
         <li title='Connections Status' style="margin-right:.5rem">
           <a href="{{ url_for('modeLight') }}" title="Satori Central connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
-            <i class="fa fa-circle" style="color:green"></i>
+            <i id="connectionElectrumx" class="fa fa-circle" style="color:green"></i>
           </a>
           <a href="{{ url_for('modeLight') }}" title="Pubsub Network connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
-            <i class="fa fa-circle" style="color:maroon"></i>
+            <i id="connectionCentral" class="fa fa-circle" style="color:maroon"></i>
           </a>
           <a href="{{ url_for('modeLight') }}" title="Peer-to-Peer connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
-            <i class="fa fa-circle-o" style="color:maroon"></i>
+            <i id="connectionPubsub" class="fa fa-circle-o" style="color:maroon"></i>
+          </a>
+          <a href="{{ url_for('modeLight') }}" title="Peer-to-Peer connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
+            <i id="connectionSynergy" class="fa fa-circle-o" style="color:maroon"></i>
+          </a>
+          <a href="{{ url_for('modeLight') }}" title="Peer-to-Peer connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
+            <i id="connectionP2p" class="fa fa-circle-o" style="color:maroon"></i>
           </a>
         </li>
         <li title='Dark Mode' class='hide-on-med-and-down' style="margin-right:.5rem">
@@ -229,78 +235,39 @@
     } else if (e.data == "redundantCall") {
       console.log('redundantCalled');
     } else {
-      let streamOverview = JSON.parse(e.data);
-      console.log('streamOverview');
-      console.log(streamOverview);
-      console.log(streamOverview.predictions);
-      console.log(streamOverview.prediction);
-      // find the table row for this stream and update it
-      //let tdIcon = document.getElementById("td-" + streamOverview.hashed + "-icon");
-      let tdSource = document.getElementById("td-" + streamOverview.hashed + "-source");
-      let tdStream = document.getElementById("td-" + streamOverview.hashed + "-stream");
-      let tdTarget = document.getElementById("td-" + streamOverview.hashed + "-target");
-      let tdValue = document.getElementById("td-" + streamOverview.hashed + "-value");
-      let tdPrediction = document.getElementById("td-" + streamOverview.hashed + "-prediction");
-      //tdIcon.onclick = viewOnClick(streamOverview);
-      tdSource.onclick = viewOnClick(streamOverview);
-      tdStream.onclick = viewOnClick(streamOverview);
-      tdTarget.onclick = viewOnClick(streamOverview);
-      tdValue.onclick = viewOnClick(streamOverview);
-      tdPrediction.onclick = viewOnClick(streamOverview);
-      //tdIcon.innerHTML = `<div class="d-flex px-3 py-1">
-      //  <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream('` + streamOverview.source + `', '` + streamOverview.author + `', '` + streamOverview.stream + `', '` + streamOverview.target + `', '` + streamOverview.hashed + `');">
-      //    <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
-      //      <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
-      //    </button>
-      //  </h6>
-      //</div>`
-      tdSource.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.source + `</h6></div>`
-      tdStream.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.stream + `</h6></div>`
-      tdTarget.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.target + `</h6></div>`
-      tdValue.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.value + `</h6></div>`
-      tdPrediction.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview.prediction) + `</h6></div>`
-      //let myRow = document.getElementById("tr-" + streamOverview.hashed);
-      //myRow.onclick = function() {
-      //  scrollOrJumpTo('predictionsbr');
-      //  setData(chartOne, streamOverview.predictions);
-      //  setData(chartTwo, streamOverview.errs);
-      //  setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
-      //};
-      //myRow.innerHTML = `
-      //    <td class="td-`+streamOverview.hashed+`">
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview.source + `, ` + streamOverview.author + `, ` + streamOverview.stream + `, ` + streamOverview.target + `, ` + streamOverview.hashed+`);">
-      //          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
-      //            <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
-      //          </button>
-      //        </h6>
-      //      </div>
-      //    </td>
-      //    <td class="td-`+streamOverview.hashed+`">
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.source + `</h6>
-      //      </div>
-      //    </td>
-      //    <td>
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.stream + `</h6>
-      //      </div>
-      //    </td>
-      //    <td>
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.target + `</h6>
-      //      </div>
-      //    </td>
-      //    <td>
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.value + `</h6>
-      //      </div>
-      //    </td>
-      //    <td>
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview.prediction) + `</h6>
-      //      </div>
-      //    </td>`;
+      let conns = JSON.parse(e.data);
+      console.log('conns');
+      console.log(conns);
+      console.log(conns.electrumx);
+      console.log(conns.cenral);
+      console.log(conns.pubsub);
+      console.log(conns.synergy);
+      console.log(conns.p2p);
+      if (conns.electrumx) {
+        document.getElementById("connectionElectrumx").style.color = 'green';
+      } else {
+        document.getElementById("connectionElectrumx").style.color = 'red';
+      }
+      if (conns.central) {
+        document.getElementById("connectionCentral").style.color = 'green';
+      } else {
+        document.getElementById("connectionCentral").style.color = 'red';
+      }
+      if (conns.pubsub) {
+        document.getElementById("connectionPubsub").style.color = 'green';
+      } else {
+        document.getElementById("connectionPubsub").style.color = 'red';
+      }
+      if (conns.synergy) {
+        document.getElementById("connectionSynergy").style.color = 'green';
+      } else {
+        document.getElementById("connectionSynergy").style.color = 'red';
+      }
+      if (conns.p2p) {
+        document.getElementById("connectionP2p").style.color = 'green';
+      } else {
+        document.getElementById("connectionP2p").style.color = 'red';
+      }
     }
   };
 </script>
