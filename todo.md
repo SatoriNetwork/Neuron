@@ -370,7 +370,11 @@ PLAN
             DONE central - test entire process
             central - snapshot - set them to beta=1 june 30th MAIN
         Scalability
-            central - upgrade database to postgres
+            DONE central - upgrade database to postgres
+            central - install posgres
+            central - migrate to posgres
+            central - test posgres
+            central - prod posgres
             central - revisit the scheduler after postgres as a standalone process since the database is multithreaded now.
         Infrastructure
             setup backup electurmx servers for RVN and EVR
@@ -454,6 +458,7 @@ central - test the average cadence query
 central - derived cadence as well from history table
 central - purge history more than 31+ days old (it grows very quickly)
 central - see server todo
+central - break database and servers into their own dockers to be deployed separately
 
 neuron - point everything at evrmore wallet instead of ravencoin wallet and test
 all - convert rvn wallet to evr wallet

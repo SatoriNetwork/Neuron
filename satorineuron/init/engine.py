@@ -43,6 +43,7 @@ def establishConnection(pubkey: str, key: str, url: str = None):
         # just a function, and shouldn't be eliminated.
 
     return SatoriPubSubConn(
+        start=getStart(),
         uid=pubkey,
         router=router,
         payload=key,

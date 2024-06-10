@@ -742,6 +742,25 @@ def pinDepinStream():
     return 'OK', 200
 
 
+@app.route('/connections-status')
+def connectionsStatus():
+    def update():
+        while True:
+            electrumx = start.connElectrumxQueue.get()
+            central = start.connCentralQueue.get()
+            pubsub = start.connPubsubQueue.get()
+            synergy = start.connSynergyQueue.get()
+            p2p = start.connP2PQueue.get()
+            yield "data: " + str({
+                'electrumx': electrumx,
+                'central': central,
+                'pubsub': pubsub,
+                'synergy': synergy,
+                'p2p': p2p, }) + "\n\n"
+
+    return Response(update(), mimetype='text/event-stream')
+
+
 # old way
 # @app.route('/model-updates')
 # def modelUpdates():
@@ -782,7 +801,7 @@ def pinDepinStream():
 #    import time
 #    return Response(update(), mimetype='text/event-stream')
 
-@app.route('/model-updates')
+@ app.route('/model-updates')
 def modelUpdates():
     def update():
 
@@ -809,7 +828,7 @@ def modelUpdates():
             while True:
                 data = updateQueue.get()
                 if thisThreadsTime != updateTime:
-                    return Response('data: oldCall\n\n', mimetype='text/event-stream')
+                    return Response('data: redundantCall\n\n', mimetype='text/event-stream')
                 yield data
         else:
             # logging.debug('yeilding once', len(
@@ -819,7 +838,7 @@ def modelUpdates():
     return Response(update(), mimetype='text/event-stream')
 
 
-@app.route('/working_updates')
+@ app.route('/working_updates')
 def workingUpdates():
     def update():
         try:
@@ -846,14 +865,14 @@ def workingUpdates():
     return Response(update(), mimetype='text/event-stream')
 
 
-@app.route('/working_updates_end')
+@ app.route('/working_updates_end')
 def workingUpdatesEnd():
     # start.workingUpdates.on_next('working_updates_end')
     start.workingUpdates.put('working_updates_end')
     return 'ok', 200
 
 
-@app.route('/chat', methods=['GET'])
+@ app.route('/chat', methods=['GET'])
 def chatPage():
     def presentChatForm():
         '''
@@ -869,7 +888,7 @@ def chatPage():
         'chatForm': presentChatForm()}))
 
 
-@app.route('/chat/session', methods=['POST'])
+@ app.route('/chat/session', methods=['POST'])
 def chatSession():
     def query(chatForm: str = ''):
         import satorineuron.chat as chat
@@ -881,7 +900,7 @@ def chatSession():
     return 'ok', 200
 
 
-@app.route('/chat/updates')
+@ app.route('/chat/updates')
 def chatUpdates():
     def update():
         try:
@@ -900,13 +919,13 @@ def chatUpdates():
     return Response(update(), mimetype='text/event-stream')
 
 
-@app.route('/chat/updates/end')
+@ app.route('/chat/updates/end')
 def chatUpdatesEnd():
     start.chatUpdates.send('chat_updates_end')
     return 'ok', 200
 
 
-@app.route('/remove_wallet_alias/<network>')
+@ app.route('/remove_wallet_alias/<network>')
 def removeWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.getWallet(network=network)
     myWallet.get(allWalletInfo=False)
@@ -923,7 +942,7 @@ def removeWalletAlias(network: str = 'main', alias: str = ''):
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@app.route('/update_wallet_alias/<network>/<alias>')
+@ app.route('/update_wallet_alias/<network>/<alias>')
 def updateWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.getWallet(network=network)
     myWallet.get(allWalletInfo=False)
@@ -940,7 +959,7 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@app.route('/wallet/<network>', methods=['GET', 'POST'])  # @closeVault
+@ app.route('/wallet/<network>', methods=['GET', 'POST'])  # @closeVault
 def wallet(network: str = 'main'):
     def accept_submittion(passwordForm):
         _rvn, _evr = start.openVault(
@@ -1019,14 +1038,14 @@ def presentSendSatoriTransactionform(formData):
     return sendSatoriTransaction
 
 
-@app.route('/wallet_lock/enable', methods=['GET'])
+@ app.route('/wallet_lock/enable', methods=['GET'])
 def enableWalletLock():
     # the network portion should be whatever network I'm on.
     config.add(data={'wallet lock': True})
     return 'OK', 200
 
 
-@app.route('/wallet_lock/disable', methods=['GET'])
+@ app.route('/wallet_lock/disable', methods=['GET'])
 def disableWalletLock():
     if start.vault is None:
         flash('Must unlock your wallet to disable walletlock.')
@@ -1035,7 +1054,7 @@ def disableWalletLock():
     return 'OK', 200
 
 
-@app.route('/vault/<network>', methods=['GET', 'POST'])
+@ app.route('/vault/<network>', methods=['GET', 'POST'])
 def vaultMainTest(network: str = 'main'):
     return vault()
 
@@ -1050,7 +1069,7 @@ def presentVaultPasswordForm():
     return passwordForm
 
 
-@app.route('/vault', methods=['GET', 'POST'])
+@ app.route('/vault', methods=['GET', 'POST'])
 def vault():
 
     def accept_submittion(passwordForm):
@@ -1098,7 +1117,7 @@ def vault():
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@app.route('/enable_autosecure/<network>/<retainInWallet>', methods=['GET'])
+@ app.route('/enable_autosecure/<network>/<retainInWallet>', methods=['GET'])
 def enableAutosecure(network: str = 'main', retainInWallet: int = 0):
     try:
         retainInWallet = int(retainInWallet)
@@ -1130,7 +1149,7 @@ def enableAutosecure(network: str = 'main', retainInWallet: int = 0):
     return 'OK', 200
 
 
-@app.route('/disable_autosecure/<network>', methods=['GET'])
+@ app.route('/disable_autosecure/<network>', methods=['GET'])
 def disableAutosecure(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to disable autosecure.')
@@ -1145,7 +1164,7 @@ def disableAutosecure(network: str = 'main'):
     return 'OK', 200
 
 
-@app.route('/mine_to_vault/enable/<network>', methods=['GET'])
+@ app.route('/mine_to_vault/enable/<network>', methods=['GET'])
 def enableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to enable minetovault.')
@@ -1163,7 +1182,7 @@ def enableMineToVault(network: str = 'main'):
     return f'Failed to enable minetovault: {result}', 400
 
 
-@app.route('/mine_to_vault/disable/<network>', methods=['GET'])
+@ app.route('/mine_to_vault/disable/<network>', methods=['GET'])
 def disableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to disable minetovault.')
@@ -1181,7 +1200,7 @@ def disableMineToVault(network: str = 'main'):
     return f'Failed to disable minetovault: {result}', 400
 
 
-@app.route('/vote', methods=['GET', 'POST'])
+@ app.route('/vote', methods=['GET', 'POST'])
 def vote():
 
     def getVotes(wallet):
@@ -1266,7 +1285,7 @@ def vote():
         **getVotes(myWallet)}))
 
 
-@app.route('/vote/submit/manifest/wallet', methods=['POST'])
+@ app.route('/vote/submit/manifest/wallet', methods=['POST'])
 def voteSubmitManifestWallet():
     # logging.debug(request.json, color='yellow')
     if (
@@ -1287,16 +1306,16 @@ def voteSubmitManifestWallet():
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
-@app.route('/vote/submit/manifest/vault', methods=['POST'])
+@ app.route('/vote/submit/manifest/vault', methods=['POST'])
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-                int(request.json.get('vaultPredictors')) > 0 or
-                int(request.json.get('vaultOracles')) > 0 or
-                int(request.json.get('vaultInviters')) > 0 or
-                int(request.json.get('vaultCreators')) > 0 or
-                int(request.json.get('vaultManagers')) > 0) and
-                start.vault is not None and start.vault.isDecrypted
+            int(request.json.get('vaultPredictors')) > 0 or
+            int(request.json.get('vaultOracles')) > 0 or
+            int(request.json.get('vaultInviters')) > 0 or
+            int(request.json.get('vaultCreators')) > 0 or
+            int(request.json.get('vaultManagers')) > 0) and
+            start.vault is not None and start.vault.isDecrypted
             ):
         start.server.submitMaifestVote(
             start.vault,
@@ -1309,7 +1328,7 @@ def voteSubmitManifestVault():
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
-@app.route('/vote/submit/sanction/wallet', methods=['POST'])
+@ app.route('/vote/submit/sanction/wallet', methods=['POST'])
 def voteSubmitSanctionWallet():
     # logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}

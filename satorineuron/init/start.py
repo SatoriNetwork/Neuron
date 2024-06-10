@@ -59,6 +59,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.chatUpdates: BehaviorSubject = BehaviorSubject(None)
         self.workingUpdates: Queue = Queue()
         self.chatUpdates: Queue = Queue()
+        self.connElectrumxQueue: Queue = Queue()
+        self.connCentralQueue: Queue = Queue()
+        self.connPubsubQueue: Queue = Queue()
+        self.connSynergyQueue: Queue = Queue()
+        self.connP2PQueue: Queue = Queue()
         self.urlServer: str = urlServer
         self.urlPubsub: str = urlPubsub
         self.urlSynergy: str = urlSynergy
@@ -146,6 +151,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             config.walletPath('wallet.yaml'),
             reserve=0.01,
             isTestnet=self.networkIsTest('ravencoin'))()
+        if self.ravencoinWallet.electrumx.conn is not None:
+            self.connElectrumxQueue.put(True)
+        else:
+            self.connElectrumxQueue.put(False)
         # self.evrmoreWallet = EvrmoreWallet(
         #    config.walletPath('wallet.yaml'),
         #    reserve=0.01,
@@ -172,6 +181,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     isTestnet=self.networkIsTest('ravencoin'),
                     password=password,
                 )()
+                if self.ravencoinVault.electrumx.conn is not None:
+                    self.connElectrumxQueue.put(True)
+                else:
+                    self.connElectrumxQueue.put(False)
                 # self.evrmoreVault = EvrmoreWallet(
                 #    vaultPath,
                 #    reserve=0.01,
@@ -205,6 +218,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         except Exception as _:
             referrer = None
         self.details = CheckinDetails(self.server.checkin(referrer=referrer))
+        self.connCentralQueue.put(True)
         # logging.debug(self.details, color='magenta')
         self.key = self.details.key
         self.idKey = self.details.idKey
@@ -282,6 +296,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.pubsub is not None:
             self.pubsub.disconnect()
             self.pubsub = None
+            self.connPubsubQueue.put(False)
         if self.key:
             signature = self.wallet.sign(self.key)
             self.pubsub = satorineuron.engine.establishConnection(
@@ -338,8 +353,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def syncDatasets(self):
         ''' establish a synergy connection '''
         if self.synergy and self.synergy.isConnected:
+            self.connSynergyQueue.put(True)
             for stream in self.subscriptions:
                 self.synergy.connectToPeer(stream.streamId)
+        else:
+            self.connSynergyQueue.put(False)
         # else:
         #    raise Exception('synergy not created or not connected.')
 
