@@ -54,3 +54,13 @@ The underlying DLT (blockchain) has not been designed.
 - <https://twitter.com/Satorinetio>
 - <https://www.reddit.com/r/SatoriNetwork>
 - <https://www.linkedin.com/company/satorinet/>
+
+
+#### wil setup
+
+VSCode plugins: Dev Containers (WSL on Windows)
+clone local Neuron repo, make sure set to correct branch
+https://github.com/SatoriNetwork/Neuron.git
+in VSCode new winodw:
+(bottom left, Open Remote Window) Open Folder in Container...
+pick local Neuron repo
