@@ -24,11 +24,8 @@ class StartupDagStruct(object):
         super(StartupDagStruct, self).__init__(*args)
         self.workingUpdates: Queue = None
         self.chatUpdates: Queue = None
-        self.connElectrumxQueue: Queue = None
-        self.connCentralQueue: Queue = None
-        self.connPubsubQueue: Queue = None
-        self.connSynergyQueue: Queue = None
-        self.connP2PQueue: Queue = None
+        self.connectionsStatusQueue: Queue = None
+        self.latestConnectionStatus: dict = None
         self.env: str = None
         self.urlServer: str = None
         self.urlPubsub: str = None

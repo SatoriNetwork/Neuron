@@ -746,17 +746,8 @@ def pinDepinStream():
 def connectionsStatus():
     def update():
         while True:
-            electrumx = start.connElectrumxQueue.get()
-            central = start.connCentralQueue.get()
-            pubsub = start.connPubsubQueue.get()
-            synergy = start.connSynergyQueue.get()
-            p2p = start.connP2PQueue.get()
-            yield "data: " + str({
-                'electrumx': electrumx,
-                'central': central,
-                'pubsub': pubsub,
-                'synergy': synergy,
-                'p2p': p2p, }) + "\n\n"
+            start.latestConnectionStatus = start.connectionsStatusQueue.get()
+            yield "data: " + str(start.latestConnectionStatus) + "\n\n"
 
     return Response(update(), mimetype='text/event-stream')
 

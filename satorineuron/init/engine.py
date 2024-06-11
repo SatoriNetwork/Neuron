@@ -8,7 +8,7 @@ from satoriengine import ModelManager, Engine, DataManager
 from satorineuron import config
 
 
-def establishConnection(pubkey: str, key: str, url: str = None):
+def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None):
     ''' establishes a connection to the satori server, returns connection object '''
     from satorineuron.init.start import getStart
 
@@ -47,7 +47,9 @@ def establishConnection(pubkey: str, key: str, url: str = None):
         uid=pubkey,
         router=router,
         payload=key,
-        url=url)
+        url=url,
+        onConnect=onConnect,
+        onDisconnect=onDisconnect)
     # payload={
     #    'publisher': ['stream-a'],
     #    'subscriptions': ['stream-b', 'stream-c', 'stream-d']})
