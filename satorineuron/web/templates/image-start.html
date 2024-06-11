@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% block head %}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    {% include 'links.html' %}
+    {% block inner_head %}
+    {% block preamble %}{% endblock %}
+    {% block resources %}
+      {% block css_resources %}
+      {{ bokeh_css | indent(8) if bokeh_css }}
+      {% endblock %}
+      {% block js_resources %}
+      {{ bokeh_js | indent(8) if bokeh_js }}
+      {% endblock %}
+    {% endblock %}
+    {% block postamble %}{% endblock %}
+    {% endblock %}
+  </head>
+  {% endblock %}
+  <body class="g-sidenav-show {% if darkmode %}bg-gray-900{% else %}bg-gray-200{% endif %}">
+	<div id="working" class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="display: none;">
+		<div class="container-for-center vertical-center" style="padding-left: 0px;">
+		  {% if darkmode %}<img src="{{ url_for('static', filename='img/loading_dark.gif') }}" class="loadingThingy">{% else %}<img src="{{ url_for('static', filename='img/loading_light.gif') }}" class="loadingThingy">{% endif %}	
+    </div>
+    <div id="working_messages" class="container-for-center vertical-center" style="padding-left: 0px;position: relative;margin-left: 12%;margin-top: 20%;"><p id="working_message"></p></div>
+	</div>
+  <!--{ % include 'loader.html' %}-->
+  <!--{ % include 'header.html' % }-->
+  
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <div class="container-fluid py-4">
+
+      <div class="row mb-4" id="WelcomeMessage">
+        <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+          <div class="card {% if darkmode %}dark-colors{% endif %}">
+            <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+              <div class="row">
+                <div class="col-lg-12 col-12">
+                  <h6 class="text-center {% if darkmode %}dark-colors{% endif %}" style="font-weight: 500;">Let's Restart</h6>
+                </div>
+              </div>
+            </div>
+            <div class="card-body pb-3">
+              <div class="row">
+                <div class="col-lg-12 col-12">
+                  <p class="text mb-0 {% if darkmode %}dark-colors{% endif %}" style="font-weight: 400;">
+                    Your Satori Neuron did not start correctly.
+                    <br><br>To start Satori please do one of the following:
+                    <br><br>
+                    <br>• Double click the Satori icon on your desktop.
+                    <br>or 
+                    <br>• Restart your entire computer (since Satori should run automatically on startup).
+                    <br><br>
+                    <br><br>Thank you for being part of the Satori Network!
+                    <br><br>Namaste.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+  </body>
+</html>

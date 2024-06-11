@@ -17,6 +17,7 @@ from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
 from satorineuron import logging
 from satorineuron import config
+from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import StartupDagStruct
 from satorineuron.structs.pubsub import SignedStreamId
@@ -59,6 +60,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.chatUpdates: BehaviorSubject = BehaviorSubject(None)
         self.workingUpdates: Queue = Queue()
         self.chatUpdates: Queue = Queue()
+        # dictionary of connection statuses {ConnectionTo: bool}
+        self.connectionsStatusQueue: Queue = Queue()
+        self.latestConnectionStatus: dict = {}
         self.urlServer: str = urlServer
         self.urlPubsub: str = urlPubsub
         self.urlSynergy: str = urlSynergy
@@ -137,6 +141,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.buildEngine()
         # time.sleep(60*4)
 
+    def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
+        self.connectionsStatusQueue.put({
+            **self.latestConnectionStatus,
+            **{connTo.name: status}})
+
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
         logging.info('started relay validation engine', color='green')
@@ -146,6 +155,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             config.walletPath('wallet.yaml'),
             reserve=0.01,
             isTestnet=self.networkIsTest('ravencoin'))()
+        if self.ravencoinWallet.electrumx.conn is not None:
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.electrumx,
+                status=True)
+        else:
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.electrumx,
+                status=False)
         # self.evrmoreWallet = EvrmoreWallet(
         #    config.walletPath('wallet.yaml'),
         #    reserve=0.01,
@@ -172,6 +189,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     isTestnet=self.networkIsTest('ravencoin'),
                     password=password,
                 )()
+                if self.ravencoinVault.electrumx.conn is not None:
+                    self.updateConnectionStatus(
+                        connTo=ConnectionTo.electrumx,
+                        status=True)
+                else:
+                    self.updateConnectionStatus(
+                        connTo=ConnectionTo.electrumx,
+                        status=False)
                 # self.evrmoreVault = EvrmoreWallet(
                 #    vaultPath,
                 #    reserve=0.01,
@@ -205,6 +230,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         except Exception as _:
             referrer = None
         self.details = CheckinDetails(self.server.checkin(referrer=referrer))
+        self.updateConnectionStatus(
+            connTo=ConnectionTo.central,
+            status=False)
         # logging.debug(self.details, color='magenta')
         self.key = self.details.key
         self.idKey = self.details.idKey
@@ -281,13 +309,22 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' establish a pubsub connection. '''
         if self.pubsub is not None:
             self.pubsub.disconnect()
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.pubsub,
+                status=False)
             self.pubsub = None
         if self.key:
             signature = self.wallet.sign(self.key)
             self.pubsub = satorineuron.engine.establishConnection(
                 url=self.urlPubsub,
                 pubkey=self.wallet.publicKey,
-                key=signature.decode() + '|' + self.key)
+                key=signature.decode() + '|' + self.key,
+                onConnect=lambda: self.updateConnectionStatus(
+                    connTo=ConnectionTo.pubsub,
+                    status=True),
+                onDisconnect=lambda: self.updateConnectionStatus(
+                    connTo=ConnectionTo.pubsub,
+                    status=False))
             logging.info('connected to Satori pubsub network', color='green')
         else:
             raise Exception('no key provided by satori server')
@@ -338,8 +375,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def syncDatasets(self):
         ''' establish a synergy connection '''
         if self.synergy and self.synergy.isConnected:
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.synergy,
+                status=True)
             for stream in self.subscriptions:
                 self.synergy.connectToPeer(stream.streamId)
+        else:
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.synergy,
+                status=False)
         # else:
         #    raise Exception('synergy not created or not connected.')
 
