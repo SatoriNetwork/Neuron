@@ -41,7 +41,29 @@
             <i class="fa fa-cog fixed-plugin-button-nav cursor-pointer"></i>
           </a>
         </li>
-      -->
+        -->
+        <li title='Connections Status' style="margin-right:1.25rem">
+          <a href="#" title="Wallet connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;" onClick="refreshConnectionsStatus('connectionElectrumx')">
+            <i id="connectionElectrumx" class="fa fa-circle" style="color: #548c2f;"></i>
+          </a>
+          <a href="#" title="Central connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;" onClick="refreshConnectionsStatus('connectionCentral')">
+            <i id="connectionCentral" class="fa fa-circle" style="color: #548c2f;"></i>
+          </a>
+          <a href="#" title="Pubsub connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;" onClick="refreshConnectionsStatus('connectionPubsub')">
+            <i id="connectionPubsub" class="fa fa-circle" style="color: #548c2f;"></i>
+          </a>
+          <a href="#" title="P2P Satori Synergy connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;" onClick="refreshConnectionsStatus('connectionSynergy')">
+            <i id="connectionSynergy" class="fa fa-circle" style="color: #548c2f;"></i>
+          </a>
+          <!--<a href="{{ url_for('modeLight') }}" title="P2P connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
+            <i id="connectionP2p" class="fa fa-circle" style="color: maroon;"></i>
+          </a>-->
+        </li>
+        <li class="nav-item pe-2 d-flex align-items-center">
+          <a href="{{ url_for('restart') }}" class="nav-link text-body p-0">
+            <i class="fa fa-power-off cursor-pointer"></i>
+            <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Restart</span></a>
+        </li>
         {% if paused %} <!-- server should tell us if we're paused or not... hit endpoint, refresh page. -->
         <li class="nav-item pe-2 d-flex align-items-center">
           <a href="{{ url_for('unpause') }}" class="nav-link text-body p-0">
@@ -178,23 +200,6 @@
           </ul>
           -->
         </li>
-        <li title='Connections Status' style="margin-right:.5rem">
-          <a href="{{ url_for('modeLight') }}" title="Satori Central connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
-            <i id="connectionElectrumx" class="fa fa-circle" style="color:green"></i>
-          </a>
-          <a href="{{ url_for('modeLight') }}" title="Pubsub Network connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
-            <i id="connectionCentral" class="fa fa-circle" style="color:maroon"></i>
-          </a>
-          <a href="{{ url_for('modeLight') }}" title="Peer-to-Peer connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
-            <i id="connectionPubsub" class="fa fa-circle-o" style="color:maroon"></i>
-          </a>
-          <a href="{{ url_for('modeLight') }}" title="Peer-to-Peer connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
-            <i id="connectionSynergy" class="fa fa-circle-o" style="color:maroon"></i>
-          </a>
-          <a href="{{ url_for('modeLight') }}" title="Peer-to-Peer connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;">
-            <i id="connectionP2p" class="fa fa-circle-o" style="color:maroon"></i>
-          </a>
-        </li>
         <li title='Dark Mode' class='hide-on-med-and-down' style="margin-right:.5rem">
           {% if darkmode %}
             <a href="{{ url_for('modeLight') }}" class="nav-link text-body p-0">
@@ -228,48 +233,51 @@
       //document.body.classList.toggle("dark-theme");
     }
   }
-  var table_update = new EventSource("/connections-status");
-  table_update.onmessage = function (e) {
+  var updateConnectionsStatus = new EventSource("/connections-status");
+  updateConnectionsStatus.onmessage = function (e) {
     if (e.data == "close") {
-      table_update.close();
+      updateConnectionsStatus.close();
     } else if (e.data == "redundantCall") {
       console.log('redundantCalled');
     } else {
       let conns = JSON.parse(e.data);
-      console.log('conns');
-      console.log(conns);
-      console.log(conns.electrumx);
-      console.log(conns.cenral);
-      console.log(conns.pubsub);
-      console.log(conns.synergy);
-      console.log(conns.p2p);
       if (conns.electrumx) {
-        document.getElementById("connectionElectrumx").style.color = 'green';
+        document.getElementById("connectionElectrumx").style.color = '#548c2f';
       } else {
-        document.getElementById("connectionElectrumx").style.color = 'red';
+        document.getElementById("connectionElectrumx").style.color = 'maroon';
       }
       if (conns.central) {
-        document.getElementById("connectionCentral").style.color = 'green';
+        document.getElementById("connectionCentral").style.color = '#548c2f';
       } else {
-        document.getElementById("connectionCentral").style.color = 'red';
+        document.getElementById("connectionCentral").style.color = 'maroon';
       }
       if (conns.pubsub) {
-        document.getElementById("connectionPubsub").style.color = 'green';
+        document.getElementById("connectionPubsub").style.color = '#548c2f';
       } else {
-        document.getElementById("connectionPubsub").style.color = 'red';
+        document.getElementById("connectionPubsub").style.color = 'maroon';
       }
       if (conns.synergy) {
-        document.getElementById("connectionSynergy").style.color = 'green';
+        document.getElementById("connectionSynergy").style.color = '#548c2f';
       } else {
-        document.getElementById("connectionSynergy").style.color = 'red';
+        document.getElementById("connectionSynergy").style.color = 'maroon';
       }
-      if (conns.p2p) {
-        document.getElementById("connectionP2p").style.color = 'green';
-      } else {
-        document.getElementById("connectionP2p").style.color = 'red';
-      }
+      //if (conns.p2p) {
+      //  document.getElementById("connectionP2p").style.color = '#548c2f';
+      //} else {
+      //  document.getElementById("connectionP2p").style.color = 'maroon';
+      //}
     }
   };
+  function refreshConnectionsStatus(connectionId) {
+    document.getElementById(connectionId).style.color = 'grey';
+
+      fetch('/connections-status/refresh', {
+        method: 'GET',
+      }).then(response => {
+        console.log('Connection Statuses Refreshed:');
+        console.log(response.text);
+      }).catch(error => console.error('Error:', error));
+    }
 </script>
 
     <!-- End Navbar -->

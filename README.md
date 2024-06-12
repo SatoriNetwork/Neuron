@@ -56,7 +56,7 @@ The underlying DLT (blockchain) has not been designed.
 - <https://www.linkedin.com/company/satorinet/>
 
 
-#### Devemopment Setup:
+### Devemopment Setup:
 
 VSCode plugins: Dev Containers (WSL on Windows)
 clone local Neuron repo, make sure set to correct branch

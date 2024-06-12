@@ -142,9 +142,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # time.sleep(60*4)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
-        self.connectionsStatusQueue.put({
+        logging.debug('connTo???', self.latestConnectionStatus,
+                      connTo.name, status, color='yellow')
+        self.latestConnectionStatus = {
             **self.latestConnectionStatus,
-            **{connTo.name: status}})
+            **{connTo.name: status}}
+        self.connectionsStatusQueue.put(self.latestConnectionStatus)
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
@@ -229,55 +232,60 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 mode='r').read().strip()
         except Exception as _:
             referrer = None
-        self.details = CheckinDetails(self.server.checkin(referrer=referrer))
-        self.updateConnectionStatus(
-            connTo=ConnectionTo.central,
-            status=False)
-        # logging.debug(self.details, color='magenta')
-        self.key = self.details.key
-        self.idKey = self.details.idKey
-        self.subscriptionKeys = self.details.subscriptionKeys
-        self.publicationKeys = self.details.publicationKeys
-        self.subscriptions = [
-            Stream.fromMap(x)
-            for x in json.loads(self.details.subscriptions)]
-        # logging.debug(self.subscriptions, color='yellow')
-        self.publications = [
-            Stream.fromMap(x)
-            for x in json.loads(self.details.publications)]
-        # logging.debug(self.publications, color='magenta')
-        self.caches = {
-            x.streamId: disk.Cache(id=x.streamId)
-            for x in set(self.subscriptions + self.publications)}
-        # for k, v in self.caches.items():
-        #    logging.debug(k, v, color='magenta')
+        try:
+            self.details = CheckinDetails(self.server.checkin(referrer=referrer))
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.central,
+                status=True)
+            # logging.debug(self.details, color='magenta')
+            self.key = self.details.key
+            self.idKey = self.details.idKey
+            self.subscriptionKeys = self.details.subscriptionKeys
+            self.publicationKeys = self.details.publicationKeys
+            self.subscriptions = [
+                Stream.fromMap(x)
+                for x in json.loads(self.details.subscriptions)]
+            # logging.debug(self.subscriptions, color='yellow')
+            self.publications = [
+                Stream.fromMap(x)
+                for x in json.loads(self.details.publications)]
+            # logging.debug(self.publications, color='magenta')
+            self.caches = {
+                x.streamId: disk.Cache(id=x.streamId)
+                for x in set(self.subscriptions + self.publications)}
+            # for k, v in self.caches.items():
+            #    logging.debug(k, v, color='magenta')
 
-        # logging.debug(self.caches, color='yellow')
-        # self.signedStreamIds = [
-        #    SignedStreamId(
-        #        source=s.id.source,
-        #        author=s.id.author,
-        #        stream=s.id.stream,
-        #        target=s.id.target,
-        #        publish=False,
-        #        subscribe=True,
-        #        signature=sig,  # doesn't the server need my pubkey?
-        #        signed=self.wallet.sign(sig)) for s, sig in zip(
-        #            self.subscriptions,
-        #            self.subscriptionKeys)
-        # ] + [
-        #    SignedStreamId(
-        #        source=p.id.source,
-        #        author=p.id.author,
-        #        stream=p.id.stream,
-        #        target=p.id.target,
-        #        publish=True,
-        #        subscribe=True,
-        #        signature=sig,  # doesn't the server need my pubkey?
-        #        signed=self.wallet.sign(sig)) for p, sig in zip(
-        #            self.publications,
-        #            self.publicationKeys)]
-        logging.info('checked in with Satori', color='green')
+            # logging.debug(self.caches, color='yellow')
+            # self.signedStreamIds = [
+            #    SignedStreamId(
+            #        source=s.id.source,
+            #        author=s.id.author,
+            #        stream=s.id.stream,
+            #        target=s.id.target,
+            #        publish=False,
+            #        subscribe=True,
+            #        signature=sig,  # doesn't the server need my pubkey?
+            #        signed=self.wallet.sign(sig)) for s, sig in zip(
+            #            self.subscriptions,
+            #            self.subscriptionKeys)
+            # ] + [
+            #    SignedStreamId(
+            #        source=p.id.source,
+            #        author=p.id.author,
+            #        stream=p.id.stream,
+            #        target=p.id.target,
+            #        publish=True,
+            #        subscribe=True,
+            #        signature=sig,  # doesn't the server need my pubkey?
+            #        signed=self.wallet.sign(sig)) for p, sig in zip(
+            #            self.publications,
+            #            self.publicationKeys)]
+            logging.info('checked in with Satori', color='green')
+        except Exception as _:
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.central,
+                status=False)
 
     def verifyCaches(self) -> bool:
         ''' rehashes my published hashes '''
