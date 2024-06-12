@@ -1,0 +1,28 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node
+{
+	"name": "SatoriNet",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	// "image": "python:3.9-slim",
+	"build": { "dockerfile": "Dockerfile-dev" },
+	// "capAdd": ["SYS_ADMIN"],
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root",
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	"customizations": {
+		"vscode": {
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-python.debugpy"]
+		}
+	  },
+
+	"workspaceFolder": "/Satori",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/Satori/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+
+	// Uncomment the next line to run commands after the container is created - for example installing curl.
+	"postCreateCommand": "cd /Satori/Neuron && pip install -r requirements.txt && python setup.py develop",
+}
