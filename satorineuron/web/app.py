@@ -742,12 +742,17 @@ def pinDepinStream():
     return 'OK', 200
 
 
+@app.route('/connections-status/refresh', methods=['GET'])
+def connectionsStatusRefresh():
+    start.connectionsStatusQueue.put(start.latestConnectionStatus)
+    return str(start.latestConnectionStatus).replace("'", '"').replace(': True', ': true').replace(': False', ': false'), 200
+
+
 @app.route('/connections-status')
 def connectionsStatus():
     def update():
         while True:
-            start.latestConnectionStatus = start.connectionsStatusQueue.get()
-            yield "data: " + str(start.latestConnectionStatus) + "\n\n"
+            yield "data: " + str(start.connectionsStatusQueue.get()).replace("'", '"').replace(': True', ': true').replace(': False', ': false') + "\n\n"
 
     return Response(update(), mimetype='text/event-stream')
 
