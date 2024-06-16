@@ -325,6 +325,8 @@ PLAN
             DONE simple one
         Legal
             DONE Ulas and other disclaimer/aggreement documents
+        Central
+            make sure every neuron ip address is unique
         Neuron
             DONE make optional wallet lock
             ui message if people try to run it using just docker: to start Satori please double click on the desktop icon or restart your computer.

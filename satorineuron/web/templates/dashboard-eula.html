@@ -1,0 +1,26 @@
+{% block content %}
+<div class="row mb-4" id="EulaMessage">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-body pb-3">
+        <div class="row">
+          <div class="col-lg-12 col-12">
+            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %} text-center">
+              <a href="/static/legal/eula.txt" target="_blank">End User License Agreement</a>,
+              <a href="/static/legal/privacy-policy.txt" target="_blank">Privacy Policy</a>,
+              <a href="/static/legal/terms-of-service.txt" target="_blank">Terms of Service</a>,
+              <a href="/static/legal/disclaimer.txt" target="_blank">Disclaimer of Warranties</a>,
+              <a href="/static/legal/open.txt" target="_blank">Open Source Notice</a>, and the
+              <a href="/static/legal/token.txt" target="_blank">Token Use Policy</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+

@@ -88,11 +88,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()
+        alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
         while True:
             if self.asyncThread.loop is not None:
                 self.restartThread = self.asyncThread.repeatRun(
                     task=self.start,
-                    interval=60*60*24)
+                    interval=60*60*24 if alreadySetup else 60*60*6)
                 break
             print('waiting for main loop to start')
             time.sleep(1)
@@ -142,8 +143,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # time.sleep(60*4)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
-        logging.debug('connTo???', self.latestConnectionStatus,
-                      connTo.name, status, color='yellow')
         self.latestConnectionStatus = {
             **self.latestConnectionStatus,
             **{connTo.name: status}}
@@ -233,7 +232,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         except Exception as _:
             referrer = None
         try:
-            self.details = CheckinDetails(self.server.checkin(referrer=referrer))
+            self.details = CheckinDetails(
+                self.server.checkin(referrer=referrer))
             self.updateConnectionStatus(
                 connTo=ConnectionTo.central,
                 status=True)
