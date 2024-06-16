@@ -1,9 +1,7 @@
 {% extends "basic.html" %}
 {% block content %}
-  {% if firstRun %}
-    {% if wallet.balance == 0 %}
-      {% include 'dashboard-welcome.html' %}
-    {% endif %}
+  {% if wallet.balanceAmount + vaultBalanceAmount == 0 %}
+    {% include 'dashboard-welcome.html' %}
   {% endif %}
   {% include 'dashboard-balance.html' %}
   <!--<br id='invitebr'>
