@@ -1,7 +1,7 @@
 {% extends "basic.html" %}
 {% block content %}
-  {% if firstRun or True %}
-    {% if wallet.balance == 0 or True %}
+  {% if firstRun %}
+    {% if wallet.balance == 0 %}
       {% include 'dashboard-welcome.html' %}
     {% endif %}
   {% endif %}
