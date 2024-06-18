@@ -306,12 +306,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             ''' filter down to prediciton publications '''
             return [s for s in streams if s.predicting is not None]
 
-        logging.info('starting AI Engine...', color='green')
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
             publications=predictionStreams(self.publications))
         self.engine.run()
-        logging.info('started AI Engine', color='green')
 
     def pubsubConnect(self):
         ''' establish a pubsub connection. '''

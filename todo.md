@@ -383,7 +383,7 @@ PLAN
         Deploy Mainnet
             external - make a separate wallet for the association so we don't co-mingle funds
             central - set the audit, wallet and other stuff to use that wallet
-            external - divisibility on evr to 8 dec
+            DONE external - divisibility on evr to 8 dec
             neuron - switch mainnet to mainnet
     After Launch
         Banking
