@@ -7,7 +7,6 @@ class GetHistory(object):
     '''
 
     def __init__(self, *args, **kwargs):
-        super(GetHistory, self).__init__(*args, **kwargs)
         import requests
         self.response = requests.get(
             url='https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&past_days=10&hourly=winddirection_10m')

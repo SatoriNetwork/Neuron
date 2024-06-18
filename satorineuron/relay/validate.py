@@ -26,7 +26,6 @@ def postRequestHook(r: requests.Response):
 class ValidateRelayStream(object):
 
     def __init__(self, *args):
-        super(ValidateRelayStream, self).__init__(*args)
         self.claimed = set()
         self.regexURL = (
             # r"^https?://"

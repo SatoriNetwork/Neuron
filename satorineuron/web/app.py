@@ -695,7 +695,7 @@ def dashboard():
     or all at once (getAll)
     '''
     def __init__(self):
-        super(GetHistory, self).__init__()
+        pass
 
     def getNext(self):
         '''

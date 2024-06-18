@@ -2,7 +2,6 @@ class GetHistory(object):
     '''example 1'''
 
     def __init__(self, *args, **kwargs):
-        super(GetHistory, self).__init__(*args, **kwargs)
         import requests
         self.i = 0
         self.value = (
@@ -34,7 +33,6 @@ def postRequestHook(text: str):
 class GetHistory(object):
     '''example 1'''
     def __init__(self, *args, **kwargs):
-        super(GetHistory, self).__init__(*args, **kwargs)
         import requests
         self.i = 0
         self.value = (

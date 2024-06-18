@@ -4,7 +4,6 @@ import threading
 class PubSubTest(object):
     def __init__(
             self, router: 'function' = None, *args, **kwargs):
-        super(PubSubTest, self).__init__(*args, **kwargs)
         self.router = router
         self.listening = True
         self.ear = self.setEar()

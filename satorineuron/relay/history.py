@@ -2,7 +2,7 @@ class GetHistoryTemplate(object):
     '''gets the history of this dataset one observation at a time using the getNext method'''
 
     def __init__(self, *args, **kwargs):
-        super(GetHistoryTemplate, self).__init__(*args, **kwargs)
+        pass
 
     def getNext(self, *args, **kwargs):
         '''
@@ -30,7 +30,7 @@ class GetHistoryTemplate(object):
         return """class GetHistory(object):
   '''supplies the history of the data stream one observation at a time (getNext, isDone) or all at once (getAll)'''
   def __init__(self, *args, **kwargs):
-    super(GetHistory, self).__init__(*args, **kwargs)
+    pass
   def getNext(self, *args, **kwargs):
     '''should return a value or a list of two values, the first being the time in UTC as a string of the observation,the second being the observation value'''
     return ''

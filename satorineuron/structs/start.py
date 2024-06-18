@@ -21,7 +21,6 @@ class StartupDagStruct(object):
         urlSynergy: str = None,
         *args
     ):
-        super(StartupDagStruct, self).__init__(*args)
         self.workingUpdates: Queue = None
         self.chatUpdates: Queue = None
         self.connectionsStatusQueue: Queue = None

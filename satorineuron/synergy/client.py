@@ -12,7 +12,6 @@ from satorilib.synergy import SynergyProtocol
 
 class SynergyRestClient(object):
     def __init__(self, url, *args, **kwargs):
-        super(SynergyRestClient, self).__init__(*args, **kwargs)
         self.url = url
 
     def getChallenge(self):
