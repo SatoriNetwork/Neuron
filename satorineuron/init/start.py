@@ -364,7 +364,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 wallet=self.wallet,
                 onConnect=self.syncDatasets)
             logging.info(
-                'connected to Satori p2p network', color='magenta')
+                'connected to Satori p2p network', color='green')
         else:
             raise Exception('wallet not open yet.')
 

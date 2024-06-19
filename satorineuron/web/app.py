@@ -79,7 +79,8 @@ while True:
                 'prod': 'https://satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
         # threading.Thread(target=start.start, daemon=True).start()
-        logging.info('Satori Neuron started!', color='green')
+        logging.info(f'environment: {ENV}', print=True)
+        logging.info('Satori Neuron is starting...', color='green')
         break
     except ConnectionError as e:
         # try again...
@@ -126,8 +127,9 @@ def getFile(ext: str = '.csv') -> tuple[str, int, Union[None, 'FileStorage']]:
 
 def getResp(resp: Union[dict, None] = None) -> dict:
     return {
-        'v': VERSION,
-        'm': MOTO,
+        'version': VERSION,
+        'moto': MOTO,
+        'env': ENV,
         'paused': start.paused,
         'darkmode': darkmode,
         'title': 'Satori',
