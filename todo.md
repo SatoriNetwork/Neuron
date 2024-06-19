@@ -380,6 +380,9 @@ PLAN
             central - revisit the scheduler after postgres as a standalone process since the database is multithreaded now.
         Infrastructure
             setup backup electurmx servers for RVN and EVR
+            setup neurons on testnet full time
+            modify install to support testnet dynamically
+            neuron - add neuron lock feature
         Deploy Mainnet
             external - make a separate wallet for the association so we don't co-mingle funds
             central - set the audit, wallet and other stuff to use that wallet
