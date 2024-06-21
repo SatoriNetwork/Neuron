@@ -245,13 +245,40 @@ def unpause():
 @app.route('/restart', methods=['GET'])
 def restart():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
-    return 'Satori Neuron is attempting to restart. Please wait a few minutes then refresh the page...', 200
+    html = (
+        '<!DOCTYPE html>'
+        '<html>'
+        '<head>'
+        '    <title>Restarting Satori Neuron</title>'
+        '    <script type="text/javascript">'
+        '        setTimeout(function(){'
+        '            window.location.href = "http://127.0.0.1:24601";'
+        '        }, 1000 * 60 * 10); // 600,000 milliseconds'
+        '    </script>'
+        '</head>'
+        '<body>'
+        '    <p>Satori Neuron is attempting to restart. Please wait several (say 10) minutes then <a href="http://127.0.0.1:24601">click here</a>...</p>'
+        '</body>'
+        '</html>'
+    )
+    return html, 200
 
 
 @app.route('/shutdown', methods=['GET'])
 def shutdown():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(shutdown=True)))
-    return 'Satori Neuron is shutting down. Please wait a few minutes then refresh the page...', 200
+    html = (
+        '<!DOCTYPE html>'
+        '<html>'
+        '<head>'
+        '    <title>Shutting Down Satori Neuron</title>'
+        '</head>'
+        '<body>'
+        '    <p>Satori Neuron is attempting to shut down. To verify it has shut down you can make sure the container is not running under the Container tab in Docker, and you can close the terminal window which shows the logs of the Satori Neuron.</p>'
+        '</body>'
+        '</html>'
+    )
+    return html, 200
 
 
 @app.route('/mode/light', methods=['GET'])
@@ -1314,7 +1341,7 @@ def voteSubmitManifestVault():
             int(request.json.get('vaultCreators')) > 0 or
             int(request.json.get('vaultManagers')) > 0) and
             start.vault is not None and start.vault.isDecrypted
-            ):
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
