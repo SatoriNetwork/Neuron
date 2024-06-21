@@ -95,7 +95,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     task=self.start,
                     interval=60*60*24 if alreadySetup else 60*60*6)
                 break
-            print('waiting for main loop to start')
             time.sleep(1)
 
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
