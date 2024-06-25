@@ -329,7 +329,7 @@ PLAN
             make sure every neuron ip address is unique
         Neuron
             DONE make optional wallet lock
-            ui message if people try to run it using just docker: to start Satori please double click on the desktop icon or restart your computer.
+            DONE ui message if people try to run it using just docker: to start Satori please double click on the desktop icon or restart your computer.
         Glitches
             DONE neuron or central - send all fails somewhere
             DONE footer nav
@@ -379,9 +379,9 @@ PLAN
             central - prod posgres
             central - revisit the scheduler after postgres as a standalone process since the database is multithreaded now.
         Infrastructure
-            setup backup electurmx servers for RVN and EVR
-            setup neurons on testnet full time
-            modify install to support testnet dynamically
+            DONE setup backup electurmx servers for RVN and EVR
+            DONE setup neurons on testnet full time
+            DONE modify install to support testnet dynamically
             neuron - add neuron lock feature
         Deploy Mainnet
             external - make a separate wallet for the association so we don't co-mingle funds
