@@ -450,14 +450,19 @@ PLAN
             government statistics
             etc.
 
+neuron - point everything at evrmore wallet instead of ravencoin wallet and test
+all - convert rvn wallet to evr wallet
+all - all test evr manually since electrum servers are newer versions for evr
+central - prodx to prod
+Central - what about address? can't send to rvn addresses drive evr address for entire database, remove extra address, save elsewhere.
+
 neuron - troubleshoot setting up a stream with the urls from wilsql
 neuron - crete intensity level so you can dial down the rate at which it mines
 neuron - on ui fix divisibility so it's at most 8 places
-central - setup restart signal
+DONE central - setup restart signal
 central - verify amounts match for distributions
-central - prodx to prod
 
-beta - make a commemorative NFT
+DONE beta - make a commemorative NFT
 
 central - test the average cadence query
 central - derived cadence as well from history table
@@ -465,16 +470,13 @@ central - purge history more than 31+ days old (it grows very quickly)
 central - see server todo
 central - break database and servers into their own dockers to be deployed separately
 
-neuron - point everything at evrmore wallet instead of ravencoin wallet and test
-all - convert rvn wallet to evr wallet
-all - all test evr manually since electrum servers are newer versions for evr
-central - update website (images)
-central - update website (copy)
+DONE central - update website (images)
+DONE central - update website (copy)
 central - update website (yellowpaper)
 
 central - we will need an admin dashboard to track the activity of the network
 
-central - setup additional electrumx server for evr
+DONE central - setup additional electrumx server for evr
 
 central - better frontend experience - llm lite
 
