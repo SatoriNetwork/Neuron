@@ -299,10 +299,10 @@ DONE neuron - everytime we get a message from pubsub about new data we should tr
 -- Prep for launch --
 
 0. DONE - divisibility on rvn to 8 dec
-1. divisibility on evr to 8 dec
+1. DONE divisibility on evr to 8 dec
 2. DONE build clone of network on test.satorinet.io
 3. test extensively
-4. build NFT for launch
+4. DONE build NFT for launch
 
 DONE all - reissue SATORI to be 8 decimal places, handle everywhere
 DONE installer - I think we should visit the installer again before launch to give it the ability to shutdown or restart the node, that way we can update the docker image from within the docker image
