@@ -443,7 +443,7 @@ PLAN
             neruon - call endpoints
             central - endpoints
             central - logic to wrap tokens
-            central - logic to unwrap tokens            
+            central - logic to unwrap tokens
         Setup useful oracles
             Fred data
             finanacial data
