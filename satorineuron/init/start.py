@@ -89,14 +89,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()
         alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
+        if alreadySetup:
+            threading.Thread(target=self.delayedEngine).start()
         while True:
             if self.asyncThread.loop is not None:
                 self.restartThread = self.asyncThread.repeatRun(
                     task=self.start,
-                    interval=60*60*24 if alreadySetup else 60*60*6)
+                    interval=60*60*24 if alreadySetup else 60*60*12)
                 break
-            print('waiting for main loop to start')
             time.sleep(1)
+
+    def delayedEngine(self):
+        time.sleep(60*60*6)
+        self.buildEngine()
 
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         ''' returns the reference to the cache of a stream '''

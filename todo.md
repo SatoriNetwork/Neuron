@@ -299,10 +299,10 @@ DONE neuron - everytime we get a message from pubsub about new data we should tr
 -- Prep for launch --
 
 0. DONE - divisibility on rvn to 8 dec
-1. divisibility on evr to 8 dec
+1. DONE divisibility on evr to 8 dec
 2. DONE build clone of network on test.satorinet.io
 3. test extensively
-4. build NFT for launch
+4. DONE build NFT for launch
 
 DONE all - reissue SATORI to be 8 decimal places, handle everywhere
 DONE installer - I think we should visit the installer again before launch to give it the ability to shutdown or restart the node, that way we can update the docker image from within the docker image
@@ -329,7 +329,7 @@ PLAN
             make sure every neuron ip address is unique
         Neuron
             DONE make optional wallet lock
-            ui message if people try to run it using just docker: to start Satori please double click on the desktop icon or restart your computer.
+            DONE ui message if people try to run it using just docker: to start Satori please double click on the desktop icon or restart your computer.
         Glitches
             DONE neuron or central - send all fails somewhere
             DONE footer nav
@@ -379,9 +379,9 @@ PLAN
             central - prod posgres
             central - revisit the scheduler after postgres as a standalone process since the database is multithreaded now.
         Infrastructure
-            setup backup electurmx servers for RVN and EVR
-            setup neurons on testnet full time
-            modify install to support testnet dynamically
+            DONE setup backup electurmx servers for RVN and EVR
+            DONE setup neurons on testnet full time
+            DONE modify install to support testnet dynamically
             neuron - add neuron lock feature
         Deploy Mainnet
             external - make a separate wallet for the association so we don't co-mingle funds
@@ -443,21 +443,26 @@ PLAN
             neruon - call endpoints
             central - endpoints
             central - logic to wrap tokens
-            central - logic to unwrap tokens            
+            central - logic to unwrap tokens
         Setup useful oracles
             Fred data
             finanacial data
             government statistics
             etc.
 
+neuron - point everything at evrmore wallet instead of ravencoin wallet and test
+all - convert rvn wallet to evr wallet
+all - all test evr manually since electrum servers are newer versions for evr
+central - prodx to prod
+Central - what about address? can't send to rvn addresses drive evr address for entire database, remove extra address, save elsewhere.
+
 neuron - troubleshoot setting up a stream with the urls from wilsql
 neuron - crete intensity level so you can dial down the rate at which it mines
 neuron - on ui fix divisibility so it's at most 8 places
-central - setup restart signal
+DONE central - setup restart signal
 central - verify amounts match for distributions
-central - prodx to prod
 
-beta - make a commemorative NFT
+DONE beta - make a commemorative NFT
 
 central - test the average cadence query
 central - derived cadence as well from history table
@@ -465,16 +470,13 @@ central - purge history more than 31+ days old (it grows very quickly)
 central - see server todo
 central - break database and servers into their own dockers to be deployed separately
 
-neuron - point everything at evrmore wallet instead of ravencoin wallet and test
-all - convert rvn wallet to evr wallet
-all - all test evr manually since electrum servers are newer versions for evr
-central - update website (images)
-central - update website (copy)
+DONE central - update website (images)
+DONE central - update website (copy)
 central - update website (yellowpaper)
 
 central - we will need an admin dashboard to track the activity of the network
 
-central - setup additional electrumx server for evr
+DONE central - setup additional electrumx server for evr
 
 central - better frontend experience - llm lite
 

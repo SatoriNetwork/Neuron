@@ -35,38 +35,46 @@ Disclaimer: Licensor expressly disclaims all warranties, whether express, implie
 
 In no event shall Licensor be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses, resulting from (i) the User's use or inability to use the Software; (ii) any unauthorized access to or use of the Software; (iii) any interruption or cessation of transmission to or from the Software; (iv) any bugs, viruses, trojan horses, or the like that may be transmitted to or through the Software by any third party; or (v) any errors or omissions in any content or for any loss or damage incurred as a result of the use of any content posted, emailed, transmitted, or otherwise made available through the Software, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not Licensor has been informed of the possibility of such damage.
 
-8. GOVERNING LAW AND DISPUTE RESOLUTION
+8. DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY
+
+Use at Your Own Risk: This software is provided on an "AS IS" and "AS AVAILABLE" basis. The user acknowledges and agrees that the use of this software is entirely at their own risk.
+No Guarantees: The developers, investors, creators, The Satori Association, and any other affiliated parties (collectively referred to as "the Providers") make no warranties, express or implied, including but not limited to the implied warranties of merchantability and fitness for a particular purpose. The Providers do not warrant that the software will meet your requirements, be uninterrupted, secure, or error-free.
+Experimental Technology: The user acknowledges that this software is new and experimental technology, which may contain multiple vulnerabilities. The user agrees to accept all risks associated with the use of this software, including but not limited to the risks of data loss, security breaches, and system failures.
+Limitation of Liability: In no event shall the Providers be liable for any direct, indirect, incidental, special, consequential, or exemplary damages (including but not limited to damages for loss of profits, goodwill, use, data, or other intangible losses) arising out of or in connection with the use or inability to use the software.
+Indemnification: The user agrees to indemnify, defend, and hold harmless the Providers from and against any and all claims, liabilities, damages, losses, costs, expenses, fees (including reasonable attorneys' fees), that the Providers may incur as a result of or arising from the use of the software, the violation of this Agreement, or the infringement of any intellectual property or other right of any person or entity by the user.
+Responsibility for Malicious Attacks: The user agrees that no one involved with the creation, distribution, or promotion of this software can be held responsible for any harm caused by malicious attackers. The user agrees to hold only those malicious attackers responsible and to release and indemnify all other parties from any claims or liabilities.
+
+9. GOVERNING LAW AND DISPUTE RESOLUTION
 
 Governing Law: This EULA shall be governed by and construed in accordance with the laws of Switzerland.
 Dispute Resolution: Any disputes arising under or in connection with this EULA shall first be attempted to be resolved through mediation. The parties agree to submit the dispute to a mutually agreed-upon mediator in Switzerland. If mediation fails to resolve the dispute, it shall then be resolved in the courts of Switzerland.
 
-9. DATA COLLECTION
+10. DATA COLLECTION
 
 Public Keys and Addresses: The Software collects the public keys and addresses of the wallets it generates itself which are used to identify the activities of this instance of the Software on the Satori Network.
 Hardware Metrics: The Software collects public IP addresses and simplified metrics about the hardware it is running on, such as CPU, memory, and disk space, to optimize its performance.
 Predictions and Shared Data: The Software collects the predictions it creates, and any data the User voluntarily shares with the Software and the network as an oracle (data provider).
 
-10. TOKEN USE
+11. TOKEN USE
 
 Earning Tokens: Tokens are earned by providing valuable data (oracle) and valuable predictions (predictor) to the Satori Network. The specifics of this calculation are subject to change at any moment.
 Using Tokens: Tokens can be used to weight the User's vote in determining the value of data streams and the relative worth of mining activities.
 Ownership: Users own the tokens as personal property and may use them as they see fit. The Satori Association is not liable for any uses of the tokens.
 
-11. UPDATES AND MODIFICATIONS
+12. UPDATES AND MODIFICATIONS
 
 Licensor reserves the right to update or modify the Software and this EULA at any time. Users will be notified of any significant changes via [method of notification, e.g., email or in-app notification]. Continued use of the Software following any changes signifies acceptance of the updated terms.
 
-12. SEVERABILITY
+13. SEVERABILITY
 
 If any provision of this EULA is found to be unenforceable, the remaining provisions will continue in full force and effect.
 
-13. ENTIRE AGREEMENT
+14. ENTIRE AGREEMENT
 
 This EULA constitutes the entire agreement between the User and Licensor regarding the use of the Software and supersedes all prior or contemporaneous understandings.
 
-14. CONTACT INFORMATION
+15. CONTACT INFORMATION
 
 For support or legal inquiries, please contact:
-
 The Satori Association
 eula@satorinet.io
