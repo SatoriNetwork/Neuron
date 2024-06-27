@@ -987,7 +987,7 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 @ app.route('/wallet/<network>', methods=['GET', 'POST'])  # @closeVault
 def wallet(network: str = 'main'):
     def accept_submittion(passwordForm):
-        _rvn, _evr = start.openVault(
+        _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
         # if rvn is None or not rvn.isEncrypted:
@@ -1098,7 +1098,7 @@ def presentVaultPasswordForm():
 def vault():
 
     def accept_submittion(passwordForm):
-        _rvn, _evr = start.openVault(
+        _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
         # if rvn is None or not rvn.isEncrypted:
@@ -1281,7 +1281,7 @@ def vote():
         # }]
 
     def accept_submittion(passwordForm):
-        _rvn, _evr = start.openVault(password=passwordForm.password.data)
+        _vault = start.openVault(password=passwordForm.password.data)
         # if rvn is None and not rvn.isEncrypted:
         #    flash('unable to open vault')
 
