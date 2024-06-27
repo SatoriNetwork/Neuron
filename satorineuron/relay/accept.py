@@ -183,7 +183,7 @@ def generateHookFromTarget(target: str = ''):
     '''
     called and given the response each time
     the endpoint for this data stream is hit.
-    returns the value of the observaiton 
+    returns the value of the observation 
     as a string, integer or double.
     if empty string is returned the observation
     is not relayed to the network.
