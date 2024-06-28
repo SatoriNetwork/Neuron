@@ -238,16 +238,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         without a password it will open the vault (if it exists) but not decrypt
         it. this allows us to get it's balance, but not spend from it.
         '''
-        vault = self.getVault(network, password, create)()
-        if vault is not None and vault.electrumx.conn is not None:
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.electrumx,
-                status=True)
-        else:
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.electrumx,
-                status=False)
-        logging.info('opened wallet', color='green')
+        vault = self.getVault(network, password, create)
+        if vault is not None:
+            vault = vault()
+            if vault.electrumx.conn is not None:
+                self.updateConnectionStatus(
+                    connTo=ConnectionTo.electrumx,
+                    status=True)
+            else:
+                self.updateConnectionStatus(
+                    connTo=ConnectionTo.electrumx,
+                    status=False)
+            logging.info('opened wallet', color='green')
         return vault
 
     def start(self):
