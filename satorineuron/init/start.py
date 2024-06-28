@@ -110,12 +110,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     @property
     def vault(self) -> Union[EvrmoreWallet, RavencoinWallet]:
         # TODO: CHANGE ON LAUNCH
-        return self._evrmoreVault if self.env == 'prod' else self._ravencoinVault
+        return self._evrmoreVault if self.env == 'prodx' else self._ravencoinVault
 
     @property
     def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
         # TODO: CHANGE ON LAUNCH
-        return self._evrmoreWallet if self.env == 'prod' else self._ravencoinWallet
+        return self._evrmoreWallet if self.env == 'prodx' else self._ravencoinWallet
 
     @property
     def ravencoinWallet(self) -> RavencoinWallet:
@@ -191,8 +191,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.networkIsTest(network):
             return self.ravencoinWallet
         # TODO: CHANGE ON LAUNCH
-        # return self.ravencoinWallet
-        return self.evrmoreWallet
+        return self.ravencoinWallet
+        # return self.evrmoreWallet
 
     def getVault(
         self,
@@ -204,8 +204,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.networkIsTest(network):
             return self.ravencoinVault(password=password, create=create)
         # TODO: CHANGE ON LAUNCH
-        # return self.ravencoinVault(password=password, create=create)
-        return self.evrmoreVault(password=password, create=create)
+        return self.ravencoinVault(password=password, create=create)
+        # return self.evrmoreVault(password=password, create=create)
 
     def openWallet(self, network: Union[str, None] = None) -> Union[EvrmoreWallet, RavencoinWallet]:
         wallet = self.getWallet(network)()
@@ -257,6 +257,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.openWallet()
         self.openVault()
+        print('self.wallet', self.wallet)
+        print('self.vault', self.vault)
         self.checkin()
         self.autosecure()
         self.verifyCaches()
@@ -266,7 +268,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.startRelay()
         self.buildEngine()
-        # time.sleep(60*4)
+        time.sleep(60*4)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         self.latestConnectionStatus = {
