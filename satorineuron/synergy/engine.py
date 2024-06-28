@@ -37,9 +37,12 @@ class SynergyManager():
 
     def handleMessage(self, msg: SynergyProtocol):
         if not msg.completed:
+            # print('incomplete')
             msg = self.buildMessage(msg)
+            # print('msg', msg.toJson())
             self.synergy.send(msg.toJson())
         else:
+            # print('complete')
             self.createChannel(msg)
 
     def buildMessage(self, msg: SynergyProtocol):
