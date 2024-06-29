@@ -26,7 +26,7 @@
                   {% if loop.index <= 3 %}
                 <tr class='yellow-hover'>
                   <td>
-                    <a href="https://rvn.cryptoscope.io/tx/?txid={{ transaction.tx_hash }}", target='_blank'>
+                    <a href="https://{{ 'evr' if wallet.chain == 'Evrmore' else 'rvn' }}.cryptoscope.io/tx/?txid={{ transaction.tx_hash }}", target='_blank'>
                       <div class="d-flex px-3 py-1">
                         <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ counter }} {{ transaction.tx_hash }}</h6>
                       </div>
@@ -37,7 +37,7 @@
                 {% endfor %}
                 <tr class='yellow-hover'>
                   <td>
-                    <a href="https://rvn.cryptoscope.io/address/?address={{ wallet.address }}", target='_blank'>
+                    <a href="https://{{ 'evr' if wallet.chain == 'Evrmore' else 'rvn' }}.cryptoscope.io/address/?address={{ wallet.address }}", target='_blank'>
                       <div class="d-flex px-3 py-1">
                         <h6 class="mb-0 text-sm text-center {% if darkmode %}dark-text{% endif %}">See All Transactions</h6>
                       </div>
@@ -69,14 +69,14 @@
               {% for transaction in wallet.transactions %}
               <tr class='yellow-hover'>
                 <td>
-                  <a href="https://rvn.cryptoscope.io/tx/?txid={{ transaction.txid }}", target='_blank'>
+                  <a href="https://{{ 'evr' if wallet.chain == 'Evrmore' else 'rvn' }}.cryptoscope.io/tx/?txid={{ transaction.txid }}", target='_blank'>
                     <div class="d-flex px-3 py-1">
                       <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ transaction.txid }}</h6>
                     </div>
                   </a>
                 </td>
                 <td>
-                  <a href="https://rvn.cryptoscope.io/tx/?txid={{ transaction.txid }}", target='_blank'>
+                  <a href="https://{{ 'evr' if wallet.chain == 'Evrmore' else 'rvn' }}.cryptoscope.io/tx/?txid={{ transaction.txid }}", target='_blank'>
                     <div class="d-flex px-3 py-1">
                       <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ transaction.confirmations }}</h6>
                     </div>
