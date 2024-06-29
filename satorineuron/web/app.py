@@ -993,8 +993,8 @@ def wallet(network: str = 'main'):
         # if rvn is None or not rvn.isEncrypted:
         #    flash('unable to open vault')
 
-    myWallet = start.getWallet(network=network)
-    myWallet.get(allWalletInfo=False)
+    myWallet = start.openWallet(network=network)
+    # myWallet.get(allWalletInfo=False)
     alias = myWallet.alias or start.server.getWalletAlias()
     if config.get().get('wallet lock'):
         if request.method == 'POST':
@@ -1335,13 +1335,13 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-            int(request.json.get('vaultPredictors')) > 0 or
-            int(request.json.get('vaultOracles')) > 0 or
-            int(request.json.get('vaultInviters')) > 0 or
-            int(request.json.get('vaultCreators')) > 0 or
-            int(request.json.get('vaultManagers')) > 0) and
-            start.vault is not None and start.vault.isDecrypted
-        ):
+                int(request.json.get('vaultPredictors')) > 0 or
+                int(request.json.get('vaultOracles')) > 0 or
+                int(request.json.get('vaultInviters')) > 0 or
+                int(request.json.get('vaultCreators')) > 0 or
+                int(request.json.get('vaultManagers')) > 0) and
+                start.vault is not None and start.vault.isDecrypted
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
