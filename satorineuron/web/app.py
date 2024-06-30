@@ -402,6 +402,7 @@ def relay():
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
 def sendSatoriTransactionFromWallet(network: str = 'main'):
+    # logging.debug('sendSatoriTransactionFromWallet', network, color='magenta')
     return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
 
 
@@ -429,6 +430,7 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
             # if we're sending to wallet we don't want it to auto send back to vault
             disableAutosecure(network)
         try:
+            # logging.debug('sweep', sendSatoriForm.sweep.data, color='magenta')
             result = myWallet.typicalNeuronTransaction(
                 sweep=sendSatoriForm.sweep.data,
                 amount=sendSatoriForm.amount.data or 0,
@@ -1335,12 +1337,12 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-                int(request.json.get('vaultPredictors')) > 0 or
-                int(request.json.get('vaultOracles')) > 0 or
-                int(request.json.get('vaultInviters')) > 0 or
-                int(request.json.get('vaultCreators')) > 0 or
-                int(request.json.get('vaultManagers')) > 0) and
-                start.vault is not None and start.vault.isDecrypted
+            int(request.json.get('vaultPredictors')) > 0 or
+            int(request.json.get('vaultOracles')) > 0 or
+            int(request.json.get('vaultInviters')) > 0 or
+            int(request.json.get('vaultCreators')) > 0 or
+            int(request.json.get('vaultManagers')) > 0) and
+            start.vault is not None and start.vault.isDecrypted
             ):
         start.server.submitMaifestVote(
             start.vault,
