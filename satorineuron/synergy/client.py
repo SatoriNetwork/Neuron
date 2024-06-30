@@ -110,7 +110,7 @@ class SynergyClient:
                 f'&signature={quote_plus(signature)}')
             self.sio.connect(connection_url)
         except socketio.exceptions.ConnectionError as e:
-            logging.error('Failed to connect to Synergy.', e)
+            # logging.error('Failed to connect to Synergy.', e)
             time.sleep(30)
             self.reconnect()
 
@@ -156,6 +156,6 @@ class SynergyClient:
             self.disconnect()
             logging.info('Disconnected by user')
         except Exception as e:
-            logging.error('Satori Synergy error:', e, print=True)
+            # logging.error('Satori Synergy error:', e, print=True)
             self.disconnect()
             self.reconnect()

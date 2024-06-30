@@ -131,7 +131,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 config.walletPath('wallet.yaml'),
                 reserve=0.01,
                 isTestnet=self.networkIsTest('evrmore'))
-        print(self._evrmoreWallet)
         return self._evrmoreWallet
 
     def ravencoinVault(
@@ -252,8 +251,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.openWallet()
         self.openVault()
-        print('self.wallet', self.wallet)
-        print('self.vault', self.vault)
         self.checkin()
         self.autosecure()
         self.verifyCaches()
