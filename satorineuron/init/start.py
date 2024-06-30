@@ -109,12 +109,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def vault(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        # TODO: CHANGE ON LAUNCH
         return self._evrmoreVault if self.env == 'prod' else self._ravencoinVault
 
     @property
     def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        # TODO: CHANGE ON LAUNCH
         return self._evrmoreWallet if self.env == 'prod' else self._ravencoinWallet
 
     @property
@@ -191,8 +189,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         network = network or ('main' if self.env == 'prod' else 'test')
         if self.networkIsTest(network):
             return self.ravencoinWallet
-        # TODO: CHANGE ON LAUNCH
-        # return self.ravencoinWallet
         return self.evrmoreWallet
 
     def getVault(
@@ -204,8 +200,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         network = network or ('main' if self.env == 'prod' else 'test')
         if self.networkIsTest(network):
             return self.ravencoinVault(password=password, create=create)
-        # TODO: CHANGE ON LAUNCH
-        # return self.ravencoinVault(password=password, create=create)
         return self.evrmoreVault(password=password, create=create)
 
     def openWallet(self, network: Union[str, None] = None) -> Union[EvrmoreWallet, RavencoinWallet]:
