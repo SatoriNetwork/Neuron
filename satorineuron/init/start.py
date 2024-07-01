@@ -108,6 +108,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.caches.get(streamId)
 
     @property
+    def network(self) -> str:
+        return 'main' if self.env == 'prod' else 'test'
+
+    @property
     def vault(self) -> Union[EvrmoreWallet, RavencoinWallet]:
         return self._evrmoreVault if self.env == 'prod' else self._ravencoinVault
 
@@ -185,7 +189,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn')
 
     def getWallet(self, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        network = network or ('main' if self.env == 'prod' else 'test')
+        network = network or self.network
         if self.networkIsTest(network):
             return self.ravencoinWallet
         return self.evrmoreWallet
@@ -196,7 +200,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         password: Union[str, None] = None,
         create: bool = False,
     ) -> Union[EvrmoreWallet, RavencoinWallet]:
-        network = network or ('main' if self.env == 'prod' else 'test')
+        network = network or self.network
         if self.networkIsTest(network):
             return self.ravencoinVault(password=password, create=create)
         return self.evrmoreVault(password=password, create=create)
@@ -263,6 +267,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         time.sleep(60*4)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
+        logging.info('connTo:', connTo, status, color='yellow')
         self.latestConnectionStatus = {
             **self.latestConnectionStatus,
             **{connTo.name: status}}

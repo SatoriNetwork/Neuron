@@ -118,7 +118,7 @@
       <hr class="dark horizontal my-0">
       <div class="card-footer p-1">
         <center><p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
-          Transaction fees will be added during the send process. If Ravencoin is available the transaction fee will be about 0.0075 RVN. If only SATORI is present the transaction fee will be 1 SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://moontree.com/'>Moontree</a></p></center>
+          Transaction fees will be added during the send process. If {% if network=='main' %}Evrmore{% endif %}Ravencoin{% endif %} is available the transaction fee will be about 0.0075 {% if network=='main' %}EVR{% endif %}RVN{% endif %}. If only SATORI is present the transaction fee will be 1 SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://moontree.com/'>Moontree</a></p></center>
       </div>
     </div>
   </div>

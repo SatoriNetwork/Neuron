@@ -110,7 +110,7 @@ class SynergyClient:
                 f'&signature={quote_plus(signature)}')
             self.sio.connect(connection_url)
         except socketio.exceptions.ConnectionError as e:
-            # logging.error('Failed to connect to Synergy.', e)
+            logging.error('Failed to connect to Synergy.', e)
             self.reconnect()
 
     def send(self, payload):

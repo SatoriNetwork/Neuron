@@ -55,7 +55,9 @@ class StartupDagStruct(object):
     def cacheOf(self, streamId: StreamId):
         ''' returns the reference to the cache of a stream '''
 
-        
+    @property
+    def network(self) -> str:
+        ''' get wallet '''
 
     @property
     def vault(self) -> Union[EvrmoreWallet, RavencoinWallet]:
@@ -86,8 +88,7 @@ class StartupDagStruct(object):
         create: bool = False,
     ) -> Union[RavencoinWallet, None]:
         ''' get the ravencoin vault '''
-        
-        
+
     def start(self):
         ''' start the satori engine. '''
 

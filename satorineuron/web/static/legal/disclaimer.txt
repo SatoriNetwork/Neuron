@@ -2,9 +2,9 @@ DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY
 
 1. DISCLAIMER OF WARRANTIES
 
-AS IS: The Satori Neuron software ("Software") is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, whether express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, title, and non-infringement.
-NO GUARANTEE: We do not guarantee that the Software will be uninterrupted, error-free, secure, or free of viruses or other harmful components.
-USER RESPONSIBILITY: The user is solely responsible for any damage to their device or loss of data that results from the use of the Software.
+AS IS: THE SATORI NEURON SOFTWARE ("SOFTWARE") IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+NO GUARANTEE: WE DO NOT GUARANTEE THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS.
+USER RESPONSIBILITY: THE USER IS SOLELY RESPONSIBLE FOR ANY DAMAGE TO THEIR DEVICE OR LOSS OF DATA THAT RESULTS FROM THE USE OF THE SOFTWARE.
 
 2. LIMITATION OF LIABILITY
 

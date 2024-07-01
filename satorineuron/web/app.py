@@ -1121,7 +1121,7 @@ def vault():
             'title': 'Vault',
             'walletIcon': 'lock',
             'image': getQRCode(start.vault.address),
-            'network': 'test',  # change to main when ready
+            'network': start.network,  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
             'minedtovault': start.server.minedToVault(),
@@ -1135,7 +1135,7 @@ def vault():
         'title': 'Vault',
         'walletIcon': 'lock',
         'image': '',
-        'network': 'test',  # change to main when ready
+        'network': start.network,  # change to main when ready
         'autosecured': False,
         'minedtovault': start.server.minedToVault(),
         'vaultPasswordForm': presentVaultPasswordForm(),
@@ -1216,6 +1216,7 @@ def disableMineToVault(network: str = 'main'):
         return redirect('/dashboard')
     vault = start.getVault(network=network)
     wallet = start.getWallet(network=network)
+    logging.debug('wallet:', wallet, color="magenta")
     mineToAddress = wallet.address
     success, result = start.server.disableMineToVault(
         walletSignature=wallet.sign(mineToAddress),
@@ -1290,11 +1291,11 @@ def vote():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
 
-    myWallet = start.getWallet(network='test')
+    myWallet = start.getWallet(network=start.network)
     if start.vault is not None and not start.vault.isEncrypted:
         return render_template('vote.html', **getResp({
             'title': 'Vote',
-            'network': 'test',  # change to main when ready
+            'network': start.network,
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': myWallet,
@@ -1303,7 +1304,7 @@ def vote():
             **getVotes(myWallet)}))
     return render_template('vote.html', **getResp({
         'title': 'Vote',
-        'network': 'test',  # change to main when ready
+        'network': start.network,
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': myWallet,
@@ -1323,7 +1324,7 @@ def voteSubmitManifestWallet():
         request.json.get('walletManagers') > 0
     ):
         start.server.submitMaifestVote(
-            wallet=start.getWallet(network='test'),
+            wallet=start.getWallet(network=start.network),
             votes={
                 'predictors': request.json.get('walletPredictors', 0),
                 'oracles': request.json.get('walletOracles', 0),
@@ -1368,7 +1369,7 @@ def voteSubmitSanctionWallet():
             'walletVotes', []))
     ):
         start.server.submitSanctionVote(
-            wallet=start.getWallet(network='test'),
+            wallet=start.getWallet(network=start.network),
             votes={
                 'streamIds': request.json.get('walletStreamIds'),
                 'votes': request.json.get('walletVotes')})
@@ -1401,9 +1402,10 @@ def voteSubmitSanctionVault():
 @app.route('/vote/remove_all/sanction', methods=['GET'])
 def voteRemoveAllSanction():
     # logging.debug(request.json, color='yellow')
-    start.server.removeSanctionVote(wallet=start.getWallet(network='test'))
+    start.server.removeSanctionVote(
+        wallet=start.getWallet(network=start.network))
     if (start.vault is not None and start.vault.isDecrypted):
-        start.server.removeSanctionVote(start.vaul)
+        start.server.removeSanctionVote(start.vault)
     return jsonify({'message': 'Stream votes received successfully'}), 200
 
 
