@@ -111,7 +111,6 @@ class SynergyClient:
             self.sio.connect(connection_url)
         except socketio.exceptions.ConnectionError as e:
             # logging.error('Failed to connect to Synergy.', e)
-            time.sleep(30)
             self.reconnect()
 
     def send(self, payload):
@@ -145,6 +144,7 @@ class SynergyClient:
 
     def reconnect(self):
         logging.info('Attempting to reconnect...')
+        time.sleep(30)
         self.connect()
 
     def runForever(self):
