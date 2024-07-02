@@ -50,7 +50,6 @@ class SynergyClient:
         self.connected = threading.Event()
         self.onConnected = onConnected
         self.setupHandlers()
-        print('synergy client end...')
 
     def setupHandlers(self):
         @self.sio.event

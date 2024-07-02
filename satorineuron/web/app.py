@@ -958,15 +958,16 @@ def removeWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.openWallet(network=network)
     myWallet.setAlias(None)
     start.server.removeWalletAlias()
-    return render_template('wallet-page.html', **getResp({
-        'title': 'Wallet',
-        'walletIcon': 'wallet',
-        'network': network,
-        'image': getQRCode(myWallet.address),
-        'wallet': myWallet,
-        'exampleAlias': getRandomName(),
-        'alias': '',
-        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    return wallet(network=network)
+    # return render_template('wallet-page.html', **getResp({
+    #    'title': 'Wallet',
+    #    'walletIcon': 'wallet',
+    #    'network': network,
+    #    'image': getQRCode(myWallet.address),
+    #    'wallet': myWallet,
+    #    'exampleAlias': getRandomName(),
+    #    'alias': '',
+    #    'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
 @ app.route('/update_wallet_alias/<network>/<alias>')
@@ -974,15 +975,16 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.openWallet(network=network)
     myWallet.setAlias(alias)
     start.server.updateWalletAlias(alias)
-    return render_template('wallet-page.html', **getResp({
-        'title': 'Wallet',
-        'walletIcon': 'wallet',
-        'network': network,
-        'image': getQRCode(myWallet.address),
-        'wallet': myWallet,
-        'exampleAlias': getRandomName(),
-        'alias': alias,
-        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    return wallet(network=network)
+    # ('wallet-page.html', **getResp({
+    #        'title': 'Wallet',
+    #        'walletIcon': 'wallet',
+    #        'network': network,
+    #        'image': getQRCode(myWallet.address),
+    #        'wallet': myWallet,
+    #        'exampleAlias': getRandomName(),
+    #        'alias': alias,
+    #        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
 @ app.route('/wallet/<network>', methods=['GET', 'POST'])  # @closeVault
@@ -1341,7 +1343,7 @@ def voteSubmitManifestVault():
             int(request.json.get('vaultCreators')) > 0 or
             int(request.json.get('vaultManagers')) > 0) and
             start.vault is not None and start.vault.isDecrypted
-            ):
+        ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
