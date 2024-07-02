@@ -97,7 +97,7 @@ class SynergyClient:
     def defaultRouter(msg: SynergyProtocol):
         logging.info('Routing message:', msg)
 
-    def connect(self):
+    def connect(self) -> bool:
         '''connect to the server with a challenge and signature'''
         challenge = SynergyRestClient(url=self.url).getChallenge()
         signature = self.wallet.authPayload(
@@ -110,8 +110,10 @@ class SynergyClient:
                 f'&challenge={quote_plus(challenge)}'
                 f'&signature={quote_plus(signature)}')
             self.sio.connect(connection_url)
+            return True
         except socketio.exceptions.ConnectionError as e:
-            logging.error('Failed to connect to Synergy.', e)
+            # logging.error('Failed to connect to Synergy.', e)
+            return False
             # self.reconnect()
 
     def send(self, payload):
@@ -151,15 +153,15 @@ class SynergyClient:
     def runForever(self):
         # Initiates the connection and enters the event loop
         while True:
-            self.connect()
-            try:
-                self.sio.wait()
-            except KeyboardInterrupt:
-                self.disconnect()
-                logging.info('Disconnected by user')
-                break
-            except Exception as e:
-                logging.error('Satori Synergy error:', e, print=True)
-                self.disconnect()
-                logging.info('Attempting to reconnect...')
+            if self.connect():
+                try:
+                    self.sio.wait()
+                except KeyboardInterrupt:
+                    self.disconnect()
+                    logging.info('Disconnected by user')
+                    break
+                except Exception as e:
+                    logging.error('Satori Synergy error:', e, print=True)
+                    self.disconnect()
+                    logging.info('Attempting to reconnect...')
         time.sleep(30)
