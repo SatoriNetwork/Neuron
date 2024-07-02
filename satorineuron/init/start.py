@@ -282,7 +282,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         time.sleep(60*4)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
-        logging.info('connTo:', connTo, status, color='yellow')
+        # logging.info('connTo:', connTo, status, color='yellow')
         self.latestConnectionStatus = {
             **self.latestConnectionStatus,
             **{connTo.name: status}}
