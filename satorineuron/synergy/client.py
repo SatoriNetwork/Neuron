@@ -50,6 +50,7 @@ class SynergyClient:
         self.connected = threading.Event()
         self.onConnected = onConnected
         self.setupHandlers()
+        print('synergy client end...')
 
     def setupHandlers(self):
         @self.sio.event
@@ -111,7 +112,7 @@ class SynergyClient:
             self.sio.connect(connection_url)
         except socketio.exceptions.ConnectionError as e:
             logging.error('Failed to connect to Synergy.', e)
-            self.reconnect()
+            # self.reconnect()
 
     def send(self, payload):
         if self.connected.is_set():
@@ -119,7 +120,7 @@ class SynergyClient:
                 self.sio.emit('message', payload)
             except Exception as e:
                 logging.error('Failed to send message.', e)
-                self.reconnect()
+                # self.reconnect()
         else:
             logging.warning(
                 'Connection to Synergy not established. Message not sent.')
@@ -130,7 +131,7 @@ class SynergyClient:
                 self.sio.emit('ping', payload)
             except Exception as e:
                 logging.error('Failed to send message.', e)
-                self.reconnect()
+                # self.reconnect()
         else:
             logging.warning('Connection not established. Message not sent.')
 
@@ -149,13 +150,16 @@ class SynergyClient:
 
     def runForever(self):
         # Initiates the connection and enters the event loop
-        self.connect()
-        try:
-            self.sio.wait()
-        except KeyboardInterrupt:
-            self.disconnect()
-            logging.info('Disconnected by user')
-        except Exception as e:
-            # logging.error('Satori Synergy error:', e, print=True)
-            self.disconnect()
-            self.reconnect()
+        while True:
+            self.connect()
+            try:
+                self.sio.wait()
+            except KeyboardInterrupt:
+                self.disconnect()
+                logging.info('Disconnected by user')
+                break
+            except Exception as e:
+                logging.error('Satori Synergy error:', e, print=True)
+                self.disconnect()
+                logging.info('Attempting to reconnect...')
+        time.sleep(30)
