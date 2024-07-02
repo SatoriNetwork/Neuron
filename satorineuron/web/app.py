@@ -424,6 +424,7 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
     def accept_submittion(sendSatoriForm):
         def refreshWallet():
             time.sleep(4)
+            # doesn't respect the cooldown
             myWallet.get(allWalletInfo=False)
 
         if sendSatoriForm.address.data == start.getWallet(network=network).address:
@@ -682,9 +683,9 @@ def dashboard():
     streamOverviews = (
         [model.miniOverview() for model in start.engine.models]
         if start.engine is not None else [])  # StreamOverviews.demo()
-    start.wallet.get(allWalletInfo=False)
+    start.openWallet()
     if start.vault is not None:
-        start.vault.get(allWalletInfo=False)
+        start.openVault()
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
@@ -954,8 +955,7 @@ def chatUpdatesEnd():
 
 @ app.route('/remove_wallet_alias/<network>')
 def removeWalletAlias(network: str = 'main', alias: str = ''):
-    myWallet = start.getWallet(network=network)
-    myWallet.get(allWalletInfo=False)
+    myWallet = start.openWallet(network=network)
     myWallet.setAlias(None)
     start.server.removeWalletAlias()
     return render_template('wallet-page.html', **getResp({
@@ -971,8 +971,7 @@ def removeWalletAlias(network: str = 'main', alias: str = ''):
 
 @ app.route('/update_wallet_alias/<network>/<alias>')
 def updateWalletAlias(network: str = 'main', alias: str = ''):
-    myWallet = start.getWallet(network=network)
-    myWallet.get(allWalletInfo=False)
+    myWallet = start.openWallet(network=network)
     myWallet.setAlias(alias)
     start.server.updateWalletAlias(alias)
     return render_template('wallet-page.html', **getResp({
@@ -996,7 +995,6 @@ def wallet(network: str = 'main'):
         #    flash('unable to open vault')
 
     myWallet = start.openWallet(network=network)
-    # myWallet.get(allWalletInfo=False)
     alias = myWallet.alias or start.server.getWalletAlias()
     if config.get().get('wallet lock'):
         if request.method == 'POST':
@@ -1109,7 +1107,6 @@ def vault():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
-        start.vault.get(allWalletInfo=False)
         from satorilib.api.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
         if start.server.betaStatus()[1].get('value') == 1:
