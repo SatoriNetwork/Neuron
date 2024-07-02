@@ -27,7 +27,6 @@ from satorilib.api.disk import Cache  # Disk
 Cache.setConfig(config)
 vaultPath = config.walletPath('vault.yaml')
 vaultPath
-password = ''
 urlServer = 'https://satorinet.io'
 referrer = None
 # r = RavencoinWallet(vaultPath, reserve=0.01, isTestnet=True, password=password)
@@ -40,5 +39,6 @@ e()
 eserver = SatoriServerClient(e, url=urlServer)
 edetails = CheckinDetails(eserver.checkin(referrer=referrer))
 edetails.key[0:5]
-esub = SatoriPubSubConn(uid=e.publicKey, router=lambda x: print(x), payload='edetails.key',
-                        url='ws://satorinet.io:3000', onConnect=lambda: print('connected'), onDisconnect=lambda: print('connected'))
+signature = e.sign(edetails.key)
+esub = SatoriPubSubConn(uid=e.publicKey, router=print, payload=f'{signature.decode()}|{edetails.key}',
+                        url='ws://satorinet.io:3002', onConnect=lambda: print('connected-'), onDisconnect=lambda: print('-disconnected'))
