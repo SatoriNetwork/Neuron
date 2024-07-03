@@ -405,6 +405,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     status=False))
             logging.info('connected to Satori pubsub network', color='green')
         else:
+            time.sleep(30)
             raise Exception('no key provided by satori server')
 
     def startRelay(self):

@@ -98,7 +98,13 @@ class SynergyClient:
 
     def connect(self) -> bool:
         '''connect to the server with a challenge and signature'''
-        challenge = SynergyRestClient(url=self.url).getChallenge()
+        challenge = None
+        while challenge is None:
+            try:
+                challenge = SynergyRestClient(url=self.url).getChallenge()
+            except Exception as e:
+                time.sleep(30)
+                logging.error('Failed to connect to Synergy.', e)
         signature = self.wallet.authPayload(
             challenge=challenge,
             asDict=True)['signature']
