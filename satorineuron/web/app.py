@@ -242,6 +242,22 @@ def unpause():
     return redirect(url_for('dashboard'))
 
 
+@app.route('/backupk/<target>', methods=['GET'])
+def backup(target: str = 'satori'):
+    outputPath = '/Satori/Neuron/satorineuron/web/static/download'
+    if target == 'satori':
+        zipSelected(
+            folderPath=f'/Satori/Neuron/{target}',
+            outputPath=f'{outputPath}/{target}.zip',
+            selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
+    else:
+        zipFolder(
+            folderPath=f'/Satori/Neuron/{target}',
+            outputPath=f'{outputPath}/{target}.zip')
+
+    return redirect(url_for('dashboard'))
+
+
 @app.route('/restart', methods=['GET'])
 def restart():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
@@ -1233,22 +1249,20 @@ def vote():
 
     def getVotes(wallet):
 
-        def valuesAsNumbers(map: dict):
-            return {k: int(v) for k, v in map.items()}
+        # def valuesAsNumbers(map: dict):
+        #    return {k: int(v) for k, v in map.items()}
 
         x = {
             'communityVotes': start.server.getManifestVote(),
             'walletVotes': {k: v/100 for k, v in start.server.getManifestVote(wallet).items()},
-            'vaultVotes': (
-                valuesAsNumbers(
-                    {k: v/100 for k, v in start.server.getManifestVote(start.vault).items()})
-                if start.vault is not None and start.vault.isDecrypted else {
-                    'predictors': 0,
-                    'oracles': 0,
-                    'inviters': 0,
-                    'creators': 0,
-                    'managers': 0})}
-        # logging.debug('x', x, color='yellow')
+            'vaultVotes': ({k: v/100 for k, v in start.server.getManifestVote(start.vault).items()}
+                           if start.vault is not None and start.vault.isDecrypted else {
+                'predictors': 0,
+                'oracles': 0,
+                'inviters': 0,
+                'creators': 0,
+                'managers': 0})}
+        logging.debug('x', x, color='yellow')
         return x
 
     def getStreams(wallet):
@@ -1337,22 +1351,33 @@ def voteSubmitManifestWallet():
 @ app.route('/vote/submit/manifest/vault', methods=['POST'])
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
-    if ((
-                int(request.json.get('vaultPredictors')) > 0 or
-                int(request.json.get('vaultOracles')) > 0 or
-                int(request.json.get('vaultInviters')) > 0 or
-                int(request.json.get('vaultCreators')) > 0 or
-                int(request.json.get('vaultManagers')) > 0) and
-                start.vault is not None and start.vault.isDecrypted
-            ):
+    vaultPredictors = request.json.get('vaultPredictors')
+    vaultOracles = request.json.get('vaultOracles')
+    vaultInviters = request.json.get('vaultInviters')
+    vaultCreators = request.json.get('vaultCreators')
+    vaultManagers = request.json.get('vaultManagers')
+    vaultPredictors = 0 if vaultPredictors.strip() == '' else int(vaultPredictors)
+    vaultOracles = 0 if vaultOracles.strip() == '' else int(vaultOracles)
+    vaultInviters = 0 if vaultInviters.strip() == '' else int(vaultInviters)
+    vaultCreators = 0 if vaultCreators.strip() == '' else int(vaultCreators)
+    vaultManagers = 0 if vaultManagers.strip() == '' else int(vaultManagers)
+    if (
+        (
+            vaultPredictors > 0 or
+            vaultOracles > 0 or
+            vaultInviters > 0 or
+            vaultCreators > 0 or
+            vaultManagers > 0
+        ) and start.vault is not None and start.vault.isDecrypted
+    ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
-                'predictors': request.json.get('vaultdictors', 0),
-                'oracles': request.json.get('vaultOracles', 0),
-                'inviters': request.json.get('vaultInviters', 0),
-                'creators': request.json.get('vaultreators', 0),
-                'managers': request.json.get('vaultanagers', 0)})
+                'predictors': vaultPredictors,
+                'oracles': vaultOracles,
+                'inviters': vaultInviters,
+                'creators': vaultCreators,
+                'managers': vaultManagers})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
