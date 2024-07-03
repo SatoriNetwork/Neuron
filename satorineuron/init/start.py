@@ -232,6 +232,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' close the vault, reopen it without decrypting it. '''
         try:
             self._ravencoinVault.close()
+        except Exception as _:
+            pass
+        try:
             self._evrmoreVault.close()
         except Exception as _:
             pass

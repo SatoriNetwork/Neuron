@@ -246,16 +246,17 @@ def unpause():
 def backup(target: str = 'satori'):
     outputPath = '/Satori/Neuron/satorineuron/web/static/download'
     if target == 'satori':
+        from satorilib.api.disk.zip.zip import zipSelected
         zipSelected(
             folderPath=f'/Satori/Neuron/{target}',
             outputPath=f'{outputPath}/{target}.zip',
             selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
     else:
+        from satorilib.api.disk.zip.zip import zipFolder
         zipFolder(
             folderPath=f'/Satori/Neuron/{target}',
-            outputPath=f'{outputPath}/{target}.zip')
-
-    return redirect(url_for('dashboard'))
+            outputPath=f'{outputPath}/{target}')
+    return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
 
 
 @app.route('/restart', methods=['GET'])
@@ -1004,7 +1005,8 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
     #        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@ app.route('/wallet/<network>', methods=['GET', 'POST'])  # @closeVault
+@ app.route('/wallet/<network>', methods=['GET', 'POST'])
+@closeVault
 def wallet(network: str = 'main'):
     def accept_submittion(passwordForm):
         _vault = start.openVault(
