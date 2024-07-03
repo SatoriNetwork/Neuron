@@ -3,7 +3,7 @@
 <div class="row mb-0">
   <div class="col-xl-6 col-sm-6 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
-      <a href="https://rvn.cryptoscope.io/address/?address={{ wallet.address }}", target='_blank'>
+      <a href="https://{{ 'evr' if wallet.chain == 'Evrmore' else 'rvn' }}.cryptoscope.io/address/?address={{ wallet.address }}", target='_blank'>
         <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
           <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl mt-n4 position-absolute">
             <i class="material-icons opacity-10">{{walletIcon}}</i>
@@ -118,7 +118,7 @@
       <hr class="dark horizontal my-0">
       <div class="card-footer p-1">
         <center><p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
-          Transaction fees will be added during the send process. If Ravencoin is available the transaction fee will be about 0.0075 RVN. If only SATORI is present the transaction fee will be 1 SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://moontree.com/'>Moontree</a></p></center>
+          Transaction fees will be added during the send process. If {% if network=='main' %}Evrmore{% else %}Ravencoin{% endif %} is available the transaction fee will be about 0.0075 {% if network=='main' %}EVR{% else %}RVN{% endif %}. If only SATORI is present the transaction fee will be 1 SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://moontree.com/'>Moontree</a></p></center>
       </div>
     </div>
   </div>

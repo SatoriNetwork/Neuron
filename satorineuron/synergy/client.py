@@ -96,7 +96,7 @@ class SynergyClient:
     def defaultRouter(msg: SynergyProtocol):
         logging.info('Routing message:', msg)
 
-    def connect(self):
+    def connect(self) -> bool:
         '''connect to the server with a challenge and signature'''
         challenge = SynergyRestClient(url=self.url).getChallenge()
         signature = self.wallet.authPayload(
@@ -109,10 +109,11 @@ class SynergyClient:
                 f'&challenge={quote_plus(challenge)}'
                 f'&signature={quote_plus(signature)}')
             self.sio.connect(connection_url)
+            return True
         except socketio.exceptions.ConnectionError as e:
-            logging.error('Failed to connect to Synergy.', e)
-            time.sleep(30)
-            self.reconnect()
+            # logging.error('Failed to connect to Synergy.', e)
+            return False
+            # self.reconnect()
 
     def send(self, payload):
         if self.connected.is_set():
@@ -120,7 +121,7 @@ class SynergyClient:
                 self.sio.emit('message', payload)
             except Exception as e:
                 logging.error('Failed to send message.', e)
-                self.reconnect()
+                # self.reconnect()
         else:
             logging.warning(
                 'Connection to Synergy not established. Message not sent.')
@@ -131,7 +132,7 @@ class SynergyClient:
                 self.sio.emit('ping', payload)
             except Exception as e:
                 logging.error('Failed to send message.', e)
-                self.reconnect()
+                # self.reconnect()
         else:
             logging.warning('Connection not established. Message not sent.')
 
@@ -145,17 +146,21 @@ class SynergyClient:
 
     def reconnect(self):
         logging.info('Attempting to reconnect...')
+        time.sleep(30)
         self.connect()
 
     def runForever(self):
         # Initiates the connection and enters the event loop
-        self.connect()
-        try:
-            self.sio.wait()
-        except KeyboardInterrupt:
-            self.disconnect()
-            logging.info('Disconnected by user')
-        except Exception as e:
-            logging.error('Satori Synergy error:', e, print=True)
-            self.disconnect()
-            self.reconnect()
+        while True:
+            if self.connect():
+                try:
+                    self.sio.wait()
+                except KeyboardInterrupt:
+                    self.disconnect()
+                    logging.info('Disconnected by user')
+                    break
+                except Exception as e:
+                    logging.error('Satori Synergy error:', e, print=True)
+                    self.disconnect()
+                    logging.info('Attempting to reconnect...')
+        time.sleep(30)

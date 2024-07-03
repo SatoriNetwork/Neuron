@@ -62,8 +62,10 @@
         <li class="nav-item pe-2 d-flex align-items-center">
           <a href="{{ url_for('restart') }}" class="nav-link text-body p-0">
             <i class="fa fa-power-off cursor-pointer"></i>
-            <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Restart</span></a>
+            <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Restart</span>
+          </a>
         </li>
+          
         {% if paused %} <!-- server should tell us if we're paused or not... hit endpoint, refresh page. -->
         <li class="nav-item pe-2 d-flex align-items-center">
           <a href="{{ url_for('unpause') }}" class="nav-link text-body p-0">
@@ -114,6 +116,37 @@
           </ul>
         </li>
         {% endif %}
+        <li class="nav-item dropdown pe-2 d-flex align-items-center">
+          <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonBackup" data-bs-toggle="dropdown" aria-expanded="false">
+            <!--<i class="fa fa-play cursor-pointer"></i>-->
+            <i class="fa fa-download cursor-pointer"></i>
+            <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Backup</span>
+          </a>
+          <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButtonBackup">
+            <!--<li class="mb-2">-->
+            <!--  <a class="dropdown-item border-radius-md" href="{{ url_for('backup', target='satori') }}">-->
+            <!--  <div class="d-flex py-1">-->
+            <!--    <div class="d-flex flex-column justify-content-center">-->
+            <!--    <h6 class="text-sm font-weight-normal mb-1">-->
+            <!--      <span class="font-weight-bold">Entire Neuron</span>-->
+            <!--    </h6>-->
+            <!--    </div>-->
+            <!--  </div>-->
+            <!--  </a>-->
+            <!--</li>-->
+            <li class="mb-2">
+              <a class="dropdown-item border-radius-md" href="{{ url_for('backup', target='wallet') }}">
+              <div class="d-flex py-1">
+                <div class="d-flex flex-column justify-content-center">
+                <h6 class="text-sm font-weight-normal mb-1">
+                  <span class="font-weight-bold">Wallet</span>
+                </h6>
+                </div>
+              </div>
+              </a>
+            </li>
+          </ul>
+        </li>
   <!--
         <li class="nav-item dropdown pe-2 d-flex align-items-center">
           <a href="javascript:;" class="nav-link text-body p-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">

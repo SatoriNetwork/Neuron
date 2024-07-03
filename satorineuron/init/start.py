@@ -54,6 +54,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ):
         super(StartupDag, self).__init__(*args)
         self.env = env
+        self.lastWalletCall = 0
+        self.lastVaultCall = 0
+        self.electrumCooldown = 30
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
         # self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
@@ -108,14 +111,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.caches.get(streamId)
 
     @property
+    def network(self) -> str:
+        return 'main' if self.env == 'prod' else 'test'
+
+    @property
     def vault(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        # TODO: CHANGE ON LAUNCH
-        return self._evrmoreVault if self.env == 'prodx' else self._ravencoinVault
+        return self._evrmoreVault if self.env == 'prod' else self._ravencoinVault
 
     @property
     def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        # TODO: CHANGE ON LAUNCH
-        return self._evrmoreWallet if self.env == 'prodx' else self._ravencoinWallet
+        return self._evrmoreWallet if self.env == 'prod' else self._ravencoinWallet
 
     @property
     def ravencoinWallet(self) -> RavencoinWallet:
@@ -140,7 +145,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         password: Union[str, None] = None,
         create: bool = False,
     ) -> Union[RavencoinWallet, None]:
-        if self._ravencoinVault is None or password is not None:
+        if self._ravencoinVault is None or (self._ravencoinVault.password is None and password is not None):
             try:
                 vaultPath = config.walletPath('vault.yaml')
                 if os.path.exists(vaultPath) or create:
@@ -148,14 +153,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         vaultPath,
                         reserve=0.01,
                         isTestnet=self.networkIsTest('ravencoin'),
-                        password=password)
+                        password=password,
+                        use=self._ravencoinVault)
             except Exception as e:
                 logging.error('failed to open vault', color='red')
                 raise e
             if password is None:
-                logging.info('loaded vault', color='green')
+                logging.info('loaded raw vault', color='green')
             else:
-                logging.info('opened vault', color='green')
+                logging.info('accessed vault', color='green')
             return self._ravencoinVault
         return self._ravencoinVault
 
@@ -164,7 +170,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         password: Union[str, None] = None,
         create: bool = False,
     ) -> Union[RavencoinWallet, None]:
-        if self._evrmoreVault is None or password is not None:
+        if self._evrmoreVault is None or (self._evrmoreVault.password is None and password is not None):
             try:
                 vaultPath = config.walletPath('vault.yaml')
                 if os.path.exists(vaultPath) or create:
@@ -172,14 +178,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         vaultPath,
                         reserve=0.01,
                         isTestnet=self.networkIsTest('evrmore'),
-                        password=password)
+                        password=password,
+                        use=self._evrmoreVault)
             except Exception as e:
                 logging.error('failed to open vault', color='red')
                 raise e
             if password is None:
                 logging.info('loaded vault', color='green')
             else:
-                logging.info('opened vault', color='green')
+                logging.info('accessed vault', color='green')
             return self._evrmoreVault
         return self._evrmoreVault
 
@@ -187,12 +194,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn')
 
     def getWallet(self, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        network = network or ('main' if self.env == 'prod' else 'test')
+        network = network or self.network
         if self.networkIsTest(network):
             return self.ravencoinWallet
-        # TODO: CHANGE ON LAUNCH
-        return self.ravencoinWallet
-        # return self.evrmoreWallet
+        return self.evrmoreWallet
 
     def getVault(
         self,
@@ -200,31 +205,39 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         password: Union[str, None] = None,
         create: bool = False,
     ) -> Union[EvrmoreWallet, RavencoinWallet]:
-        network = network or ('main' if self.env == 'prod' else 'test')
+        network = network or self.network
         if self.networkIsTest(network):
             return self.ravencoinVault(password=password, create=create)
-        # TODO: CHANGE ON LAUNCH
-        return self.ravencoinVault(password=password, create=create)
-        # return self.evrmoreVault(password=password, create=create)
+        return self.evrmoreVault(password=password, create=create)
 
     def openWallet(self, network: Union[str, None] = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        wallet = self.getWallet(network)()
-        if wallet.electrumx.conn is not None:
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.electrumx,
-                status=True)
+        wallet = self.getWallet(network)
+        if self.lastWalletCall + self.electrumCooldown < time.time():
+            self.lastWalletCall = time.time()
+            wallet = wallet()
+            if wallet.electrumx.conn is not None:
+                self.updateConnectionStatus(
+                    connTo=ConnectionTo.electrumx,
+                    status=True)
+            else:
+                self.updateConnectionStatus(
+                    connTo=ConnectionTo.electrumx,
+                    status=False)
+            logging.info('opened wallet', color='green')
         else:
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.electrumx,
-                status=False)
-        logging.info('opened wallet', color='green')
+            logging.info('respecting wallet cooldown', color='green')
         return wallet
 
     def closeVault(self) -> Union[RavencoinWallet, EvrmoreWallet, None]:
         ''' close the vault, reopen it without decrypting it. '''
-        self._ravencoinVault = None
-        self._evrmoreVault = None
-        self.getVault()
+        try:
+            self._ravencoinVault.close()
+        except Exception as _:
+            pass
+        try:
+            self._evrmoreVault.close()
+        except Exception as _:
+            pass
         return self.openVault()
 
     def openVault(
@@ -238,7 +251,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         it. this allows us to get it's balance, but not spend from it.
         '''
         vault = self.getVault(network, password, create)
-        if vault is not None:
+        if vault is not None and self.lastVaultCall + self.electrumCooldown < time.time():
+            self.lastVaultCall = time.time()
             vault = vault()
             if vault.electrumx.conn is not None:
                 self.updateConnectionStatus(
@@ -248,7 +262,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.electrumx,
                     status=False)
-            logging.info('opened wallet', color='green')
+            logging.info('opened vault', color='green')
+        else:
+            logging.info('respecting vault cooldown', color='green')
         return vault
 
     def start(self):
@@ -257,10 +273,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.openWallet()
         self.openVault()
-        print('self.wallet', self.wallet)
-        print('self.vault', self.vault)
         self.checkin()
-        self.autosecure()
+        # self.autosecure()
         self.verifyCaches()
         self.startSynergyEngine()
         self.pubsubConnect()
@@ -271,6 +285,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         time.sleep(60*4)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
+        # logging.info('connTo:', connTo, status, color='yellow')
         self.latestConnectionStatus = {
             **self.latestConnectionStatus,
             **{connTo.name: status}}
@@ -468,74 +483,74 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.pauseThread = None
         logging.info('AI engine unpaused', color='green')
 
-    def autosecure(self):
-        ''' automatically send funds to the vault on startup '''
+    # def autosecure(self):
+    #     ''' automatically send funds to the vault on startup '''
 
-        def executeAutosecure(wallet: Union[RavencoinWallet, EvrmoreWallet], network: str):
-            entry = wallet.getAutosecureEntry()
-            if entry is None:
-                return
-            amount = wallet.balanceAmount - entry.get('retain', 0)
-            if amount > wallet.reserveAmount:
-                result = wallet.typicalNeuronTransaction(
-                    amount=amount,
-                    address=entry.get('address'),
-                    sweep=False,
-                    pullFeeFromAmount=True)
-                if result.msg == 'creating partial, need feeSatsReserved.':
-                    responseJson = self.server.requestSimplePartial(
-                        network=network)
-                    # account for fee
-                    if amount > 1:
-                        amount -= 1
-                    result = wallet.typicalNeuronTransaction(
-                        sweep=False,
-                        amount=amount,
-                        address=entry.get('address'),
-                        completerAddress=responseJson.get('completerAddress'),
-                        feeSatsReserved=responseJson.get('feeSatsReserved'),
-                        changeAddress=responseJson.get('changeAddress'),
-                    )
-                if result is None:
-                    logging.error('Unable to execute autosecure transaction')
-                elif result.success:
-                    if (  # checking any on of these should suffice in theory...
-                        result.tx is not None and
-                        result.reportedFeeSats is not None and
-                        result.reportedFeeSats > 0 and
-                        result.msg == 'send transaction requires fee.'
-                    ):
-                        r = self.server.broadcastSimplePartial(
-                            tx=result.tx,
-                            reportedFeeSats=result.reportedFeeSats,
-                            feeSatsReserved=responseJson.get(
-                                'feeSatsReserved'),
-                            network=(
-                                'ravencoin' if self.networkIsTest(network)
-                                else 'evrmore'))
-                        if r.text != '':
-                            logging.info(r.text)
-                            time.sleep(10)
-                            wallet.get(allWalletInfo=False)
-                            return
-                        logging.error(
-                            'Unable to execute autosecure transaction')
-                        return
-                    time.sleep(10)
-                    wallet.get(allWalletInfo=False)
-                    return
-                logging.error('Unable to execute autosecure transaction')
+    #     def executeAutosecure(wallet: Union[RavencoinWallet, EvrmoreWallet], network: str):
+    #         entry = wallet.getAutosecureEntry()
+    #         if entry is None:
+    #             return
+    #         amount = wallet.balanceAmount - entry.get('retain', 0)
+    #         if amount > wallet.reserveAmount:
+    #             result = wallet.typicalNeuronTransaction(
+    #                 amount=amount,
+    #                 address=entry.get('address'),
+    #                 sweep=False,
+    #                 pullFeeFromAmount=True)
+    #             if result.msg == 'creating partial, need feeSatsReserved.':
+    #                 responseJson = self.server.requestSimplePartial(
+    #                     network=network)
+    #                 # account for fee
+    #                 if amount > 1:
+    #                     amount -= 1
+    #                 result = wallet.typicalNeuronTransaction(
+    #                     sweep=False,
+    #                     amount=amount,
+    #                     address=entry.get('address'),
+    #                     completerAddress=responseJson.get('completerAddress'),
+    #                     feeSatsReserved=responseJson.get('feeSatsReserved'),
+    #                     changeAddress=responseJson.get('changeAddress'),
+    #                 )
+    #             if result is None:
+    #                 logging.error('Unable to execute autosecure transaction')
+    #             elif result.success:
+    #                 if (  # checking any on of these should suffice in theory...
+    #                     result.tx is not None and
+    #                     result.reportedFeeSats is not None and
+    #                     result.reportedFeeSats > 0 and
+    #                     result.msg == 'send transaction requires fee.'
+    #                 ):
+    #                     r = self.server.broadcastSimplePartial(
+    #                         tx=result.tx,
+    #                         reportedFeeSats=result.reportedFeeSats,
+    #                         feeSatsReserved=responseJson.get(
+    #                             'feeSatsReserved'),
+    #                         network=(
+    #                             'ravencoin' if self.networkIsTest(network)
+    #                             else 'evrmore'))
+    #                     if r.text != '':
+    #                         logging.info(r.text)
+    #                         time.sleep(10)
+    #                         wallet.get(allWalletInfo=False)
+    #                         return
+    #                     logging.error(
+    #                         'Unable to execute autosecure transaction')
+    #                     return
+    #                 time.sleep(10)
+    #                 wallet.get(allWalletInfo=False)
+    #                 return
+    #             logging.error('Unable to execute autosecure transaction')
 
-        def autosecureLoop():
-            logging.info('running autosecure loop', color='green')
-            for wallet, network in zip(
-                [self._ravencoinWallet, self._evrmoreWallet],
-                ['test', 'main']
-            ):
-                if wallet is not None and wallet.shouldAutosecure():
-                    executeAutosecure(wallet, network)
+    #     def autosecureLoop():
+    #         logging.info('running autosecure loop', color='green')
+    #         for wallet, network in zip(
+    #             [self._ravencoinWallet, self._evrmoreWallet],
+    #             ['test', 'main']
+    #         ):
+    #             if wallet is not None and wallet.shouldAutosecure():
+    #                 executeAutosecure(wallet, network)
 
-        autosecureLoop()
+    #     autosecureLoop()
 
     def repullFor(self, streamId: StreamId):
         if self.engine is not None:

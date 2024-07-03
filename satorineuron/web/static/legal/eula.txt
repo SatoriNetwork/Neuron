@@ -28,8 +28,8 @@ Post-Termination Obligations: Upon termination, the User must cease all use of t
 
 6. WARRANTIES AND DISCLAIMERS
 
-No Warranties: The Software is provided "AS IS," without any warranties of any kind.
-Disclaimer: Licensor expressly disclaims all warranties, whether express, implied, or statutory, including, but not limited to, implied warranties of merchantability, fitness for a particular purpose, title, and non-infringement.
+NO WARRANTIES: THE SOFTWARE IS PROVIDED "AS IS," WITHOUT ANY WARRANTIES OF ANY KIND.
+DISCLAIMER: LICENSOR EXPRESSLY DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
 
 7. LIMITATION OF LIABILITY
 
@@ -37,12 +37,12 @@ In no event shall Licensor be liable for any indirect, incidental, special, cons
 
 8. DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY
 
-Use at Your Own Risk: This software is provided on an "AS IS" and "AS AVAILABLE" basis. The user acknowledges and agrees that the use of this software is entirely at their own risk.
-No Guarantees: The developers, investors, creators, The Satori Association, and any other affiliated parties (collectively referred to as "the Providers") make no warranties, express or implied, including but not limited to the implied warranties of merchantability and fitness for a particular purpose. The Providers do not warrant that the software will meet your requirements, be uninterrupted, secure, or error-free.
-Experimental Technology: The user acknowledges that this software is new and experimental technology, which may contain multiple vulnerabilities. The user agrees to accept all risks associated with the use of this software, including but not limited to the risks of data loss, security breaches, and system failures.
-Limitation of Liability: In no event shall the Providers be liable for any direct, indirect, incidental, special, consequential, or exemplary damages (including but not limited to damages for loss of profits, goodwill, use, data, or other intangible losses) arising out of or in connection with the use or inability to use the software.
-Indemnification: The user agrees to indemnify, defend, and hold harmless the Providers from and against any and all claims, liabilities, damages, losses, costs, expenses, fees (including reasonable attorneys' fees), that the Providers may incur as a result of or arising from the use of the software, the violation of this Agreement, or the infringement of any intellectual property or other right of any person or entity by the user.
-Responsibility for Malicious Attacks: The user agrees that no one involved with the creation, distribution, or promotion of this software can be held responsible for any harm caused by malicious attackers. The user agrees to hold only those malicious attackers responsible and to release and indemnify all other parties from any claims or liabilities.
+USE AT YOUR OWN RISK: THIS SOFTWARE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. THE USER ACKNOWLEDGES AND AGREES THAT THE USE OF THIS SOFTWARE IS ENTIRELY AT THEIR OWN RISK.
+NO GUARANTEES: THE DEVELOPERS, INVESTORS, CREATORS, THE SATORI ASSOCIATION, AND ANY OTHER AFFILIATED PARTIES (COLLECTIVELY REFERRED TO AS "THE PROVIDERS") MAKE NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE PROVIDERS DO NOT WARRANT THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS, BE UNINTERRUPTED, SECURE, OR ERROR-FREE.
+EXPERIMENTAL TECHNOLOGY: THE USER ACKNOWLEDGES THAT THIS SOFTWARE IS NEW AND EXPERIMENTAL TECHNOLOGY, WHICH MAY CONTAIN MULTIPLE VULNERABILITIES. THE USER AGREES TO ACCEPT ALL RISKS ASSOCIATED WITH THE USE OF THIS SOFTWARE, INCLUDING BUT NOT LIMITED TO THE RISKS OF DATA LOSS, SECURITY BREACHES, AND SYSTEM FAILURES.
+LIMITATION OF LIABILITY: IN NO EVENT SHALL THE PROVIDERS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES (INCLUDING BUT NOT LIMITED TO DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, DATA, OR OTHER INTANGIBLE LOSSES) ARISING OUT OF OR IN CONNECTION WITH THE USE OR INABILITY TO USE THE SOFTWARE.
+INDEMNIFICATION: THE USER AGREES TO INDEMNIFY, DEFEND, AND HOLD HARMLESS THE PROVIDERS FROM AND AGAINST ANY AND ALL CLAIMS, LIABILITIES, DAMAGES, LOSSES, COSTS, EXPENSES, FEES (INCLUDING REASONABLE ATTORNEYS' FEES), THAT THE PROVIDERS MAY INCUR AS A RESULT OF OR ARISING FROM THE USE OF THE SOFTWARE, THE VIOLATION OF THIS AGREEMENT, OR THE INFRINGEMENT OF ANY INTELLECTUAL PROPERTY OR OTHER RIGHT OF ANY PERSON OR ENTITY BY THE USER.
+RESPONSIBILITY FOR MALICIOUS ATTACKS: THE USER AGREES THAT NO ONE INVOLVED WITH THE CREATION, DISTRIBUTION, OR PROMOTION OF THIS SOFTWARE CAN BE HELD RESPONSIBLE FOR ANY HARM CAUSED BY MALICIOUS ATTACKERS. THE USER AGREES TO HOLD ONLY THOSE MALICIOUS ATTACKERS RESPONSIBLE AND TO RELEASE AND INDEMNIFY ALL OTHER PARTIES FROM ANY CLAIMS OR LIABILITIES.
 
 9. GOVERNING LAW AND DISPUTE RESOLUTION
 

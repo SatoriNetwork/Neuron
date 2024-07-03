@@ -242,6 +242,23 @@ def unpause():
     return redirect(url_for('dashboard'))
 
 
+@app.route('/backupk/<target>', methods=['GET'])
+def backup(target: str = 'satori'):
+    outputPath = '/Satori/Neuron/satorineuron/web/static/download'
+    if target == 'satori':
+        from satorilib.api.disk.zip.zip import zipSelected
+        zipSelected(
+            folderPath=f'/Satori/Neuron/{target}',
+            outputPath=f'{outputPath}/{target}.zip',
+            selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
+    else:
+        from satorilib.api.disk.zip.zip import zipFolder
+        zipFolder(
+            folderPath=f'/Satori/Neuron/{target}',
+            outputPath=f'{outputPath}/{target}')
+    return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
+
+
 @app.route('/restart', methods=['GET'])
 def restart():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
@@ -402,6 +419,8 @@ def relay():
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
 def sendSatoriTransactionFromWallet(network: str = 'main'):
+    # logging.debug('sendSatoriTransactionFromWallet', network, color='magenta')
+    # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
     return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
 
 
@@ -423,12 +442,14 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
     def accept_submittion(sendSatoriForm):
         def refreshWallet():
             time.sleep(4)
+            # doesn't respect the cooldown
             myWallet.get(allWalletInfo=False)
 
         if sendSatoriForm.address.data == start.getWallet(network=network).address:
             # if we're sending to wallet we don't want it to auto send back to vault
             disableAutosecure(network)
         try:
+            # logging.debug('sweep', sendSatoriForm.sweep.data, color='magenta')
             result = myWallet.typicalNeuronTransaction(
                 sweep=sendSatoriForm.sweep.data,
                 amount=sendSatoriForm.amount.data or 0,
@@ -680,9 +701,9 @@ def dashboard():
     streamOverviews = (
         [model.miniOverview() for model in start.engine.models]
         if start.engine is not None else [])  # StreamOverviews.demo()
-    start.wallet.get(allWalletInfo=False)
+    start.openWallet()
     if start.vault is not None:
-        start.vault.get(allWalletInfo=False)
+        start.openVault()
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
@@ -952,39 +973,40 @@ def chatUpdatesEnd():
 
 @ app.route('/remove_wallet_alias/<network>')
 def removeWalletAlias(network: str = 'main', alias: str = ''):
-    myWallet = start.getWallet(network=network)
-    myWallet.get(allWalletInfo=False)
+    myWallet = start.openWallet(network=network)
     myWallet.setAlias(None)
     start.server.removeWalletAlias()
-    return render_template('wallet-page.html', **getResp({
-        'title': 'Wallet',
-        'walletIcon': 'wallet',
-        'network': network,
-        'image': getQRCode(myWallet.address),
-        'wallet': myWallet,
-        'exampleAlias': getRandomName(),
-        'alias': '',
-        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    return wallet(network=network)
+    # return render_template('wallet-page.html', **getResp({
+    #    'title': 'Wallet',
+    #    'walletIcon': 'wallet',
+    #    'network': network,
+    #    'image': getQRCode(myWallet.address),
+    #    'wallet': myWallet,
+    #    'exampleAlias': getRandomName(),
+    #    'alias': '',
+    #    'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
 @ app.route('/update_wallet_alias/<network>/<alias>')
 def updateWalletAlias(network: str = 'main', alias: str = ''):
-    myWallet = start.getWallet(network=network)
-    myWallet.get(allWalletInfo=False)
+    myWallet = start.openWallet(network=network)
     myWallet.setAlias(alias)
     start.server.updateWalletAlias(alias)
-    return render_template('wallet-page.html', **getResp({
-        'title': 'Wallet',
-        'walletIcon': 'wallet',
-        'network': network,
-        'image': getQRCode(myWallet.address),
-        'wallet': myWallet,
-        'exampleAlias': getRandomName(),
-        'alias': alias,
-        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    return wallet(network=network)
+    # ('wallet-page.html', **getResp({
+    #        'title': 'Wallet',
+    #        'walletIcon': 'wallet',
+    #        'network': network,
+    #        'image': getQRCode(myWallet.address),
+    #        'wallet': myWallet,
+    #        'exampleAlias': getRandomName(),
+    #        'alias': alias,
+    #        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@ app.route('/wallet/<network>', methods=['GET', 'POST'])  # @closeVault
+@ app.route('/wallet/<network>', methods=['GET', 'POST'])
+@closeVault
 def wallet(network: str = 'main'):
     def accept_submittion(passwordForm):
         _vault = start.openVault(
@@ -993,8 +1015,7 @@ def wallet(network: str = 'main'):
         # if rvn is None or not rvn.isEncrypted:
         #    flash('unable to open vault')
 
-    myWallet = start.getWallet(network=network)
-    myWallet.get(allWalletInfo=False)
+    myWallet = start.openWallet(network=network)
     alias = myWallet.alias or start.server.getWalletAlias()
     if config.get().get('wallet lock'):
         if request.method == 'POST':
@@ -1107,7 +1128,6 @@ def vault():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
-        start.vault.get(allWalletInfo=False)
         from satorilib.api.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
         if start.server.betaStatus()[1].get('value') == 1:
@@ -1119,7 +1139,7 @@ def vault():
             'title': 'Vault',
             'walletIcon': 'lock',
             'image': getQRCode(start.vault.address),
-            'network': 'test',  # change to main when ready
+            'network': start.network,  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
             'minedtovault': start.server.minedToVault(),
@@ -1133,7 +1153,7 @@ def vault():
         'title': 'Vault',
         'walletIcon': 'lock',
         'image': '',
-        'network': 'test',  # change to main when ready
+        'network': start.network,  # change to main when ready
         'autosecured': False,
         'minedtovault': start.server.minedToVault(),
         'vaultPasswordForm': presentVaultPasswordForm(),
@@ -1214,6 +1234,7 @@ def disableMineToVault(network: str = 'main'):
         return redirect('/dashboard')
     vault = start.getVault(network=network)
     wallet = start.getWallet(network=network)
+    logging.debug('wallet:', wallet, color="magenta")
     mineToAddress = wallet.address
     success, result = start.server.disableMineToVault(
         walletSignature=wallet.sign(mineToAddress),
@@ -1230,22 +1251,20 @@ def vote():
 
     def getVotes(wallet):
 
-        def valuesAsNumbers(map: dict):
-            return {k: int(v) for k, v in map.items()}
+        # def valuesAsNumbers(map: dict):
+        #    return {k: int(v) for k, v in map.items()}
 
         x = {
             'communityVotes': start.server.getManifestVote(),
             'walletVotes': {k: v/100 for k, v in start.server.getManifestVote(wallet).items()},
-            'vaultVotes': (
-                valuesAsNumbers(
-                    {k: v/100 for k, v in start.server.getManifestVote(start.vault).items()})
-                if start.vault is not None and start.vault.isDecrypted else {
-                    'predictors': 0,
-                    'oracles': 0,
-                    'inviters': 0,
-                    'creators': 0,
-                    'managers': 0})}
-        # logging.debug('x', x, color='yellow')
+            'vaultVotes': ({k: v/100 for k, v in start.server.getManifestVote(start.vault).items()}
+                           if start.vault is not None and start.vault.isDecrypted else {
+                'predictors': 0,
+                'oracles': 0,
+                'inviters': 0,
+                'creators': 0,
+                'managers': 0})}
+        logging.debug('x', x, color='yellow')
         return x
 
     def getStreams(wallet):
@@ -1288,11 +1307,11 @@ def vote():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
 
-    myWallet = start.getWallet(network='test')
+    myWallet = start.getWallet(network=start.network)
     if start.vault is not None and not start.vault.isEncrypted:
         return render_template('vote.html', **getResp({
             'title': 'Vote',
-            'network': 'test',  # change to main when ready
+            'network': start.network,
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': myWallet,
@@ -1301,7 +1320,7 @@ def vote():
             **getVotes(myWallet)}))
     return render_template('vote.html', **getResp({
         'title': 'Vote',
-        'network': 'test',  # change to main when ready
+        'network': start.network,
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': myWallet,
@@ -1321,7 +1340,7 @@ def voteSubmitManifestWallet():
         request.json.get('walletManagers') > 0
     ):
         start.server.submitMaifestVote(
-            wallet=start.getWallet(network='test'),
+            wallet=start.getWallet(network=start.network),
             votes={
                 'predictors': request.json.get('walletPredictors', 0),
                 'oracles': request.json.get('walletOracles', 0),
@@ -1334,22 +1353,33 @@ def voteSubmitManifestWallet():
 @ app.route('/vote/submit/manifest/vault', methods=['POST'])
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
-    if ((
-            int(request.json.get('vaultPredictors')) > 0 or
-            int(request.json.get('vaultOracles')) > 0 or
-            int(request.json.get('vaultInviters')) > 0 or
-            int(request.json.get('vaultCreators')) > 0 or
-            int(request.json.get('vaultManagers')) > 0) and
-            start.vault is not None and start.vault.isDecrypted
-        ):
+    vaultPredictors = request.json.get('vaultPredictors')
+    vaultOracles = request.json.get('vaultOracles')
+    vaultInviters = request.json.get('vaultInviters')
+    vaultCreators = request.json.get('vaultCreators')
+    vaultManagers = request.json.get('vaultManagers')
+    vaultPredictors = 0 if vaultPredictors.strip() == '' else int(vaultPredictors)
+    vaultOracles = 0 if vaultOracles.strip() == '' else int(vaultOracles)
+    vaultInviters = 0 if vaultInviters.strip() == '' else int(vaultInviters)
+    vaultCreators = 0 if vaultCreators.strip() == '' else int(vaultCreators)
+    vaultManagers = 0 if vaultManagers.strip() == '' else int(vaultManagers)
+    if (
+        (
+            vaultPredictors > 0 or
+            vaultOracles > 0 or
+            vaultInviters > 0 or
+            vaultCreators > 0 or
+            vaultManagers > 0
+        ) and start.vault is not None and start.vault.isDecrypted
+    ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
-                'predictors': request.json.get('vaultdictors', 0),
-                'oracles': request.json.get('vaultOracles', 0),
-                'inviters': request.json.get('vaultInviters', 0),
-                'creators': request.json.get('vaultreators', 0),
-                'managers': request.json.get('vaultanagers', 0)})
+                'predictors': vaultPredictors,
+                'oracles': vaultOracles,
+                'inviters': vaultInviters,
+                'creators': vaultCreators,
+                'managers': vaultManagers})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
@@ -1366,7 +1396,7 @@ def voteSubmitSanctionWallet():
             'walletVotes', []))
     ):
         start.server.submitSanctionVote(
-            wallet=start.getWallet(network='test'),
+            wallet=start.getWallet(network=start.network),
             votes={
                 'streamIds': request.json.get('walletStreamIds'),
                 'votes': request.json.get('walletVotes')})
@@ -1399,9 +1429,10 @@ def voteSubmitSanctionVault():
 @app.route('/vote/remove_all/sanction', methods=['GET'])
 def voteRemoveAllSanction():
     # logging.debug(request.json, color='yellow')
-    start.server.removeSanctionVote(wallet=start.getWallet(network='test'))
+    start.server.removeSanctionVote(
+        wallet=start.getWallet(network=start.network))
     if (start.vault is not None and start.vault.isDecrypted):
-        start.server.removeSanctionVote(start.vaul)
+        start.server.removeSanctionVote(start.vault)
     return jsonify({'message': 'Stream votes received successfully'}), 200
 
 
