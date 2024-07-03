@@ -403,6 +403,7 @@ def relay():
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
 def sendSatoriTransactionFromWallet(network: str = 'main'):
     # logging.debug('sendSatoriTransactionFromWallet', network, color='magenta')
+    # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
     return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
 
 
@@ -1337,13 +1338,13 @@ def voteSubmitManifestWallet():
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     if ((
-            int(request.json.get('vaultPredictors')) > 0 or
-            int(request.json.get('vaultOracles')) > 0 or
-            int(request.json.get('vaultInviters')) > 0 or
-            int(request.json.get('vaultCreators')) > 0 or
-            int(request.json.get('vaultManagers')) > 0) and
-            start.vault is not None and start.vault.isDecrypted
-        ):
+                int(request.json.get('vaultPredictors')) > 0 or
+                int(request.json.get('vaultOracles')) > 0 or
+                int(request.json.get('vaultInviters')) > 0 or
+                int(request.json.get('vaultCreators')) > 0 or
+                int(request.json.get('vaultManagers')) > 0) and
+                start.vault is not None and start.vault.isDecrypted
+            ):
         start.server.submitMaifestVote(
             start.vault,
             votes={
