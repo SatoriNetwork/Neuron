@@ -91,16 +91,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()
-        alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
-        if alreadySetup:
-            threading.Thread(target=self.delayedEngine).start()
-        while True:
-            if self.asyncThread.loop is not None:
-                self.restartThread = self.asyncThread.repeatRun(
-                    task=self.start,
-                    interval=60*60*24 if alreadySetup else 60*60*12)
-                break
-            time.sleep(1)
+        self.restartThread = threading.Thread(
+            target=self.restartEverything, daemon=True)
+        self.restartThread.start()
+        self.delayedStart()
 
     def delayedEngine(self):
         time.sleep(60*60*6)
@@ -562,3 +556,21 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     for target in model.targets:
                         if target == streamId:
                             model.inputsUpdated.on_next(True)
+
+    def delayedStart(self):
+        alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
+        if alreadySetup:
+            threading.Thread(target=self.delayedEngine).start()
+        # while True:
+        #    if self.asyncThread.loop is not None:
+        #        self.restartThread = self.asyncThread.repeatRun(
+        #            task=self.start,
+        #            interval=60*60*24 if alreadySetup else 60*60*12)
+        #        break
+        #    time.sleep(1)
+
+    def restartEverything(self):
+        import random
+        time.sleep(random.randint(60*60*21, 60*60*24))
+        import requests
+        requests.get('http://127.0.0.1:24601/restart')
