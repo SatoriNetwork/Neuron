@@ -454,7 +454,7 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
                 sweep=sendSatoriForm.sweep.data,
                 amount=sendSatoriForm.amount.data or 0,
                 address=sendSatoriForm.address.data or '')
-            logging.debug('result.msg',result.msg, color='magenta')
+            logging.debug('result.msg', result.msg, color='magenta')
             if result.msg == 'creating partial, need feeSatsReserved.':
                 responseJson = start.server.requestSimplePartial(
                     network=network)

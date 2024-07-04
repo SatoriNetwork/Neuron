@@ -55,51 +55,6 @@
               {% endif %}
             </tbody>
           </table>
-
-          <!--<table class="table align-items-center mb-0">
-            <thead>
-              <tr>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Id</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Confirmations</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Sent</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Received</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for transaction in wallet.transactions %}
-              <tr class='yellow-hover'>
-                <td>
-                  <a href="https://{{ 'evr' if wallet.chain == 'Evrmore' else 'rvn' }}.cryptoscope.io/tx/?txid={{ transaction.txid }}", target='_blank'>
-                    <div class="d-flex px-3 py-1">
-                      <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ transaction.txid }}</h6>
-                    </div>
-                  </a>
-                </td>
-                <td>
-                  <a href="https://{{ 'evr' if wallet.chain == 'Evrmore' else 'rvn' }}.cryptoscope.io/tx/?txid={{ transaction.txid }}", target='_blank'>
-                    <div class="d-flex px-3 py-1">
-                      <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ transaction.confirmations }}</h6>
-                    </div>
-                  </a>
-                </td>
-              <td>
-                    {% for name, value in transaction.received.items() %}
-                    <div class="d-flex px-3 py-1">
-                      <h6 class="mb-0 text-sm">{{ name }}: {{ value }}</h6>
-                    </div>
-                    {% endfor %}
-                  </td>
-                  <td>
-                    {% for name, value in transaction.sent.items() %}
-                    <div class="d-flex px-3 py-1">
-                      <h6 class="mb-0 text-sm">{{ name }}: {{ value }}</h6>
-                    </div>
-                    {% endfor %}
-                  </td>
-                </tr> 
-              {% endfor %}
-            </tbody>
-          </table>-->
         </div>
       </div>
     </div>
