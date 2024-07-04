@@ -94,17 +94,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.restartThread = threading.Thread(
             target=self.restartEverything, daemon=True)
         self.restartThread.start()
-
-        alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
-        if alreadySetup:
-            threading.Thread(target=self.delayedEngine).start()
-        while True:
-            if self.asyncThread.loop is not None:
-                self.restartThread = self.asyncThread.repeatRun(
-                    task=self.start,
-                    interval=60*60*24 if alreadySetup else 60*60*12)
-                break
-            time.sleep(1)
+        self.delayedStart()
 
     def delayedEngine(self):
         time.sleep(60*60*6)
@@ -566,6 +556,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     for target in model.targets:
                         if target == streamId:
                             model.inputsUpdated.on_next(True)
+
+    def delayedStart(self):
+        alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
+        if alreadySetup:
+            threading.Thread(target=self.delayedEngine).start()
+        # while True:
+        #    if self.asyncThread.loop is not None:
+        #        self.restartThread = self.asyncThread.repeatRun(
+        #            task=self.start,
+        #            interval=60*60*24 if alreadySetup else 60*60*12)
+        #        break
+        #    time.sleep(1)
 
     def restartEverything(self):
         import random
