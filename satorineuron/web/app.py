@@ -419,7 +419,6 @@ def relay():
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
 def sendSatoriTransactionFromWallet(network: str = 'main'):
-    logging.debug('sendSatoriTransactionFromWallet', network, color='magenta')
     # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
     return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
 
@@ -444,7 +443,7 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
             time.sleep(4)
             # doesn't respect the cooldown
             myWallet.get(allWalletInfo=False)
-        
+
         # doesn't respect the cooldown
         myWallet.getUnspentSignatures()
         if sendSatoriForm.address.data == start.getWallet(network=network).address:
@@ -456,7 +455,6 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
                 sweep=sendSatoriForm.sweep.data,
                 amount=sendSatoriForm.amount.data or 0,
                 address=sendSatoriForm.address.data or '')
-            logging.debug('result.msg', result.msg, color='magenta')
             if result.msg == 'creating partial, need feeSatsReserved.':
                 responseJson = start.server.requestSimplePartial(
                     network=network)
