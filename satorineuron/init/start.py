@@ -91,6 +91,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()
+        self.restartThread = threading.Thread(
+            target=self.restartEverything, daemon=True)
+        self.restartThread.start()
+
         alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
         if alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
@@ -562,3 +566,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     for target in model.targets:
                         if target == streamId:
                             model.inputsUpdated.on_next(True)
+
+    def restartEverything(self):
+        import random
+        time.sleep(random.randint(60*60*21, 60*60*24))
+        import requests
+        requests.get('http://127.0.0.1:24601/restart')
