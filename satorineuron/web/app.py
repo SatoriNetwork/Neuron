@@ -444,7 +444,9 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
             time.sleep(4)
             # doesn't respect the cooldown
             myWallet.get(allWalletInfo=False)
-
+        
+        # doesn't respect the cooldown
+        myWallet.getUnspentSignatures()
         if sendSatoriForm.address.data == start.getWallet(network=network).address:
             # if we're sending to wallet we don't want it to auto send back to vault
             disableAutosecure(network)
