@@ -56,7 +56,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.env = env
         self.lastWalletCall = 0
         self.lastVaultCall = 0
-        self.electrumCooldown = 30
+        self.electrumCooldown = 10
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
         # self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
@@ -157,8 +157,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         vaultPath,
                         reserve=0.01,
                         isTestnet=self.networkIsTest('ravencoin'),
-                        password=password,
-                        use=self._ravencoinVault)
+                        password=password)
             except Exception as e:
                 logging.error('failed to open vault', color='red')
                 raise e
@@ -174,7 +173,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         password: Union[str, None] = None,
         create: bool = False,
     ) -> Union[RavencoinWallet, None]:
-        if self._evrmoreVault is None or (self._evrmoreVault.password is None and password is not None):
+        if self._evrmoreVault is None:
             try:
                 vaultPath = config.walletPath('vault.yaml')
                 if os.path.exists(vaultPath) or create:
@@ -182,8 +181,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         vaultPath,
                         reserve=0.01,
                         isTestnet=self.networkIsTest('evrmore'),
-                        password=password,
-                        use=self._evrmoreVault)
+                        password=password)
             except Exception as e:
                 logging.error('failed to open vault', color='red')
                 raise e
@@ -192,6 +190,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             else:
                 logging.info('accessed vault', color='green')
             return self._evrmoreVault
+        elif self._evrmoreVault.password is None and password is not None:
+            self._evrmoreVault.open(password)
         return self._evrmoreVault
 
     def networkIsTest(self, network: str = None) -> bool:
@@ -242,7 +242,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self._evrmoreVault.close()
         except Exception as _:
             pass
-        return self.openVault()
 
     def openVault(
         self,
