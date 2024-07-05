@@ -37,7 +37,7 @@ from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 ###############################################################################
 ## Globals ####################################################################
 ###############################################################################
-
+# logging.setup(level=0)
 # development flags
 debug = True
 darkmode = False
@@ -274,7 +274,9 @@ def restart():
         '    </script>'
         '</head>'
         '<body>'
-        '    <p>Satori Neuron is attempting to restart. Please wait several (say 10) minutes then <a href="http://127.0.0.1:24601">click here</a>...</p>'
+        '    <p>Satori Neuron is attempting to restart. <b>Please wait,</b> the restart process can take several minutes as it downloads updates.</p>'
+        '    <p>If after 10 minutes your this page has not refreshed <a href="http://127.0.0.1:24601">click here to refresh the Satori Neuron UI</a>.</p>'
+        '    <p>Thank you.</p>'
         '</body>'
         '</html>'
     )
@@ -419,7 +421,6 @@ def relay():
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
 def sendSatoriTransactionFromWallet(network: str = 'main'):
-    logging.debug('sendSatoriTransactionFromWallet', network, color='magenta')
     # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
     return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
 
@@ -445,6 +446,8 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
             # doesn't respect the cooldown
             myWallet.get(allWalletInfo=False)
 
+        # doesn't respect the cooldown
+        myWallet.getUnspentSignatures()
         if sendSatoriForm.address.data == start.getWallet(network=network).address:
             # if we're sending to wallet we don't want it to auto send back to vault
             disableAutosecure(network)
@@ -454,7 +457,6 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
                 sweep=sendSatoriForm.sweep.data,
                 amount=sendSatoriForm.amount.data or 0,
                 address=sendSatoriForm.address.data or '')
-            logging.debug('result.msg',result.msg, color='magenta')
             if result.msg == 'creating partial, need feeSatsReserved.':
                 responseJson = start.server.requestSimplePartial(
                     network=network)
@@ -1120,6 +1122,7 @@ def presentVaultPasswordForm():
 def vault():
 
     def accept_submittion(passwordForm):
+        #start.workingUpdates.put('decrypting...')
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
@@ -1129,13 +1132,14 @@ def vault():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
+        #start.workingUpdates.put('downloading balance...')
         from satorilib.api.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
-        if start.server.betaStatus()[1].get('value') == 1:
-            claimResult = start.server.betaClaim(account.address)[1]
-            logging.info(
-                'beta NFT not yet claimed. Claiming Beta NFT:',
-                claimResult.get('description'))
+        # if start.server.betaStatus()[1].get('value') == 1:
+        #    claimResult = start.server.betaClaim(account.address)[1]
+        #    logging.info(
+        #        'beta NFT not yet claimed. Claiming Beta NFT:',
+        #        claimResult.get('description'))
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
@@ -1143,20 +1147,21 @@ def vault():
             'network': start.network,  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
-            'minedtovault': start.server.minedToVault(),
+            'minedtovault': True,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    #start.workingUpdates.put('loading...')
     return render_template('vault.html', **getResp({
         'title': 'Vault',
         'walletIcon': 'lock',
         'image': '',
         'network': start.network,  # change to main when ready
         'autosecured': False,
-        'minedtovault': start.server.minedToVault(),
+        'minedtovault': True,  # start.server.minedToVault(),
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
@@ -1251,10 +1256,8 @@ def disableMineToVault(network: str = 'main'):
 def vote():
 
     def getVotes(wallet):
-
         # def valuesAsNumbers(map: dict):
         #    return {k: int(v) for k, v in map.items()}
-
         x = {
             'communityVotes': start.server.getManifestVote(),
             'walletVotes': {k: v/100 for k, v in start.server.getManifestVote(wallet).items()},
@@ -1265,7 +1268,6 @@ def vote():
                 'inviters': 0,
                 'creators': 0,
                 'managers': 0})}
-        logging.debug('x', x, color='yellow')
         return x
 
     def getStreams(wallet):

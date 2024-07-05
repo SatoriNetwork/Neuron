@@ -75,8 +75,8 @@ class SynergyClient:
                 msg = SynergyProtocol.fromJson(message)
                 self.router(msg)
             except Exception as e:
-                logging.error('error parsing synergy message:',
-                              message, e, color='red')
+                logging.warning('error parsing synergy message:',
+                                message, e, color='red')
 
     @property
     def isConnected(self) -> bool:
@@ -104,7 +104,7 @@ class SynergyClient:
                 challenge = SynergyRestClient(url=self.url).getChallenge()
             except Exception as e:
                 time.sleep(30)
-                logging.error('Failed to connect to Synergy.', e)
+                # logging.warning('Failed to connect to Synergy.', color='yellow')
         signature = self.wallet.authPayload(
             challenge=challenge,
             asDict=True)['signature']
@@ -117,7 +117,7 @@ class SynergyClient:
             self.sio.connect(connection_url)
             return True
         except socketio.exceptions.ConnectionError as e:
-            # logging.error('Failed to connect to Synergy.', e)
+            # logging.warning('Failed to connect to Synergy.', e)
             return False
             # self.reconnect()
 
@@ -126,7 +126,7 @@ class SynergyClient:
             try:
                 self.sio.emit('message', payload)
             except Exception as e:
-                logging.error('Failed to send message.', e)
+                logging.warning('Failed to send message.', e, color='yellow')
                 # self.reconnect()
         else:
             logging.warning(
@@ -137,7 +137,7 @@ class SynergyClient:
             try:
                 self.sio.emit('ping', payload)
             except Exception as e:
-                logging.error('Failed to send message.', e)
+                logging.warning('Failed to send message.', e)
                 # self.reconnect()
         else:
             logging.warning('Connection not established. Message not sent.')
@@ -166,7 +166,7 @@ class SynergyClient:
                     logging.info('Disconnected by user')
                     break
                 except Exception as e:
-                    logging.error('Satori Synergy error:', e, print=True)
+                    logging.warning('Satori Synergy error:', e, print=True)
                     self.disconnect()
                     logging.info('Attempting to reconnect...')
         time.sleep(30)
