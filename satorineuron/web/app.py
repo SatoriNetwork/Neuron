@@ -47,7 +47,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updateTime = 0
 updateQueue = Queue()
-ENV = os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev'))
+ENV = config.get().get('env', os.environ.get(
+    'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 CORS(app, origins=[{
     'local': 'http://192.168.0.10:5002',
     'dev': 'http://localhost:5002',
@@ -1122,7 +1123,7 @@ def presentVaultPasswordForm():
 def vault():
 
     def accept_submittion(passwordForm):
-        #start.workingUpdates.put('decrypting...')
+        # start.workingUpdates.put('decrypting...')
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
@@ -1132,7 +1133,7 @@ def vault():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
-        #start.workingUpdates.put('downloading balance...')
+        # start.workingUpdates.put('downloading balance...')
         from satorilib.api.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
         # if start.server.betaStatus()[1].get('value') == 1:
@@ -1154,7 +1155,7 @@ def vault():
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
-    #start.workingUpdates.put('loading...')
+    # start.workingUpdates.put('loading...')
     return render_template('vault.html', **getResp({
         'title': 'Vault',
         'walletIcon': 'lock',
