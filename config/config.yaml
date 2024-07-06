@@ -1,5 +1,3 @@
-# neuron lock enabled: true
-# neuron lock password: 123
 streamr light client port: 24686
 user interface port: 24601
 wallet lock: false

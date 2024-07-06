@@ -128,7 +128,7 @@ def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
             # delete on client
             start.relayValidation.claimed.remove(thisStream)
         except Exception as e:
-            logging.error(e)
+            logging.error('relay err', e)
 
     # attempt to save to server.
     save = start.relayValidation.registerStream(data=data)
@@ -143,7 +143,7 @@ def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
             # this can take a very long time - will flask/browser timeout?
             start.relayValidation.saveHistory(data)
         except Exception as e:
-            logging.error(e)
+            logging.error('relay err, in history', e)
             msgs.append(
                 'Unable to save stream because saving history process '
                 f'errored. Fix or remove history text. Error: {e}')

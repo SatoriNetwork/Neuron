@@ -253,6 +253,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         without a password it will open the vault (if it exists) but not decrypt
         it. this allows us to get it's balance, but not spend from it.
         '''
+        self.closeVault()
         vault = self.getVault(network, password, create)
         if vault is not None and self.lastVaultCall + self.electrumCooldown < time.time():
             self.lastVaultCall = time.time()

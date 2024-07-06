@@ -202,15 +202,25 @@ passphrase_html = '''
 
 @app.route('/unlock', methods=['GET', 'POST'])
 def passphrase():
+
+    def tryToInterpretAsInteger(password: str, exectedPassword: Union[str, int]) -> bool:
+        if isinstance(exectedPassword, int):
+            try:
+                return int(password) == expectedPassword
+            except Exception as _:
+                pass
+        return False
+
     if request.method == 'POST':
         target = request.form.get('next') or 'dashboard'
         conf = config.get()
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-                hashSaltIt(request.form['passphrase']) == expectedPassword or 
-            int(request.form['passphrase']) == expectedPassword 
-            ):
+                hashSaltIt(request.form['passphrase']) == expectedPassword or
+                tryToInterpretAsInteger(
+                request.form['passphrase'], expectedPassword)
+                ):
             session['authenticated'] = True
             return redirect(target)
         else:
@@ -698,7 +708,7 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
             try:
                 start.relayValidation.claimed.remove(removeRelayStream)
             except Exception as e:
-                logging.error(e)
+                logging.error('remove stream logic err', e)
             start.checkin()
             start.pubsubConnect()
             start.startRelay()
@@ -728,7 +738,7 @@ def removeStreamByPost():
             try:
                 start.relayValidation.claimed.remove(removeRelayStream)
             except Exception as e:
-                logging.error(e)
+                logging.error('remove strem by post err', e)
             start.checkin()
             start.pubsubConnect()
             start.startRelay()
@@ -1242,12 +1252,15 @@ def vault():
 
     def accept_submittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
+        # logging.debug(passwordForm.password.data, color='yellow')
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
         if not config.get().get('neuron lock hash', False):
             config.add(data={'neuron lock hash': hashSaltIt(
                 passwordForm.password.data)})
+            if 'neuron lock enabled' not in config.get():
+                config.add(data={'neuron lock enabled': False})
         # if rvn is None or not rvn.isEncrypted:
         #    flash('unable to open vault')
 
@@ -1795,8 +1808,6 @@ if __name__ == '__main__':
     #    spoofStreamer()
 
     # serve(app, host='0.0.0.0', port=config.get()['port'])
-    if not debug:
-        webbrowser.open('http://127.0.0.1:24601', new=0, autoraise=True)
     app.run(
         host='0.0.0.0',
         port=config.flaskPort(),

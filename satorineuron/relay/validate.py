@@ -252,7 +252,7 @@ class ValidateRelayStream(object):
                 saver.saveAll([i for i in generator()])
                 return True
             except Exception as e:
-                logging.error(e)
+                logging.error('relay error', e)
                 return False
 
         def saveIncrementally():
