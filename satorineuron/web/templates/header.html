@@ -233,7 +233,22 @@
           </ul>
           -->
         </li>
-        <li title='Dark Mode' class='hide-on-med-and-down' style="margin-right:.5rem">
+        {% if lockable %}
+          {% if lockEnabled %}
+          <li title='Neuron Lock Enabled - Logout' class='hide-on-med-and-down' style="margin-right:.5rem">
+              <a href="{{ url_for('lockRelock') }}" class="nav-link text-body p-0" onclick="confirmLogout(event)">
+                <i class="fa fa-lock"></i>
+              </a>
+          </li>
+          {% else %}
+          <li title='Neuron Lock Disabled - Enable' class='hide-on-med-and-down' style="margin-right:.5rem">
+            <a href="{{ url_for('lockEnable') }}" class="nav-link text-body p-0" onclick="confirmEnableNeuronLock(event)">
+              <i class="fa fa-unlock"></i>
+            </a>
+          </li>
+          {% endif %}
+        {% endif %}
+        <li title='Dark Mode' class='hide-on-med-and-down' style="margin-left:.5rem;margin-right:.5rem">
           {% if darkmode %}
             <a href="{{ url_for('modeLight') }}" class="nav-link text-body p-0">
               <i class="fa fa-moon-o"></i>
@@ -253,6 +268,18 @@
     </div>
   </div>
 </nav>
+<script>
+  function confirmEnableNeuronLock(event) {
+      if (!confirm("Are you sure you want to enable Neuron Lock?\n(You must know your vault password to get in).")) {
+          event.preventDefault();
+      }
+  }
+  function confirmLogout(event) {
+    if (!confirm("Are you sure you want to logout?\n(You must know your vault password to get back in).")) {
+        event.preventDefault();
+    }
+}
+</script>
 <script>
   // Listen for a click on the button 
   function toggleDark() {
