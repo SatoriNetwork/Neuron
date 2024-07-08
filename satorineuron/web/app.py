@@ -191,7 +191,7 @@ def authRequired(f):
 passphrase_html = '''
     <!doctype html>
     <title>Satori</title>
-    <h1>Welcome to your Satori Neuron</h1>
+    <h1>Unlock the Satori Neuron</h1>
     <form method="post">
       <p><input type="password" name="passphrase">
       <input type="hidden" name="next" value="{{ next }}">
@@ -1250,6 +1250,12 @@ def presentVaultPasswordForm():
 @authRequired
 def vault():
 
+    def defaultMineToVault():
+        try:
+            enableMineToVault
+        except Exception as _:
+            pass
+
     def accept_submittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
         # logging.debug(passwordForm.password.data, color='yellow')
@@ -1275,6 +1281,7 @@ def vault():
         #    logging.info(
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
+        threading.thread(defaultMineToVault, daemon=True).start()
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
