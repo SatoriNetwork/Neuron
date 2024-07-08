@@ -1281,7 +1281,7 @@ def vault():
         #    logging.info(
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
-        threading.thread(defaultMineToVault, daemon=True).start()
+        threading.Thread(target=defaultMineToVault, daemon=True).start()
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
