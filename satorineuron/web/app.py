@@ -224,7 +224,7 @@ def passphrase():
             session['authenticated'] = True
             return redirect(target)
         else:
-            return "Wrong passphrase, try again."
+            return "Wrong passphrase, try again.\n\nIf you're unable to unlock your Neuron remove the setting in the config file."
     next_url = request.args.get('next')
     return render_template_string(passphrase_html, next=next_url)
 
