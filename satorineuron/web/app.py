@@ -68,17 +68,17 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlPubsub={
                 'local': 'ws://192.168.0.10:3000',
                 'dev': 'ws://localhost:3000',
                 'test': 'ws://test.satorinet.io:3000',
-                'prod': 'ws://satorinet.io:3000'}[ENV],
+                'prod': 'ws://pubsub.satorinet.io:3000'}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
-                'prod': 'https://satorinet.io:24602'}[ENV],
+                'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)

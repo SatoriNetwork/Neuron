@@ -91,7 +91,7 @@ def run(installDir: str = None):
         return
     with open(p2pScript, "r") as file:
         script = file.read()
-    r = requests.get('https://satorinet.io/verify/scripthash')
+    r = requests.get('https://synergy.satorinet.io/verify/scripthash')
     if r.status_code == 200:
         hashes = r.json()
         if generateHash(script) in hashes:

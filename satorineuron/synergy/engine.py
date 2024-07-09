@@ -14,7 +14,7 @@ class SynergyManager():
         self.wallet = wallet
         self.pubkey = wallet.publicKey
         self.synergy = SynergyClient(
-            url=url or 'https://satorinet.io:24602',
+            url=url or 'https://synergy.satorinet.io:24602',
             router=self.handleMessage,
             wallet=wallet,
             onConnected=onConnect)
