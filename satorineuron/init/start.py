@@ -300,6 +300,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info('started relay validation engine', color='green')
 
     def checkin(self):
+        logging.debug(self.urlServer, color='teal')
         self.server = SatoriServerClient(self.wallet, url=self.urlServer)
         try:
             referrer = open(
