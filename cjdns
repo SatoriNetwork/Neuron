@@ -23,6 +23,14 @@ cd cjdns
 ln -s $(pwd)/cjdroute /usr/local/bin/cjdroute
 ./cjdroute --genconf > /etc/cjdroute.conf
 
+
+"129.227.46.179:24603": {
+    "login": "default-login",
+    "password": "jjsjkh14qq1hsp1wznsfmy0s97kdzt2",
+    "publicKey": "f2q47nr2g25z3g8y7uxxwn83drnj3838q5jsx3xpjxk1qqjv7620.k",
+    "peerName": "black"
+},
+
 vi /etc/cjdroute.conf
 nohup cjdroute < /etc/cjdroute.conf > /var/log/cjdns.log 2>&1 &
 cat /var/log/cjdns.log | grep -i "peer"
