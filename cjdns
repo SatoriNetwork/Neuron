@@ -1,18 +1,22 @@
 https://chatgpt.com/share/489cf9f2-1730-45fb-b9e2-a806ed1aeb24
 
+cd /tmp
 apt-get update
 apt-get install build-essential git
-
 # Download and install Node.js
-curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+apt-get install curl -y
+#curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 apt-get install -y nodejs
 # Verify Node.js installation
 node -v
-npm -v
+#npm -v
 # Clean previous build attempts
-cd /tmp/cjdns
-git clean -fdx
+#cd /tmp/cjdns
+#git clean -fdx
 # Build Cjdns
+# GET RUST. "$HOME/.cargo/env"
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+. "$HOME/.cargo/env"
 git clone https://github.com/cjdelisle/cjdns.git
 cd cjdns
 ./do
@@ -22,6 +26,8 @@ vi /etc/cjdroute.conf
 nohup cjdroute < /etc/cjdroute.conf > /var/log/cjdns.log 2>&1 &
 cat /var/log/cjdns.log | grep -i "peer"
 ufw allow <your_cjdns_port>/udp
+ufw allow 24603/udp
+ufw allow 24603/tcp
 ufw reload
 vi /etc/systemd/system/cjdns.service
 [Unit]
