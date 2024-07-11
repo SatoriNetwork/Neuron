@@ -3,6 +3,7 @@ https://chatgpt.com/share/489cf9f2-1730-45fb-b9e2-a806ed1aeb24
 cd /tmp
 apt-get update
 apt-get install build-essential git
+#apt-get install ufw -y
 # Download and install Node.js
 apt-get install curl -y
 #curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
@@ -32,14 +33,17 @@ vi /etc/cjdroute.conf
              "peerName": "black"
          },
 
+
+"fc6c:12cf:0ce3:1b50:436a:fa7c:f730:41ca"
          "65.130.251.139:24603": {
              "login": "default-login",
              "password": "mffu43zpbxjn2f595xssyzpys02zdfz",
              "publicKey": "4091pk2mxl13b6b3bmm22m72yl1z0vp2b9t347r20cqyj3pzd5w0.k",
              "peerName": "silver"
          },
-
 nohup cjdroute < /etc/cjdroute.conf > /var/log/cjdns.log 2>&1 &
+
+/usr/local/bin/cjdroute /etc/cjdroute.conf
 cat /var/log/cjdns.log | grep -i "peer"
 ufw allow <your_cjdns_port>/udp
 ufw allow 24603/udp
