@@ -22,6 +22,7 @@ cd cjdns
 ./do
 ln -s $(pwd)/cjdroute /usr/local/bin/cjdroute
 ./cjdroute --genconf > /etc/cjdroute.conf
+
 vi /etc/cjdroute.conf
 nohup cjdroute < /etc/cjdroute.conf > /var/log/cjdns.log 2>&1 &
 cat /var/log/cjdns.log | grep -i "peer"
