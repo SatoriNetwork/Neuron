@@ -1,0 +1,62 @@
+https://chatgpt.com/share/489cf9f2-1730-45fb-b9e2-a806ed1aeb24
+
+apt-get update
+apt-get install build-essential git
+
+# Download and install Node.js
+curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+apt-get install -y nodejs
+# Verify Node.js installation
+node -v
+npm -v
+# Clean previous build attempts
+cd /tmp/cjdns
+git clean -fdx
+# Build Cjdns
+git clone https://github.com/cjdelisle/cjdns.git
+cd cjdns
+./do
+ln -s $(pwd)/cjdroute /usr/local/bin/cjdroute
+./cjdroute --genconf > /etc/cjdroute.conf
+vi /etc/cjdroute.conf
+nohup cjdroute < /etc/cjdroute.conf > /var/log/cjdns.log 2>&1 &
+cat /var/log/cjdns.log | grep -i "peer"
+ufw allow <your_cjdns_port>/udp
+ufw reload
+vi /etc/systemd/system/cjdns.service
+[Unit]
+Description=Cjdns Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/cjdroute /etc/cjdroute.conf
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+systemctl enable cjdns
+systemctl start cjdns
+import socket
+import json
+from cryptography.fernet import Fernet
+
+# Generate a key for encryption
+key = Fernet.generate_key()
+cipher = Fernet(key)
+
+def send_message(ipv6_address, port, message):
+    sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    encrypted_message = cipher.encrypt(message.encode())
+    sock.sendto(encrypted_message, (ipv6_address, port))
+
+def receive_message(port):
+    sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    sock.bind(('::', port))
+    while True:
+        data, addr = sock.recvfrom(1024)
+        decrypted_message = cipher.decrypt(data).decode()
+        print(f"Received message from {addr}: {decrypted_message}")
+
+# Example usage
+send_message("fceb:7fc0:c62c:9cd9:2971:e3ff:aee2:6e08", 26041, "Hello, Peer!")
+receive_message(26041)
