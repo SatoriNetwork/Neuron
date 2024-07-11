@@ -1,72 +1,68 @@
-https://chatgpt.com/share/489cf9f2-1730-45fb-b9e2-a806ed1aeb24
+## attempting to install cjdns test-run:
 
+# RUN docker with ipv6 support before 
+# (must)
+--sysctl net.ipv6.conf.all.disable_ipv6=0
+
+# attempting to install cjdns to /tmp as a test-run
 cd /tmp
+
+# need curl
 apt-get update
 apt-get install build-essential git
-#apt-get install ufw -y
-# Download and install Node.js
 apt-get install curl -y
-#curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+
+# need node
 apt-get install -y nodejs
-# Verify Node.js installation
 node -v
-#npm -v
-# Clean previous build attempts
-#cd /tmp/cjdns
-#git clean -fdx
-# Build Cjdns
-# GET RUST. "$HOME/.cargo/env"
+
+# need rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 . "$HOME/.cargo/env"
+
+# need cjdns
 git clone https://github.com/cjdelisle/cjdns.git
-cd cjdns
+
+# install cjdns
+cd /tmp/cjdns
 ./do
+
+# link
 ln -s $(pwd)/cjdroute /usr/local/bin/cjdroute
 ./cjdroute --genconf > /etc/cjdroute.conf
+
+# edit config manually:
+# set binding port to 24603
+# paste peer connect_to entry
 vi /etc/cjdroute.conf
 
-"fc54:08ab:ba2d:61dd:8297:6192:6e62:8810"
-"129.227.46.147:24603": {
-             "login": "default-login",
-             "password": "4u1x42ktq3b7nvrcj8gzkg6nm0kubdz",
-             "publicKey": "ysf8rg5x3u9l9n91xmqs668bj3v2zrgwqyhnb3bwdwbwr5yqcsz0.k",
-             "peerName": "black"
-         },
+# manually get data:
+# copy self ipv6
+# copy self entry
+# get external ip (satorinet.io/ip) and paste as your id key
+cat /etc/cjdroute.conf
+#"fc54:08ab:ba2d:61dd:8297:6192:6e62:8810"
+#"129.227.46.147:24603": {
+#             "login": "default-login",
+#             "password": "4u1x42ktq3b7nvrcj8gzkg6nm0kubdz",
+#             "publicKey": "ysf8rg5x3u9l9n91xmqs668bj3v2zrgwqyhnb3bwdwbwr5yqcsz0.k",
+#             "peerName": "black"
+#         },
 
-
-"fc6c:12cf:0ce3:1b50:436a:fa7c:f730:41ca"
-         "65.130.251.139:24603": {
-             "login": "default-login",
-             "password": "mffu43zpbxjn2f595xssyzpys02zdfz",
-             "publicKey": "4091pk2mxl13b6b3bmm22m72yl1z0vp2b9t347r20cqyj3pzd5w0.k",
-             "peerName": "silver"
-         },
+# start cjdroute
 nohup cjdroute < /etc/cjdroute.conf > /var/log/cjdns.log 2>&1 &
 
-/usr/local/bin/cjdroute /etc/cjdroute.conf
-cat /var/log/cjdns.log | grep -i "peer"
-ufw allow <your_cjdns_port>/udp
-ufw allow 24603/udp
-ufw allow 24603/tcp
-ufw reload
-vi /etc/systemd/system/cjdns.service
-[Unit]
-Description=Cjdns Service
-After=network.target
+# look at logs to make sure its running
+/var/log/cjdns.log
 
-[Service]
-ExecStart=/usr/local/bin/cjdroute /etc/cjdroute.conf
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-systemctl enable cjdns
-systemctl start cjdns
+# now that it's running start python and try to connect with socket script
+# paste peer ipv6 address 
+python
+```
 import socket
 import json
 from cryptography.fernet import Fernet
 
-# Generate a key for encryption
 key = Fernet.generate_key()
 cipher = Fernet(key)
 
@@ -74,6 +70,7 @@ def send_message(ipv6_address, port, message):
     sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     encrypted_message = cipher.encrypt(message.encode())
     sock.sendto(encrypted_message, (ipv6_address, port))
+
 
 def receive_message(port):
     sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
@@ -83,6 +80,8 @@ def receive_message(port):
         decrypted_message = cipher.decrypt(data).decode()
         print(f"Received message from {addr}: {decrypted_message}")
 
-# Example usage
-send_message("fceb:7fc0:c62c:9cd9:2971:e3ff:aee2:6e08", 26041, "Hello, Peer!")
+
+ipv6 = "fc54:08ab:ba2d:61dd:8297:6192:6e62:8810"
+send_message(ipv6, 26041, "Hello, Peer!")
 receive_message(26041)
+```

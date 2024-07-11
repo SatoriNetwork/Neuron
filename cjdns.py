@@ -22,6 +22,7 @@ def receive_message(port):
         print(f"Received message from {addr}: {decrypted_message}")
 
 
+ipv6 = "fc54:08ab:ba2d:61dd:8297:6192:6e62:8810"
 # Example usage
-send_message("fceb:7fc0:c62c:9cd9:2971:e3ff:aee2:6e08", 26041, "Hello, Peer!")
+send_message(ipv6, 26041, "Hello, Peer!")
 receive_message(26041)
