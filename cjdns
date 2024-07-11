@@ -82,6 +82,6 @@ def receive_message(port):
 
 
 ipv6 = "fc54:08ab:ba2d:61dd:8297:6192:6e62:8810"
-send_message(ipv6, 26041, "Hello, Peer!")
-receive_message(26041)
+send_message(ipv6, 24603, "Hello, Peer!")
+receive_message(24603)
 ```
