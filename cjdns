@@ -31,6 +31,13 @@ ln -s $(pwd)/cjdroute /usr/local/bin/cjdroute
     "peerName": "black"
 },
 
+         "65.130.251.139:24603": {
+             "login": "default-login",
+             "password": "mffu43zpbxjn2f595xssyzpys02zdfz",
+             "publicKey": "4091pk2mxl13b6b3bmm22m72yl1z0vp2b9t347r20cqyj3pzd5w0.k",
+             "peerName": "silver"
+         },
+
 vi /etc/cjdroute.conf
 nohup cjdroute < /etc/cjdroute.conf > /var/log/cjdns.log 2>&1 &
 cat /var/log/cjdns.log | grep -i "peer"
