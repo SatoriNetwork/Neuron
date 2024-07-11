@@ -22,14 +22,15 @@ cd cjdns
 ./do
 ln -s $(pwd)/cjdroute /usr/local/bin/cjdroute
 ./cjdroute --genconf > /etc/cjdroute.conf
+vi /etc/cjdroute.conf
 
 
-"129.227.46.179:24603": {
-    "login": "default-login",
-    "password": "jjsjkh14qq1hsp1wznsfmy0s97kdzt2",
-    "publicKey": "f2q47nr2g25z3g8y7uxxwn83drnj3838q5jsx3xpjxk1qqjv7620.k",
-    "peerName": "black"
-},
+"129.227.46.147:24603": {
+             "login": "default-login",
+             "password": "4u1x42ktq3b7nvrcj8gzkg6nm0kubdz",
+             "publicKey": "ysf8rg5x3u9l9n91xmqs668bj3v2zrgwqyhnb3bwdwbwr5yqcsz0.k",
+             "peerName": "black"
+         },
 
          "65.130.251.139:24603": {
              "login": "default-login",
@@ -38,7 +39,6 @@ ln -s $(pwd)/cjdroute /usr/local/bin/cjdroute
              "peerName": "silver"
          },
 
-vi /etc/cjdroute.conf
 nohup cjdroute < /etc/cjdroute.conf > /var/log/cjdns.log 2>&1 &
 cat /var/log/cjdns.log | grep -i "peer"
 ufw allow <your_cjdns_port>/udp
