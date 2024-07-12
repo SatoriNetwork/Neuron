@@ -28,13 +28,14 @@ import traceback
 # from satorilib.utils import getRandomName, getRandomQuote
 # from satorisynapse import Envelope, Signal
 # from satorineuron import VERSION, MOTO
-from satorineuron import config
+from satorineuron import VERSION, config
 from satorineuron import logging
 # from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 # from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 # from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
+logging.info(f'verison: {VERSION}', print=True)
 
 ###############################################################################
 ## Globals ####################################################################
