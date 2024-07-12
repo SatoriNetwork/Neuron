@@ -6,9 +6,8 @@
 HEADLESS=$(python headless_check.py)
 
 if [ "$HEADLESS" = "True" ]; then
-    echo "Running headless.py"
+    echo "Running in headless mode"
     python headless.py
 else
-    echo "Running Neuron.py"
     python app.py
 fi

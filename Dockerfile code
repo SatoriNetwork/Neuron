@@ -19,7 +19,7 @@ COPY Engine/satoriengine /Satori/Engine/satoriengine
 COPY Engine/setup.py /Satori/Engine/setup.py
 COPY Engine/requirements.txt /Satori/Engine/requirements.txt
 COPY Neuron/satorineuron/ /Satori/Neuron/satorineuron/
-COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
+#COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
 COPY Neuron/setup.py /Satori/Neuron/setup.py
 COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
 
