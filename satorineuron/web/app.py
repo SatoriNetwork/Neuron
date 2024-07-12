@@ -1538,7 +1538,7 @@ def voteSubmitManifestVault():
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
 @authRequired
 def voteSubmitSanctionWallet():
-    # logging.debug(request.json, color='yellow')
+    #logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
     # zip(walletStreamIds, walletVotes)
     # {'walletStreamIds': [None], 'walletVotes': [1]}

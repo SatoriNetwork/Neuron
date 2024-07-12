@@ -23,7 +23,7 @@
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
                 <!--<th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Cadence</th>-->
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Sanctioned</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style='display:none;'>Sanctioned</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" id='walletVoteColumn' style='display:none;'>Wallet Vote</th>
                 {%if vault.isDecrypted %}
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" id='vaultVoteColumn' style='display:none;'>Vault Vote</th>
@@ -74,7 +74,7 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['cadence'] }}</h6>
                   </div>
                 </td>-->
-                <td>
+                <td style='display:none;'>
                   <div class="d-flex px-3 py-1">
                     <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">{{ ((stream['sanctioned']) | round | int) if stream['sanctioned'] > 0 else 0 }}</h6>
                   </div>
