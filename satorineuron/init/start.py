@@ -583,5 +583,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def restartEverything(self):
         import random
         time.sleep(random.randint(60*60*21, 60*60*24))
-        import requests
-        requests.get('http://127.0.0.1:24601/restart')
+        # import requests
+        # requests.get('http://127.0.0.1:24601/restart')
+        from satorisynapse import Envelope, Signal
+        self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
