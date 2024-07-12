@@ -217,9 +217,9 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-                hashSaltIt(request.form['passphrase']) == expectedPassword or
-                tryToInterpretAsInteger(
-                request.form['passphrase'], expectedPassword)
+                    hashSaltIt(request.form['passphrase']) == expectedPassword or
+                    tryToInterpretAsInteger(
+                    request.form['passphrase'], expectedPassword)
                 ):
             session['authenticated'] = True
             return redirect(target)
@@ -1281,7 +1281,7 @@ def vault():
         #    logging.info(
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
-        threading.Thread(target=defaultMineToVault, daemon=True).start()
+        # threading.Thread(target=defaultMineToVault, daemon=True).start()
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
@@ -1289,7 +1289,7 @@ def vault():
             'network': start.network,  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
-            'minedtovault': True,  # start.server.minedToVault(),
+            'minedtovault': start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
@@ -1386,7 +1386,7 @@ def disableMineToVault(network: str = 'main'):
         return redirect('/dashboard')
     vault = start.getVault(network=network)
     wallet = start.getWallet(network=network)
-    logging.debug('wallet:', wallet, color="magenta")
+    # logging.debug('wallet:', wallet, color="magenta")
     mineToAddress = wallet.address
     success, result = start.server.disableMineToVault(
         walletSignature=wallet.sign(mineToAddress),
@@ -1538,7 +1538,7 @@ def voteSubmitManifestVault():
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
 @authRequired
 def voteSubmitSanctionWallet():
-    #logging.debug(request.json, color='yellow')
+    # logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
     # zip(walletStreamIds, walletVotes)
     # {'walletStreamIds': [None], 'walletVotes': [1]}

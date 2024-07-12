@@ -1,3 +1,5 @@
+neuron lock enabled: false
+neuron lock hash: f78f89bf50c0dbcf
 streamr light client port: 24686
 user interface port: 24601
 wallet lock: false
