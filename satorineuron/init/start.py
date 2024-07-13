@@ -48,6 +48,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         *args,
         env: str = 'dev',
         urlServer: str = None,
+        urlSending: str = None,
         urlPubsub: str = None,
         urlSynergy: str = None,
         isDebug: bool = False
@@ -67,6 +68,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.connectionsStatusQueue: Queue = Queue()
         self.latestConnectionStatus: dict = {}
         self.urlServer: str = urlServer
+        self.urlSending: str = urlSending
         self.urlPubsub: str = urlPubsub
         self.urlSynergy: str = urlSynergy
         self.paused: bool = False
@@ -301,7 +303,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def checkin(self):
         logging.debug(self.urlServer, color='teal')
-        self.server = SatoriServerClient(self.wallet, url=self.urlServer)
+        self.server = SatoriServerClient(
+            self.wallet, url=self.urlServer, sendingUrl=self.urlSending)
         try:
             referrer = open(
                 config.root('config', 'referral.txt'),

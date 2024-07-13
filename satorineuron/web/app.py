@@ -68,7 +68,12 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://central.satorinet.io'}[ENV],
+                'prod': 'https://test-central.satorinet.io'}[ENV],
+            urlSending={
+                'local': 'http://192.168.0.10:5002',
+                'dev': 'http://localhost:5002',
+                'test': 'https://test.satorinet.io',
+                'prod': 'https://sending.satorinet.io'}[ENV],
             urlPubsub={
                 'local': 'ws://192.168.0.10:3000',
                 'dev': 'ws://localhost:3000',
