@@ -597,6 +597,7 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
                         tx=result.tx,
                         reportedFeeSats=result.reportedFeeSats,
                         feeSatsReserved=responseJson.get('feeSatsReserved'),
+                        walletId=responseJson.get('partialId'),
                         network=(
                             'ravencoin' if start.networkIsTest(network)
                             else 'evrmore'))
