@@ -68,17 +68,17 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://test-central.satorinet.io'}[ENV],
+                'prod': 'https://test.satorinet.io'}[ENV],
             urlSending={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://sending.satorinet.io'}[ENV],
+                'prod': 'https://mundo.satorinet.io'}[ENV],
             urlPubsub={
                 'local': 'ws://192.168.0.10:3000',
                 'dev': 'ws://localhost:3000',
                 'test': 'ws://test.satorinet.io:3000',
-                'prod': 'ws://pubsub.satorinet.io:3000'}[ENV],
+                'prod': 'ws://test.satorinet.io:3000'}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
