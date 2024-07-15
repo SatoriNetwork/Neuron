@@ -17,7 +17,7 @@ class StartupDagStruct(object):
         self,
         env: str = None,
         urlServer: str = None,
-        urlSending: str = None,
+        urlMundo: str = None,
         urlPubsub: str = None,
         urlSynergy: str = None,
         *args
@@ -28,7 +28,7 @@ class StartupDagStruct(object):
         self.latestConnectionStatus: dict = None
         self.env: str = None
         self.urlServer: str = None
-        self.urlSending: str = None
+        self.urlMundo: str = None
         self.urlPubsub: str = None
         self.urlSynergy: str = None
         self.paused: bool = None
