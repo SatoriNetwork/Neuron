@@ -144,7 +144,8 @@ class RawStreamRelayEngine(Cached):
             topic=stream.streamId.topic(),
             data=data,
             observationTime=timestamp,
-            observationHash=observationHash)
+            observationHash=observationHash,
+            isPrediction=False)
 
     def save(self, stream: Stream, data: str = None) -> CachedResult:
         self.latest[stream.streamId.topic()] = data
