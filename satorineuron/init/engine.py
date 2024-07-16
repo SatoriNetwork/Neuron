@@ -8,7 +8,7 @@ from satoriengine import ModelManager, Engine, DataManager
 from satorineuron import config
 
 
-def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None, subscription: True):
+def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None, subscription: bool = True):
     ''' establishes a connection to the satori server, returns connection object '''
     from satorineuron.init.start import getStart
 
