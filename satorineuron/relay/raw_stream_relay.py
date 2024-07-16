@@ -138,7 +138,12 @@ class RawStreamRelayEngine(Cached):
         getStart().pubsub.publish(
             topic=stream.streamId.topic(),
             data=data,
-            time=timestamp,
+            observationTime=timestamp,
+            observationHash=observationHash)
+        getStart().server.publishPrediction(
+            topic=stream.streamId.topic(),
+            data=data,
+            observationTime=timestamp,
             observationHash=observationHash)
 
     def save(self, stream: Stream, data: str = None) -> CachedResult:
