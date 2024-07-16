@@ -329,11 +329,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.subscriptions = [
                 Stream.fromMap(x)
                 for x in json.loads(self.details.subscriptions)]
-            logging.debug(self.subscriptions, color='yellow')
+            logging.info('subscriptions:', len(self.subscriptions))
             self.publications = [
                 Stream.fromMap(x)
                 for x in json.loads(self.details.publications)]
-            logging.debug(self.publications, color='magenta')
+            logging.info('publications:', len(self.publications))
             self.caches = {
                 x.streamId: disk.Cache(id=x.streamId)
                 for x in set(self.subscriptions + self.publications)}
@@ -421,7 +421,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 onDisconnect=lambda: self.updateConnectionStatus(
                     connTo=ConnectionTo.pubsub,
                     status=False))
-            logging.info('connected to Satori pubsub network', color='green')
         else:
             time.sleep(30)
             raise Exception('no key provided by satori server')
