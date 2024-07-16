@@ -433,8 +433,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         an additional set of connections that they mush push to.
         '''
         self.pubs = []
-        oracleStreams = oracleStreams(self.publications)
-        if not self.oracleKey and len(oracleStreams) == 0:
+        # oracles = oracleStreams(self.publications)
+        if not self.oracleKey:
             return
         for pubsubMachine in ['pubsub2.satorinet.io']:
             signature = self.wallet.sign(self.oracleKey)
