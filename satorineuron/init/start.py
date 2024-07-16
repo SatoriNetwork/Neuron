@@ -398,7 +398,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
-            publications=predictionStreams(self.publications))
+            publications=StartupDag.predictionStreams(self.publications))
         self.engine.run()
 
     def subConnect(self):
@@ -435,7 +435,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # oracles = oracleStreams(self.publications)
         if not self.oracleKey:
             return
-        for pubsubMachine in ['pubsub2.satorinet.io']:
+        for pubsubMachine in self.urlPubsubs:
             signature = self.wallet.sign(self.oracleKey)
             self.pubs.append(
                 satorineuron.engine.establishConnection(
@@ -554,11 +554,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' publishes to all the pubsub servers '''
         for pub in self.pubs:
             pub.publish(
-                topic=StreamId(
-                    source=data.get('source', 'satori'),
-                    author=start.wallet.publicKey,
-                    stream=data.get('name'),
-                    target=data.get('target')).topic(),
-                data=data.get('data'),
+                topic=topic,
+                data=data,
                 observationTime=observationTime,
                 observationHash=observationHash)
