@@ -282,16 +282,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.openWallet()
         self.openVault()
-        self.checkin()
-        # self.autosecure()
-        self.verifyCaches()
-        self.startSynergyEngine()
-        self.subConnect()
-        self.pubsConnect()
-        if self.isDebug:
-            return
-        self.startRelay()
-        self.buildEngine()
+        # self.checkin()
+        # self.verifyCaches()
+        # self.startSynergyEngine()
+        # self.subConnect()
+        # self.pubsConnect()
+        # if self.isDebug:
+        #    return
+        # self.startRelay()
+        # self.buildEngine()
         time.sleep(60*4)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):

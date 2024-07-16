@@ -1295,7 +1295,7 @@ def vault():
             'network': start.network,  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
-            'minedtovault': start.server.minedToVault(),
+            'minedtovault': False,# start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
