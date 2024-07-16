@@ -2,6 +2,7 @@ from typing import Union
 import os
 import time
 import json
+import random
 import threading
 from reactivex.subject import BehaviorSubject
 from queue import Queue
@@ -49,7 +50,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         env: str = 'dev',
         urlServer: str = None,
         urlMundo: str = None,
-        urlPubsub: str = None,
+        urlPubsubs: list[str] = None,
         urlSynergy: str = None,
         isDebug: bool = False
     ):
@@ -69,7 +70,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.latestConnectionStatus: dict = {}
         self.urlServer: str = urlServer
         self.urlMundo: str = urlMundo
-        self.urlPubsub: str = urlPubsub
+        self.urlPubsubs: list[str] = urlPubsubs
         self.urlSynergy: str = urlSynergy
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
@@ -79,6 +80,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self._evrmoreVault: Union[EvrmoreWallet, None] = None
         self.details: dict
         self.key: str
+        self.oracleKey: str
         self.idKey: str
         self.subscriptionKeys: str
         self.publicationKeys: str
@@ -86,7 +88,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
-        self.pubsub: SatoriPubSubConn = None
+        self.sub: SatoriPubSubConn = None
+        self.pubs: list[SatoriPubSubConn] = []
         self.synergy: Union[SynergyManager, None] = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
@@ -283,7 +286,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.autosecure()
         self.verifyCaches()
         self.startSynergyEngine()
-        self.pubsubConnect()
+        self.subConnect()
+        self.pubsConnect()
         if self.isDebug:
             return
         self.startRelay()
@@ -319,6 +323,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 status=True)
             # logging.debug(self.details, color='magenta')
             self.key = self.details.key
+            self.oracleKey = self.details.oracleKey
             self.idKey = self.details.idKey
             self.subscriptionKeys = self.details.subscriptionKeys
             self.publicationKeys = self.details.publicationKeys
@@ -380,29 +385,35 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.asyncThread.runAsync(cache, task=validateCache)
         return True
 
+    @staticmethod
+    def predictionStreams(streams: list[Stream]):
+        ''' filter down to prediciton publications '''
+        return [s for s in streams if s.predicting is not None]
+
+    @staticmethod
+    def oracleStreams(streams: list[Stream]):
+        ''' filter down to prediciton publications '''
+        return [s for s in streams if s.predicting is None]
+
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
-        def predictionStreams(streams: list[Stream]):
-            ''' filter down to prediciton publications '''
-            return [s for s in streams if s.predicting is not None]
-
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
             publications=predictionStreams(self.publications))
         self.engine.run()
 
-    def pubsubConnect(self):
-        ''' establish a pubsub connection. '''
-        if self.pubsub is not None:
-            self.pubsub.disconnect()
+    def subConnect(self):
+        ''' establish a random pubsub connection used only for subscribing '''
+        if self.sub is not None:
+            self.sub.disconnect()
             self.updateConnectionStatus(
                 connTo=ConnectionTo.pubsub,
                 status=False)
-            self.pubsub = None
+            self.sub = None
         if self.key:
             signature = self.wallet.sign(self.key)
-            self.pubsub = satorineuron.engine.establishConnection(
-                url=self.urlPubsub,
+            self.sub = satorineuron.engine.establishConnection(
+                url=random.choice(self.urlPubsubs),
                 pubkey=self.wallet.publicKey,
                 key=signature.decode() + '|' + self.key,
                 onConnect=lambda: self.updateConnectionStatus(
@@ -415,6 +426,24 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         else:
             time.sleep(30)
             raise Exception('no key provided by satori server')
+
+    def pubsConnect(self):
+        '''
+        oracle nodes publish to every pubsub machine. therefore, they have 
+        an additional set of connections that they mush push to.
+        '''
+        self.pubs = []
+        oracleStreams = oracleStreams(self.publications)
+        if not self.oracleKey and len(oracleStreams) == 0:
+            return
+        for pubsubMachine in ['pubsub2.satorinet.io']:
+            signature = self.wallet.sign(self.oracleKey)
+            self.pubs.append(
+                satorineuron.engine.establishConnection(
+                    subscription=False,
+                    url=pubsubMachine,
+                    pubkey=self.wallet.publicKey,
+                    key=signature.decode() + '|' + self.oracleKey))
 
     def startRelay(self):
         def append(streams: list[Stream]):
@@ -521,3 +550,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # requests.get('http://127.0.0.1:24601/restart')
         from satorisynapse import Envelope, Signal
         self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+
+    def publish(self, topic: str, data: str, observationTime: str, observationHash: str):
+        ''' publishes to all the pubsub servers '''
+        for pub in self.pubs:
+            pub.publish(
+                topic=StreamId(
+                    source=data.get('source', 'satori'),
+                    author=start.wallet.publicKey,
+                    stream=data.get('name'),
+                    target=data.get('target')).topic(),
+                data=data.get('data'),
+                observationTime=observationTime,
+                observationHash=observationHash)

@@ -31,13 +31,13 @@ def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
     failures = [str(i) for i, s in enumerate(statuses) if s != 200]
     if len(failures) == 0:
         start.checkin()
-        start.pubsubConnect()
+        start.pubsConnect()
         start.startRelay()
         return 'all succeeded', 200
     elif len(failures) == len(statuses):
         return 'all failed', 500
     start.checkin()
-    start.pubsubConnect()
+    start.pubsConnect()
     start.startRelay()
     return f'rows {",".join(failures)} failed', 200
 
@@ -62,15 +62,18 @@ def acceptRelaySubmission(start: 'StartupDag', data: dict):
             return 'Unable to register stream with server', 500
         # get pubkey, recreate connection...
         start.checkin()
-        start.pubsubConnect()
+        start.pubsConnect()
     # ...pass data onto pubsub
-    start.pubsub.publish(
+    start.publish(
         topic=StreamId(
             source=data.get('source', 'satori'),
             author=start.wallet.publicKey,
             stream=data.get('name'),
             target=data.get('target')).topic(),
         data=data.get('data'))
+    # todo: why am I not passing these here?
+    # observationTime=timestamp,
+    # observationHash=observationHash
     return 'Success: ', 200
 
 
@@ -151,7 +154,7 @@ def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
     # get pubkey, recreate connection, restart relay engine
     if restart:
         start.checkin()
-        start.pubsubConnect()
+        start.pubsConnect()
         start.startRelay()
     if save == False:
         msgs.append('Unable to save stream.')

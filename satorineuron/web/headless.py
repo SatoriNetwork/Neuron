@@ -72,10 +72,10 @@ while True:
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://central.satorinet.io'}[ENV],
             urlPubsub={
-                'local': 'ws://192.168.0.10:3000',
-                'dev': 'ws://localhost:3000',
-                'test': 'ws://test.satorinet.io:3000',
-                'prod': 'ws://pubsub.satorinet.io:3000'}[ENV],
+                'local': ['ws://192.168.0.10:3000'],
+                'dev': ['ws://localhost:3000'],
+                'test': ['ws://test.satorinet.io:3000'],
+                'prod': ['ws://pubsub.satorinet.io:3000']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',

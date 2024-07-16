@@ -135,12 +135,12 @@ class RawStreamRelayEngine(Cached):
             'outgoing message:',
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
             data, timestamp, print=True)
-        getStart().pubsub.publish(
+        getStart().publish(
             topic=stream.streamId.topic(),
             data=data,
             observationTime=timestamp,
             observationHash=observationHash)
-        getStart().server.publishPrediction(
+        getStart().server.publish(
             topic=stream.streamId.topic(),
             data=data,
             observationTime=timestamp,

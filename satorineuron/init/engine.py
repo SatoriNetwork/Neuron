@@ -8,7 +8,7 @@ from satoriengine import ModelManager, Engine, DataManager
 from satorineuron import config
 
 
-def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None):
+def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None, subscription: True):
     ''' establishes a connection to the satori server, returns connection object '''
     from satorineuron.init.start import getStart
 
@@ -40,10 +40,12 @@ def establishConnection(pubkey: str, key: str, url: str = None, onConnect: calla
         # after revewing the data manger I see it handles lots of edge cases,
         # such as not relaying duplicate values, etc. so it seems its more than
         # just a function, and shouldn't be eliminated.
+    def doNothing(response: str):
+        pass
 
     return SatoriPubSubConn(
         uid=pubkey,
-        router=router,
+        router=router if subscription else doNothing,
         payload=key,
         url=url,
         onConnect=onConnect,

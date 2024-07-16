@@ -74,11 +74,11 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
-            urlPubsub={
-                'local': 'ws://192.168.0.10:24603',
-                'dev': 'ws://localhost:24603',
-                'test': 'ws://test.satorinet.io:24603',
-                'prod': 'ws://pubsub2.satorinet.io:24603'}[ENV],
+            urlPubsubs={
+                'local': ['ws://192.168.0.10:24603'],
+                'dev': ['ws://localhost:24603'],
+                'test': ['ws://test.satorinet.io:24603'],
+                'prod': ['ws://pubsub2.satorinet.io:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
@@ -520,9 +520,9 @@ def relay():
     #            return 'Unable to register stream with server', 500
     #        # get pubkey, recreate connection...
     #        start.checkin()
-    #        start.pubsubConnect()
+    #        start.pubsConnect()
     #    # ...pass data onto pubsub
-    #    start.pubsub.publish(
+    #    start.publish(
     #        topic=StreamId(
     #            source=data.get('source', 'satori'),
     #            author=start.wallet.publicKey,
@@ -716,7 +716,7 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
             except Exception as e:
                 logging.error('remove stream logic err', e)
             start.checkin()
-            start.pubsubConnect()
+            start.pubsConnect()
             start.startRelay()
         else:
             msg = 'Unable to delete stream.'
@@ -746,7 +746,7 @@ def removeStreamByPost():
             except Exception as e:
                 logging.error('remove strem by post err', e)
             start.checkin()
-            start.pubsubConnect()
+            start.pubsConnect()
             start.startRelay()
         else:
             msg = 'Unable to delete stream.'
