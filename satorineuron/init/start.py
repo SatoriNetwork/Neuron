@@ -305,17 +305,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info('started relay validation engine', color='green')
 
     def checkin(self):
+        logging.debug(self.urlServer, color='teal')
+        self.server = SatoriServerClient(
+            self.wallet, url=self.urlServer, sendingUrl=self.urlMundo)
+        try:
+            referrer = open(
+                config.root('config', 'referral.txt'),
+                mode='r').read().strip()
+        except Exception as _:
+            referrer = None
         x = 30
         while True:
-            logging.debug(self.urlServer, color='teal')
-            self.server = SatoriServerClient(
-                self.wallet, url=self.urlServer, sendingUrl=self.urlMundo)
-            try:
-                referrer = open(
-                    config.root('config', 'referral.txt'),
-                    mode='r').read().strip()
-            except Exception as _:
-                referrer = None
             try:
                 self.details = CheckinDetails(
                     self.server.checkin(referrer=referrer))
@@ -369,11 +369,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 #            self.publicationKeys)]
                 logging.info('checked in with Satori', color='green')
                 break
-            except Exception as _:
+            except Exception as e:
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central,
                     status=False)
             x = x * 1.5 if x < 60*60*6 else 60*60*6
+            logging.warning(f'trying again in {x}: {e}')
             time.sleep(x)
 
     def verifyCaches(self) -> bool:
