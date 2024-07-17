@@ -280,8 +280,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' start the satori engine. '''
         # while True:
         self.createRelayValidation()
-        self.openWallet()
-        self.openVault()
+        self.getWallet()
+        self.getVault()
         self.checkin()
         self.verifyCaches()
         self.startSynergyEngine()
@@ -305,71 +305,76 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info('started relay validation engine', color='green')
 
     def checkin(self):
-        logging.debug(self.urlServer, color='teal')
-        self.server = SatoriServerClient(
-            self.wallet, url=self.urlServer, sendingUrl=self.urlMundo)
-        try:
-            referrer = open(
-                config.root('config', 'referral.txt'),
-                mode='r').read().strip()
-        except Exception as _:
-            referrer = None
-        try:
-            self.details = CheckinDetails(
-                self.server.checkin(referrer=referrer))
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.central,
-                status=True)
-            # logging.debug(self.details, color='magenta')
-            self.key = self.details.key
-            self.oracleKey = self.details.oracleKey
-            self.idKey = self.details.idKey
-            self.subscriptionKeys = self.details.subscriptionKeys
-            self.publicationKeys = self.details.publicationKeys
-            self.subscriptions = [
-                Stream.fromMap(x)
-                for x in json.loads(self.details.subscriptions)]
-            logging.info('subscriptions:', len(self.subscriptions))
-            self.publications = [
-                Stream.fromMap(x)
-                for x in json.loads(self.details.publications)]
-            logging.info('publications:', len(self.publications))
-            self.caches = {
-                x.streamId: disk.Cache(id=x.streamId)
-                for x in set(self.subscriptions + self.publications)}
-            # for k, v in self.caches.items():
-            #    logging.debug(k, v, color='magenta')
+        x = 30
+        while True:
+            logging.debug(self.urlServer, color='teal')
+            self.server = SatoriServerClient(
+                self.wallet, url=self.urlServer, sendingUrl=self.urlMundo)
+            try:
+                referrer = open(
+                    config.root('config', 'referral.txt'),
+                    mode='r').read().strip()
+            except Exception as _:
+                referrer = None
+            try:
+                self.details = CheckinDetails(
+                    self.server.checkin(referrer=referrer))
+                self.updateConnectionStatus(
+                    connTo=ConnectionTo.central,
+                    status=True)
+                # logging.debug(self.details, color='magenta')
+                self.key = self.details.key
+                self.oracleKey = self.details.oracleKey
+                self.idKey = self.details.idKey
+                self.subscriptionKeys = self.details.subscriptionKeys
+                self.publicationKeys = self.details.publicationKeys
+                self.subscriptions = [
+                    Stream.fromMap(x)
+                    for x in json.loads(self.details.subscriptions)]
+                logging.info('subscriptions:', len(self.subscriptions))
+                self.publications = [
+                    Stream.fromMap(x)
+                    for x in json.loads(self.details.publications)]
+                logging.info('publications:', len(self.publications))
+                self.caches = {
+                    x.streamId: disk.Cache(id=x.streamId)
+                    for x in set(self.subscriptions + self.publications)}
+                # for k, v in self.caches.items():
+                #    logging.debug(k, v, color='magenta')
 
-            # logging.debug(self.caches, color='yellow')
-            # self.signedStreamIds = [
-            #    SignedStreamId(
-            #        source=s.id.source,
-            #        author=s.id.author,
-            #        stream=s.id.stream,
-            #        target=s.id.target,
-            #        publish=False,
-            #        subscribe=True,
-            #        signature=sig,  # doesn't the server need my pubkey?
-            #        signed=self.wallet.sign(sig)) for s, sig in zip(
-            #            self.subscriptions,
-            #            self.subscriptionKeys)
-            # ] + [
-            #    SignedStreamId(
-            #        source=p.id.source,
-            #        author=p.id.author,
-            #        stream=p.id.stream,
-            #        target=p.id.target,
-            #        publish=True,
-            #        subscribe=True,
-            #        signature=sig,  # doesn't the server need my pubkey?
-            #        signed=self.wallet.sign(sig)) for p, sig in zip(
-            #            self.publications,
-            #            self.publicationKeys)]
-            logging.info('checked in with Satori', color='green')
-        except Exception as _:
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.central,
-                status=False)
+                # logging.debug(self.caches, color='yellow')
+                # self.signedStreamIds = [
+                #    SignedStreamId(
+                #        source=s.id.source,
+                #        author=s.id.author,
+                #        stream=s.id.stream,
+                #        target=s.id.target,
+                #        publish=False,
+                #        subscribe=True,
+                #        signature=sig,  # doesn't the server need my pubkey?
+                #        signed=self.wallet.sign(sig)) for s, sig in zip(
+                #            self.subscriptions,
+                #            self.subscriptionKeys)
+                # ] + [
+                #    SignedStreamId(
+                #        source=p.id.source,
+                #        author=p.id.author,
+                #        stream=p.id.stream,
+                #        target=p.id.target,
+                #        publish=True,
+                #        subscribe=True,
+                #        signature=sig,  # doesn't the server need my pubkey?
+                #        signed=self.wallet.sign(sig)) for p, sig in zip(
+                #            self.publications,
+                #            self.publicationKeys)]
+                logging.info('checked in with Satori', color='green')
+                break
+            except Exception as _:
+                self.updateConnectionStatus(
+                    connTo=ConnectionTo.central,
+                    status=False)
+            x = x * 1.5 if x < 60*60*6 else 60*60*6
+            time.sleep(x)
 
     def verifyCaches(self) -> bool:
         ''' rehashes my published hashes '''
