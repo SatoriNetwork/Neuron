@@ -68,7 +68,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage2.satorinet.io'}[ENV],
+                'prod': 'https://stage.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -78,7 +78,7 @@ while True:
                 'local': ['ws://192.168.0.10:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
-                'prod': ['ws://pubsub2.satorinet.io:24603']}[ENV],
+                'prod': ['ws://pubsub2.satorinet.io:24603','ws://pubsub3.satorinet.io:24603','ws://pubsub4.satorinet.io:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
