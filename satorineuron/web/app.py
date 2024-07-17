@@ -68,7 +68,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://stage2.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -222,9 +222,9 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-                    hashSaltIt(request.form['passphrase']) == expectedPassword or
-                    tryToInterpretAsInteger(
-                    request.form['passphrase'], expectedPassword)
+                hashSaltIt(request.form['passphrase']) == expectedPassword or
+                tryToInterpretAsInteger(
+                request.form['passphrase'], expectedPassword)
                 ):
             session['authenticated'] = True
             return redirect(target)
@@ -1295,7 +1295,7 @@ def vault():
             'network': start.network,  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
-            'minedtovault': False,# start.server.minedToVault(),
+            'minedtovault': False,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
