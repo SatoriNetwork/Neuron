@@ -7,5 +7,5 @@ from satorilib.api.disk import Cache  # Disk
 Cache.setConfig(config)
 logging.setup()
 
-VERSION = '0.1.16'
+VERSION = '0.1.17'
 MOTO = 'Let your workings remain a mystery, just show people the results.'

@@ -34,6 +34,7 @@ from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
+logging.info(f'verison: {VERSION}', print=True)
 
 ###############################################################################
 ## Globals ####################################################################
