@@ -18,6 +18,7 @@ from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
 from satorineuron import logging
 from satorineuron import config
+from satorineuron.init.tag import LatestTag
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import StartupDagStruct
@@ -97,7 +98,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()
         self.restartThread = threading.Thread(
-            target=self.restartEverything, daemon=True)
+            target=self.restartEverythingPeriodic, daemon=True)
         self.restartThread.start()
         # self.delayedStart()
         alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
@@ -568,13 +569,28 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #        break
         #    time.sleep(1)
 
-    def restartEverything(self):
-        import random
-        time.sleep(random.randint(60*60*21, 60*60*24))
+    def triggerRestart():
+        self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
         # import requests
         # requests.get('http://127.0.0.1:24601/restart')
+
+    def restartEverythingPeriodic(self):
+        def triggerRestart():
+            self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+            # import requests
+            # requests.get('http://127.0.0.1:24601/restart')
+
+        import random
         from satorisynapse import Envelope, Signal
-        self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+        restartTime = time.time() + random.randint(60*60*21, 60*60*24)
+        latestTag = LatestTag()
+        while True:
+            if time.time() > restartTime:
+                triggerRestart()
+            time.sleep(random.randint(60*60, 60*60*4))
+            latestTag.get()
+            if latestTag.isNew:
+                triggerRestart()
 
     def publish(self, topic: str, data: str, observationTime: str, observationHash: str):
         ''' publishes to all the pubsub servers '''
