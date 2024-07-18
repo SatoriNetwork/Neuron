@@ -296,7 +296,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.startRelay()
         self.buildEngine()
-        time.sleep(60*4)
+        time.sleep(60*60*24)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
@@ -425,6 +425,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             signature = self.wallet.sign(self.key)
             self.sub = satorineuron.engine.establishConnection(
                 url=random.choice(self.urlPubsubs),
+                # url='ws://pubsub3.satorinet.io:24603',
                 pubkey=self.wallet.publicKey,
                 key=signature.decode() + '|' + self.key,
                 emergencyRestart=self.emergencyRestart,
@@ -453,7 +454,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 satorineuron.engine.establishConnection(
                     subscription=False,
                     url=pubsubMachine,
-                    pubkey=self.wallet.publicKey,
+                    pubkey=self.wallet.publicKey + ':publishing',
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + '|' + self.oracleKey))
 
