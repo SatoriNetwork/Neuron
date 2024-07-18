@@ -427,6 +427,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 url=random.choice(self.urlPubsubs),
                 pubkey=self.wallet.publicKey,
                 key=signature.decode() + '|' + self.key,
+                emergencyRestart=self.emergencyRestart,
                 onConnect=lambda: self.updateConnectionStatus(
                     connTo=ConnectionTo.pubsub,
                     status=True),
@@ -453,6 +454,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     subscription=False,
                     url=pubsubMachine,
                     pubkey=self.wallet.publicKey,
+                    emergencyRestart=self.emergencyRestart, 
                     key=signature.decode() + '|' + self.oracleKey))
 
     def startRelay(self):
@@ -569,28 +571,29 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #        break
         #    time.sleep(1)
 
-    def triggerRestart():
+    def triggerRestart(self):
+        from satorisynapse import Envelope, Signal
         self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
         # import requests
         # requests.get('http://127.0.0.1:24601/restart')
 
-    def restartEverythingPeriodic(self):
-        def triggerRestart():
-            self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
-            # import requests
-            # requests.get('http://127.0.0.1:24601/restart')
+    def emergencyRestart(self):
+        import time
+        logging.warning('restarting in 10 minutes', print=True)
+        time.sleep(60*10)
+        self.triggerRestart()
 
+    def restartEverythingPeriodic(self):
         import random
-        from satorisynapse import Envelope, Signal
         restartTime = time.time() + random.randint(60*60*21, 60*60*24)
         latestTag = LatestTag()
         while True:
             if time.time() > restartTime:
-                triggerRestart()
+                self.triggerRestart()
             time.sleep(random.randint(60*60, 60*60*4))
             latestTag.get()
             if latestTag.isNew:
-                triggerRestart()
+                self.triggerRestart()
 
     def publish(self, topic: str, data: str, observationTime: str, observationHash: str):
         ''' publishes to all the pubsub servers '''
