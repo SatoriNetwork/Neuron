@@ -144,16 +144,17 @@ def getEngine(
             ModelManager(
                 variable=publication.predicting,
                 output=publication.id,
-                targets=[subscription.id
-                         # will be unique by publication, no need to enforce
-                         for subscription in subscriptions
-                         if (
-                             subscription.reason is not None and
-                             subscription.reason.source == publication.id.source and
-                             subscription.reason.author == publication.id.author and
-                             subscription.reason.stream == publication.id.stream and
-                             subscription.reason.target == publication.id.target
-                         )],
+                targets=[
+                    subscription.id
+                    # will be unique by publication, no need to enforce
+                    for subscription in subscriptions
+                    if (
+                        subscription.reason is not None and
+                        subscription.reason.source == publication.id.source and
+                        subscription.reason.author == publication.id.author and
+                        subscription.reason.stream == publication.id.stream and
+                        subscription.reason.target == publication.id.target
+                    )],
                 chosenFeatures=[(
                     subscription.id.source,
                     subscription.id.author,
@@ -168,21 +169,17 @@ def getEngine(
                         subscription.reason.stream == publication.id.stream and
                         subscription.reason.target == publication.id.target
                 )],
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'High'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'Low'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'DiffHighLow'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'DailyHigh21'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'RollingLow50min'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'RollingHigh14std'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'RollingHigh50max')],
                 memory=memory.Memory,
                 **kwargs)
+            # if publication.id in getStart().caches.keys()
             for publication in publications
         }
 
     ModelManager.setConfig(config)
     # DataManager.setConfig(config)
+    print(publications)
     modelManager = generateModelManager()
+    print(modelManager)
     dataMananger = DataManager(getStart=getStart)
     return Engine(
         getStart=getStart,

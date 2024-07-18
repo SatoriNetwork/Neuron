@@ -5,7 +5,7 @@ from satorineuron.init import engine
 # from satorilib.api.wallet import RavencoinWallet
 from satorilib.api.disk import Cache  # Disk
 Cache.setConfig(config)
-logging.setup()
+logging.setup(level=logging.WARNING)
 
-VERSION = '0.1.18'
+VERSION = '0.1.19'
 MOTO = 'Let your workings remain a mystery, just show people the results.'

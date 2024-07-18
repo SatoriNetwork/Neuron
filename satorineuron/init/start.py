@@ -402,6 +402,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
+        print(self.subscriptions)
+        print(StartupDag.predictionStreams(self.publications))
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
             publications=StartupDag.predictionStreams(self.publications))

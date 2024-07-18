@@ -36,11 +36,13 @@ from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
 logging.info(f'verison: {VERSION}', print=True)
 
+
 ###############################################################################
 ## Globals ####################################################################
 ###############################################################################
-# logging.setup(level=0)
-# development flags
+
+logging.logging.getLogger('werkzeug').setLevel(logging.logging.ERROR)
+
 debug = True
 darkmode = False
 firstRun = True
