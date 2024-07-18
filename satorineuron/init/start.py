@@ -454,7 +454,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     subscription=False,
                     url=pubsubMachine,
                     pubkey=self.wallet.publicKey,
-                    emergencyRestart=self.emergencyRestart, 
+                    emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + '|' + self.oracleKey))
 
     def startRelay(self):
