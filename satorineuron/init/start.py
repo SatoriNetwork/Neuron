@@ -103,13 +103,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
         if alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
+        self.ranOnce = False
         while True:
             if self.asyncThread.loop is not None:
                 self.restartThread = self.asyncThread.repeatRun(
                     task=self.start,
                     interval=60*60*24 if alreadySetup else 60*60*12)
                 break
-            time.sleep(1)
+            time.sleep(100)
 
     def delayedEngine(self):
         time.sleep(60*60*6)
@@ -279,6 +280,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def start(self):
         ''' start the satori engine. '''
         # while True:
+        if self.ranOnce:
+            time.sleep(60*60)
+        self.ranOnce = True
         self.createRelayValidation()
         self.getWallet()
         self.getVault()
