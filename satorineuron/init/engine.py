@@ -177,9 +177,9 @@ def getEngine(
 
     ModelManager.setConfig(config)
     # DataManager.setConfig(config)
-    print(publications)
+    # print(publications)
     modelManager = generateModelManager()
-    print(modelManager)
+    # print(modelManager)
     dataMananger = DataManager(getStart=getStart)
     return Engine(
         getStart=getStart,
