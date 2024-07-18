@@ -8,7 +8,7 @@ from satoriengine import ModelManager, Engine, DataManager
 from satorineuron import config
 
 
-def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None):
+def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None, emergencyRestart: callable = None, subscription: bool = True):
     ''' establishes a connection to the satori server, returns connection object '''
     from satorineuron.init.start import getStart
 
@@ -41,11 +41,14 @@ def establishConnection(pubkey: str, key: str, url: str = None, onConnect: calla
         # such as not relaying duplicate values, etc. so it seems its more than
         # just a function, and shouldn't be eliminated.
 
+    logging.info(
+        'subscribing to:' if subscription else 'publishing to:', url)
     return SatoriPubSubConn(
         uid=pubkey,
-        router=router,
+        router=router if subscription else None,
         payload=key,
         url=url,
+        emergencyRestart=emergencyRestart,
         onConnect=onConnect,
         onDisconnect=onDisconnect)
     # payload={
@@ -142,16 +145,17 @@ def getEngine(
             ModelManager(
                 variable=publication.predicting,
                 output=publication.id,
-                targets=[subscription.id
-                         # will be unique by publication, no need to enforce
-                         for subscription in subscriptions
-                         if (
-                             subscription.reason is not None and
-                             subscription.reason.source == publication.id.source and
-                             subscription.reason.author == publication.id.author and
-                             subscription.reason.stream == publication.id.stream and
-                             subscription.reason.target == publication.id.target
-                         )],
+                targets=[
+                    subscription.id
+                    # will be unique by publication, no need to enforce
+                    for subscription in subscriptions
+                    if (
+                        subscription.reason is not None and
+                        subscription.reason.source == publication.id.source and
+                        subscription.reason.author == publication.id.author and
+                        subscription.reason.stream == publication.id.stream and
+                        subscription.reason.target == publication.id.target
+                    )],
                 chosenFeatures=[(
                     subscription.id.source,
                     subscription.id.author,
@@ -166,15 +170,9 @@ def getEngine(
                         subscription.reason.stream == publication.id.stream and
                         subscription.reason.target == publication.id.target
                 )],
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'High'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'Low'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'DiffHighLow'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'DailyHigh21'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'RollingLow50min'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'RollingHigh14std'),
-                # ('streamrSpoof', 'simpleEURCleanedHL', 'RollingHigh50max')],
                 memory=memory.Memory,
                 **kwargs)
+            # if publication.id in getStart().caches.keys()
             for publication in publications
         }
 

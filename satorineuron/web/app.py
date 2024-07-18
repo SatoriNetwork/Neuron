@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# mainly used for generating unique ids for data and model paths since they must be short
 
 # run with:
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
@@ -19,7 +20,7 @@ from queue import Queue
 from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
-from flask import Response, stream_with_context
+from flask import Response, stream_with_context, render_template_string
 from satorilib.concepts.structs import StreamId, StreamOverviews
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timeToSeconds
@@ -33,12 +34,15 @@ from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
+logging.info(f'verison: {VERSION}', print=True)
+
 
 ###############################################################################
 ## Globals ####################################################################
 ###############################################################################
-# logging.setup(level=0)
-# development flags
+
+logging.logging.getLogger('werkzeug').setLevel(logging.logging.ERROR)
+
 debug = True
 darkmode = False
 firstRun = True
@@ -47,7 +51,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updateTime = 0
 updateQueue = Queue()
-ENV = os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev'))
+ENV = config.get().get('env', os.environ.get(
+    'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 CORS(app, origins=[{
     'local': 'http://192.168.0.10:5002',
     'dev': 'http://localhost:5002',
@@ -66,18 +71,26 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://satorinet.io'}[ENV],
-            urlPubsub={
-                'local': 'ws://192.168.0.10:3000',
-                'dev': 'ws://localhost:3000',
-                'test': 'ws://test.satorinet.io:3000',
-                'prod': 'ws://satorinet.io:3000'}[ENV],
+                'prod': 'https://stage.satorinet.io'}[ENV],
+            urlMundo={
+                'local': 'http://192.168.0.10:5002',
+                'dev': 'http://localhost:5002',
+                'test': 'https://test.satorinet.io',
+                'prod': 'https://mundo.satorinet.io'}[ENV],
+            urlPubsubs={
+                'local': ['ws://192.168.0.10:24603'],
+                'dev': ['ws://localhost:24603'],
+                'test': ['ws://test.satorinet.io:24603'],
+                'prod': ['ws://pubsub2.satorinet.io:24603', 'ws://pubsub3.satorinet.io:24603', 'ws://d2ruaphb4v7v3i.cloudfront.net/']}[ENV],
+            # 'prod': ['ws://pubsub2.satorinet.io:24603', 'ws://pubsub3.satorinet.io:24603', 'ws://pubsub4.satorinet.io:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
-                'prod': 'https://satorinet.io:24602'}[ENV],
+                'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
+        print('building engine')
+        # start.buildEngine()
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
         logging.info('Satori Neuron is starting...', color='green')
@@ -105,6 +118,29 @@ def returnNone():
     return r, 204
 
 
+def hashSaltIt(string: str) -> str:
+    import hashlib
+    # return hashlib.sha256(rowStr.encode()).hexdigest()
+    # return hashlib.md5(rowStr.encode()).hexdigest()
+    return hashlib.blake2s(
+        (string+string).encode(),
+        digest_size=8).hexdigest()
+
+
+def isActuallyLockable():
+    conf = config.get()
+    return conf.get('neuron lock enabled') is not None and (
+        conf.get('neuron lock hash') is not None or
+        conf.get('neuron lock password') is not None)
+
+
+def isActuallyLocked():
+    conf = config.get()
+    return conf.get('neuron lock enabled') == True and (
+        conf.get('neuron lock hash') is not None or
+        conf.get('neuron lock password') is not None)
+
+
 def get_user_id():
     return session.get('user_id', '0')
 
@@ -128,6 +164,8 @@ def getFile(ext: str = '.csv') -> tuple[str, int, Union[None, 'FileStorage']]:
 def getResp(resp: Union[dict, None] = None) -> dict:
     return {
         'version': VERSION,
+        'lockEnabled': isActuallyLocked(),
+        'lockable': isActuallyLockable(),
         'moto': MOTO,
         'env': ENV,
         'paused': start.paused,
@@ -143,6 +181,80 @@ def closeVault(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+def authRequired(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('authenticated'):
+            # conf = config.get()
+            # if not conf.get('neuron lock enabled', False) or (
+            #    not conf.get('neuron lock password') and
+            #    not conf.get('neuron lock hash')
+            # ):
+            if isActuallyLocked():
+                return redirect(url_for('passphrase', next=request.url))
+            else:
+                session['authenticated'] = True
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+passphrase_html = '''
+    <!doctype html>
+    <title>Satori</title>
+    <h1>Unlock the Satori Neuron</h1>
+    <form method="post">
+      <p><input type="password" name="passphrase">
+      <input type="hidden" name="next" value="{{ next }}">
+      <p><input type="submit" name="unlock" value="Submit">
+    </form>
+'''
+
+
+@app.route('/unlock', methods=['GET', 'POST'])
+def passphrase():
+
+    def tryToInterpretAsInteger(password: str, exectedPassword: Union[str, int]) -> bool:
+        if isinstance(exectedPassword, int):
+            try:
+                return int(password) == expectedPassword
+            except Exception as _:
+                pass
+        return False
+
+    if request.method == 'POST':
+        target = request.form.get('next') or 'dashboard'
+        conf = config.get()
+        expectedPassword = conf.get('neuron lock password')
+        expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
+        if (request.form['passphrase'] == expectedPassword or
+                    hashSaltIt(request.form['passphrase']) == expectedPassword or
+                    tryToInterpretAsInteger(
+                    request.form['passphrase'], expectedPassword)
+                ):
+            session['authenticated'] = True
+            return redirect(target)
+        else:
+            return "Wrong passphrase, try again.\n\nIf you're unable to unlock your Neuron remove the setting in the config file."
+    next_url = request.args.get('next')
+    return render_template_string(passphrase_html, next=next_url)
+
+
+@app.route('/lock/enable', methods=['GET', 'POST'])
+def lockEnable():
+    # vaultPath = config.walletPath('vault.yaml')
+    # if os.path.exists(vaultPath) or create:
+    if isActuallyLockable():
+        config.add(data={'neuron lock enabled': True})
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/lock/relock', methods=['GET', 'POST'])
+@authRequired
+def lockRelock():
+    ''' no ability to disable, this gives the user peace of mind '''
+    session['authenticated'] = False
+    return redirect(url_for('dashboard'))
 
 ###############################################################################
 ## Errors #####################################################################
@@ -167,16 +279,13 @@ def favicon():
 
 
 @app.route('/static/<path:path>')
+@authRequired
 def sendStatic(path):
     return send_from_directory('static', path)
 
 
-@app.route('/generated/<path:path>')
-def generated(path):
-    return send_from_directory('generated', path)
-
-
 @app.route('/upload_history_csv', methods=['POST'])
+@authRequired
 def uploadHistoryCsv():
     msg, status, f = getFile('.csv')
     if f is not None:
@@ -188,6 +297,7 @@ def uploadHistoryCsv():
 
 
 @app.route('/upload_datastream_csv', methods=['POST'])
+@authRequired
 def uploadDatastreamCsv():
     msg, status, f = getFile('.csv')
     if f is not None:
@@ -200,23 +310,23 @@ def uploadDatastreamCsv():
     return redirect(url_for('dashboard'))
 
 
-@app.route('/test')
-def test():
-    logging.info(request.MOBILE)
-    return render_template('test.html')
+# @app.route('/test')
+# def test():
+#    logging.info(request.MOBILE)
+#    return render_template('test.html')
 
 
-@app.route('/kwargs')
-def kwargs():
-    ''' ...com/kwargs?0-name=widget_name0&0-value=widget_value0&0-type=widget_type0&1-name=widget_name1&1-value=widget_value1&1-#type=widget_type1 '''
-    kwargs = {}
-    for i in range(25):
-        if request.args.get(f'{i}-name') and request.args.get(f'{i}-value'):
-            kwargs[request.args.get(f'{i}-name')
-                   ] = request.args.get(f'{i}-value')
-            kwargs[request.args.get(f'{i}-name') +
-                   '-type'] = request.args.get(f'{i}-type')
-    return jsonify(kwargs)
+# @app.route('/kwargs')
+# def kwargs():
+#    ''' ...com/kwargs?0-name=widget_name0&0-value=widget_value0&0-type=widget_type0&1-name=widget_name1&1-value=widget_value1&1-#type=widget_type1 '''
+#    kwargs = {}
+#    for i in range(25):
+#        if request.args.get(f'{i}-name') and request.args.get(f'{i}-value'):
+#            kwargs[request.args.get(f'{i}-name')
+#                   ] = request.args.get(f'{i}-value')
+#            kwargs[request.args.get(f'{i}-name') +
+#                   '-type'] = request.args.get(f'{i}-type')
+#    return jsonify(kwargs)
 
 
 @app.route('/ping', methods=['GET'])
@@ -226,6 +336,7 @@ def ping():
 
 
 @app.route('/pause/<timeout>', methods=['GET'])
+@authRequired
 def pause(timeout):
     try:
         timeout = int(timeout)
@@ -237,12 +348,14 @@ def pause(timeout):
 
 
 @app.route('/unpause', methods=['GET'])
+@authRequired
 def unpause():
     start.unpause()
     return redirect(url_for('dashboard'))
 
 
-@app.route('/backupk/<target>', methods=['GET'])
+@app.route('/backup/<target>', methods=['GET'])
+@authRequired
 def backup(target: str = 'satori'):
     outputPath = '/Satori/Neuron/satorineuron/web/static/download'
     if target == 'satori':
@@ -284,6 +397,7 @@ def restart():
 
 
 @app.route('/shutdown', methods=['GET'])
+@authRequired
 def shutdown():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(shutdown=True)))
     html = (
@@ -301,6 +415,7 @@ def shutdown():
 
 
 @app.route('/mode/light', methods=['GET'])
+@authRequired
 def modeLight():
     global darkmode
     darkmode = False
@@ -308,6 +423,7 @@ def modeLight():
 
 
 @app.route('/mode/dark', methods=['GET'])
+@authRequired
 def modeDark():
     global darkmode
     darkmode = True
@@ -319,6 +435,7 @@ def modeDark():
 
 
 @app.route('/configuration', methods=['GET', 'POST'])
+@authRequired
 @closeVault
 def editConfiguration():
     import importlib
@@ -370,12 +487,14 @@ def editConfiguration():
 
 
 @app.route('/hook/<target>', methods=['GET'])
+@authRequired
 def hook(target: str = 'Close'):
     ''' generates a hook for the given target '''
     return generateHookFromTarget(target)
 
 
 @app.route('/hook/', methods=['GET'])
+@authRequired
 def hookEmptyTarget():
     ''' generates a hook for the given target '''
     # in the case target is empty string
@@ -383,6 +502,7 @@ def hookEmptyTarget():
 
 
 @app.route('/relay', methods=['POST'])
+@authRequired
 def relay():
     '''
     format for json post (as python dict):{
@@ -406,9 +526,9 @@ def relay():
     #            return 'Unable to register stream with server', 500
     #        # get pubkey, recreate connection...
     #        start.checkin()
-    #        start.pubsubConnect()
+    #        start.pubsConnect()
     #    # ...pass data onto pubsub
-    #    start.pubsub.publish(
+    #    start.publish(
     #        topic=StreamId(
     #            source=data.get('source', 'satori'),
     #            author=start.wallet.publicKey,
@@ -420,12 +540,14 @@ def relay():
 
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
+@authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
     # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
     return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
 
 
 @app.route('/send_satori_transaction_from_vault/<network>', methods=['POST'])
+@authRequired
 def sendSatoriTransactionFromVault(network: str = 'main'):
     return sendSatoriTransactionUsing(start.vault, network, 'vault')
 
@@ -481,6 +603,7 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
                         tx=result.tx,
                         reportedFeeSats=result.reportedFeeSats,
                         feeSatsReserved=responseJson.get('feeSatsReserved'),
+                        walletId=responseJson.get('partialId'),
                         network=(
                             'ravencoin' if start.networkIsTest(network)
                             else 'evrmore'))
@@ -503,6 +626,7 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
 
 
 @app.route('/register_stream', methods=['POST'])
+@authRequired
 def registerStream():
     import importlib
     global forms
@@ -548,6 +672,7 @@ def registerStream():
 
 
 @app.route('/edit_stream/<topic>', methods=['GET'])
+@authRequired
 def editStream(topic=None):
     # name,target,cadence,offset,datatype,description,tags,url,uri,headers,payload,hook
     import importlib
@@ -570,6 +695,7 @@ def editStream(topic=None):
 # @app.route('/remove_stream/<source>/<stream>/<target>/', methods=['GET'])
 # def removeStream(source=None, stream=None, target=None):
 @app.route('/remove_stream/<topic>', methods=['GET'])
+@authRequired
 def removeStream(topic=None):
     # removeRelayStream = {
     #    'source': source or 'satori',
@@ -594,9 +720,9 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
             try:
                 start.relayValidation.claimed.remove(removeRelayStream)
             except Exception as e:
-                logging.error(e)
+                logging.error('remove stream logic err', e)
             start.checkin()
-            start.pubsubConnect()
+            start.pubsConnect()
             start.startRelay()
         else:
             msg = 'Unable to delete stream.'
@@ -608,6 +734,7 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
 
 
 @app.route('/remove_stream_by_post', methods=['POST'])
+@authRequired
 def removeStreamByPost():
 
     def accept_submittion(removeRelayStream):
@@ -623,9 +750,9 @@ def removeStreamByPost():
             try:
                 start.relayValidation.claimed.remove(removeRelayStream)
             except Exception as e:
-                logging.error(e)
+                logging.error('remove strem by post err', e)
             start.checkin()
-            start.pubsubConnect()
+            start.pubsConnect()
             start.startRelay()
         else:
             msg = 'Unable to delete stream.'
@@ -641,10 +768,12 @@ def removeStreamByPost():
 ###############################################################################
 
 
-@app.route('/', methods=['GET'])
+@app.route('/')
 @app.route('/home', methods=['GET'])
+@app.route('/index', methods=['GET'])
 @app.route('/dashboard', methods=['GET'])
 @closeVault
+@authRequired
 def dashboard():
     '''
     UI
@@ -773,7 +902,16 @@ def dashboard():
     }))
 
 
+# @app.route('/fetch/balance', methods=['POST'])
+# @authRequired
+# def fetchBalance():
+#    start.openWallet()
+#    if start.vault is not None:
+#    return 'OK', 200
+
+
 @app.route('/pin_depin', methods=['POST'])
+@authRequired
 def pinDepinStream():
     # tell the server we want to toggle the pin of this stream
     # on the server that means mark the subscription as chosen by user
@@ -850,7 +988,7 @@ def connectionsStatus():
 #    import time
 #    return Response(update(), mimetype='text/event-stream')
 
-@ app.route('/model-updates')
+@app.route('/model-updates')
 def modelUpdates():
     def update():
 
@@ -887,7 +1025,7 @@ def modelUpdates():
     return Response(update(), mimetype='text/event-stream')
 
 
-@ app.route('/working_updates')
+@app.route('/working_updates')
 def workingUpdates():
     def update():
         try:
@@ -914,14 +1052,15 @@ def workingUpdates():
     return Response(update(), mimetype='text/event-stream')
 
 
-@ app.route('/working_updates_end')
+@app.route('/working_updates_end')
 def workingUpdatesEnd():
     # start.workingUpdates.on_next('working_updates_end')
     start.workingUpdates.put('working_updates_end')
     return 'ok', 200
 
 
-@ app.route('/chat', methods=['GET'])
+@app.route('/chat', methods=['GET'])
+@authRequired
 def chatPage():
     def presentChatForm():
         '''
@@ -937,7 +1076,8 @@ def chatPage():
         'chatForm': presentChatForm()}))
 
 
-@ app.route('/chat/session', methods=['POST'])
+@app.route('/chat/session', methods=['POST'])
+@authRequired
 def chatSession():
     def query(chatForm: str = ''):
         import satorineuron.chat as chat
@@ -949,7 +1089,8 @@ def chatSession():
     return 'ok', 200
 
 
-@ app.route('/chat/updates')
+@app.route('/chat/updates')
+@authRequired
 def chatUpdates():
     def update():
         try:
@@ -968,13 +1109,15 @@ def chatUpdates():
     return Response(update(), mimetype='text/event-stream')
 
 
-@ app.route('/chat/updates/end')
+@app.route('/chat/updates/end')
+@authRequired
 def chatUpdatesEnd():
     start.chatUpdates.send('chat_updates_end')
     return 'ok', 200
 
 
-@ app.route('/remove_wallet_alias/<network>')
+@app.route('/remove_wallet_alias/<network>')
+@authRequired
 def removeWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.openWallet(network=network)
     myWallet.setAlias(None)
@@ -991,7 +1134,8 @@ def removeWalletAlias(network: str = 'main', alias: str = ''):
     #    'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@ app.route('/update_wallet_alias/<network>/<alias>')
+@app.route('/update_wallet_alias/<network>/<alias>')
+@authRequired
 def updateWalletAlias(network: str = 'main', alias: str = ''):
     myWallet = start.openWallet(network=network)
     myWallet.setAlias(alias)
@@ -1008,8 +1152,9 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
     #        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@ app.route('/wallet/<network>', methods=['GET', 'POST'])
+@app.route('/wallet/<network>', methods=['GET', 'POST'])
 @closeVault
+@authRequired
 def wallet(network: str = 'main'):
     def accept_submittion(passwordForm):
         _vault = start.openVault(
@@ -1087,14 +1232,16 @@ def presentSendSatoriTransactionform(formData):
     return sendSatoriTransaction
 
 
-@ app.route('/wallet_lock/enable', methods=['GET'])
+@app.route('/wallet_lock/enable', methods=['GET'])
+@authRequired
 def enableWalletLock():
     # the network portion should be whatever network I'm on.
     config.add(data={'wallet lock': True})
     return 'OK', 200
 
 
-@ app.route('/wallet_lock/disable', methods=['GET'])
+@app.route('/wallet_lock/disable', methods=['GET'])
+@authRequired
 def disableWalletLock():
     if start.vault is None:
         flash('Must unlock your wallet to disable walletlock.')
@@ -1103,7 +1250,8 @@ def disableWalletLock():
     return 'OK', 200
 
 
-@ app.route('/vault/<network>', methods=['GET', 'POST'])
+@app.route('/vault/<network>', methods=['GET', 'POST'])
+@authRequired
 def vaultMainTest(network: str = 'main'):
     return vault()
 
@@ -1118,21 +1266,34 @@ def presentVaultPasswordForm():
     return passwordForm
 
 
-@ app.route('/vault', methods=['GET', 'POST'])
+@app.route('/vault', methods=['GET', 'POST'])
+@authRequired
 def vault():
 
+    def defaultMineToVault():
+        try:
+            enableMineToVault
+        except Exception as _:
+            pass
+
     def accept_submittion(passwordForm):
-        #start.workingUpdates.put('decrypting...')
+        # start.workingUpdates.put('decrypting...')
+        # logging.debug(passwordForm.password.data, color='yellow')
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
+        if not config.get().get('neuron lock hash', False):
+            config.add(data={'neuron lock hash': hashSaltIt(
+                passwordForm.password.data)})
+            if 'neuron lock enabled' not in config.get():
+                config.add(data={'neuron lock enabled': False})
         # if rvn is None or not rvn.isEncrypted:
         #    flash('unable to open vault')
 
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
-        #start.workingUpdates.put('downloading balance...')
+        # start.workingUpdates.put('downloading balance...')
         from satorilib.api.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
         # if start.server.betaStatus()[1].get('value') == 1:
@@ -1140,6 +1301,7 @@ def vault():
         #    logging.info(
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
+        # threading.Thread(target=defaultMineToVault, daemon=True).start()
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
@@ -1147,14 +1309,14 @@ def vault():
             'network': start.network,  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
-            'minedtovault': True,  # start.server.minedToVault(),
+            'minedtovault': False,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
-    #start.workingUpdates.put('loading...')
+    # start.workingUpdates.put('loading...')
     return render_template('vault.html', **getResp({
         'title': 'Vault',
         'walletIcon': 'lock',
@@ -1168,7 +1330,8 @@ def vault():
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
-@ app.route('/enable_autosecure/<network>/<retainInWallet>', methods=['GET'])
+@app.route('/enable_autosecure/<network>/<retainInWallet>', methods=['GET'])
+@authRequired
 def enableAutosecure(network: str = 'main', retainInWallet: int = 0):
     try:
         retainInWallet = int(retainInWallet)
@@ -1200,7 +1363,8 @@ def enableAutosecure(network: str = 'main', retainInWallet: int = 0):
     return 'OK', 200
 
 
-@ app.route('/disable_autosecure/<network>', methods=['GET'])
+@app.route('/disable_autosecure/<network>', methods=['GET'])
+@authRequired
 def disableAutosecure(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to disable autosecure.')
@@ -1215,7 +1379,16 @@ def disableAutosecure(network: str = 'main'):
     return 'OK', 200
 
 
-@ app.route('/mine_to_vault/enable/<network>', methods=['GET'])
+@app.route('/mine_to_vault/status', methods=['GET'])
+@authRequired
+def mineToVaultStatus():
+    x = start.server.minedToVault()
+    print(x)
+    return str(x), 200
+
+
+@app.route('/mine_to_vault/enable/<network>', methods=['GET'])
+@authRequired
 def enableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to enable minetovault.')
@@ -1233,14 +1406,15 @@ def enableMineToVault(network: str = 'main'):
     return f'Failed to enable minetovault: {result}', 400
 
 
-@ app.route('/mine_to_vault/disable/<network>', methods=['GET'])
+@app.route('/mine_to_vault/disable/<network>', methods=['GET'])
+@authRequired
 def disableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to disable minetovault.')
         return redirect('/dashboard')
     vault = start.getVault(network=network)
     wallet = start.getWallet(network=network)
-    logging.debug('wallet:', wallet, color="magenta")
+    # logging.debug('wallet:', wallet, color="magenta")
     mineToAddress = wallet.address
     success, result = start.server.disableMineToVault(
         walletSignature=wallet.sign(mineToAddress),
@@ -1252,7 +1426,8 @@ def disableMineToVault(network: str = 'main'):
     return f'Failed to disable minetovault: {result}', 400
 
 
-@ app.route('/vote', methods=['GET', 'POST'])
+@app.route('/vote', methods=['GET', 'POST'])
+@authRequired
 def vote():
 
     def getVotes(wallet):
@@ -1332,7 +1507,8 @@ def vote():
         **getVotes(myWallet)}))
 
 
-@ app.route('/vote/submit/manifest/wallet', methods=['POST'])
+@app.route('/vote/submit/manifest/wallet', methods=['POST'])
+@authRequired
 def voteSubmitManifestWallet():
     # logging.debug(request.json, color='yellow')
     if (
@@ -1353,7 +1529,8 @@ def voteSubmitManifestWallet():
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
-@ app.route('/vote/submit/manifest/vault', methods=['POST'])
+@app.route('/vote/submit/manifest/vault', methods=['POST'])
+@authRequired
 def voteSubmitManifestVault():
     # logging.debug(request.json, color='yellow')
     vaultPredictors = request.json.get('vaultPredictors')
@@ -1386,7 +1563,8 @@ def voteSubmitManifestVault():
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
-@ app.route('/vote/submit/sanction/wallet', methods=['POST'])
+@app.route('/vote/submit/sanction/wallet', methods=['POST'])
+@authRequired
 def voteSubmitSanctionWallet():
     # logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
@@ -1407,6 +1585,7 @@ def voteSubmitSanctionWallet():
 
 
 @app.route('/vote/submit/sanction/vault', methods=['POST'])
+@authRequired
 def voteSubmitSanctionVault():
     # logging.debug(request.json, color='yellow')
     # {'walletStreamIds': [0], 'vaultStreamIds': [], 'walletVotes': [27], 'vaultVotes': []}
@@ -1430,6 +1609,7 @@ def voteSubmitSanctionVault():
 
 
 @app.route('/vote/remove_all/sanction', methods=['GET'])
+@authRequired
 def voteRemoveAllSanction():
     # logging.debug(request.json, color='yellow')
     start.server.removeSanctionVote(
@@ -1440,6 +1620,7 @@ def voteRemoveAllSanction():
 
 
 @app.route('/relay_csv', methods=['GET'])
+@authRequired
 def relayCsv():
     ''' returns a csv file of the current relay streams '''
     import pandas as pd
@@ -1464,6 +1645,7 @@ def relayCsv():
 
 
 @app.route('/relay_history_csv/<topic>', methods=['GET'])
+@authRequired
 def relayHistoryCsv(topic: str = None):
     ''' returns a csv file of the history of the relay stream '''
     cache = start.cacheOf(StreamId.fromTopic(topic))
@@ -1483,6 +1665,7 @@ def relayHistoryCsv(topic: str = None):
 
 
 @app.route('/merge_history_csv/<topic>', methods=['POST'])
+@authRequired
 def mergeHistoryCsv(topic: str = None):
     ''' merge history uploaded  '''
     cache = start.cacheOf(StreamId.fromTopic(topic))
@@ -1507,6 +1690,7 @@ def mergeHistoryCsv(topic: str = None):
 
 
 @app.route('/remove_history_csv/<topic>', methods=['GET'])
+@authRequired
 def removeHistoryCsv(topic: str = None):
     ''' removes history '''
     cache = start.cacheOf(StreamId.fromTopic(topic))
@@ -1519,6 +1703,7 @@ def removeHistoryCsv(topic: str = None):
 
 
 @app.route('/trigger_relay/<topic>', methods=['GET'])
+@authRequired
 def triggerRelay(topic: str = None):
     ''' triggers relay stream to happen '''
     if start.relay.triggerManually(StreamId.fromTopic(topic)):
@@ -1582,6 +1767,7 @@ def triggerRelay(topic: str = None):
 
 
 @app.route('/history/request')
+@authRequired
 def publsih():
     ''' to streamr - create a new datastream to publish to '''
     # todo: spoof a dataset response - random generated data, so that the
@@ -1590,6 +1776,7 @@ def publsih():
 
 
 @app.route('/history')
+@authRequired
 def publsihMeta():
     ''' to streamr - publish to a stream '''
     return render_template('unknown.html', **getResp())
@@ -1656,8 +1843,6 @@ if __name__ == '__main__':
     #    spoofStreamer()
 
     # serve(app, host='0.0.0.0', port=config.get()['port'])
-    if not debug:
-        webbrowser.open('http://127.0.0.1:24601', new=0, autoraise=True)
     app.run(
         host='0.0.0.0',
         port=config.flaskPort(),

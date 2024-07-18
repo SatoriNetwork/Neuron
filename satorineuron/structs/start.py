@@ -17,7 +17,8 @@ class StartupDagStruct(object):
         self,
         env: str = None,
         urlServer: str = None,
-        urlPubsub: str = None,
+        urlMundo: str = None,
+        urlPubsubs: list[str] = None,
         urlSynergy: str = None,
         *args
     ):
@@ -27,7 +28,8 @@ class StartupDagStruct(object):
         self.latestConnectionStatus: dict = None
         self.env: str = None
         self.urlServer: str = None
-        self.urlPubsub: str = None
+        self.urlMundo: str = None
+        self.urlPubsubs: [str] = None
         self.urlSynergy: str = None
         self.paused: bool = None
         self.pauseThread: Union[threading.Thread, None] = None
@@ -37,6 +39,7 @@ class StartupDagStruct(object):
         self._evrmoreVault: Union[EvrmoreWallet, None] = None
         self.details: dict = None
         self.key: str = None
+        self.oracleKey: str = None
         self.idKey: str = None
         self.subscriptionKeys: str = None
         self.publicationKeys: str = None
@@ -44,7 +47,8 @@ class StartupDagStruct(object):
         self.signedStreamIds: list['SignedStreamId'] = None
         self.relayValidation: 'ValidateRelayStream' = None
         self.server: SatoriServerClient = None
-        self.pubsub: SatoriPubSubConn = None
+        self.sub: SatoriPubSubConn = None
+        self.pubs: list[SatoriPubSubConn] = []
         self.relay: 'RawStreamRelayEngine' = None
         self.engine: 'satoriengine.Engine' = None
         self.publications: list[Stream] = None
@@ -121,7 +125,10 @@ class StartupDagStruct(object):
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
 
-    def pubsubConnect(self):
+    def subConnect(self):
+        ''' establish a pubsub connection. '''
+
+    def pubsConnect(self):
         ''' establish a pubsub connection. '''
 
     def startSynergyEngine(self):
