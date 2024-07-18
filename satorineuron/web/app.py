@@ -223,10 +223,10 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-                    hashSaltIt(request.form['passphrase']) == expectedPassword or
-                    tryToInterpretAsInteger(
-                    request.form['passphrase'], expectedPassword)
-                ):
+            hashSaltIt(request.form['passphrase']) == expectedPassword or
+            tryToInterpretAsInteger(
+            request.form['passphrase'], expectedPassword)
+            ):
             session['authenticated'] = True
             return redirect(target)
         else:
@@ -1372,6 +1372,14 @@ def disableAutosecure(network: str = 'main'):
             k: v for k, v in config.get('autosecure').items()
             if k != start.getWallet(network=network).address})
     return 'OK', 200
+
+
+@app.route('/mine_to_vault/status', methods=['GET'])
+@authRequired
+def mineToVaultStatus():
+    x = start.server.minedToVault()
+    print(x)
+    return str(x), 200
 
 
 @app.route('/mine_to_vault/enable/<network>', methods=['GET'])

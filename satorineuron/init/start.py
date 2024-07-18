@@ -284,7 +284,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.getVault()
         self.checkin()
         self.verifyCaches()
-        self.startSynergyEngine()
+        # self.startSynergyEngine()
         self.subConnect()
         self.pubsConnect()
         if self.isDebug:
@@ -471,7 +471,23 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info('started relay engine', color='green')
 
     def startSynergyEngine(self):
-        ''' establish a synergy connection '''
+        '''establish a synergy connection'''
+        '''DISABLED FOR NOW:
+        Snippet of a tcpdump
+        23:11:41.073074 IP lpcpu04.58111 > dns.google.domain: 2468+ A? synergy.satorinet.io. (38)
+        23:11:41.073191 IP lpcpu04.42736 > dns.google.domain: 10665+ A? synergy.satorinet.io. (38)
+        23:11:41.073796 IP lpcpu04.10088 > dns.google.domain: 42995+ A? synergy.satorinet.io. (38)
+        23:11:41.073819 IP lpcpu04.42121 > dns.google.domain: 31559+ A? synergy.satorinet.io. (38)
+        23:11:41.073991 IP lpcpu04.44500 > dns.google.domain: 33234+ A? synergy.satorinet.io. (38)
+        23:11:41.074484 IP lpcpu04.40834 > dns.google.domain: 29728+ A? synergy.satorinet.io. (38)
+        23:11:41.074561 IP lpcpu04.62919 > dns.google.domain: 40503+ A? synergy.satorinet.io. (38)
+        23:11:41.074685 IP lpcpu04.38206 > dns.google.domain: 20506+ A? synergy.satorinet.io. (38)
+        23:11:41.075028 IP lpcpu04.58587 > dns.google.domain: 34024+ A? synergy.satorinet.io. (38)
+        23:11:41.075408 IP lpcpu04.45231 > dns.google.domain: 13854+ A? synergy.satorinet.io. (38)
+        23:11:41.075438 IP lpcpu04.49361 > dns.google.domain: 19875+ A? synergy.satorinet.io. (38)
+        23:11:41.075581 IP lpcpu04.57224 > dns.google.domain: 47540+ A? synergy.satorinet.io. (38)
+        same second, hundred of querys
+        '''
         if self.wallet:
             self.synergy = SynergyManager(
                 url=self.urlSynergy,
