@@ -27,7 +27,7 @@ from satorilib.api.time import timeToSeconds
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
 from satorisynapse import Envelope, Signal
-from satorineuron import VERSION, MOTO, config
+from satorineuron import VERSION, MOTTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
@@ -166,7 +166,7 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'version': VERSION,
         'lockEnabled': isActuallyLocked(),
         'lockable': isActuallyLockable(),
-        'moto': MOTO,
+        'motto': MOTTO,
         'env': ENV,
         'paused': start.paused,
         'darkmode': darkmode,
