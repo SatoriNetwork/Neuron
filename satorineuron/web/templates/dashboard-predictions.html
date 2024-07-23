@@ -39,7 +39,7 @@
                   I think there's an issue with pinning, so we're removing the view of this feature for now:
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Pin</th>
                 -->
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Source</th>
+                <!--<th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Source</th>-->
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Latest</th>
@@ -70,11 +70,11 @@
                     </div>
                   </td>
                 -->
-                <td id="td-{{streamOverview.hashed}}-source" onclick="scrollOrJumpTo('predictionsbr');setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction | default(null, false)}}, {{streamOverview.predictions}});"> <!--setData(chartOne, {{ streamOverview.predictions }});setData(chartTwo, {{streamOverview.errs}});-->
+                <!--<td id="td-{{streamOverview.hashed}}-source" onclick="scrollOrJumpTo('predictionsbr');setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction | default(null, false)}}, {{streamOverview.predictions}});">
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.source }}</h6>
                   </div>
-                </td>
+                </td>-->
                 <td id="td-{{streamOverview.hashed}}-stream" onclick="scrollOrJumpTo('predictionsbr');setDataChartThree({{streamOverview.values}}, {{streamOverview.prediction | default('null', false)}}, {{streamOverview.predictions}});"> <!--setData(chartOne, {{ streamOverview.predictions }});setData(chartTwo, {{streamOverview.errs}});-->
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.stream }}</h6>
