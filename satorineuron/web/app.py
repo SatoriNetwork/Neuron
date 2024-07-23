@@ -81,8 +81,8 @@ while True:
                 'local': ['ws://192.168.0.10:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
-                'prod': ['ws://pubsub2.satorinet.io:24603', 'ws://pubsub3.satorinet.io:24603', 'ws://d2ruaphb4v7v3i.cloudfront.net/']}[ENV],
-            # 'prod': ['ws://pubsub2.satorinet.io:24603', 'ws://pubsub3.satorinet.io:24603', 'ws://pubsub4.satorinet.io:24603']}[ENV],
+                # 'prod': ['ws://pubsub2.satorinet.io:24603', 'ws://pubsub3.satorinet.io:24603', 'ws://d2ruaphb4v7v3i.cloudfront.net/']}[ENV],
+                'prod': ['ws://pubsub2.satorinet.io:24603', 'ws://pubsub3.satorinet.io:24603', 'ws://pubsub4.satorinet.io:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
@@ -228,10 +228,10 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-                    hashSaltIt(request.form['passphrase']) == expectedPassword or
-                    tryToInterpretAsInteger(
-                    request.form['passphrase'], expectedPassword)
-                ):
+            hashSaltIt(request.form['passphrase']) == expectedPassword or
+            tryToInterpretAsInteger(
+            request.form['passphrase'], expectedPassword)
+            ):
             session['authenticated'] = True
             return redirect(target)
         else:
