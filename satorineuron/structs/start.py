@@ -90,7 +90,7 @@ class StartupDagStruct(object):
         self,
         password: Union[str, None] = None,
         create: bool = False,
-    ) -> Union[RavencoinWallet, None]:
+    ) -> Union[EvrmoreWallet, None]:
         ''' get the ravencoin vault '''
 
     def start(self):
