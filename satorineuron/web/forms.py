@@ -35,7 +35,7 @@ class RelayStreamForm(FlaskForm):
     # number of seconds between api hits, not None
     cadence = IntegerField(
         'Cadence',
-        validators=[NumberRange(min=60, max=None, message='Cadence must be at least 60 seconds.'), InputRequired()])
+        validators=[NumberRange(min=60*10, max=None, message='Cadence must be at least 10 minutes.'), InputRequired()])
     # number of seconds to offset from utc or None
     offset = IntegerField(
         'Offset',

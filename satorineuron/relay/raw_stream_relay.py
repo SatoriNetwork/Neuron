@@ -212,7 +212,7 @@ class RawStreamRelayEngine(Cached):
 
     def _cadence(self, stream: Stream) -> int:
         ''' returns cadence in seconds, engine does not allow < 60 '''
-        return int(max(stream.cadence or 60, 60))
+        return int(max(stream.cadence or Stream.minimumCadence, Stream.minimumCadence))
 
     def _offset(self, stream: Stream) -> int:
         ''' returns cadence in seconds, engine does not allow < 60 '''
