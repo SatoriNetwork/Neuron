@@ -389,8 +389,7 @@ def restart():
         '</head>'
         '<body>'
         '    <p>Satori Neuron is attempting to restart. <b>Please wait,</b> the restart process can take several minutes as it downloads updates.</p>'
-
-        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' + "//" + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
+        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' + " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
         '    <p>Thank you.</p>'
         '</body>'
         '</html>'
