@@ -100,22 +100,31 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.restartThread = threading.Thread(
             target=self.restartEverythingPeriodic, daemon=True)
         self.restartThread.start()
+        self.checkinCheckThread = threading.Thread(
+            target=self.checkinCheck, daemon=True)
+        self.checkinCheckThread.start()
         # self.delayedStart()
         alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
-        if alreadySetup:
+        if not alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
         self.ranOnce = False
         while True:
             if self.asyncThread.loop is not None:
-                self.restartThread = self.asyncThread.repeatRun(
+                self.checkinThread = self.asyncThread.repeatRun(
                     task=self.start,
                     interval=60*60*24 if alreadySetup else 60*60*12)
                 break
-            time.sleep(100)
+            time.sleep(60*15)
 
     def delayedEngine(self):
         time.sleep(60*60*6)
         self.buildEngine()
+
+    def checkinCheck(self):
+        while True:
+            time.sleep(60*60*6)
+            if self.server.checkinCheck():
+                self.triggerRestart()  # should just be start()
 
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         ''' returns the reference to the cache of a stream '''
@@ -378,8 +387,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central,
                     status=False)
+                logging.warning(f'connecting to central err: {e}')
             x = x * 1.5 if x < 60*60*6 else 60*60*6
-            logging.warning(f'trying again in {x}: {e}')
+            logging.warning(f'trying again in {x}')
             time.sleep(x)
 
     def verifyCaches(self) -> bool:
