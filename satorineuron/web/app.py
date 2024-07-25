@@ -373,6 +373,7 @@ def backup(target: str = 'satori'):
 
 
 @app.route('/restart', methods=['GET'])
+@authRequired
 def restart():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
     html = (
