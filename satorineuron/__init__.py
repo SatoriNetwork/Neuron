@@ -14,4 +14,5 @@ logging.setup(level={
 }[config.get().get('logging level', 'warning').lower()])
 
 VERSION = '0.1.30'
-MOTO = 'Let your workings remain a mystery, just show people the results.'
+MOTTO = 'Let your workings remain a mystery, just show people the results.'
+

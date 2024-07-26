@@ -27,7 +27,7 @@ from satorilib.api.time import timeToSeconds
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
 from satorisynapse import Envelope, Signal
-from satorineuron import VERSION, MOTO, config
+from satorineuron import VERSION, MOTTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
@@ -68,6 +68,7 @@ while True:
         start = StartupDag(
             env=ENV,
             urlServer={
+                # TODO: local endpoint should be in a config file.
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
@@ -166,7 +167,7 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'version': VERSION,
         'lockEnabled': isActuallyLocked(),
         'lockable': isActuallyLockable(),
-        'moto': MOTO,
+        'motto': MOTTO,
         'env': ENV,
         'paused': start.paused,
         'darkmode': darkmode,
@@ -373,6 +374,7 @@ def backup(target: str = 'satori'):
 
 
 @app.route('/restart', methods=['GET'])
+@authRequired
 def restart():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
     html = (
@@ -388,7 +390,7 @@ def restart():
         '</head>'
         '<body>'
         '    <p>Satori Neuron is attempting to restart. <b>Please wait,</b> the restart process can take several minutes as it downloads updates.</p>'
-        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol + "//" + window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
+        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' + " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
         '    <p>Thank you.</p>'
         '</body>'
         '</html>'
