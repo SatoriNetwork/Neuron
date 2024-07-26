@@ -1,0 +1,47 @@
+{% block content %}
+  <div class="col-xl-9 col-lg-9 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-12 col-12">
+            <h6 class="text-center {% if darkmode %}dark-colors{% endif %}">Daily Stats</h6>
+            <p id="walletStatsDaily" class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+              
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2 mb-4">
+        <div class="row">
+          <div class="col-lg-12 col-12">
+            <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" title="refresh">
+              <center>
+                <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;" onclick="fetchWalletStatsDaily();">
+                  <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 36px;">refresh</i>
+                </button>
+              </center>
+            </h6>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function fetchWalletStatsDaily() {
+      document.getElementById("walletStatsDaily").innerHTML = '';
+      fetch('/fetch/wallet/stats/daily', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      })
+      .then(text => {
+        console.log(text);
+        document.getElementById("walletStatsDaily").innerHTML = text;
+      })
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
+{% endblock %}

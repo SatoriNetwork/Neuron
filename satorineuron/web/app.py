@@ -71,7 +71,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -228,9 +228,9 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-            hashSaltIt(request.form['passphrase']) == expectedPassword or
-            tryToInterpretAsInteger(
-            request.form['passphrase'], expectedPassword)
+                hashSaltIt(request.form['passphrase']) == expectedPassword or
+                tryToInterpretAsInteger(
+                request.form['passphrase'], expectedPassword)
             ):
             session['authenticated'] = True
             return redirect(target)
@@ -910,6 +910,23 @@ def dashboard():
 #    return 'OK', 200
 
 
+@app.route('/fetch/wallet/stats/daily', methods=['GET'])
+@authRequired
+def fetchWalletStatsDaily():
+    stats = start.server.fetchWalletStatsDaily()
+    if stats == '':
+        return 'No stats available.', 200
+    df = pd.DataFrame(stats)
+    if df.empty or 'placement' not in df.columns:
+        return 'No stats available.', 200
+    avg = df['placement'].mean()
+    count = len(df)
+    # average_placement = df.groupby('predictor_stream_id')['placement'].mean().reset_index()
+    return (
+        f'This Neuron has participated in {count} competition{"" if count == 1 else "s"} today, '
+        f'with an average placement of {avg}'), 200
+
+
 @app.route('/pin_depin', methods=['POST'])
 @authRequired
 def pinDepinStream():
@@ -996,7 +1013,7 @@ def modelUpdates():
             global updateQueue
             if x is not None:
                 overview = model.overview()
-                # logging.debug('Yielding', overview, color='yellow')
+                #logging.debug('Yielding', overview.values, color='yellow')
                 updateQueue.put(
                     "data: " + str(overview).replace("'", '"') + "\n\n")
 
