@@ -72,7 +72,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://central.satorinet.io'}[ENV],
+                'prod': 'https://stage.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -229,9 +229,9 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-                hashSaltIt(request.form['passphrase']) == expectedPassword or
-                tryToInterpretAsInteger(
-                request.form['passphrase'], expectedPassword)
+            hashSaltIt(request.form['passphrase']) == expectedPassword or
+            tryToInterpretAsInteger(
+            request.form['passphrase'], expectedPassword)
             ):
             session['authenticated'] = True
             return redirect(target)
@@ -390,7 +390,8 @@ def restart():
         '</head>'
         '<body>'
         '    <p>Satori Neuron is attempting to restart. <b>Please wait,</b> the restart process can take several minutes as it downloads updates.</p>'
-        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' + " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
+        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' +
+        " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
         '    <p>Thank you.</p>'
         '</body>'
         '</html>'
@@ -1015,7 +1016,7 @@ def modelUpdates():
             global updateQueue
             if x is not None:
                 overview = model.overview()
-                #logging.debug('Yielding', overview.values, color='yellow')
+                # logging.debug('Yielding', overview.values, color='yellow')
                 updateQueue.put(
                     "data: " + str(overview).replace("'", '"') + "\n\n")
 
