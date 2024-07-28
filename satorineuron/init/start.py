@@ -298,6 +298,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.getWallet()
         self.getVault()
         self.checkin()
+        self.performLicenseCheck()
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()

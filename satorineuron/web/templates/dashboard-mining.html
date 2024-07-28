@@ -96,33 +96,34 @@
 </div>
 
 <script>
-  var licenseStatus = "False";
+  var licenseStatus = "{{ licenseStatus }}";
+  console.log("licenseStatus " + (licenseStatus));
   function toggleMode() {
     var isChecked = document.getElementById("modeToggle").checked;
     console.log("Toggle switch is " + (isChecked ? "ON" : "OFF"));
-    fetch('/license/check', { method: 'GET' })
-      .then(response => {
-        if (response.ok) {
-          return response.text();
-        } else {
-          throw new Error('Network response was not ok.');
-        }
-      })
-      .then(text => {
-        console.log(text);
-        licenseStatus = text;
-        updateMiningCard();
-      })
-      .catch(error => console.error('Error:', error));
-    if (licenseStatus == "True") {
-      // set it in the config, perform a checkin or something.
-    } else {
-      if (isChecked) {
-        showMiningInviteCard();
+    if (isChecked) {
+      if (licenseStatus == "True") {
+        // set it in the config, perform a checkin or something.
       } else {
-        hideMiningInviteCard();
+        showMiningInviteCard();
+        document.getElementById("modeToggle").checked = false;
+        fetch('/license/check', { method: 'GET' })
+        .then(response => {
+          if (response.ok) {
+            return response.text();
+          } else {
+            throw new Error('Network response was not ok.');
+          }
+        })
+        .then(text => {
+          console.log(text);
+          licenseStatus = text;
+          updateMiningCard();
+        })
+        .catch(error => console.error('Error:', error));
       }
-      document.getElementById("modeToggle").checked = false;
+    } else {
+      hideMiningInviteCard();
     }
   }
 </script>

@@ -72,7 +72,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -546,17 +546,21 @@ def relay():
 @app.route('/license/check', methods=['GET'])
 @authRequired
 def licenseCheck():
-    return start.performLicenseCheck()
+    status = start.performLicenseCheck()
+    print(status)
+    return str(status), 200
 
 
 @app.route('/license/apply', methods=['GET'])
 @authRequired
 def applyForLicense():
-    result = sendSatoriTransactionUsing(
-        start.getWallet(network='main'),
-        network='main',
-        loc='wallet',
-        override={'address': 'licenseAddress', 'amount': 1.0, 'sweep': False})
+    # TODO: test this!
+    #result = sendSatoriTransactionUsing(
+    #    start.getWallet(network='main'),
+    #    network='main',
+    #    loc='wallet',
+    #    override={'address': 'licenseAddress', 'amount': 1.0, 'sweep': False})
+    result = '467f90327d4915421ad901e1517e981ad4999120615908bfe008fbe992d368b6'
     if len(result) == 64:
         flash(result)
         if start.server.licenseApplication(result):
