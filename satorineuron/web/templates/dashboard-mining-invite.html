@@ -41,23 +41,8 @@
         </p>
       </div>
       <div class="card-body px-0 pb-2">
-        {% if licenseStatus %}
-          {% if miningMode %}
-            Mining Mode is currently enabled.
-          {% else %}
-            Mining Mode is currently disabled.
-          {% endif %}
-        {% else %}
-          {% if holdingBalance >= 1 %}
-            <div style="text-align:center;" >
-              <a href="{{ url_for('applyForLicense') }}" class="loadingThingy"><button class="btn btn-primary {% if darkmode %}dark-colors{% endif %}" style="margin-top:20px;box-shadow: none;" onclick="payFee()">Apply Now</button></a>
-            </div>
-          {% else %}
-            <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-              You need at least 1 SATORI to apply for a license.
-            </p>
-          {% endif %}
-        {% endif %}
+        <p id="miningModeCard" class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+        </p>
       </div>
     </div>
   </div>
@@ -75,4 +60,33 @@
     console.log('Fee payment initiated');
   }
 </script>
+<script>
+  function updateMiningCard() {
+      // Update mining mode details based on license status and mining mode
+      var detailsText = "Satori's mission is to bring free and open prediction of the future to everyone. Satori is free to download and use.";
+      if (licenseStatus) {
+          detailsText += " This Neuron currently licensed for Mining Mode. ";
+          detailsText += miningMode ? "Mining Mode is currently enabled." : "Mining Mode is currently disabled.";
+      } else {
+          detailsText += " To enter Mining Mode a license must be applied to this Neuron. The license fee is 1 SATORI and is for the duration of a year. To pay the fee and apply for a license click the button below.";
+      }
+      document.getElementById('miningModeDetails').innerText = detailsText;
+      
+      // Update card body based on license status and holding balance
+      var cardBody = document.getElementById('miningModeCard');
+      if (licenseStatus) {
+          cardBody.innerText = miningMode ? "Mining Mode is currently enabled." : "Mining Mode is currently disabled.";
+      } else {
+          if (holdingBalance >= 1) {
+              cardBody.innerHTML = '<div style="text-align:center;"><a href="/applyForLicense" class="loadingThingy"><button class="btn btn-primary ' + (darkmode ? 'dark-colors' : '') + '" style="margin-top:20px;box-shadow: none;" onclick="payFee()">Apply Now</button></a></div>';
+          } else {
+              cardBody.innerHTML = 'You need at least 1 SATORI to apply for a license.';
+          }
+      }
+  }
+
+  // Call the function to update the card when the page loads
+  //document.addEventListener('DOMContentLoaded', updateMiningCard);
+</script>
+
 {% endblock %}

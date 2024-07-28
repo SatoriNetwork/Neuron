@@ -96,7 +96,7 @@
 </div>
 
 <script>
-  var licenseStatus = "{{ licenseStatus }}";
+  var licenseStatus = "False";
   function toggleMode() {
     var isChecked = document.getElementById("modeToggle").checked;
     console.log("Toggle switch is " + (isChecked ? "ON" : "OFF"));
@@ -111,10 +111,11 @@
       .then(text => {
         console.log(text);
         licenseStatus = text;
+        updateMiningCard();
       })
       .catch(error => console.error('Error:', error));
     if (licenseStatus == "True") {
-      // do more
+      // set it in the config, perform a checkin or something.
     } else {
       if (isChecked) {
         showMiningInviteCard();
