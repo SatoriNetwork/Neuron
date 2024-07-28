@@ -229,10 +229,10 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-            hashSaltIt(request.form['passphrase']) == expectedPassword or
-            tryToInterpretAsInteger(
-            request.form['passphrase'], expectedPassword)
-            ):
+                    hashSaltIt(request.form['passphrase']) == expectedPassword or
+                    tryToInterpretAsInteger(
+                    request.form['passphrase'], expectedPassword)
+                ):
             session['authenticated'] = True
             return redirect(target)
         else:
@@ -842,7 +842,9 @@ def dashboard():
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
-        'vaultBalanceAmount': start.vault.balanceAmount if start.vault is not None else 0,
+        'feePaid': False,
+        'miningMode': False,
+        'holdingBalance': round(start.wallet.balanceAmount + (start.vault.balanceAmount if start.vault is not None else 0), 8),
         'streamOverviews': streamOverviews,
         'configOverrides': config.get(),
         'paused': start.paused,
