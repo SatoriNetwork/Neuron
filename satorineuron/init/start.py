@@ -97,6 +97,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()
+        self.licenseStatus: bool = False
         self.restartThread = threading.Thread(
             target=self.restartEverythingPeriodic, daemon=True)
         self.restartThread.start()
@@ -614,3 +615,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 data=data,
                 observationTime=observationTime,
                 observationHash=observationHash)
+
+    def performLicenseCheck(self):
+        self.licenseStatus = self.server.licenseCheck()
+        return self.licenseStatus

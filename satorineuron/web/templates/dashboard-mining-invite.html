@@ -15,7 +15,7 @@
   }
 </style>
 
-<div class="row"  id="miningCard" style="display:none;">
+<div class="row"  id="miningCard" style="display:{{miningDisplay}};">
   <div class="col-xl-12 col-lg-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}" style="height: 100%;margin-top:20px;" >
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
@@ -26,19 +26,22 @@
         <p id="miningModeDetails" class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
           Satori's mission is to bring free and open prediction of the future to everyone. 
           Satori is free to download and use.
-          {% if feePaid %}
-            To be eligible for prediction rewards a license must be applied to this Neuron. 
-            The license fee is 1 SATORI. 
-            To pay the fee and apply for a license click the button below.
+          {% if licenseStatus %}
+            This Neuron currently licensed for Mining Mode.
+            {% if miningMode %}
+              Mining Mode is currently enabled.
+            {% else %}
+              Mining Mode is currently disabled.
+            {% endif %}
           {% else %}
-            To be eligible for prediction rewards a license must be applied to this Neuron. 
-            The license fee is 1 SATORI. 
+            To enter Mining Mode a license must be applied to this Neuron. 
+            The license fee is 1 SATORI and is for the duration of a year.
             To pay the fee and apply for a license click the button below.
           {% endif %}
         </p>
       </div>
       <div class="card-body px-0 pb-2">
-        {% if feePaid %}
+        {% if licenseStatus %}
           {% if miningMode %}
             Mining Mode is currently enabled.
           {% else %}
@@ -46,10 +49,9 @@
           {% endif %}
         {% else %}
           {% if holdingBalance >= 1 %}
-          
-          <div style="text-align:center;" >
-            <button class="btn btn-primary {% if darkmode %}dark-colors{% endif %}" style="margin-top:20px;box-shadow: none;" onclick="payFee()">Apply Now</button>
-          </div>
+            <div style="text-align:center;" >
+              <a href="{{ url_for('applyForLicense') }}" class="loadingThingy"><button class="btn btn-primary {% if darkmode %}dark-colors{% endif %}" style="margin-top:20px;box-shadow: none;" onclick="payFee()">Apply Now</button></a>
+            </div>
           {% else %}
             <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
               You need at least 1 SATORI to apply for a license.

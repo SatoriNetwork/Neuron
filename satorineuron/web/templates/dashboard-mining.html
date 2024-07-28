@@ -75,7 +75,7 @@
     <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
       <div class="row">
         <div class="col-lg-12 col-12">
-          <h6 class="text-center {% if darkmode %}dark-colors{% endif %}">Mode</h6>
+          <h6 class="text-center {% if darkmode %}dark-colors{% endif %}">Running Mode</h6>
           <p id="miningModeStatus" class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}"></p>
         </div>
       </div>
@@ -83,12 +83,12 @@
     <div class="card-body px-0 pb-2 ">
       <div class="mode-container">
         <div class="toggle-options">
-          <div style="padding-bottom: 6px;">Local</div>
+          <div style="padding-bottom: 6px;" onclick="hideMiningInviteCard();">Local</div>
           <label class="toggle-switch">
-            <input type="checkbox" id="modeToggle" onclick="toggleMode('{{feePaid}}')">
+            <input type="checkbox" id="modeToggle" onclick="toggleMode('{{licenseStatus}}')">
             <span class="slider round"></span>
           </label>
-          <div style="padding-bottom: 6px;">Mining</div>
+          <div style="padding-bottom: 6px;" onclick="showMiningInviteCard();">Mining</div>
         </div>
       </div>
     </div>
@@ -96,10 +96,24 @@
 </div>
 
 <script>
-  function toggleMode(feePaid) {
+  var licenseStatus = "{{ licenseStatus }}";
+  function toggleMode() {
     var isChecked = document.getElementById("modeToggle").checked;
     console.log("Toggle switch is " + (isChecked ? "ON" : "OFF"));
-    if (feePaid == "True") {
+    fetch('/license/check', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      })
+      .then(text => {
+        console.log(text);
+        licenseStatus = text;
+      })
+      .catch(error => console.error('Error:', error));
+    if (licenseStatus == "True") {
       // do more
     } else {
       if (isChecked) {
@@ -107,6 +121,7 @@
       } else {
         hideMiningInviteCard();
       }
+      document.getElementById("modeToggle").checked = false;
     }
   }
 </script>
