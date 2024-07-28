@@ -27,7 +27,7 @@ import traceback
 # from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 # from satorilib.utils import getRandomName, getRandomQuote
 # from satorisynapse import Envelope, Signal
-# from satorineuron import VERSION, MOTO
+# from satorineuron import VERSION, MOTTO
 from satorineuron import VERSION, config
 from satorineuron import logging
 # from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
