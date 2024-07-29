@@ -390,7 +390,8 @@ def restart():
         '</head>'
         '<body>'
         '    <p>Satori Neuron is attempting to restart. <b>Please wait,</b> the restart process can take several minutes as it downloads updates.</p>'
-        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' + " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
+        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' +
+        " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
         '    <p>Thank you.</p>'
         '</body>'
         '</html>'
@@ -912,6 +913,23 @@ def dashboard():
 #    return 'OK', 200
 
 
+@app.route('/fetch/wallet/stats/daily', methods=['GET'])
+@authRequired
+def fetchWalletStatsDaily():
+    stats = start.server.fetchWalletStatsDaily()
+    if stats == '':
+        return 'No stats available.', 200
+    df = pd.DataFrame(stats)
+    if df.empty or 'placement' not in df.columns:
+        return 'No stats available.', 200
+    avg = df['placement'].mean()
+    count = len(df)
+    # average_placement = df.groupby('predictor_stream_id')['placement'].mean().reset_index()
+    return (
+        f'This Neuron has participated in {count} competition{"" if count == 1 else "s"} today, '
+        f'with an average placement of {avg}'), 200
+
+
 @app.route('/pin_depin', methods=['POST'])
 @authRequired
 def pinDepinStream():
@@ -998,7 +1016,7 @@ def modelUpdates():
             global updateQueue
             if x is not None:
                 overview = model.overview()
-                # logging.debug('Yielding', overview, color='yellow')
+                # logging.debug('Yielding', overview.values, color='yellow')
                 updateQueue.put(
                     "data: " + str(overview).replace("'", '"') + "\n\n")
 
