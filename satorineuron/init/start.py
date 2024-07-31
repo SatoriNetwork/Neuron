@@ -97,7 +97,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()
-        self.licenseStatus: bool = False
+        self.ticketStatus: bool = False
+        self.miningMode: bool = False
         self.restartThread = threading.Thread(
             target=self.restartEverythingPeriodic, daemon=True)
         self.restartThread.start()
@@ -298,7 +299,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.getWallet()
         self.getVault()
         self.checkin()
-        self.performLicenseCheck()
+        if self.performTicketCheck():
+            self.miningMode: bool = True
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()
@@ -617,6 +619,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 observationTime=observationTime,
                 observationHash=observationHash)
 
-    def performLicenseCheck(self):
-        self.licenseStatus = self.server.licenseCheck()
-        return self.licenseStatus
+    def performTicketCheck(self):
+        self.ticketStatus = self.server.ticketCheck()
+        return self.ticketStatus

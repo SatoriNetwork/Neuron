@@ -55,7 +55,7 @@ class StartupDagStruct(object):
         self.subscriptions: list[Stream] = None
         self.asyncThread: AsyncThread = None
         self.udpQueue: Queue
-        self.licenseStatus: bool = False
+        self.ticketStatus: bool = False
 
     def cacheOf(self, streamId: StreamId):
         ''' returns the reference to the cache of a stream '''
@@ -151,5 +151,5 @@ class StartupDagStruct(object):
     def unpause(self):
         ''' pause the engine. '''
 
-    def performLicenseCheck(self):
-        ''' check the license status '''
+    def performTicketCheck(self):
+        ''' check the ticket status '''

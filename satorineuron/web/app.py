@@ -230,10 +230,10 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-                    hashSaltIt(request.form['passphrase']) == expectedPassword or
-                    tryToInterpretAsInteger(
-                    request.form['passphrase'], expectedPassword)
-                ):
+            hashSaltIt(request.form['passphrase']) == expectedPassword or
+            tryToInterpretAsInteger(
+            request.form['passphrase'], expectedPassword)
+            ):
             session['authenticated'] = True
             return redirect(target)
         else:
@@ -543,29 +543,45 @@ def relay():
     return acceptRelaySubmission(start, json.loads(request.get_json()))
 
 
-@app.route('/license/check', methods=['GET'])
+@app.route('/mining/mode/on', methods=['GET'])
 @authRequired
-def licenseCheck():
+def miningModeOn():
+    start.miningMode = True
+    return str(start.miningMode), 200
+
+
+@app.route('/mining/mode/off', methods=['GET'])
+@authRequired
+def miningModeOff():
+    start.miningMode = False
+    return str(start.miningMode), 200
+
+
+@app.route('/ticket/check', methods=['GET'])
+@authRequired
+def ticketCheck():
     status = start.performLicenseCheck()
-    print(status)
     return str(status), 200
 
 
-@app.route('/license/apply', methods=['GET'])
+@app.route('/ticket/apply', methods=['GET'])
 @authRequired
 def applyForLicense():
+    # DON'T CHARGE UNTIL TOS IS UPDATED
     # TODO: test this!
-    #result = sendSatoriTransactionUsing(
+    # result = sendSatoriTransactionUsing(
     #    start.getWallet(network='main'),
     #    network='main',
     #    loc='wallet',
-    #    override={'address': 'licenseAddress', 'amount': 1.0, 'sweep': False})
-    result = '467f90327d4915421ad901e1517e981ad4999120615908bfe008fbe992d368b6'
-    if len(result) == 64:
-        flash(result)
-        if start.server.licenseApplication(result):
-            flash('License Requested')
+    #    override={'address': 'ticketAddress', 'amount': 1.0, 'sweep': False})
+    #result = '467f90327d4915421ad901e1517e981ad4999120615908bfe008fbe992d368b6'
+    #if len(result) == 64:
+    #    flash(result)
+    #    if start.server.ticketApplication(result):
+    #        flash('License Requested')
+    flash('License Requested')
     return redirect('/dashboard')
+    
 
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
@@ -886,8 +902,8 @@ def dashboard():
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
-        'licenseStatus': start.licenseStatus,
-        'miningMode': False,
+        'ticketStatus': start.ticketStatus,
+        'miningMode': start.miningMode,
         'miningDisplay': 'none',
         'holdingBalance': round(start.wallet.balanceAmount + (start.vault.balanceAmount if start.vault is not None else 0), 8),
         'streamOverviews': streamOverviews,
