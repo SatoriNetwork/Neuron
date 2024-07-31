@@ -91,7 +91,7 @@ while True:
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
 
-        print('building engine')
+        # print('building engine')
         # start.buildEngine()
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
@@ -233,7 +233,7 @@ def passphrase():
                 hashSaltIt(request.form['passphrase']) == expectedPassword or
                 tryToInterpretAsInteger(
                 request.form['passphrase'], expectedPassword)
-                ):
+            ):
             session['authenticated'] = True
             return redirect(target)
         else:
