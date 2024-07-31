@@ -97,6 +97,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()
+        self.ticketStatus: bool = False
+        self.miningMode: bool = False
         self.restartThread = threading.Thread(
             target=self.restartEverythingPeriodic, daemon=True)
         self.restartThread.start()
@@ -297,6 +299,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.getWallet()
         self.getVault()
         self.checkin()
+        if self.performTicketCheck():
+            self.miningMode: bool = True
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()
@@ -418,10 +422,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
+        # if self.miningMode:
+        logging.warning('Running in Minng Mode.', color='green')
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
             publications=StartupDag.predictionStreams(self.publications))
         self.engine.run()
+        # else:
+        #    logging.warning('Running in Local Mode.', color='green')
 
     def subConnect(self):
         ''' establish a random pubsub connection used only for subscribing '''
@@ -614,3 +622,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 data=data,
                 observationTime=observationTime,
                 observationHash=observationHash)
+
+    def performTicketCheck(self):
+        self.ticketStatus = self.server.ticketCheck()
+        return self.ticketStatus

@@ -1,9 +1,9 @@
 {% extends "basic.html" %}
 {% block content %}
-  {% if wallet.balanceAmount + vaultBalanceAmount == 0 %}
+  {% if holdingBalance == 0 %}
     {% include 'dashboard-welcome.html' %}
   {% endif %}
-  {% include 'dashboard-balance.html' %}
+  {% include 'dashboard-top.html' %}
   <!--<br id='invitebr'>
   include 'dashboard-invite.html' move into balances next to wallet eventually-->
   <!--br id='rankbr'>

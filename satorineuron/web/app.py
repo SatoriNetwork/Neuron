@@ -72,7 +72,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -90,6 +90,7 @@ while True:
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
+
         print('building engine')
         # start.buildEngine()
         # threading.Thread(target=start.start, daemon=True).start()
@@ -229,10 +230,10 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-            hashSaltIt(request.form['passphrase']) == expectedPassword or
-            tryToInterpretAsInteger(
-            request.form['passphrase'], expectedPassword)
-            ):
+                hashSaltIt(request.form['passphrase']) == expectedPassword or
+                tryToInterpretAsInteger(
+                request.form['passphrase'], expectedPassword)
+                ):
             session['authenticated'] = True
             return redirect(target)
         else:
@@ -542,20 +543,72 @@ def relay():
     return acceptRelaySubmission(start, json.loads(request.get_json()))
 
 
+@app.route('/mining/mode/on', methods=['GET'])
+@authRequired
+def miningModeOn():
+    start.miningMode = True
+    return str(start.miningMode), 200
+
+
+@app.route('/mining/mode/off', methods=['GET'])
+@authRequired
+def miningModeOff():
+    start.miningMode = False
+    return str(start.miningMode), 200
+
+
+@app.route('/ticket/check', methods=['GET'])
+@authRequired
+def ticketCheck():
+    status = start.performTicketCheck()
+    return str(status), 200
+
+
+@app.route('/ticket/apply', methods=['GET'])
+@authRequired
+def applyForTicket():
+    # DON'T CHARGE UNTIL TOS IS UPDATED
+    # TODO: test this!
+    # result = sendSatoriTransactionUsing(
+    #    start.getWallet(network='main'),
+    #    network='main',
+    #    loc='wallet',
+    #    override={'address': 'ticketAddress', 'amount': 1.0, 'sweep': False})
+    # result = '467f90327d4915421ad901e1517e981ad4999120615908bfe008fbe992d368b6'
+    # if len(result) == 64:
+    #    flash(result)
+    #    if start.server.ticketApplication(result):
+    #        flash('Ticket Requested')
+    flash('Ticket Requested')
+    return redirect('/dashboard')
+
+
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
 @authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
     # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
-    return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
+    result = sendSatoriTransactionUsing(
+        start.getWallet(network=network), network, 'wallet')
+    if len(result) == 64:
+        flash(str(result))
+    return redirect(f'/wallet/{network}')
 
 
 @app.route('/send_satori_transaction_from_vault/<network>', methods=['POST'])
 @authRequired
 def sendSatoriTransactionFromVault(network: str = 'main'):
-    return sendSatoriTransactionUsing(start.vault, network, 'vault')
+    result = sendSatoriTransactionUsing(start.vault, network, 'vault')
+    if len(result) == 64:
+        flash(str(result))
+    return redirect(f'/vault/{network}')
 
 
-def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], network: str, loc: str):
+def sendSatoriTransactionUsing(
+    myWallet: Union[RavencoinWallet, EvrmoreWallet],
+    network: str,
+    loc: str,
+    override: Union[dict[str, str], None] = None
+):
     if myWallet is None:
         flash(f'Send Failed: {e}')
         return redirect(f'/wallet/{network}')
@@ -573,22 +626,22 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
 
         # doesn't respect the cooldown
         myWallet.getUnspentSignatures()
-        if sendSatoriForm.address.data == start.getWallet(network=network).address:
+        if sendSatoriForm['address'] == start.getWallet(network=network).address:
             # if we're sending to wallet we don't want it to auto send back to vault
             disableAutosecure(network)
         try:
-            # logging.debug('sweep', sendSatoriForm.sweep.data, color='magenta')
+            # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronTransaction(
-                sweep=sendSatoriForm.sweep.data,
-                amount=sendSatoriForm.amount.data or 0,
-                address=sendSatoriForm.address.data or '')
+                sweep=sendSatoriForm['sweep'],
+                amount=sendSatoriForm['amount'] or 0,
+                address=sendSatoriForm['address'] or '')
             if result.msg == 'creating partial, need feeSatsReserved.':
                 responseJson = start.server.requestSimplePartial(
                     network=network)
                 result = myWallet.typicalNeuronTransaction(
-                    sweep=sendSatoriForm.sweep.data,
-                    amount=sendSatoriForm.amount.data or 0,
-                    address=sendSatoriForm.address.data or '',
+                    sweep=sendSatoriForm['sweep'],
+                    amount=sendSatoriForm['amount'] or 0,
+                    address=sendSatoriForm['address'] or '',
                     completerAddress=responseJson.get('completerAddress'),
                     feeSatsReserved=responseJson.get('feeSatsReserved'),
                     changeAddress=responseJson.get('changeAddress'),
@@ -611,21 +664,28 @@ def sendSatoriTransactionUsing(myWallet: Union[RavencoinWallet, EvrmoreWallet], 
                             'ravencoin' if start.networkIsTest(network)
                             else 'evrmore'))
                     if r.text != '':
-                        flash(r.text)
+                        return r.text
                     else:
                         flash(
                             'Send Failed: wait 10 minutes, refresh, and try again.')
                 else:
-                    flash(str(result.result))
+                    return result.result
             else:
                 flash(f'Send Failed: {result.msg}')
         except TransactionFailure as e:
             flash(f'Send Failed: {e}')
         refreshWallet()
-        return redirect(f'/{loc}/{network}')
+        return result
 
     sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
-    return accept_submittion(sendSatoriForm)
+    sendForm = {}
+    override = override or {}
+    sendForm['sweep'] = override.get('sweep', sendSatoriForm.sweep.data)
+    sendForm['amount'] = override.get(
+        'amount', sendSatoriForm.amount.data or 0)
+    sendForm['address'] = override.get(
+        'address', sendSatoriForm.address.data or '')
+    return accept_submittion(sendForm)
 
 
 @app.route('/register_stream', methods=['POST'])
@@ -842,7 +902,10 @@ def dashboard():
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
-        'vaultBalanceAmount': start.vault.balanceAmount if start.vault is not None else 0,
+        'ticketStatus': start.ticketStatus,
+        'miningMode': start.miningMode,
+        'miningDisplay': 'none',
+        'holdingBalance': round(start.wallet.balanceAmount + (start.vault.balanceAmount if start.vault is not None else 0), 8),
         'streamOverviews': streamOverviews,
         'configOverrides': config.get(),
         'paused': start.paused,
