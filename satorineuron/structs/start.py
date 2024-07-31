@@ -17,7 +17,8 @@ class StartupDagStruct(object):
         self,
         env: str = None,
         urlServer: str = None,
-        urlPubsub: str = None,
+        urlMundo: str = None,
+        urlPubsubs: list[str] = None,
         urlSynergy: str = None,
         *args
     ):
@@ -27,14 +28,18 @@ class StartupDagStruct(object):
         self.latestConnectionStatus: dict = None
         self.env: str = None
         self.urlServer: str = None
-        self.urlPubsub: str = None
+        self.urlMundo: str = None
+        self.urlPubsubs: [str] = None
         self.urlSynergy: str = None
         self.paused: bool = None
         self.pauseThread: Union[threading.Thread, None] = None
-        self.ravencoinWallet: RavencoinWallet = None
-        self.evrmoreWallet: EvrmoreWallet = None
+        self._ravencoinWallet: RavencoinWallet = None
+        self._evrmoreWallet: EvrmoreWallet = None
+        self._ravencoinVault: Union[RavencoinWallet, None] = None
+        self._evrmoreVault: Union[EvrmoreWallet, None] = None
         self.details: dict = None
         self.key: str = None
+        self.oracleKey: str = None
         self.idKey: str = None
         self.subscriptionKeys: str = None
         self.publicationKeys: str = None
@@ -42,28 +47,52 @@ class StartupDagStruct(object):
         self.signedStreamIds: list['SignedStreamId'] = None
         self.relayValidation: 'ValidateRelayStream' = None
         self.server: SatoriServerClient = None
-        self.pubsub: SatoriPubSubConn = None
+        self.sub: SatoriPubSubConn = None
+        self.pubs: list[SatoriPubSubConn] = []
         self.relay: 'RawStreamRelayEngine' = None
         self.engine: 'satoriengine.Engine' = None
         self.publications: list[Stream] = None
         self.subscriptions: list[Stream] = None
         self.asyncThread: AsyncThread = None
         self.udpQueue: Queue
+        self.ticketStatus: bool = False
 
     def cacheOf(self, streamId: StreamId):
         ''' returns the reference to the cache of a stream '''
 
     @property
-    def wallet(self) -> RavencoinWallet:
-        return self.ravencoinWallet
+    def network(self) -> str:
+        ''' get wallet '''
 
-    def networkIsTest(self, network: str = None) -> bool:
-        return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn', 'ravencoin')
+    @property
+    def vault(self) -> Union[EvrmoreWallet, RavencoinWallet]:
+        ''' get wallet '''
 
-    def getWallet(self, test: bool = False, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        if test or self.networkIsTest(network):
-            return self.ravencoinWallet
-        return self.evrmoreWallet
+    @property
+    def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
+        ''' get wallet '''
+
+    @property
+    def ravencoinWallet(self) -> RavencoinWallet:
+        ''' get wallet '''
+
+    @property
+    def evrmoreWallet(self) -> EvrmoreWallet:
+        ''' get wallet '''
+
+    def ravencoinVault(
+        self,
+        password: Union[str, None] = None,
+        create: bool = False,
+    ) -> Union[RavencoinWallet, None]:
+        ''' get the ravencoin vault '''
+
+    def evrmoreVault(
+        self,
+        password: Union[str, None] = None,
+        create: bool = False,
+    ) -> Union[EvrmoreWallet, None]:
+        ''' get the ravencoin vault '''
 
     def start(self):
         ''' start the satori engine. '''
@@ -71,7 +100,24 @@ class StartupDagStruct(object):
     def createRelayValidation(self):
         ''' creates relay validation engine '''
 
-    def openWallet(self):
+    def networkIsTest(self, network: str = None) -> bool:
+        ''' get the ravencoin vault '''
+
+    def getWallet(self, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
+        ''' get wallet '''
+
+    def getVault(
+        self,
+        network: str = None,
+        password: Union[str, None] = None,
+        create: bool = False,
+    ) -> Union[EvrmoreWallet, RavencoinWallet]:
+        ''' get the ravencoin vault '''
+
+    def openWallet(self, network: Union[str, None] = None) -> Union[EvrmoreWallet, RavencoinWallet]:
+        ''' get the ravencoin vault '''
+
+    def openWallet(self, network: str = None):
         ''' opens the local wallet. '''
 
     def checkin(self):
@@ -80,7 +126,10 @@ class StartupDagStruct(object):
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
 
-    def pubsubConnect(self):
+    def subConnect(self):
+        ''' establish a pubsub connection. '''
+
+    def pubsConnect(self):
         ''' establish a pubsub connection. '''
 
     def startSynergyEngine(self):
@@ -101,3 +150,6 @@ class StartupDagStruct(object):
 
     def unpause(self):
         ''' pause the engine. '''
+
+    def performTicketCheck(self):
+        ''' check the ticket status '''

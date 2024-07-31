@@ -14,7 +14,7 @@ class SynergyManager():
         self.wallet = wallet
         self.pubkey = wallet.publicKey
         self.synergy = SynergyClient(
-            url=url or 'https://satorinet.io:24602',
+            url=url or 'https://synergy.satorinet.io:24602',
             router=self.handleMessage,
             wallet=wallet,
             onConnected=onConnect)
@@ -37,9 +37,12 @@ class SynergyManager():
 
     def handleMessage(self, msg: SynergyProtocol):
         if not msg.completed:
+            # print('incomplete')
             msg = self.buildMessage(msg)
+            # print('msg', msg.toJson())
             self.synergy.send(msg.toJson())
         else:
+            # print('complete')
             self.createChannel(msg)
 
     def buildMessage(self, msg: SynergyProtocol):

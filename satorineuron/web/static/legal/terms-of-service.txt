@@ -27,7 +27,11 @@ Not use the Software for any illegal or unauthorized purpose.
 Not interfere with or disrupt the integrity or performance of the Software or the data contained therein.
 Keep any generated public keys and addresses secure and confidential.
 
-5. PROHIBITED USES
+5. COMMUNICATION CONSENT
+
+By providing your contact information, you consent to The Satori Association contacting you via email, mobile SMS, or voice calls for the purposes of account verification, providing updates, and ensuring the security of your account. This communication is necessary to maintain the integrity of the services provided by the Website and to assist in any verification or security processes required.
+
+6. PROHIBITED USES
 
 Users must not:
 
@@ -36,7 +40,7 @@ Distribute copies of the Software to others.
 Use the Software in any way that disrupts or abuses the network, including overloading servers, sending spam, or engaging in malicious activities.
 Share any data as an oracle that is not intended for public consumption.
 
-6. SOFTWARE IDENTIFICATION
+7. SOFTWARE IDENTIFICATION
 
 The Software does not require traditional user account registration (such as choosing a username or providing an email address). Instead, upon its first startup, the Software generates a unique private-public key pair, which serves as its permanent identity.
 
@@ -44,39 +48,39 @@ Private Key: The Software keeps its private key secure and private, stored local
 Public Key: The Software shares its public key with anyone who requests it during its normal operations on the Satori Network.
 This unique identification method allows the Software to verify its identity and interact securely with other nodes on the network and with Satori servers, ensuring the integrity and authenticity of its operations.
 
-7. TERMINATION
+8. TERMINATION
 
 We may terminate or suspend your access to the Software immediately, without prior notice or liability, for any reason, including if you breach these ToS. Upon termination, your right to use the Software will cease immediately.
 
-8. MODIFICATIONS TO THE SERVICE AND TERMS
+9. MODIFICATIONS TO THE SERVICE AND TERMS
 
 We reserve the right to modify or discontinue the Software at any time, with or without notice. We may also modify these ToS from time to time. We will notify you of any changes by posting the new ToS on our website or within the Software. Your continued use of the Software after any such changes constitutes your acceptance of the new ToS.
 
-9. DISCLAIMER OF WARRANTIES
+10. DISCLAIMER OF WARRANTIES
 
-The Software is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, whether express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, title, and non-infringement. We do not warrant that the Software will be uninterrupted, error-free, or free of viruses or other harmful components.
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. WE DO NOT WARRANT THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE, OR FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS.
 
-10. LIMITATION OF LIABILITY
+11. LIMITATION OF LIABILITY
 
 In no event shall we be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses, resulting from (i) your use or inability to use the Software; (ii) any unauthorized access to or use of the Software; (iii) any interruption or cessation of transmission to or from the Software; (iv) any bugs, viruses, trojan horses, or the like that may be transmitted to or through the Software by any third party; or (v) any errors or omissions in any content or for any loss or damage incurred as a result of the use of any content posted, emailed, transmitted, or otherwise made available through the Software, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not we have been informed of the possibility of such damage.
 
-11. GOVERNING LAW
+12. GOVERNING LAW
 
 These ToS shall be governed by and construed in accordance with the laws of Switzerland.
 
-12. DISPUTE RESOLUTION
+13. DISPUTE RESOLUTION
 
 Any disputes arising under or in connection with these ToS shall first be attempted to be resolved through mediation. The parties agree to submit the dispute to a mutually agreed-upon mediator in Switzerland. If mediation fails to resolve the dispute, it shall then be resolved in the courts of Switzerland. The costs of mediation shall be shared equally between the parties.
 
-13. INDEMNIFICATION
+14. INDEMNIFICATION
 
 You agree to indemnify and hold harmless The Satori Association, its affiliates, officers, agents, and employees from any claim or demand, including reasonable attorneys' fees, arising out of your use of the Software, your violation of these ToS, or your violation of any rights of another.
 
-14. ENTIRE AGREEMENT
+15. ENTIRE AGREEMENT
 
 These ToS constitute the entire agreement between you and The Satori Association regarding the use of the Software and supersede all prior or contemporaneous understandings and agreements, whether written or oral.
 
-15. CONTACT INFORMATION
+16. CONTACT INFORMATION
 
 For support or legal inquiries, please contact:
 

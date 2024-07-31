@@ -135,11 +135,17 @@ class RawStreamRelayEngine(Cached):
             'outgoing message:',
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
             data, timestamp, print=True)
-        getStart().pubsub.publish(
+        getStart().publish(
             topic=stream.streamId.topic(),
             data=data,
-            time=timestamp,
+            observationTime=timestamp,
             observationHash=observationHash)
+        getStart().server.publish(
+            topic=stream.streamId.topic(),
+            data=data,
+            observationTime=timestamp,
+            observationHash=observationHash,
+            isPrediction=False)
 
     def save(self, stream: Stream, data: str = None) -> CachedResult:
         self.latest[stream.streamId.topic()] = data
@@ -206,7 +212,7 @@ class RawStreamRelayEngine(Cached):
 
     def _cadence(self, stream: Stream) -> int:
         ''' returns cadence in seconds, engine does not allow < 60 '''
-        return int(max(stream.cadence or 60, 60))
+        return int(max(stream.cadence or Stream.minimumCadence, Stream.minimumCadence))
 
     def _offset(self, stream: Stream) -> int:
         ''' returns cadence in seconds, engine does not allow < 60 '''

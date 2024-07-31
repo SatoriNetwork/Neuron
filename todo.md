@@ -450,6 +450,7 @@ PLAN
             government statistics
             etc.
 
+# TODO: CHANGE ON LAUNCH
 neuron - point everything at evrmore wallet instead of ravencoin wallet and test
 all - convert rvn wallet to evr wallet
 all - all test evr manually since electrum servers are newer versions for evr

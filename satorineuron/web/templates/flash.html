@@ -15,7 +15,7 @@
             <p style="margin: 15px; color: {% if darkmode %}snow{% else %}darkslategray{% endif %}; cursor: pointer;">
               {% if message|length == 64 %}
                 {% if ' ' not in message %}
-                <a href="https://rvn.cryptoscope.io/tx/?txid={{message}}" target="_blank" style="color:{% if darkmode %}snow{% else %}darkslategray{% endif %};">
+                <a href="https://{{ 'evr' if wallet.chain == 'Evrmore' else 'rvn' }}.cryptoscope.io/tx/?txid={{message}}" target="_blank" style="color:{% if darkmode %}snow{% else %}darkslategray{% endif %};">
                 {% endif %}
               {% endif %}
               {{message}}

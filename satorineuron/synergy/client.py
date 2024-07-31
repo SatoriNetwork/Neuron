@@ -75,8 +75,8 @@ class SynergyClient:
                 msg = SynergyProtocol.fromJson(message)
                 self.router(msg)
             except Exception as e:
-                logging.error('error parsing synergy message:',
-                              message, e, color='red')
+                logging.warning('error parsing synergy message:',
+                                message, e, color='red')
 
     @property
     def isConnected(self) -> bool:
@@ -96,9 +96,15 @@ class SynergyClient:
     def defaultRouter(msg: SynergyProtocol):
         logging.info('Routing message:', msg)
 
-    def connect(self):
+    def connect(self) -> bool:
         '''connect to the server with a challenge and signature'''
-        challenge = SynergyRestClient(url=self.url).getChallenge()
+        challenge = None
+        while challenge is None:
+            try:
+                challenge = SynergyRestClient(url=self.url).getChallenge()
+            except Exception as e:
+                time.sleep(30)
+                # logging.warning('Failed to connect to Synergy.', color='yellow')
         signature = self.wallet.authPayload(
             challenge=challenge,
             asDict=True)['signature']
@@ -109,18 +115,19 @@ class SynergyClient:
                 f'&challenge={quote_plus(challenge)}'
                 f'&signature={quote_plus(signature)}')
             self.sio.connect(connection_url)
+            return True
         except socketio.exceptions.ConnectionError as e:
-            logging.error('Failed to connect to Synergy.', e)
-            time.sleep(30)
-            self.reconnect()
+            # logging.warning('Failed to connect to Synergy.', e)
+            return False
+            # self.reconnect()
 
     def send(self, payload):
         if self.connected.is_set():
             try:
                 self.sio.emit('message', payload)
             except Exception as e:
-                logging.error('Failed to send message.', e)
-                self.reconnect()
+                logging.warning('Failed to send message.', e, color='yellow')
+                # self.reconnect()
         else:
             logging.warning(
                 'Connection to Synergy not established. Message not sent.')
@@ -130,8 +137,8 @@ class SynergyClient:
             try:
                 self.sio.emit('ping', payload)
             except Exception as e:
-                logging.error('Failed to send message.', e)
-                self.reconnect()
+                logging.warning('Failed to send message.', e)
+                # self.reconnect()
         else:
             logging.warning('Connection not established. Message not sent.')
 
@@ -145,17 +152,21 @@ class SynergyClient:
 
     def reconnect(self):
         logging.info('Attempting to reconnect...')
+        time.sleep(30)
         self.connect()
 
     def runForever(self):
         # Initiates the connection and enters the event loop
-        self.connect()
-        try:
-            self.sio.wait()
-        except KeyboardInterrupt:
-            self.disconnect()
-            logging.info('Disconnected by user')
-        except Exception as e:
-            logging.error('Satori Synergy error:', e, print=True)
-            self.disconnect()
-            self.reconnect()
+        while True:
+            if self.connect():
+                try:
+                    self.sio.wait()
+                except KeyboardInterrupt:
+                    self.disconnect()
+                    logging.info('Disconnected by user')
+                    break
+                except Exception as e:
+                    logging.warning('Satori Synergy error:', e, print=True)
+                    self.disconnect()
+                    logging.info('Attempting to reconnect...')
+        time.sleep(30)

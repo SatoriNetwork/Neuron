@@ -35,7 +35,7 @@ class RelayStreamForm(FlaskForm):
     # number of seconds between api hits, not None
     cadence = IntegerField(
         'Cadence',
-        validators=[NumberRange(min=60, max=None, message='Cadence must be at least 60 seconds.'), InputRequired()])
+        validators=[NumberRange(min=60*10, max=None, message='Cadence must be at least 10 minutes.'), InputRequired()])
     # number of seconds to offset from utc or None
     offset = IntegerField(
         'Offset',
@@ -86,13 +86,11 @@ class SendSatoriTransaction(FlaskForm):
         'Address',
         validators=[InputRequired(), Length(min=34, max=34)])
     # number of seconds between api hits, not None
-
     amount = DecimalField(
         'Amount',
         places=8,
         rounding=None,
-        validators=[NumberRange(min=Decimal('1.0'), max=None, message='You must send at least 1')])
-
+        validators=[NumberRange(min=Decimal('0.00000001'), max=None, message='You must send at least 1')])
     sweep = BooleanField(
         'Send Everything',
         description='Sends everything in the wallet (including SATORI tokens and currency) to the address specified.',
