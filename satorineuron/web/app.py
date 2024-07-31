@@ -16,6 +16,8 @@ import time
 import traceback
 import pandas as pd
 import threading
+import logging as log
+from logging.handlers import RotatingFileHandler
 from queue import Queue
 from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
@@ -58,6 +60,20 @@ CORS(app, origins=[{
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])
+
+fail2ban_dir = config.get().get("fail2ban_log", None)
+if fail2ban_dir:
+    if not os.path.exists(fail2ban_dir):
+        os.makedirs(fail2ban_dir)
+    log_file = os.path.join(fail2ban_dir, 'satori_auth.log')
+
+    fail2ban_handler = RotatingFileHandler(fail2ban_dir, maxBytes=100000, backupCount=1)
+    fail2ban_handler.setLevel(log.INFO)
+    fail_log = logging.getLogger("fail2ban")
+    fail_log.addHandler(fail2ban_handler)
+else:
+    fail_log = None
+
 
 
 ###############################################################################
@@ -222,6 +238,7 @@ def passphrase():
                 return int(password) == expectedPassword
             except Exception as _:
                 pass
+        if fail_log: fail_log.warning(f"Failed login attempt | IP: {request.remote_addr}")
         return False
 
     if request.method == 'POST':
