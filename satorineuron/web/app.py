@@ -230,10 +230,10 @@ def passphrase():
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-            hashSaltIt(request.form['passphrase']) == expectedPassword or
-            tryToInterpretAsInteger(
-            request.form['passphrase'], expectedPassword)
-            ):
+                hashSaltIt(request.form['passphrase']) == expectedPassword or
+                tryToInterpretAsInteger(
+                request.form['passphrase'], expectedPassword)
+                ):
             session['authenticated'] = True
             return redirect(target)
         else:
@@ -560,13 +560,13 @@ def miningModeOff():
 @app.route('/ticket/check', methods=['GET'])
 @authRequired
 def ticketCheck():
-    status = start.performLicenseCheck()
+    status = start.performTicketCheck()
     return str(status), 200
 
 
 @app.route('/ticket/apply', methods=['GET'])
 @authRequired
-def applyForLicense():
+def applyForTicket():
     # DON'T CHARGE UNTIL TOS IS UPDATED
     # TODO: test this!
     # result = sendSatoriTransactionUsing(
@@ -574,14 +574,13 @@ def applyForLicense():
     #    network='main',
     #    loc='wallet',
     #    override={'address': 'ticketAddress', 'amount': 1.0, 'sweep': False})
-    #result = '467f90327d4915421ad901e1517e981ad4999120615908bfe008fbe992d368b6'
-    #if len(result) == 64:
+    # result = '467f90327d4915421ad901e1517e981ad4999120615908bfe008fbe992d368b6'
+    # if len(result) == 64:
     #    flash(result)
     #    if start.server.ticketApplication(result):
-    #        flash('License Requested')
-    flash('License Requested')
+    #        flash('Ticket Requested')
+    flash('Ticket Requested')
     return redirect('/dashboard')
-    
 
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
