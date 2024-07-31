@@ -69,7 +69,7 @@ if fail2ban_dir:
 
     fail2ban_handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=1)
     fail2ban_handler.setLevel(log.INFO)
-    fail_log = logging.getLogger("fail2ban")
+    fail_log = log.getLogger("fail2ban")
     fail_log.addHandler(fail2ban_handler)
 else:
     fail_log = None
