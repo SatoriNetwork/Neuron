@@ -679,6 +679,7 @@ def sendSatoriTransactionUsing(
 
     sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
     sendForm = {}
+    override = override or {}
     sendForm['sweep'] = override.get('sweep', sendSatoriForm.sweep.data)
     sendForm['amount'] = override.get(
         'amount', sendSatoriForm.amount.data or 0)
