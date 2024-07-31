@@ -67,7 +67,7 @@ if fail2ban_dir:
         os.makedirs(fail2ban_dir)
     log_file = os.path.join(fail2ban_dir, 'satori_auth.log')
 
-    fail2ban_handler = RotatingFileHandler(fail2ban_dir, maxBytes=100000, backupCount=1)
+    fail2ban_handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=1)
     fail2ban_handler.setLevel(log.INFO)
     fail_log = logging.getLogger("fail2ban")
     fail_log.addHandler(fail2ban_handler)
