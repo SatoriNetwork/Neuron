@@ -53,6 +53,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updateTime = 0
 updateQueue = Queue()
+timeout = 1
 ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 CORS(app, origins=[{
@@ -67,13 +68,13 @@ if fail2ban_dir:
         os.makedirs(fail2ban_dir)
     log_file = os.path.join(fail2ban_dir, 'satori_auth.log')
 
-    fail2ban_handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=1)
+    fail2ban_handler = RotatingFileHandler(
+        log_file, maxBytes=100000, backupCount=1)
     fail2ban_handler.setLevel(log.INFO)
     fail_log = log.getLogger("fail2ban")
     fail_log.addHandler(fail2ban_handler)
 else:
     fail_log = None
-
 
 
 ###############################################################################
@@ -238,22 +239,28 @@ def passphrase():
                 return int(password) == expectedPassword
             except Exception as _:
                 pass
-        if fail_log: fail_log.warning(f"Failed login attempt | IP: {request.remote_addr}")
+        if fail_log:
+            fail_log.warning(
+                f"Failed login attempt | IP: {request.remote_addr}")
         return False
 
+    global timeout
     if request.method == 'POST':
+        time.sleep(timeout)
         target = request.form.get('next') or 'dashboard'
         conf = config.get()
         expectedPassword = conf.get('neuron lock password')
         expectedPassword = expectedPassword or conf.get('neuron lock hash', '')
         if (request.form['passphrase'] == expectedPassword or
-                hashSaltIt(request.form['passphrase']) == expectedPassword or
-                tryToInterpretAsInteger(
-                request.form['passphrase'], expectedPassword)
+            hashSaltIt(request.form['passphrase']) == expectedPassword or
+            tryToInterpretAsInteger(
+            request.form['passphrase'], expectedPassword)
             ):
             session['authenticated'] = True
+            timeout = 1
             return redirect(target)
         else:
+            timeout = timeout * 1.618
             return "Wrong passphrase, try again.\n\nIf you're unable to unlock your Neuron remove the setting in the config file."
     next_url = request.args.get('next')
     return render_template_string(passphrase_html, next=next_url)
@@ -917,7 +924,7 @@ def dashboard():
     start.openWallet()
     if start.vault is not None:
         start.openVault()
-    print('start.miningMode',start.miningMode)
+    print('start.miningMode', start.miningMode)
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
