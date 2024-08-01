@@ -547,6 +547,7 @@ def relay():
 @authRequired
 def miningModeOn():
     start.miningMode = True
+    print('mining mode', start.miningMode)
     return str(start.miningMode), 200
 
 
@@ -899,6 +900,7 @@ def dashboard():
     start.openWallet()
     if start.vault is not None:
         start.openVault()
+    print('start.miningMode',start.miningMode)
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
