@@ -650,7 +650,7 @@ def sendSatoriTransactionUsing(
             myWallet.get(allWalletInfo=False)
 
         # doesn't respect the cooldown
-        myWallet.getUnspentSignatures()
+        myWallet.getUnspentSignatures(force=True)
         if sendSatoriForm['address'] == start.getWallet(network=network).address:
             # if we're sending to wallet we don't want it to auto send back to vault
             disableAutosecure(network)
