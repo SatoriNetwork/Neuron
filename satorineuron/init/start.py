@@ -423,7 +423,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
         # if self.miningMode:
-        #logging.warning('Running in Minng Mode.', color='green')
+        # logging.warning('Running in Minng Mode.', color='green')
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
             publications=StartupDag.predictionStreams(self.publications))
