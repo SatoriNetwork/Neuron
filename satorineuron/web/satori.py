@@ -908,12 +908,15 @@ def dashboard():
     if start.vault is not None:
         start.openVault()
     print('start.miningMode', start.miningMode)
-    hodlingBalance = round(start.wallet.balanceAmount +
-                           (start.vault.balanceAmount if start.vault is not None else 0), 8)
+    hodlingBalance = round(
+        start.wallet.balanceAmount + (
+            start.vault.balanceAmount if start.vault is not None else 0), 8)
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
-        'stakeStatus': start.stakeStatus or hodlingBalance >= 5,
+        # instead of this make chain single source of truth
+        # 'stakeStatus': start.stakeStatus or hodlingBalance >= 5
+        'stakeStatus': hodlingBalance >= 5,
         'miningMode': start.miningMode,
         'miningDisplay': 'none',
         'holdingBalance': hodlingBalance,
