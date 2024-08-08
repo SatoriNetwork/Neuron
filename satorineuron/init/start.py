@@ -150,7 +150,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self._ravencoinWallet is None:
             self._ravencoinWallet = RavencoinWallet(
                 config.walletPath('wallet.yaml'),
-                reserve=0.01,
+                reserve=0.25,
                 isTestnet=self.networkIsTest('ravencoin'))
         return self._ravencoinWallet
 
@@ -159,7 +159,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self._evrmoreWallet is None:
             self._evrmoreWallet = EvrmoreWallet(
                 config.walletPath('wallet.yaml'),
-                reserve=0.01,
+                reserve=0.25,
                 isTestnet=self.networkIsTest('evrmore'))
         return self._evrmoreWallet
 
@@ -174,7 +174,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if os.path.exists(vaultPath) or create:
                     self._ravencoinVault = RavencoinWallet(
                         vaultPath,
-                        reserve=0.01,
+                        reserve=0.25,
                         isTestnet=self.networkIsTest('ravencoin'),
                         password=password)
             except Exception as e:
@@ -198,7 +198,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if os.path.exists(vaultPath) or create:
                     self._evrmoreVault = EvrmoreWallet(
                         vaultPath,
-                        reserve=0.01,
+                        reserve=0.25,
                         isTestnet=self.networkIsTest('evrmore'),
                         password=password)
             except Exception as e:
@@ -636,7 +636,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.stakeStatus
 
     def setMiningMode(self, miningMode: Union[bool, None] = None):
-        miningMode = miningMode if isinstance(miningMode, bool) else config.get().get('mining mode', True)
+        miningMode = miningMode if isinstance(
+            miningMode, bool) else config.get().get('mining mode', True)
         self.miningMode = miningMode
         config.add(data={'mining mode': self.miningMode})
         return self.miningMode
