@@ -296,12 +296,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.ranOnce:
             time.sleep(60*60)
         self.ranOnce = True
+        self.setMiningMode()
         self.createRelayValidation()
         self.getWallet()
         self.getVault()
         self.checkin()
-        if self.performStakeCheck():
-            self.miningMode: bool = True
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()
@@ -635,3 +634,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def performStakeCheck(self):
         self.stakeStatus = self.server.stakeCheck()
         return self.stakeStatus
+
+    def setMiningMode(self, miningMode: Union[bool, None] = None):
+        miningMode = miningMode if isinstance(miningMode, bool) else config.get().get('mining mode', True)
+        self.miningMode = miningMode
+        config.add(data={'mining mode': self.miningMode})
+        return self.miningMode

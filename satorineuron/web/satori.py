@@ -572,16 +572,13 @@ def relay():
 @app.route('/mining/mode/on', methods=['GET'])
 @authRequired
 def miningModeOn():
-    start.miningMode = True
-    print('mining mode', start.miningMode)
-    return str(start.miningMode), 200
+    return str(start.setMiningMode(True)), 200
 
 
 @app.route('/mining/mode/off', methods=['GET'])
 @authRequired
 def miningModeOff():
-    start.miningMode = False
-    return str(start.miningMode), 200
+    return str(start.setMiningMode(False)), 200
 
 
 @app.route('/stake/check', methods=['GET'])
@@ -907,7 +904,6 @@ def dashboard():
     start.openWallet()
     if start.vault is not None:
         start.openVault()
-    print('start.miningMode', start.miningMode)
     hodlingBalance = round(
         start.wallet.balanceAmount + (
             start.vault.balanceAmount if start.vault is not None else 0), 8)
