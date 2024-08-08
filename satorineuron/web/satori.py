@@ -913,7 +913,7 @@ def dashboard():
         # instead of this make chain single source of truth
         # 'stakeStatus': start.stakeStatus or hodlingBalance >= 5
         'stakeStatus': hodlingBalance >= 5,
-        'miningMode': start.miningMode,
+        'miningMode': start.miningMode and hodlingBalance >= 5,
         'miningDisplay': 'none',
         'holdingBalance': hodlingBalance,
         'streamOverviews': streamOverviews,
