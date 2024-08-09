@@ -349,12 +349,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.subscriptions = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.subscriptions)]
-                logging.info('subscriptions:', len(self.subscriptions))
+                logging.info('subscriptions:', len(
+                    self.subscriptions), print=True)
                 # logging.info('subscriptions:', self.subscriptions, print=True)
                 self.publications = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.publications)]
-                logging.info('publications:', len(self.publications))
+                logging.info('publications:', len(
+                    self.publications), print=True)
                 # logging.info('publications:', self.publications, print=True)
                 self.caches = {
                     x.streamId: disk.Cache(id=x.streamId)
