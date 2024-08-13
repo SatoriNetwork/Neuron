@@ -1,7 +1,6 @@
 {% block content %}
-<div class="row">
   <div class="col-xl-3 col-lg-3 col-sm-12 mb-xl-0 mb-4">
-    <div class="card  {% if darkmode %}dark-colors{% endif %}" style="height: 100%;">
+    <div class="card  {% if darkmode %}dark-colors{% endif %}" style="height: 200px;">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
         <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl mt-n4 position-absolute" style="width:84px !important;">
           <i class="material-icons opacity-10">wallet<i class="material-icons opacity-10">lock</i></i>
@@ -10,7 +9,7 @@
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Holdings</h4>
         </div>
         <div class="text-center pt-1" style="padding-top:3rem !important;">
-          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.balanceAmount + vaultBalanceAmount }}</h4>
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ holdingBalance }}</h4>
           <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
         </div>
       </div>
@@ -18,6 +17,4 @@
       </div>
     </div>
   </div>
-  {% include 'dashboard-stats.html' %}
-</div>
 {% endblock %}

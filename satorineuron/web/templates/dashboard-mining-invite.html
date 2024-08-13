@@ -1,0 +1,56 @@
+{% block content %}
+<style>
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .card {
+    position: relative;
+  }
+</style>
+
+<div class="row"  id="miningCard" style="display:{{miningDisplay}};">
+  <div class="col-xl-12 col-lg-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}" style="height: 200px;margin-top:20px;" >
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
+        <button class="close-btn" onclick="hideMiningInviteCard()">
+          <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">close</i>
+        </button>
+        <h5 class="text-center {% if darkmode %}dark-colors{% endif %}">Mining Mode</h5>
+        <p id="miningModeDetails" class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          Thank you for your interest in Satori Mining Mode.
+        </p>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <p id="miningModeCard" class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          In order to participate this Neuron must hold a total of 5 SATORI in the wallet or vault.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function hideMiningInviteCard() {
+    document.getElementById('miningCard').style.display = 'none';
+  }
+  function showMiningInviteCard() {
+    document.getElementById('miningCard').style.display = 'block';
+  }
+</script>
+<script>
+  function updateMiningCard() {
+      document.getElementById('miningModeDetails').innerText = 'Thank you for your interest in Satori Mining Mode.';
+      document.getElementById('miningModeCard').innerText = 'In order to participate this Neuron must hold a total of 5 SATORI in the wallet or vault.';
+  }
+  // Call the function to update the card when the page loads
+  //document.addEventListener('DOMContentLoaded', updateMiningCard);
+</script>
+
+{% endblock %}

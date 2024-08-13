@@ -1,0 +1,163 @@
+{% block content %}
+<style>
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+  }
+
+  .toggle-switch input {
+    display: none;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+  }
+
+  input:checked + .slider {
+    background-color: #533549;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(26px);
+  }
+
+  .slider.round {
+    border-radius: 34px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
+  }
+
+  .mode-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .toggle-options {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .toggle-options div {
+    display: flex;
+    align-items: center;
+  }
+</style>
+
+<div class="col-xl-3 col-lg-3 col-sm-12 mb-xl-0 mb-4">
+  <div class="card {% if darkmode %}dark-colors{% endif %}" style="height: 200px;">
+    <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+      <div class="row">
+        <div class="col-lg-12 col-12">
+          <h6 class="text-center {% if darkmode %}dark-colors{% endif %}">Running Mode</h6>
+          <p id="miningModeStatus" class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}"></p>
+        </div>
+      </div>
+    </div>
+    <div class="card-body px-0 pb-2 ">
+      <div class="mode-container">
+        <div class="toggle-options">
+          <div style="padding-bottom: 6px;" onclick="hideMiningInviteCard();">Local</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="modeToggle" onclick="toggleMode('{{stakeStatus}}')">
+            <span class="slider round"></span>
+          </label>
+          <div style="padding-bottom: 6px;" onclick="showMiningInviteCard();">Mining</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var stakeStatus = "{{ stakeStatus }}";
+  function setMiningMode() {
+    if ("{{ miningMode }}" == "True") {
+      document.getElementById("modeToggle").checked = true;
+    } else {
+      document.getElementById("modeToggle").checked = false;
+    }
+  }
+  setMiningMode();
+  function toggleMode() {
+    var isChecked = document.getElementById("modeToggle").checked;
+    console.log("Toggle switch is " + (isChecked ? "ON" : "OFF"));
+    if (isChecked) {
+      if (stakeStatus == "True") {
+        fetch('/mining/mode/on', { method: 'GET' })
+        .then(response => {
+          if (response.ok) {
+            return response.text();
+          } else {
+            throw new Error('Network response was not ok.');
+          }
+        })
+        .then(text => {
+          console.log(text);
+        })
+        .catch(error => console.error('Error:', error));
+      } else {
+        fetch('/stake/check', { method: 'GET' })
+        .then(response => {
+          if (response.ok) {
+            return response.text();
+          } else {
+            throw new Error('Network response was not ok.');
+          }
+        })
+        .then(text => {
+          console.log(text);
+          stakeStatus = text;
+          if (stakeStatus == "False") {
+            document.getElementById("modeToggle").checked = false;
+            showMiningInviteCard();
+          } 
+          updateMiningCard();
+        })
+        .catch(error => console.error('Error:', error));
+      }
+    } else {
+      hideMiningInviteCard();
+      fetch('/mining/mode/off', { method: 'GET' })
+        .then(response => {
+          if (response.ok) {
+            return response.text();
+          } else {
+            throw new Error('Network response was not ok.');
+          }
+        })
+        .then(text => {
+          console.log(text);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+  }
+</script>
+
+{% endblock %}
