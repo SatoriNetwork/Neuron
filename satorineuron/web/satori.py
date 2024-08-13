@@ -1485,11 +1485,28 @@ def disableAutosecure(network: str = 'main'):
     return 'OK', 200
 
 
+@app.route('/vault/report', methods=['GET'])
+@authRequired
+def reportVault(network: str = 'main'):
+    if start.vault is None:
+        return redirect('/dashboard')
+    # the network portion should be whatever network I'm on.
+    vault = start.getVault(network=network)
+    vaultAddress = vault.address
+    success, result = start.server.reportVault(
+        walletSignature=start.getWallet(network=network).sign(vaultAddress),
+        vaultSignature=vault.sign(vaultAddress),
+        vaultPubkey=vault.publicKey,
+        address=vaultAddress)
+    if success:
+        return 'OK', 200
+    return f'Failed to report vault: {result}', 400
+
+
 @app.route('/mine_to_vault/status', methods=['GET'])
 @authRequired
 def mineToVaultStatus():
     x = start.server.minedToVault()
-    print(x)
     return str(x), 200
 
 
