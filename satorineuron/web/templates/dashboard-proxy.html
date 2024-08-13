@@ -1,0 +1,28 @@
+{% block content %}
+<div class="row"  id="proxyCard" style="display:{{proxyDisplay}};">
+  <div class="col-xl-12 col-lg-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}" style="height: 200px;margin-top:20px;" >
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
+        <h5 class="text-center {% if darkmode %}dark-colors{% endif %}">Neruon Management</h5>
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          This Neuron has no child Neurons to Manage
+        </p>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          this card should not be displayed.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function hideProxyManagementCard() {
+    document.getElementById('proxyCard').style.display = 'none';
+  }
+  function showProxyManagementCard() {
+    document.getElementById('proxyCard').style.display = 'block';
+  }
+</script>
+{% endblock %}

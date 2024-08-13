@@ -89,7 +89,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -586,6 +586,17 @@ def stakeCheck():
     return str(status), 200
 
 
+@app.route('/stake/proxy/request/<address>', methods=['GET'])
+@authRequired
+def stakeProxyRequest(address: str):
+    print(address)
+    success, msg = start.server.stakeProxyRequest(address)
+    if success:
+        print(msg)
+        return str('ok'), 200
+    return str('failure'), 200
+
+
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
 @authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
@@ -913,6 +924,7 @@ def dashboard():
         'stakeStatus': hodlingBalance >= 5,
         'miningMode': start.miningMode and hodlingBalance >= 5,
         'miningDisplay': 'none',
+        'proxyDisplay': 'none',
         'holdingBalance': hodlingBalance,
         'streamOverviews': streamOverviews,
         'configOverrides': config.get(),
@@ -1263,6 +1275,7 @@ def wallet(network: str = 'main'):
             return render_template('wallet-page.html', **getResp({
                 'title': 'Wallet',
                 'walletIcon': 'wallet',
+                'proxyParent': '',
                 'vaultIsSetup': start.vault is not None,
                 'unlocked': True,
                 'walletlockEnabled': True,
@@ -1275,6 +1288,7 @@ def wallet(network: str = 'main'):
         return render_template('wallet-page.html', **getResp({
             'title': 'Wallet',
             'walletIcon': 'wallet',
+            'proxyParent': '',
             'vaultIsSetup': start.vault is not None,
             'unlocked': False,
             'walletlockEnabled': True,
@@ -1284,6 +1298,7 @@ def wallet(network: str = 'main'):
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
+        'proxyParent': '',
         'vaultIsSetup': start.vault is not None,
         'unlocked': True,
         'walletlockEnabled': False,
