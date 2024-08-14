@@ -1415,7 +1415,7 @@ def vault():
             'network': start.network,  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
-            'minedtovault': False,  # start.server.minedToVault(),
+            'minedtovault': start.mineToVault,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
@@ -1429,7 +1429,7 @@ def vault():
         'image': '',
         'network': start.network,  # change to main when ready
         'autosecured': False,
-        'minedtovault': True,  # start.server.minedToVault(),
+        'minedtovault': start.mineToVault,  # start.server.minedToVault(),
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
@@ -1516,14 +1516,7 @@ def enableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to enable minetovault.')
         return redirect('/dashboard')
-    # the network portion should be whatever network I'm on.
-    vault = start.getVault(network=network)
-    mineToAddress = vault.address
-    success, result = start.server.enableMineToVault(
-        walletSignature=start.getWallet(network=network).sign(mineToAddress),
-        vaultSignature=vault.sign(mineToAddress),
-        vaultPubkey=vault.publicKey,
-        address=mineToAddress)
+    success, result = start.enableMineToVault()
     if success:
         return 'OK', 200
     return f'Failed to enable minetovault: {result}', 400
@@ -1535,15 +1528,7 @@ def disableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to disable minetovault.')
         return redirect('/dashboard')
-    vault = start.getVault(network=network)
-    wallet = start.getWallet(network=network)
-    # logging.debug('wallet:', wallet, color="magenta")
-    mineToAddress = wallet.address
-    success, result = start.server.disableMineToVault(
-        walletSignature=wallet.sign(mineToAddress),
-        vaultSignature=vault.sign(mineToAddress),
-        vaultPubkey=vault.publicKey,
-        address=mineToAddress)
+    success, result = start.disableMineToVault()
     if success:
         return 'OK', 200
     return f'Failed to disable minetovault: {result}', 400

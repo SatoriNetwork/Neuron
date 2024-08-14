@@ -100,6 +100,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.udpQueue: Queue = Queue()
         self.stakeStatus: bool = False
         self.miningMode: bool = False
+        self.mineToVault: bool = False
         self.restartThread = threading.Thread(
             target=self.restartEverythingPeriodic, daemon=True)
         self.restartThread.start()
@@ -643,3 +644,30 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.miningMode = miningMode
         config.add(data={'mining mode': self.miningMode})
         return self.miningMode
+
+    def enableMineToVault(self, network: str = 'main'):
+        vault = self.getVault(network=network)
+        mineToAddress = vault.address
+        success, result = self.server.enableMineToVault(
+            walletSignature=self.getWallet(
+                network=network).sign(mineToAddress),
+            vaultSignature=vault.sign(mineToAddress),
+            vaultPubkey=vault.publicKey,
+            address=mineToAddress)
+        if success:
+            self.mineToVault = True
+        return success, result
+
+    def disableMineToVault(self, network: str = 'main'):
+        vault = self.getVault(network=network)
+        wallet = self.getWallet(network=network)
+        # logging.debug('wallet:', wallet, color="magenta")
+        mineToAddress = wallet.address
+        success, result = self.server.disableMineToVault(
+            walletSignature=wallet.sign(mineToAddress),
+            vaultSignature=vault.sign(mineToAddress),
+            vaultPubkey=vault.publicKey,
+            address=mineToAddress)
+        if success:
+            self.mineToVault = False
+        return success, result
