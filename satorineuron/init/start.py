@@ -80,7 +80,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self._evrmoreWallet: EvrmoreWallet
         self._ravencoinVault: Union[RavencoinWallet, None] = None
         self._evrmoreVault: Union[EvrmoreWallet, None] = None
-        self.details: dict
+        self.details: CheckinDetails = None
         self.key: str
         self.oracleKey: str
         self.idKey: str
@@ -133,6 +133,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         ''' returns the reference to the cache of a stream '''
         return self.caches.get(streamId)
+
+    @property
+    def rewardAddress(self) -> str:
+        if isinstance(self.details, CheckinDetails):
+            reward = self.details.wallet.get('rewardaddress', '')
+            if reward not in [
+                    self.details.wallet.get('address', ''),
+                    self.details.wallet.get('vaultaddress', '')]:
+                return reward or ''
+        return ''
 
     @property
     def network(self) -> str:

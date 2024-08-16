@@ -89,7 +89,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -589,12 +589,11 @@ def stakeCheck():
 @app.route('/stake/proxy/request/<address>', methods=['GET'])
 @authRequired
 def stakeProxyRequest(address: str):
-    print(address)
     success, msg = start.server.stakeProxyRequest(address)
     if success:
         print(msg)
         return str('ok'), 200
-    return str('failure'), 200
+    return str('failure'), 400
 
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
@@ -1275,7 +1274,7 @@ def wallet(network: str = 'main'):
             return render_template('wallet-page.html', **getResp({
                 'title': 'Wallet',
                 'walletIcon': 'wallet',
-                'proxyParent': '',
+                'proxyParent': start.rewardAddress,
                 'vaultIsSetup': start.vault is not None,
                 'unlocked': True,
                 'walletlockEnabled': True,
@@ -1288,7 +1287,7 @@ def wallet(network: str = 'main'):
         return render_template('wallet-page.html', **getResp({
             'title': 'Wallet',
             'walletIcon': 'wallet',
-            'proxyParent': '',
+            'proxyParent': start.rewardAddress,
             'vaultIsSetup': start.vault is not None,
             'unlocked': False,
             'walletlockEnabled': True,
@@ -1298,7 +1297,7 @@ def wallet(network: str = 'main'):
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
-        'proxyParent': '',
+        'proxyParent': start.rewardAddress,
         'vaultIsSetup': start.vault is not None,
         'unlocked': True,
         'walletlockEnabled': False,
