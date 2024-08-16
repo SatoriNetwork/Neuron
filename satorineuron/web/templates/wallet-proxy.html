@@ -59,8 +59,8 @@
       if ("{{ proxyParent is none or proxyParent == '' }}" === "True"){
         let addressInput = document.getElementById('walletProxy');
         console.log("updating wallet proxy")
-        if (addressInput.vaule != ''){
-          fetch('/stake/proxy/request/' + addressInput.vaule,
+        if (addressInput.value != ''){
+          fetch('/stake/proxy/request/' + addressInput.value,
           { method: 'GET' })
           .then(response => {
             if (response.ok) {

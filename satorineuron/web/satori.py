@@ -1546,6 +1546,7 @@ def proxyParentStatus():
 @authRequired
 def approveProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyApprove(address, childId=id)
+    print(success, result)
     if success:
         return result, 200
     return f'Failed stakeProxyApprove: {result}', 400
@@ -1555,6 +1556,7 @@ def approveProxyChild(address: str, id: int):
 @authRequired
 def rejectProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyDeny(address, childId=id)
+    print(success, result)
     if success:
         return result, 200
     return f'Failed stakeProxyDeny: {result}', 400
@@ -1564,6 +1566,7 @@ def rejectProxyChild(address: str, id: int):
 @authRequired
 def removeProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyRemove(address, childId=id)
+    print(success, result)
     if success:
         return result, 200
     return f'Failed stakeProxyRemove: {result}', 400

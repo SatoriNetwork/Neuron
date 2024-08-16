@@ -3,7 +3,7 @@
   <div class="col-xl-12 col-lg-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}" style="margin-top:20px;" >
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
-        <h5 class="text-center {% if darkmode %}dark-colors{% endif %}">Neruon Delegate</h5>
+        <h5 class="text-center {% if darkmode %}dark-colors{% endif %}">Neuron Delegate</h5>
         <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
           This Satori Neuron acts as a delegate to these remote Satori Neurons:
         </p>
@@ -27,7 +27,6 @@
     fetch('/proxy/parent/status', { method: 'GET' })
     .then(response => {
       if (response.ok) {
-        showProxyManagementCard()
         return response.text();
       } else {
         hideProxyManagementCard()
@@ -35,7 +34,12 @@
       }
     }).then(text => {
       console.log(text);
-      createTable(text);
+      let parsedData = JSON.parse(text);
+
+      if (parsedData.length > 0) {
+          showProxyManagementCard();
+          createTable(text);
+      }
     })
     .catch(error => console.error('Error:', error));
   }
