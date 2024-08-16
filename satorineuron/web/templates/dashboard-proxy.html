@@ -3,9 +3,11 @@
   <div class="col-xl-12 col-lg-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}" style="margin-top:20px;" >
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
-        <h5 class="text-center {% if darkmode %}dark-colors{% endif %}">Neuron Delegate</h5>
+        <h5 class="text-center {% if darkmode %}dark-colors{% endif %}">Satori Neuron Delegate</h5>
         <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-          This Satori Neuron acts as a delegate to these remote Satori Neurons:
+          A Satori Neuron Delegate is a Neuron that receives the rewards of, and holds the staking requirement for, one or more remote Neurons.
+          <br><br>
+          This Neuron acts as a delegate to the following remote Satori Neurons:
         </p>
       </div>
       <div class="card-body px-0 pb-2">
@@ -73,7 +75,7 @@
         let alias = item.name ? item.name : item.address;
         // Construct the table row for each item
         tableHTML += `
-          <tr class="yellow-hover">
+          <tr id="childRow${item.child}" class="yellow-hover">
             <td>
               <div class="py-1">
                 <h6 class="mb-0 text-sm" title="${item.address}">${alias}</h6>
@@ -85,8 +87,8 @@
         // If the item has a 'deleted' timestamp, add the approve button
         if (typeof item.deleted === 'string') {
             tableHTML += `
-                <h6 class="mb-0 text-lg" title="approve" style="margin-left: 1rem; margin-right:1rem;">
-                  <a href="/proxy/child/approve/${item.address}/${item.child}">
+                <h6 id="approveChildButton${item.child}" class="mb-0 text-lg" title="approve" style="margin-left: 1rem; margin-right:1rem;">
+                  <a href="#" onclick="approveProxyChild('${item.address}', '${item.child}')">
                     <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
                       <i class="material-icons" style="font-size: 24px;">check</i>
                     </button>
@@ -96,8 +98,8 @@
             // remove button
             tableHTML += `
                     <h6 class="mb-0 text-lg" title="remove" style="margin-left: 1rem; margin-right:1rem;">
-                      <a href="/proxy/child/remove/${item.address}/${item.child}">
-                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                      <a href="#" onclick="removeProxyChild('${item.address}', '${item.child}')">
+                          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
                           <i class="material-icons" style="font-size: 24px;">clear</i>
                         </button>
                       </a>
@@ -110,7 +112,7 @@
             // deny
             tableHTML += `
                     <h6 class="mb-0 text-lg" title="deny" style="margin-left: 1rem; margin-right:1rem;">
-                      <a href="/proxy/child/deny/${item.address}/${item.child}">
+                      <a href="#" onclick="denyProxyChild('${item.address}', '${item.child}')">
                         <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
                           <i class="material-icons" style="font-size: 24px;">clear</i>
                         </button>
@@ -131,6 +133,49 @@
     // Set the innerHTML of the specified element
     document.getElementById('stakeProxyChildrenTable').innerHTML = tableHTML;
   }
+  function approveProxyChild(address, child) {
+    fetch('/proxy/child/approve/'+address+'/'+child, { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      document.getElementById('approveChildButton'+child).style.display = 'none';
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function removeProxyChild(address, child) {
+    fetch('/proxy/child/remove/'+address+'/'+child, { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      document.getElementById('childRow'+child).style.display = 'none';
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function denyProxyChild(address, child) {
+    fetch('/proxy/child/deny/'+address+'/'+child, { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      document.getElementById('childRow'+child).style.display = 'none';
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  
 
 </script>
 {% endblock %}
