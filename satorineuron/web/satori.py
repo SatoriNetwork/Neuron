@@ -1533,6 +1533,42 @@ def disableMineToVault(network: str = 'main'):
     return f'Failed to disable minetovault: {result}', 400
 
 
+@app.route('/proxy/parent/status', methods=['GET'])
+@authRequired
+def proxyParentStatus():
+    success, result = start.server.stakeProxyChildren()
+    if success:
+        return result, 200
+    return f'Failed stakeProxyChildren: {result}', 400
+
+
+@app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
+@authRequired
+def approveProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyApprove(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyApprove: {result}', 400
+
+
+@app.route('/proxy/child/reject/<address>/<id>', methods=['GET'])
+@authRequired
+def rejectProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyDeny(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyDeny: {result}', 400
+
+
+@app.route('/proxy/child/remove/<address>/<id>', methods=['GET'])
+@authRequired
+def removeProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyRemove(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyRemove: {result}', 400
+
+
 @app.route('/vote', methods=['GET', 'POST'])
 @authRequired
 def vote():

@@ -1,22 +1,21 @@
 {% block content %}
-<div class="row"  id="proxyCard" style="display:{{proxyDisplay}};">
+<div class="row" id="proxyCard" style="display:{{proxyDisplay}};">
   <div class="col-xl-12 col-lg-12 col-sm-12 mb-xl-0 mb-4">
-    <div class="card {% if darkmode %}dark-colors{% endif %}" style="height: 200px;margin-top:20px;" >
+    <div class="card {% if darkmode %}dark-colors{% endif %}" style="margin-top:20px;" >
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
-        <h5 class="text-center {% if darkmode %}dark-colors{% endif %}">Neruon Management</h5>
+        <h5 class="text-center {% if darkmode %}dark-colors{% endif %}">Neruon Delegate</h5>
         <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-          This Neuron has no child Neurons to Manage
+          This Satori Neuron acts as a delegate to these remote Satori Neurons:
         </p>
       </div>
       <div class="card-body px-0 pb-2">
-        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-          this card should not be displayed.
+        <p id='stakeProxyChildrenTable' class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          None.
         </p>
       </div>
     </div>
   </div>
 </div>
-
 <script>
   function hideProxyManagementCard() {
     document.getElementById('proxyCard').style.display = 'none';
@@ -24,5 +23,110 @@
   function showProxyManagementCard() {
     document.getElementById('proxyCard').style.display = 'block';
   }
+  function getProxyParentStatus() {
+    fetch('/proxy/parent/status', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        showProxyManagementCard()
+        return response.text();
+      } else {
+        hideProxyManagementCard()
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      createTable(text);
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  document.addEventListener('DOMContentLoaded', (event) => {
+    getProxyParentStatus();
+  });
+
+  function createTable(text) {
+    // example text '[{
+    //   "parent": 1234,
+    //   "child": 5678, 
+    //   "address": "EJzhjaTUDmRBRrBk7QhWn8ZWEzEwWBLbcy",
+    //   "ts": "2024-08-16 02:25:00.575062+00:00",
+    //   "deleted": "2024-08-16 02:25:00.575062+00:00"}]'
+    let data = JSON.parse(text);
+    // Initialize the table HTML
+    let tableHTML = `
+      <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+        <table id="delegateChildren" class="table align-items-center mb-0" style="min-width: 1200px;">
+          <thead>
+            <tr>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Remote Neuron</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+            </tr>
+          </thead>
+        <tbody>
+    `;
+    // Iterate over each item in the JSON array
+    data.forEach(item => {
+        // Determine the alias (use empty string if not provided)
+        let alias = item.alias ? item.alias : item.address;
+        // Construct the table row for each item
+        tableHTML += `
+          <tr class="yellow-hover">
+            <td>
+              <div class="py-1">
+                <h6 class="mb-0 text-sm" title="${item.address}">${alias}</h6>
+              </div>
+            </td>
+            <td>
+              <div class="py-1" style="display: inline-flex;">
+        `;
+        // If the item has a 'deleted' timestamp, add the approve button
+        if (typeof item.deleted === 'string') {
+            tableHTML += `
+                <h6 class="mb-0 text-lg" title="approve" style="margin-left: 1rem; margin-right:1rem;">
+                  <a href="/proxy/child/approve/${item.address}/${item.child}">
+                    <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                      <i class="material-icons" style="font-size: 24px;">check</i>
+                    </button>
+                  </a>
+                </h6>
+            `;
+            // Reject
+            tableHTML += `
+                    <h6 class="mb-0 text-lg" title="reject" style="margin-left: 1rem; margin-right:1rem;">
+                      <a href="/proxy/child/reject/${item.address}/${item.child}">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                          <i class="material-icons" style="font-size: 24px;">clear</i>
+                        </button>
+                      </a>
+                    </h6>
+                  </div>
+                </td>
+              </tr>
+            `;
+          } else {
+            // remove button
+            tableHTML += `
+                    <h6 class="mb-0 text-lg" title="remove" style="margin-left: 1rem; margin-right:1rem;">
+                      <a href="/proxy/child/remove/${item.address}/${item.child}">
+                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                          <i class="material-icons" style="font-size: 24px;">clear</i>
+                        </button>
+                      </a>
+                    </h6>
+                  </div>
+                </td>
+              </tr>
+            `;
+        }
+    });
+    // Close the table and div tags
+    tableHTML += `
+          </tbody>
+        </table>
+      </div>
+    `;
+    // Set the innerHTML of the specified element
+    document.getElementById('stakeProxyChildrenTable').innerHTML = tableHTML;
+  }
+
 </script>
 {% endblock %}
