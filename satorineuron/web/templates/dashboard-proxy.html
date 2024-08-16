@@ -70,7 +70,7 @@
     // Iterate over each item in the JSON array
     data.forEach(item => {
         // Determine the alias (use empty string if not provided)
-        let alias = item.alias ? item.alias : item.address;
+        let alias = item.name ? item.name : item.address;
         // Construct the table row for each item
         tableHTML += `
           <tr class="yellow-hover">
@@ -93,10 +93,10 @@
                   </a>
                 </h6>
             `;
-            // Reject
+            // remove button
             tableHTML += `
-                    <h6 class="mb-0 text-lg" title="reject" style="margin-left: 1rem; margin-right:1rem;">
-                      <a href="/proxy/child/reject/${item.address}/${item.child}">
+                    <h6 class="mb-0 text-lg" title="remove" style="margin-left: 1rem; margin-right:1rem;">
+                      <a href="/proxy/child/remove/${item.address}/${item.child}">
                         <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
                           <i class="material-icons" style="font-size: 24px;">clear</i>
                         </button>
@@ -107,10 +107,10 @@
               </tr>
             `;
           } else {
-            // remove button
+            // deny
             tableHTML += `
-                    <h6 class="mb-0 text-lg" title="remove" style="margin-left: 1rem; margin-right:1rem;">
-                      <a href="/proxy/child/remove/${item.address}/${item.child}">
+                    <h6 class="mb-0 text-lg" title="deny" style="margin-left: 1rem; margin-right:1rem;">
+                      <a href="/proxy/child/deny/${item.address}/${item.child}">
                         <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
                           <i class="material-icons" style="font-size: 24px;">clear</i>
                         </button>

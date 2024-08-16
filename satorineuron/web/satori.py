@@ -1552,9 +1552,9 @@ def approveProxyChild(address: str, id: int):
     return f'Failed stakeProxyApprove: {result}', 400
 
 
-@app.route('/proxy/child/reject/<address>/<id>', methods=['GET'])
+@app.route('/proxy/child/deny/<address>/<id>', methods=['GET'])
 @authRequired
-def rejectProxyChild(address: str, id: int):
+def denyProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyDeny(address, childId=id)
     print(success, result)
     if success:
