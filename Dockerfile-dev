@@ -67,13 +67,16 @@ RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git
 RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git
 RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git
 RUN cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git
+RUN cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
 
+RUN pip install --upgrade pip
+RUN pip install /Satori/granite-tsfm
+RUN pip install /Satori/chronos-forecasting
 RUN cd /Satori/Synapse && pip install -r requirements.txt && python setup.py develop
 RUN cd /Satori/Lib && pip install -r requirements.txt && python setup.py develop
 RUN cd /Satori/Wallet && pip install -r requirements.txt && python setup.py develop
 RUN cd /Satori/Engine && pip install -r requirements.txt && python setup.py develop
 # RUN cd /Satori/Neuron && pip install -r requirements.txt && python setup.py develop
-RUN pip install /Satori/chronos-forecasting
 
 ## no need for ollama at this time.
 #RUN apt-get install -y curl
