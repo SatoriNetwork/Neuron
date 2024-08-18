@@ -64,7 +64,7 @@
     fetch('/mine_to_vault/status', { method: 'GET' })
       .then(response => {
         if (response.ok) {
-          return response.text(); // Return the promise of the response text
+          return response.text();
         } else {
           throw new Error('Network response was not ok.');
         }
@@ -79,8 +79,22 @@
       })
       .catch(error => console.error('Error:', error));
   }
+  function reportVault() {
+    fetch('/vault/report', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(text => {
+        console.log(text);
+      })
+      .catch(error => console.error('Error:', error));
+  }
   document.addEventListener('DOMContentLoaded', (event) => {
     getMineToVaultStatus();
+    reportVault();
   });
   function enableDisableMinetovault(network) {
     if (document.getElementById("minetovaultCheckbox").checked){

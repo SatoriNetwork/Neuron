@@ -89,7 +89,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -586,6 +586,16 @@ def stakeCheck():
     return str(status), 200
 
 
+@app.route('/stake/proxy/request/<address>', methods=['GET'])
+@authRequired
+def stakeProxyRequest(address: str):
+    success, msg = start.server.stakeProxyRequest(address)
+    if success:
+        print(msg)
+        return str('ok'), 200
+    return str('failure'), 400
+
+
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
 @authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
@@ -913,6 +923,7 @@ def dashboard():
         'stakeStatus': hodlingBalance >= 5,
         'miningMode': start.miningMode and hodlingBalance >= 5,
         'miningDisplay': 'none',
+        'proxyDisplay': 'none',
         'holdingBalance': hodlingBalance,
         'streamOverviews': streamOverviews,
         'configOverrides': config.get(),
@@ -1263,6 +1274,7 @@ def wallet(network: str = 'main'):
             return render_template('wallet-page.html', **getResp({
                 'title': 'Wallet',
                 'walletIcon': 'wallet',
+                'proxyParent': start.rewardAddress,
                 'vaultIsSetup': start.vault is not None,
                 'unlocked': True,
                 'walletlockEnabled': True,
@@ -1275,6 +1287,7 @@ def wallet(network: str = 'main'):
         return render_template('wallet-page.html', **getResp({
             'title': 'Wallet',
             'walletIcon': 'wallet',
+            'proxyParent': start.rewardAddress,
             'vaultIsSetup': start.vault is not None,
             'unlocked': False,
             'walletlockEnabled': True,
@@ -1284,6 +1297,7 @@ def wallet(network: str = 'main'):
     return render_template('wallet-page.html', **getResp({
         'title': 'Wallet',
         'walletIcon': 'wallet',
+        'proxyParent': start.rewardAddress,
         'vaultIsSetup': start.vault is not None,
         'unlocked': True,
         'walletlockEnabled': False,
@@ -1400,7 +1414,7 @@ def vault():
             'network': start.network,  # change to main when ready
             'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
             'autosecured': start.vault.autosecured(),
-            'minedtovault': False,  # start.server.minedToVault(),
+            'minedtovault': start.mineToVault,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
@@ -1414,7 +1428,7 @@ def vault():
         'image': '',
         'network': start.network,  # change to main when ready
         'autosecured': False,
-        'minedtovault': True,  # start.server.minedToVault(),
+        'minedtovault': start.mineToVault,  # start.server.minedToVault(),
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
@@ -1470,11 +1484,28 @@ def disableAutosecure(network: str = 'main'):
     return 'OK', 200
 
 
+@app.route('/vault/report', methods=['GET'])
+@authRequired
+def reportVault(network: str = 'main'):
+    if start.vault is None:
+        return redirect('/dashboard')
+    # the network portion should be whatever network I'm on.
+    vault = start.getVault(network=network)
+    vaultAddress = vault.address
+    success, result = start.server.reportVault(
+        walletSignature=start.getWallet(network=network).sign(vaultAddress),
+        vaultSignature=vault.sign(vaultAddress),
+        vaultPubkey=vault.publicKey,
+        address=vaultAddress)
+    if success:
+        return 'OK', 200
+    return f'Failed to report vault: {result}', 400
+
+
 @app.route('/mine_to_vault/status', methods=['GET'])
 @authRequired
 def mineToVaultStatus():
     x = start.server.minedToVault()
-    print(x)
     return str(x), 200
 
 
@@ -1484,14 +1515,7 @@ def enableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to enable minetovault.')
         return redirect('/dashboard')
-    # the network portion should be whatever network I'm on.
-    vault = start.getVault(network=network)
-    mineToAddress = vault.address
-    success, result = start.server.enableMineToVault(
-        walletSignature=start.getWallet(network=network).sign(mineToAddress),
-        vaultSignature=vault.sign(mineToAddress),
-        vaultPubkey=vault.publicKey,
-        address=mineToAddress)
+    success, result = start.enableMineToVault()
     if success:
         return 'OK', 200
     return f'Failed to enable minetovault: {result}', 400
@@ -1503,18 +1527,49 @@ def disableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to disable minetovault.')
         return redirect('/dashboard')
-    vault = start.getVault(network=network)
-    wallet = start.getWallet(network=network)
-    # logging.debug('wallet:', wallet, color="magenta")
-    mineToAddress = wallet.address
-    success, result = start.server.disableMineToVault(
-        walletSignature=wallet.sign(mineToAddress),
-        vaultSignature=vault.sign(mineToAddress),
-        vaultPubkey=vault.publicKey,
-        address=mineToAddress)
+    success, result = start.disableMineToVault()
     if success:
         return 'OK', 200
     return f'Failed to disable minetovault: {result}', 400
+
+
+@app.route('/proxy/parent/status', methods=['GET'])
+@authRequired
+def proxyParentStatus():
+    success, result = start.server.stakeProxyChildren()
+    if success:
+        return result, 200
+    return f'Failed stakeProxyChildren: {result}', 400
+
+
+@app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
+@authRequired
+def approveProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyApprove(address, childId=id)
+    print(success, result)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyApprove: {result}', 400
+
+
+@app.route('/proxy/child/deny/<address>/<id>', methods=['GET'])
+@authRequired
+def denyProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyDeny(address, childId=id)
+    print(success, result)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyDeny: {result}', 400
+
+
+@app.route('/proxy/child/remove/<address>/<id>', methods=['GET'])
+@authRequired
+def removeProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyRemove(address, childId=id)
+    print(success, result)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyRemove: {result}', 400
 
 
 @app.route('/vote', methods=['GET', 'POST'])
