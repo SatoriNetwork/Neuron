@@ -9,7 +9,7 @@ FROM python:3.9-slim
 RUN apt-get update
 RUN apt-get install -y build-essential
 RUN apt-get install -y wget
-RUN apt-get install -y git 
+RUN apt-get install -y git
 RUN apt-get install -y vim
 # for making python-evrmorelib
 RUN apt-get install -y cmake
@@ -22,7 +22,7 @@ RUN apt-get install -y zip
 
 # has no effect, we put it in the run command
 #RUN echo "IPFS_PATH=/Satori/Neuron/config/ipfs" >> /etc/environment
-#RUN echo "source /etc/environment" >> ~/.bashrc 
+#RUN echo "source /etc/environment" >> ~/.bashrc
 # echo $IPFS_PATH
 # RUN ipfs init # do not init. it will be initialized by the node, so that each container has a unique ID.
 
@@ -39,6 +39,18 @@ RUN mkdir /Satori/Neuron/wallet
 RUN mkdir /Satori/Neuron/config
 RUN mkdir /Satori/Neuron/uploaded
 RUN mkdir /Satori/Neuron/predictions
+
+#RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git
+#RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git
+#RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git
+#RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git
+RUN cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git
+RUN cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
+
+RUN pip install --upgrade pip
+RUN pip install /Satori/granite-tsfm
+RUN pip install /Satori/chronos-forecasting
+
 COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
 COPY Synapse/setup.py /Satori/Synapse/setup.py
 COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
@@ -77,11 +89,11 @@ RUN cd /Satori/Neuron && python setup.py develop
 #RUN ollama pull llama3
 
 # satori ui
-EXPOSE 24601 
+EXPOSE 24601
 
 # ipfs web ui
 #EXPOSE 5002
-# ipfs 
+# ipfs
 #EXPOSE 4001 5001 23384
 #EXPOSE 3000
 
@@ -92,7 +104,7 @@ WORKDIR /Satori/Neuron/satorineuron/web
 
 # BUILD PROCESS:
 # copy to and run from ../ (cd ..)
-# \Satori> docker build --no-cache -t satorinet/satorineuron:base .
+# \Satori> docker build --no-cache -f "Neuron/Dockerfile base" -t satorinet/satorineuron:base .
 # OR
 # \Satori> docker buildx create --use
 # \Satori> docker buildx build --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:base --push .

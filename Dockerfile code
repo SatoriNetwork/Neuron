@@ -2,7 +2,7 @@
 # (updating process is the only thing that requires git)
 # (vim for troubleshooting)
 
-FROM satorinet/satorineuron:base
+FROM satorinet/satorineuron:basedev
 
 #RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
 COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
@@ -30,7 +30,7 @@ RUN chmod -R 777 /Satori/Engine
 RUN chmod -R 777 /Satori/Neuron
 
 # satori ui
-EXPOSE 24601 
+EXPOSE 24601
 
 ENV IPFS_PATH=/Satori/Neuron/config/ipfs
 
@@ -43,7 +43,7 @@ CMD ["bash", "./start_from_image.sh"]
 
 # BUILD PROCESS:
 # copy to and run from ../ (cd ..)
-# \Satori> docker build --no-cache -t satorinet/satorineuron:latest .; docker push satorinet/satorineuron:latest
+# \Satori> docker build --no-cache -f "Neuron/Dockerfile code" -t satorinet/satorineuron:latest .; docker push satorinet/satorineuron:latest
 # OR
 # \Satori> docker buildx create --use
 # \Satori> docker buildx build --no-cache --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:latest --push .
