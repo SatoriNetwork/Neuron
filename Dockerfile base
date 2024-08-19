@@ -44,9 +44,10 @@ RUN mkdir /Satori/Neuron/predictions
 #RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git
 #RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git
 #RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git
+
+# ADVANCED ENGINE STUFF
 RUN cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git
 RUN cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
-
 RUN pip install --upgrade pip
 RUN pip install /Satori/granite-tsfm
 RUN pip install /Satori/chronos-forecasting
@@ -107,7 +108,7 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # \Satori> docker build --no-cache -f "Neuron/Dockerfile base" -t satorinet/satorineuron:base .
 # OR
 # \Satori> docker buildx create --use
-# \Satori> docker buildx build --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:base --push .
+# \Satori> docker buildx build -f "Neuron/Dockerfile base" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:base --push .
 # delete the base one after you push it, we just need it local
 
 # RUN OPTIONS

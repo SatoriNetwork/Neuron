@@ -2,7 +2,7 @@
 # (updating process is the only thing that requires git)
 # (vim for troubleshooting)
 
-FROM satorinet/satorineuron:basedev
+FROM satorinet/satorineuron:base
 
 #RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
 COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
@@ -46,7 +46,7 @@ CMD ["bash", "./start_from_image.sh"]
 # \Satori> docker build --no-cache -f "Neuron/Dockerfile code" -t satorinet/satorineuron:latest .; docker push satorinet/satorineuron:latest
 # OR
 # \Satori> docker buildx create --use
-# \Satori> docker buildx build --no-cache --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:latest --push .
+# \Satori> docker buildx build --no-cache  -f "Neuron/Dockerfile code" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:latest --push .
 
 # description: Miner environment and software for the Satori Network
 
