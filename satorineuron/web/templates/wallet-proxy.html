@@ -16,20 +16,20 @@
             <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
               <div class="d-flex px-3 py-1" style="padding-right: 1rem; margin-left:auto; margin-right: auto;">
                 <div class="input-group input-group-outline">
-                  <input 
-                    id="walletProxy" 
-                    name="walletProxy" 
-                    placeholder="" 
-                    value="{{ proxyParent }}" 
-                    class="tight form-control {% if darkmode %}dark-colors{% endif %}" 
-                    style="text-align: center;" 
-                    maxlength="34" 
-                    min="34" 
-                    required="" 
-                    size="34" 
-                    type="text" 
-                    onfocus="focused(this)" 
-                    onfocusout="defocused(this)" 
+                  <input
+                    id="walletProxy"
+                    name="walletProxy"
+                    placeholder=""
+                    value="{{ proxyParent }}"
+                    class="tight form-control {% if darkmode %}dark-colors{% endif %}"
+                    style="text-align: center;"
+                    maxlength="34"
+                    min="34"
+                    required=""
+                    size="34"
+                    type="text"
+                    onfocus="focused(this)"
+                    onfocusout="defocused(this)"
                     onkeypress="checkEnter(event)"
                     {% if proxyParent is not none and proxyParent != '' %}disabled{% endif %}>
                   </div>
@@ -41,6 +41,8 @@
             </div>
         </div>
         <p id='explainProxy' class="mb-1 {% if darkmode %}dark-colors{% endif %}", style="text-align: center;">
+          WARNNG: This feature is still in it's testing phases and is HIGHLY EXPERIMENTAL! Once it has been thoroughly tested by volunteers this warning will be removed.
+          <br><br>
           Enter the wallet address of the delegate for this Neuron. This action cannot be undone.
           <br><br>
           A Neuron delegate is different Neuron (presumably one kept in a very secure environment) which holds the staking responsibility and receives the rewards for this Neuron.
