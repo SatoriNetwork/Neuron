@@ -912,19 +912,19 @@ def dashboard():
     start.openWallet()
     if start.vault is not None:
         start.openVault()
-    hodlingBalance = round(
+    holdingBalance = round(
         start.wallet.balanceAmount + (
             start.vault.balanceAmount if start.vault is not None else 0), 8)
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
         # instead of this make chain single source of truth
-        # 'stakeStatus': start.stakeStatus or hodlingBalance >= 5
-        'stakeStatus': hodlingBalance >= 5,
-        'miningMode': start.miningMode and hodlingBalance >= 5,
+        # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
+        'stakeStatus': holdingBalance >= 5,
+        'miningMode': start.miningMode and holdingBalance >= 5,
         'miningDisplay': 'none',
         'proxyDisplay': 'none',
-        'holdingBalance': hodlingBalance,
+        'holdingBalance': holdingBalance,
         'streamOverviews': streamOverviews,
         'configOverrides': config.get(),
         'paused': start.paused,

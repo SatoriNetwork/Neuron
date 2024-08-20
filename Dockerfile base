@@ -46,11 +46,11 @@ RUN mkdir /Satori/Neuron/predictions
 #RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git
 
 # ADVANCED ENGINE STUFF
-RUN cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git
-RUN cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
-RUN pip install --upgrade pip
-RUN pip install /Satori/granite-tsfm
-RUN pip install /Satori/chronos-forecasting
+# RUN cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git
+# RUN cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
+# RUN pip install --upgrade pip
+# RUN pip install /Satori/granite-tsfm
+# RUN pip install /Satori/chronos-forecasting
 
 COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
 COPY Synapse/setup.py /Satori/Synapse/setup.py
