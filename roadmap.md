@@ -38,3 +38,11 @@ Decentralization
   Multi-sig distribution
   Implement competition mining
   Implement consumer mining
+
+
+todo:
+  make neurons pull code separately
+  make delegate relationships public
+  add ability to delegates (parents) to redirect the payment somewhere else
+  add ability to delegates (parents) to see status and activity of their children
+  add ability for everyone to see how many other predictors there are in their competitions
