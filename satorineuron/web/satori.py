@@ -1003,14 +1003,20 @@ def fetchWalletStatsDaily():
     if stats == '':
         return 'No stats available.', 200
     df = pd.DataFrame(stats)
-    if df.empty or 'placement' not in df.columns:
+    if df.empty:
         return 'No stats available.', 200
-    avg = df['placement'].mean()
+    required_columns = ['placement', 'competitors']
+    if not all(col in df.columns for col in required_columns):
+        return 'No stats available.', 200
+    # Calculate the normalized placement for each row
+    df['normalized_placement'] = df['placement'] / df['competitors']
+    # Calculate the average of normalized placements
+    avg_normalized_placement = df['normalized_placement'].mean()*100
     count = len(df)
     # average_placement = df.groupby('predictor_stream_id')['placement'].mean().reset_index()
     return (
         f'This Neuron has participated in {count} competition{"" if count == 1 else "s"} today, '
-        f'with an average placement of {avg}'), 200
+        f'with an average placement of {int(avg_normalized_placement)} out of 100'), 200
 
 
 @app.route('/pin_depin', methods=['POST'])
