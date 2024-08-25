@@ -592,7 +592,6 @@ def stakeCheck():
 def stakeProxyRequest(address: str):
     success, msg = start.server.stakeProxyRequest(address)
     if success:
-        print(msg)
         return str('ok'), 200
     return str('failure'), 400
 
@@ -916,13 +915,17 @@ def dashboard():
     holdingBalance = round(
         start.wallet.balanceAmount + (
             start.vault.balanceAmount if start.vault is not None else 0), 8)
+    stakeStatus = holdingBalance >= 5 or start.details.wallet.get('rewardaddress', None) not in [
+        None,
+        start.details.wallet.get('address'),
+        start.details.wallet.get('vaultaddress')]
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
         # instead of this make chain single source of truth
         # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
-        'stakeStatus': holdingBalance >= 5,
-        'miningMode': start.miningMode and holdingBalance >= 5,
+        'stakeStatus': stakeStatus,
+        'miningMode': start.miningMode and stakeStatus,
         'miningDisplay': 'none',
         'proxyDisplay': 'none',
         'holdingBalance': holdingBalance,
@@ -1553,7 +1556,6 @@ def proxyParentStatus():
 @authRequired
 def approveProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyApprove(address, childId=id)
-    print(success, result)
     if success:
         return result, 200
     return f'Failed stakeProxyApprove: {result}', 400
@@ -1563,7 +1565,6 @@ def approveProxyChild(address: str, id: int):
 @authRequired
 def denyProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyDeny(address, childId=id)
-    print(success, result)
     if success:
         return result, 200
     return f'Failed stakeProxyDeny: {result}', 400
@@ -1573,7 +1574,6 @@ def denyProxyChild(address: str, id: int):
 @authRequired
 def removeProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyRemove(address, childId=id)
-    print(success, result)
     if success:
         return result, 200
     return f'Failed stakeProxyRemove: {result}', 400

@@ -474,7 +474,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def pubsConnect(self):
         '''
-        oracle nodes publish to every pubsub machine. therefore, they have 
+        oracle nodes publish to every pubsub machine. therefore, they have
         an additional set of connections that they mush push to.
         '''
         self.pubs = []
