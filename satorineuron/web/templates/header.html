@@ -44,13 +44,13 @@
         -->
         <li title='Connections Status' style="margin-right:1.25rem">
           <a href="#" title="Wallet connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;" onClick="refreshConnectionsStatus('connectionElectrumx')">
-            <i id="connectionElectrumx" class="fa fa-circle" style="color: #548c2f;"></i>
+            <i id="connectionElectrumx" class="material-icons {% if darkmode %}dark-text{% endif %}" style="color: #548c2f; vertical-align:text-bottom;">circle</i>
           </a>
           <a href="#" title="Central connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;" onClick="refreshConnectionsStatus('connectionCentral')">
-            <i id="connectionCentral" class="fa fa-circle" style="color: #548c2f;"></i>
+            <i id="connectionCentral" class="material-icons {% if darkmode %}dark-text{% endif %}" style="color: #548c2f; vertical-align:text-bottom;">circle</i>
           </a>
           <a href="#" title="Pubsub connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;" onClick="refreshConnectionsStatus('connectionPubsub')">
-            <i id="connectionPubsub" class="fa fa-circle" style="color: #548c2f;"></i>
+            <i id="connectionPubsub" class="material-icons {% if darkmode %}dark-text{% endif %}" style="color: #548c2f; vertical-align:text-bottom;">circle</i>
           </a>
           <!--<a href="#" title="P2P Satori Synergy connection" class="text-xs p-0" style="font-size: xx-small; -webkit-writing-mode: vertical-lr; padding-bottom: 1px;" onClick="refreshConnectionsStatus('connectionSynergy')">
             <i id="connectionSynergy" class="fa fa-circle" style="color: #548c2f;"></i>
@@ -61,7 +61,7 @@
         </li>
         <li class="nav-item pe-2 d-flex align-items-center">
           <a href="{{ url_for('restart') }}" class="nav-link text-body p-0">
-            <i class="fa fa-power-off cursor-pointer"></i>
+            <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">power_settings_new</i>
             <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Restart</span>
           </a>
         </li>
@@ -69,14 +69,14 @@
         {% if paused %} <!-- server should tell us if we're paused or not... hit endpoint, refresh page. -->
         <li class="nav-item pe-2 d-flex align-items-center">
           <a href="{{ url_for('unpause') }}" class="nav-link text-body p-0">
-            <i class="fa fa-play cursor-pointer"></i>
+            <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">play_arrow</i>
             <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Unpause</span></a>
         </li>
         {% else %}
         <li class="nav-item dropdown pe-2 d-flex align-items-center">
           <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonPause" data-bs-toggle="dropdown" aria-expanded="false">
             <!--<i class="fa fa-play cursor-pointer"></i>-->
-            <i class="fa fa-pause cursor-pointer"></i>
+            <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">pause</i>
             <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Pause</span>
           </a>
           <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButtonPause">
@@ -119,7 +119,7 @@
         <li class="nav-item dropdown pe-2 d-flex align-items-center">
           <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonBackup" data-bs-toggle="dropdown" aria-expanded="false">
             <!--<i class="fa fa-play cursor-pointer"></i>-->
-            <i class="fa fa-download cursor-pointer"></i>
+            <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">file_download</i>
             <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Backup</span>
           </a>
           <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButtonBackup">
@@ -237,13 +237,13 @@
           {% if lockEnabled %}
           <li title='Neuron Lock Enabled - Logout' class='hide-on-med-and-down' style="margin-right:.5rem">
               <a href="{{ url_for('lockRelock') }}" class="nav-link text-body p-0" onclick="confirmLogout(event)">
-                <i class="fa fa-lock"></i>
+                <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">lock</i>
               </a>
           </li>
           {% else %}
           <li title='Neuron Lock Disabled - Enable' class='hide-on-med-and-down' style="margin-right:.5rem">
             <a href="{{ url_for('lockEnable') }}" class="nav-link text-body p-0" onclick="confirmEnableNeuronLock(event)">
-              <i class="fa fa-unlock"></i>
+              <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">lock_open</i>
             </a>
           </li>
           {% endif %}
@@ -251,17 +251,17 @@
         <li title='Dark Mode' class='hide-on-med-and-down' style="margin-left:.5rem;margin-right:.5rem">
           {% if darkmode %}
             <a href="{{ url_for('modeLight') }}" class="nav-link text-body p-0">
-              <i class="fa fa-moon-o"></i>
+              <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">dark_mode</i>
             </a>
           {% else %}
             <a href="{{ url_for('modeDark') }}" class="nav-link text-body p-0">
-              <i class="fa fa-sun-o"></i>
+              <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">light_mode</i>
             </a>
           {% endif %}
         </li>
         <li title='Full Screen' class='hide-on-med-and-down' style="margin-left:.5rem;">
           <a href="javascript:toggleFullScreen();" class="nav-link text-body p-0">
-            <i class="fa fa-arrows-alt"></i>
+            <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">fullscreen</i>
           </a>
         </li>
       </ul>
