@@ -52,6 +52,7 @@ logging.info(f'verison: {VERSION}', print=True)
 # updateQueue = Queue()
 ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
+DELEGATE = config.get().get('delegate', None)
 # CORS(app, origins=[{
 #    'local': 'http://192.168.0.10:5002',
 #    'dev': 'http://localhost:5002',
@@ -90,6 +91,7 @@ while True:
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
+        if DELEGATE is not None: start.server.stakeProxyRequest(DELEGATE)
         logging.info('Satori Neuron is starting...', color='green')
         break
     except ConnectionError as e:
