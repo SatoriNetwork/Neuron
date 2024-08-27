@@ -23,6 +23,7 @@ data/*
 config/autosecure.yaml
 config/manifest.yaml
 config/relay.yaml
+*config.yaml
 !data/.gitkeep
 models/*
 models/.gitkeep

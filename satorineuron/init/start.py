@@ -18,6 +18,7 @@ from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
 from satorineuron import logging
 from satorineuron import config
+from satorineuron.init.restart import restartLocalSatori
 from satorineuron.init.tag import LatestTag
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
@@ -79,7 +80,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self._evrmoreWallet: EvrmoreWallet
         self._ravencoinVault: Union[RavencoinWallet, None] = None
         self._evrmoreVault: Union[EvrmoreWallet, None] = None
-        self.details: dict
+        self.details: CheckinDetails = None
         self.key: str
         self.oracleKey: str
         self.idKey: str
@@ -97,8 +98,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()
-        self.ticketStatus: bool = False
+        self.stakeStatus: bool = False
         self.miningMode: bool = False
+        self.mineToVault: bool = False
         self.restartThread = threading.Thread(
             target=self.restartEverythingPeriodic, daemon=True)
         self.restartThread.start()
@@ -133,6 +135,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.caches.get(streamId)
 
     @property
+    def rewardAddress(self) -> str:
+        if isinstance(self.details, CheckinDetails):
+            reward = self.details.wallet.get('rewardaddress', '')
+            if reward not in [
+                    self.details.wallet.get('address', ''),
+                    self.details.wallet.get('vaultaddress', '')]:
+                return reward or ''
+        return ''
+
+    @property
     def network(self) -> str:
         return 'main' if self.env == 'prod' else 'test'
 
@@ -149,7 +161,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self._ravencoinWallet is None:
             self._ravencoinWallet = RavencoinWallet(
                 config.walletPath('wallet.yaml'),
-                reserve=0.01,
+                reserve=0.25,
                 isTestnet=self.networkIsTest('ravencoin'))
         return self._ravencoinWallet
 
@@ -158,7 +170,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self._evrmoreWallet is None:
             self._evrmoreWallet = EvrmoreWallet(
                 config.walletPath('wallet.yaml'),
-                reserve=0.01,
+                reserve=0.25,
                 isTestnet=self.networkIsTest('evrmore'))
         return self._evrmoreWallet
 
@@ -173,7 +185,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if os.path.exists(vaultPath) or create:
                     self._ravencoinVault = RavencoinWallet(
                         vaultPath,
-                        reserve=0.01,
+                        reserve=0.25,
                         isTestnet=self.networkIsTest('ravencoin'),
                         password=password)
             except Exception as e:
@@ -197,7 +209,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if os.path.exists(vaultPath) or create:
                     self._evrmoreVault = EvrmoreWallet(
                         vaultPath,
-                        reserve=0.01,
+                        reserve=0.25,
                         isTestnet=self.networkIsTest('evrmore'),
                         password=password)
             except Exception as e:
@@ -295,12 +307,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.ranOnce:
             time.sleep(60*60)
         self.ranOnce = True
+        self.setMiningMode()
         self.createRelayValidation()
         self.getWallet()
         self.getVault()
         self.checkin()
-        if self.performTicketCheck():
-            self.miningMode: bool = True
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()
@@ -349,11 +360,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.subscriptions = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.subscriptions)]
-                logging.info('subscriptions:', len(self.subscriptions))
+                logging.info('subscriptions:', len(
+                    self.subscriptions), print=True)
+                # logging.info('subscriptions:', self.subscriptions, print=True)
                 self.publications = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.publications)]
-                logging.info('publications:', len(self.publications))
+                logging.info('publications:', len(
+                    self.publications), print=True)
+                # logging.info('publications:', self.publications, print=True)
                 self.caches = {
                     x.streamId: disk.Cache(id=x.streamId)
                     for x in set(self.subscriptions + self.publications)}
@@ -423,7 +438,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
         # if self.miningMode:
-        logging.warning('Running in Minng Mode.', color='green')
+        # logging.warning('Running in Minng Mode.', color='green')
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
             publications=StartupDag.predictionStreams(self.publications))
@@ -459,7 +474,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def pubsConnect(self):
         '''
-        oracle nodes publish to every pubsub machine. therefore, they have 
+        oracle nodes publish to every pubsub machine. therefore, they have
         an additional set of connections that they mush push to.
         '''
         self.pubs = []
@@ -593,6 +608,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def triggerRestart(self):
         from satorisynapse import Envelope, Signal
         self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+        import time
+        time.sleep(5)
+        os._exit(0)
         # import requests
         # requests.get('http://127.0.0.1:24601/restart')
 
@@ -604,12 +622,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def restartEverythingPeriodic(self):
         import random
-        restartTime = time.time() + random.randint(60*60*21, 60*60*24)
+        restartTime = time.time() + config.get().get(
+            'restartTime',
+            random.randint(60*60*21, 60*60*24))
         latestTag = LatestTag()
         while True:
             if time.time() > restartTime:
                 self.triggerRestart()
-            time.sleep(random.randint(60*60, 60*60*4))
+            # time.sleep(random.randint(60*60, 60*60*4))
+            time.sleep(random.randint(10, 20))
             latestTag.get()
             if latestTag.isNew:
                 self.triggerRestart()
@@ -623,6 +644,40 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 observationTime=observationTime,
                 observationHash=observationHash)
 
-    def performTicketCheck(self):
-        self.ticketStatus = self.server.ticketCheck()
-        return self.ticketStatus
+    def performStakeCheck(self):
+        self.stakeStatus = self.server.stakeCheck()
+        return self.stakeStatus
+
+    def setMiningMode(self, miningMode: Union[bool, None] = None):
+        miningMode = miningMode if isinstance(
+            miningMode, bool) else config.get().get('mining mode', True)
+        self.miningMode = miningMode
+        config.add(data={'mining mode': self.miningMode})
+        return self.miningMode
+
+    def enableMineToVault(self, network: str = 'main'):
+        vault = self.getVault(network=network)
+        mineToAddress = vault.address
+        success, result = self.server.enableMineToVault(
+            walletSignature=self.getWallet(
+                network=network).sign(mineToAddress),
+            vaultSignature=vault.sign(mineToAddress),
+            vaultPubkey=vault.publicKey,
+            address=mineToAddress)
+        if success:
+            self.mineToVault = True
+        return success, result
+
+    def disableMineToVault(self, network: str = 'main'):
+        vault = self.getVault(network=network)
+        wallet = self.getWallet(network=network)
+        # logging.debug('wallet:', wallet, color="magenta")
+        mineToAddress = wallet.address
+        success, result = self.server.disableMineToVault(
+            walletSignature=wallet.sign(mineToAddress),
+            vaultSignature=vault.sign(mineToAddress),
+            vaultPubkey=vault.publicKey,
+            address=mineToAddress)
+        if success:
+            self.mineToVault = False
+        return success, result

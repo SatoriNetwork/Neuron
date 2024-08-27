@@ -85,7 +85,7 @@
         <div class="toggle-options">
           <div style="padding-bottom: 6px;" onclick="hideMiningInviteCard();">Local</div>
           <label class="toggle-switch">
-            <input type="checkbox" id="modeToggle" onclick="toggleMode('{{ticketStatus}}')">
+            <input type="checkbox" id="modeToggle" onclick="toggleMode('{{stakeStatus}}')">
             <span class="slider round"></span>
           </label>
           <div style="padding-bottom: 6px;" onclick="showMiningInviteCard();">Mining</div>
@@ -96,18 +96,21 @@
 </div>
 
 <script>
-  var ticketStatus = "{{ ticketStatus }}";
-  console.log("ticketStatus " + (ticketStatus));
+  var stakeStatus = "{{ stakeStatus }}";
+  function setMiningMode() {
+    if ("{{ miningMode }}" == "True") {
+      document.getElementById("modeToggle").checked = true;
+    } else {
+      document.getElementById("modeToggle").checked = false;
+    }
+  }
+  setMiningMode();
   function toggleMode() {
     var isChecked = document.getElementById("modeToggle").checked;
     console.log("Toggle switch is " + (isChecked ? "ON" : "OFF"));
     if (isChecked) {
-      if (ticketStatus == "True") {
-        // set it in the config, perform a checkin or something.
-      } else {
-        showMiningInviteCard();
-        document.getElementById("modeToggle").checked = false;
-        fetch('/ticket/check', { method: 'GET' })
+      if (stakeStatus == "True") {
+        fetch('/mining/mode/on', { method: 'GET' })
         .then(response => {
           if (response.ok) {
             return response.text();
@@ -117,13 +120,42 @@
         })
         .then(text => {
           console.log(text);
-          ticketStatus = text;
+        })
+        .catch(error => console.error('Error:', error));
+      } else {
+        fetch('/stake/check', { method: 'GET' })
+        .then(response => {
+          if (response.ok) {
+            return response.text();
+          } else {
+            throw new Error('Network response was not ok.');
+          }
+        })
+        .then(text => {
+          console.log(text);
+          stakeStatus = text;
+          if (stakeStatus == "False") {
+            document.getElementById("modeToggle").checked = false;
+            showMiningInviteCard();
+          } 
           updateMiningCard();
         })
         .catch(error => console.error('Error:', error));
       }
     } else {
       hideMiningInviteCard();
+      fetch('/mining/mode/off', { method: 'GET' })
+        .then(response => {
+          if (response.ok) {
+            return response.text();
+          } else {
+            throw new Error('Network response was not ok.');
+          }
+        })
+        .then(text => {
+          console.log(text);
+        })
+        .catch(error => console.error('Error:', error));
     }
   }
 </script>
