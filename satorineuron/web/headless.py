@@ -90,7 +90,10 @@ while True:
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
-        if DELEGATE is not None: start.server.stakeProxyRequest(DELEGATE)
+        if DELEGATE is not None:
+            wallet = start.details.wallet 
+            if isinstance(wallet.rewardaddress, str) and wallet.rewardaddress not in [wallet.address, wallet.vaultaddress]:
+                start.server.stakeProxyRequest(DELEGATE)
         logging.info('Satori Neuron is starting...', color='green')
         break
     except ConnectionError as e:
