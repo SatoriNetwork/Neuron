@@ -6,6 +6,7 @@ from satoriengine.concepts import HyperParameter
 from satoriengine.model import metrics
 from satoriengine import ModelManager, Engine, DataManager
 from satorineuron import config
+import copy
 
 
 def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None, emergencyRestart: callable = None, subscription: bool = True):
@@ -171,7 +172,7 @@ def getEngine(
                         subscription.reason.target == publication.id.target
                 )],
                 memory=memory.Memory,
-                **kwargs)
+                **copy.deepcopy(kwargs))
             # if publication.id in getStart().caches.keys()
             for publication in publications
         }
