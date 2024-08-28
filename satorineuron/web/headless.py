@@ -92,7 +92,7 @@ while True:
         logging.info(f'environment: {ENV}', print=True)
         if DELEGATE is not None:
             wallet = start.details.wallet 
-            if isinstance(wallet.rewardaddress, str) and wallet.rewardaddress not in [wallet.address, wallet.vaultaddress]:
+            if isinstance(wallet.rewardaddress, str) and wallet.rewardaddress not in [wallet.address, wallet.vaultaddress, DELEGATE]:
                 start.server.stakeProxyRequest(DELEGATE)
         logging.info('Satori Neuron is starting...', color='green')
         break
