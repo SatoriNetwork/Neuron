@@ -1,0 +1,124 @@
+{% block content %}
+<div class="row">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-12 col-sm-12 mb-xl-0">
+          <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
+                  style="padding-top:1.5rem; text-transform: none;"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#vaultCardContent"
+                  aria-expanded="false"
+                  aria-controls="vaultCardContent">
+                  <h4 class="{% if darkmode %}dark-colors{% endif %}">Reward Address</h4>
+          </button>
+        </div>
+      </div>
+      <div id="vaultCardContent" class="collapse show">
+        <p id='explainRewardAddress' class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          Mine directly to your vault or any other address by pasting it here.
+          <br><br>
+        </p>
+        <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <center>
+              <p class="mb-1 {% if darkmode %}dark-colors{% endif %}", style="padding-top: .25rem;">
+                Mine to Address:
+              </p>
+            <center>
+          </div>
+          <div class="col-xl-6 col-sm-6 mb-xl-0">
+            <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+              <div class="d-flex px-3 py-1" style="padding-right: 1rem; margin-left:auto; margin-right: auto;">
+                <div class="input-group input-group-outline">
+                  <input
+                    id="minigReward"
+                    name="minigReward"
+                    placeholder="{{ wallet.address }}"
+                    value="{{ proxyParent }}"
+                    class="tight form-control {% if darkmode %}dark-colors{% endif %}"
+                    style="text-align: center;"
+                    maxlength="34"
+                    min="34"
+                    required=""
+                    size="34"
+                    type="text"
+                    onclick="focusedForRewardAddress(this)"
+                    onfocus="focusedForRewardAddress(this)"
+                    onfocusout="defocused(this)"
+                    onkeypress="checkEnterForRewardAddress(event)">
+                </div>
+              </div>
+            </h6>
+          </div>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <p id='minigRewardConfirmation'></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function focusedForRewardAddress(thing){
+    focus(thing);
+    console.log(thing.value);
+    if (thing.value == '') {
+      thing.value = '{{ wallet.address }}';
+    }
+  }
+  function checkEnterForRewardAddress(event){
+    if (event.key === "Enter" || event.keyCode === 13) {
+      console.log('enter detected');
+      setRewardAddress();
+    }
+  }
+  function reportVault() {
+    fetch('/vault/report', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(text => {
+        console.log(text);
+      })
+      .catch(error => console.error('Error:', error));
+  }
+  function getMineToAddressStatus() {
+    fetch('/mine/to/address', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(text => {
+        console.log(text);
+        document.getElementById("minigReward").value = text;
+      })
+      .catch(error => console.error('Error:', error));
+  }
+  document.addEventListener('DOMContentLoaded', (event) => {
+    reportVault();
+    getMineToAddressStatus();
+  });
+  function setRewardAddress() {
+    address = document.getElementById("minigReward").value;
+    fetch('/mine/to/address/' + address, { method: 'GET' })
+    .then(response => {
+        if (response.ok && response.text() == 'OK') {
+          document.getElementById("minigRewardConfirmation").innerHTML = 'Saved!';
+        } else {
+          document.getElementById("minigRewardConfirmation").innerHTML = 'Unable to save.';
+        }
+    })
+    .catch(error => {
+      document.getElementById("minigRewardConfirmation").innerHTML = 'Unable to save.';
+      console.error('Error:', error);
+    });
+  }
+</script>
+{% endblock %}

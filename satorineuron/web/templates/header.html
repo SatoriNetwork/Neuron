@@ -65,7 +65,7 @@
             <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Restart</span>
           </a>
         </li>
-          
+
         {% if paused %} <!-- server should tell us if we're paused or not... hit endpoint, refresh page. -->
         <li class="nav-item pe-2 d-flex align-items-center">
           <a href="{{ url_for('unpause') }}" class="nav-link text-body p-0">
@@ -139,7 +139,7 @@
               <div class="d-flex py-1">
                 <div class="d-flex flex-column justify-content-center">
                 <h6 class="text-sm font-weight-normal mb-1">
-                  <span class="font-weight-bold">Wallet</span>
+                  <span class="font-weight-bold">Wallet and Vault</span>
                 </h6>
                 </div>
               </div>
@@ -281,7 +281,7 @@
 }
 </script>
 <script>
-  // Listen for a click on the button 
+  // Listen for a click on the button
   function toggleDark() {
     // If the OS is set to dark mode...
     if (prefersDarkScheme.matches) {

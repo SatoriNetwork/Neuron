@@ -308,7 +308,10 @@ def favicon():
 @app.route('/static/<path:path>')
 @authRequired
 def sendStatic(path):
-    return send_from_directory('static', path)
+    if start.vault is not None and not start.vault.isEncrypted:
+        return send_from_directory('static', path)
+    flash('please unlock the vault first')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/upload_history_csv', methods=['POST'])
@@ -384,19 +387,22 @@ def unpause():
 @app.route('/backup/<target>', methods=['GET'])
 @authRequired
 def backup(target: str = 'satori'):
-    outputPath = '/Satori/Neuron/satorineuron/web/static/download'
-    if target == 'satori':
-        from satorilib.api.disk.zip.zip import zipSelected
-        zipSelected(
-            folderPath=f'/Satori/Neuron/{target}',
-            outputPath=f'{outputPath}/{target}.zip',
-            selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
-    else:
-        from satorilib.api.disk.zip.zip import zipFolder
-        zipFolder(
-            folderPath=f'/Satori/Neuron/{target}',
-            outputPath=f'{outputPath}/{target}')
-    return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
+    if start.vault is not None and not start.vault.isEncrypted:
+        outputPath = '/Satori/Neuron/satorineuron/web/static/download'
+        if target == 'satori':
+            from satorilib.api.disk.zip.zip import zipSelected
+            zipSelected(
+                folderPath=f'/Satori/Neuron/{target}',
+                outputPath=f'{outputPath}/{target}.zip',
+                selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
+        else:
+            from satorilib.api.disk.zip.zip import zipFolder
+            zipFolder(
+                folderPath=f'/Satori/Neuron/{target}',
+                outputPath=f'{outputPath}/{target}')
+        return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
+    flash('please unlock the vault first')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/restart', methods=['GET'])
@@ -602,7 +608,7 @@ def sendSatoriTransactionFromWallet(network: str = 'main'):
     # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
     result = sendSatoriTransactionUsing(
         start.getWallet(network=network), network, 'wallet')
-    if len(result) == 64:
+    if isinstance(result, str) and len(result) == 64:
         flash(str(result))
     return redirect(f'/wallet/{network}')
 
@@ -639,9 +645,6 @@ def sendSatoriTransactionUsing(
 
         # doesn't respect the cooldown
         myWallet.getUnspentSignatures(force=True)
-        if sendSatoriForm['address'] == start.getWallet(network=network).address:
-            # if we're sending to wallet we don't want it to auto send back to vault
-            disableAutosecure(network)
         try:
             # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronTransaction(
@@ -1422,8 +1425,6 @@ def vault():
             'walletIcon': 'lock',
             'image': getQRCode(start.vault.address),
             'network': start.network,  # change to main when ready
-            'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
-            'autosecured': start.vault.autosecured(),
             'minedtovault': start.mineToVault,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
@@ -1437,61 +1438,11 @@ def vault():
         'walletIcon': 'lock',
         'image': '',
         'network': start.network,  # change to main when ready
-        'autosecured': False,
         'minedtovault': start.mineToVault,  # start.server.minedToVault(),
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
-
-
-@app.route('/enable_autosecure/<network>/<retainInWallet>', methods=['GET'])
-@authRequired
-def enableAutosecure(network: str = 'main', retainInWallet: int = 0):
-    try:
-        retainInWallet = int(retainInWallet)
-    except Exception as _:
-        retainInWallet = 0
-    if start.vault is None:
-        flash('Must unlock your vault to enable autosecure.')
-        return redirect('/dashboard')
-    # for this network open the wallet get the address
-    # config.get('autosecure')
-    # save the address to the autosecure config
-    # as the value save the map:
-    # {'address': vaultAddress, 'pubkey': vaultPubkey, 'sig': signature}
-    # make the signature sign the encrypted string representation of their vault
-    # plus the vaultAddress
-    # that way we can verify the signature is for this vault in the future.
-    # the config will be checked daily when value comes in.
-    config.add(
-        'autosecure',
-        data={
-            start.getWallet(network=network).address: {
-                **start.vault.authPayload(
-                    asDict=True,
-                    challenge=start.vault.address + start.vault.publicKey),
-                **{'retain': retainInWallet}
-            }
-        })
-    # start.getWallet(network=network).get() # we think this triggers the tx twice
-    return 'OK', 200
-
-
-@app.route('/disable_autosecure/<network>', methods=['GET'])
-@authRequired
-def disableAutosecure(network: str = 'main'):
-    if start.vault is None:
-        flash('Must unlock your vault to disable autosecure.')
-        return redirect('/dashboard')
-    # find the entry in the autosecure config of this wallet's nework address
-    # remove it, save the config
-    config.put(
-        'autosecure',
-        data={
-            k: v for k, v in config.get('autosecure').items()
-            if k != start.getWallet(network=network).address})
-    return 'OK', 200
 
 
 @app.route('/vault/report', methods=['GET'])
@@ -1512,11 +1463,46 @@ def reportVault(network: str = 'main'):
     return f'Failed to report vault: {result}', 400
 
 
-@app.route('/mine_to_vault/status', methods=['GET'])
+@app.route('/mine/to/address', methods=['GET'])
 @authRequired
-def mineToVaultStatus():
-    x = start.server.minedToVault()
-    return str(x), 200
+def mineToAddressStatus():
+    return str(start.server.mineToAddressStatus()), 200
+
+
+@app.route('/mine/to/address/<address>', methods=['GET'])
+@authRequired
+def mineToAddress(address: str):
+    if start.vault is None:
+        return '', 200
+    # the network portion should be whatever network I'm on.
+    network = 'main'
+    vault = start.getVault(network=network)
+    success, result = start.server.mineToAddress(
+        walletSignature=start.getWallet(network=network).sign(address),
+        vaultSignature=vault.sign(address),
+        vaultPubkey=vault.publicKey,
+        address=address)
+    if success:
+        return 'OK', 200
+    return f'Failed to report vault: {result}', 400
+
+
+@app.route('/stake/for/address/<address>', methods=['GET'])
+@authRequired
+def stakeForAddress(address: str):
+    if start.vault is None:
+        return '', 200
+    # the network portion should be whatever network I'm on.
+    network = 'main'
+    vault = start.getVault(network=network)
+    success, result = start.server.stakeForAddress(
+        walletSignature=start.getWallet(network=network).sign(address),
+        vaultSignature=vault.sign(address),
+        vaultPubkey=vault.publicKey,
+        address=address)
+    if success:
+        return 'OK', 200
+    return f'Failed to report vault: {result}', 400
 
 
 @app.route('/mine_to_vault/enable/<network>', methods=['GET'])
