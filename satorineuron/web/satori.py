@@ -1477,7 +1477,6 @@ def mineToAddress(address: str):
     # the network portion should be whatever network I'm on.
     network = 'main'
     vault = start.getVault(network=network)
-    wallet = start.getWallet(network=network)
     success, result = start.server.mineToAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
