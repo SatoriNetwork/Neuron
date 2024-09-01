@@ -89,7 +89,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://central.satorinet.io'}[ENV],
+                'prod': 'https://stage.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -1690,8 +1690,10 @@ def voteSubmitManifestVault():
         ) and start.vault is not None and start.vault.isDecrypted
     ):
         start.server.submitMaifestVote(
-            start.vault,
+            start.getWallet(network=start.network),
             votes={
+                # TODO: authenticate the vault.
+                # 'vault': start.vault.address,
                 'predictors': vaultPredictors,
                 'oracles': vaultOracles,
                 'inviters': vaultInviters,
