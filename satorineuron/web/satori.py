@@ -1666,40 +1666,40 @@ def voteSubmitManifestWallet():
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
-@app.route('/vote/submit/manifest/vault', methods=['POST'])
-@authRequired
-def voteSubmitManifestVault():
-    # logging.debug(request.json, color='yellow')
-    vaultPredictors = request.json.get('vaultPredictors')
-    vaultOracles = request.json.get('vaultOracles')
-    vaultInviters = request.json.get('vaultInviters')
-    vaultCreators = request.json.get('vaultCreators')
-    vaultManagers = request.json.get('vaultManagers')
-    vaultPredictors = 0 if vaultPredictors.strip() == '' else int(vaultPredictors)
-    vaultOracles = 0 if vaultOracles.strip() == '' else int(vaultOracles)
-    vaultInviters = 0 if vaultInviters.strip() == '' else int(vaultInviters)
-    vaultCreators = 0 if vaultCreators.strip() == '' else int(vaultCreators)
-    vaultManagers = 0 if vaultManagers.strip() == '' else int(vaultManagers)
-    if (
-        (
-            vaultPredictors > 0 or
-            vaultOracles > 0 or
-            vaultInviters > 0 or
-            vaultCreators > 0 or
-            vaultManagers > 0
-        ) and start.vault is not None and start.vault.isDecrypted
-    ):
-        start.server.submitMaifestVote(
-            start.getWallet(network=start.network),
-            votes={
-                # TODO: authenticate the vault.
-                # 'vault': start.vault.address,
-                'predictors': vaultPredictors,
-                'oracles': vaultOracles,
-                'inviters': vaultInviters,
-                'creators': vaultCreators,
-                'managers': vaultManagers})
-    return jsonify({'message': 'Manifest votes received successfully'}), 200
+# @app.route('/vote/submit/manifest/vault', methods=['POST'])
+# @authRequired
+# def voteSubmitManifestVault():
+#     # logging.debug(request.json, color='yellow')
+#     vaultPredictors = request.json.get('vaultPredictors')
+#     vaultOracles = request.json.get('vaultOracles')
+#     vaultInviters = request.json.get('vaultInviters')
+#     vaultCreators = request.json.get('vaultCreators')
+#     vaultManagers = request.json.get('vaultManagers')
+#     vaultPredictors = 0 if vaultPredictors.strip() == '' else int(vaultPredictors)
+#     vaultOracles = 0 if vaultOracles.strip() == '' else int(vaultOracles)
+#     vaultInviters = 0 if vaultInviters.strip() == '' else int(vaultInviters)
+#     vaultCreators = 0 if vaultCreators.strip() == '' else int(vaultCreators)
+#     vaultManagers = 0 if vaultManagers.strip() == '' else int(vaultManagers)
+#     if (
+#         (
+#             vaultPredictors > 0 or
+#             vaultOracles > 0 or
+#             vaultInviters > 0 or
+#             vaultCreators > 0 or
+#             vaultManagers > 0
+#         ) and start.vault is not None and start.vault.isDecrypted
+#     ):
+#         start.server.submitMaifestVote(
+#             start.getWallet(network=start.network),
+#             votes={
+#                 # TODO: authenticate the vault.
+#                 # 'vault': start.vault.address,
+#                 'predictors': vaultPredictors,
+#                 'oracles': vaultOracles,
+#                 'inviters': vaultInviters,
+#                 'creators': vaultCreators,
+#                 'managers': vaultManagers})
+#     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
