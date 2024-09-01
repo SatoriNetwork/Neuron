@@ -71,14 +71,20 @@
     address = document.getElementById("addStakingAddress").value;
     fetch('/stake/for/address/' + address, { method: 'GET' })
     .then(response => {
-        if (response.ok && response.text() == 'OK') {
-          document.getElementById("addStakingAddressConfirmation").innerHTML = 'Saved!';
-          getProxyParentStatus();
+        if (response.ok) {
+          return response.text();
         } else {
-          document.getElementById("addStakingAddressConfirmation").innerHTML = 'Unable to save.';
+          throw new Error('Network response was not ok.');
         }
     })
-    .catch(error => {
+    .then(text => {
+      if (text == 'OK') {
+        document.getElementById("addStakingAddressConfirmation").innerHTML = 'Saved!';
+        getProxyParentStatus();
+      } else {
+        document.getElementById("addStakingAddressConfirmation").innerHTML = 'Unable to save.';
+      }
+    }).catch(error => {
       document.getElementById("addStakingAddressConfirmation").innerHTML = 'Unable to save.';
       console.error('Error:', error);
     });
@@ -97,8 +103,7 @@
       if (parsedData.length > 0) {
         createTable(text);
       }
-    })
-    .catch(error => console.error('Error:', error));
+    }).catch(error => console.error('Error:', error));
   }
   document.addEventListener('DOMContentLoaded', (event) => {
     getProxyParentStatus();

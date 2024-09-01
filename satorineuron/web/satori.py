@@ -89,7 +89,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -1463,7 +1463,7 @@ def reportVault(network: str = 'main'):
     return f'Failed to report vault: {result}', 400
 
 
-@app.route('/mine/to/address', methods=['GET'])
+@app.route('/mining/to/address', methods=['GET'])
 @authRequired
 def mineToAddressStatus():
     return str(start.server.mineToAddressStatus()), 200
@@ -1477,8 +1477,8 @@ def mineToAddress(address: str):
     # the network portion should be whatever network I'm on.
     network = 'main'
     vault = start.getVault(network=network)
+    wallet = start.getWallet(network=network)
     success, result = start.server.mineToAddress(
-        walletSignature=start.getWallet(network=network).sign(address),
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
         address=address)
@@ -1496,7 +1496,6 @@ def stakeForAddress(address: str):
     network = 'main'
     vault = start.getVault(network=network)
     success, result = start.server.stakeForAddress(
-        walletSignature=start.getWallet(network=network).sign(address),
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
         address=address)

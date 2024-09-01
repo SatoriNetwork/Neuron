@@ -84,11 +84,11 @@
         }
       }).then(text => {
         console.log(text);
-      })
-      .catch(error => console.error('Error:', error));
+      }).catch(error => console.error('Error:', error));
   }
   function getMineToAddressStatus() {
-    fetch('/mine/to/address', { method: 'GET' })
+    console.log('getMineToAddressStatus');
+    fetch('/mining/to/address', { method: 'GET' })
       .then(response => {
         if (response.ok) {
           return response.text();
@@ -96,26 +96,32 @@
           throw new Error('Network response was not ok.');
         }
       }).then(text => {
+        console.log('getMineToAddressStatus...');
         console.log(text);
         document.getElementById("minigReward").value = text;
-      })
-      .catch(error => console.error('Error:', error));
-  }
-  document.addEventListener('DOMContentLoaded', (event) => {
-    reportVault();
-    getMineToAddressStatus();
-  });
-  function setRewardAddress() {
-    address = document.getElementById("minigReward").value;
-    fetch('/mine/to/address/' + address, { method: 'GET' })
-    .then(response => {
-        if (response.ok && response.text() == 'OK') {
-          document.getElementById("minigRewardConfirmation").innerHTML = 'Saved!';
+      }).catch(error => console.error('Error:', error));
+    }
+    document.addEventListener('DOMContentLoaded', (event) => {
+      reportVault();
+      getMineToAddressStatus();
+    });
+    function setRewardAddress() {
+      address = document.getElementById("minigReward").value;
+      fetch('/mine/to/address/' + address, { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
         } else {
-          document.getElementById("minigRewardConfirmation").innerHTML = 'Unable to save.';
-        }
-    })
-    .catch(error => {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      if (text == 'OK') {
+        document.getElementById("minigRewardConfirmation").innerHTML = 'Saved!';
+      } else {
+        document.getElementById("minigRewardConfirmation").innerHTML = 'Unable to save.';
+      }
+    }).catch(error => {
       document.getElementById("minigRewardConfirmation").innerHTML = 'Unable to save.';
       console.error('Error:', error);
     });
