@@ -52,7 +52,7 @@ logging.info(f'verison: {VERSION}', print=True)
 # updateQueue = Queue()
 ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
-DELEGATE = config.get().get('delegate', None)
+# DELEGATE = config.get().get('delegate', None)
 # CORS(app, origins=[{
 #    'local': 'http://192.168.0.10:5002',
 #    'dev': 'http://localhost:5002',
@@ -90,10 +90,10 @@ while True:
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
-        if DELEGATE is not None:
-            wallet = start.details.wallet 
-            if isinstance(wallet.rewardaddress, str) and wallet.rewardaddress not in [wallet.address, wallet.vaultaddress, DELEGATE]:
-                start.server.stakeProxyRequest(DELEGATE)
+        # if DELEGATE is not None:
+        #     wallet = start.details.wallet 
+        #     if isinstance(wallet.rewardaddress, str) and wallet.rewardaddress not in [wallet.address, wallet.vaultaddress, DELEGATE]:
+        #         start.server.stakeProxyRequest(DELEGATE)
         logging.info('Satori Neuron is starting...', color='green')
         break
     except ConnectionError as e:
@@ -130,11 +130,11 @@ while True:
 ################################################################################
 #
 #
-# if __name__ == '__main__':
-#    app.run(
-#        host='0.0.0.0',
-#        port=config.flaskPort(),
-#        threaded=True,
-#        debug=debug,
-#        use_reloader=False)
-#
+if __name__ == '__main__':
+   app.run(
+       host='127.0.0.1',
+       port=config.flaskPort(),
+       threaded=True,
+       debug=debug,
+       use_reloader=False)
+
