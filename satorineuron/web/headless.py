@@ -4,13 +4,13 @@
 
 # run with:
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
-# from flask_cors import CORS
+from flask_cors import CORS
 # from typing import Union
 # from functools import wraps, partial
 import os
 import sys
 # import json
-# import secrets
+import secrets
 # import webbrowser
 import time
 import traceback
@@ -18,9 +18,9 @@ import traceback
 # import threading
 # from queue import Queue
 # from waitress import serve  # necessary ?
-# from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
-# from flask import session, request, render_template
-# from flask import Response, stream_with_context, render_template_string
+from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
+from flask import session, request, render_template
+from flask import Response, stream_with_context, render_template_string
 # from satorilib.concepts.structs import StreamId, StreamOverviews
 # from satorilib.api.wallet.wallet import TransactionFailure
 # from satorilib.api.time import timeToSeconds
@@ -40,15 +40,15 @@ logging.info(f'verison: {VERSION}', print=True)
 ###############################################################################
 ## Globals ####################################################################
 ###############################################################################
-# logging.setup(level=0)
+logging.setup(level=0)
 # development flags
-# debug = True
-# darkmode = False
-# firstRun = True
-# badForm = {}
-# app = Flask(__name__)
-# app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
-# updateTime = 0
+debug = True
+darkmode = False
+firstRun = True
+badForm = {}
+app = Flask(__name__)
+app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
+updateTime = 0
 # updateQueue = Queue()
 ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
@@ -114,15 +114,15 @@ while True:
 ################################################################################
 #
 #
-# @app.errorhandler(404)
-# def not_found(e):
-#    return render_template('404.html'), 404
-#
-#
-# @app.route('/ping', methods=['GET'])
-# def ping():
-#    from datetime import datetime
-#    return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+@app.errorhandler(404)
+def not_found(e):
+   return render_template('404.html'), 404
+
+
+@app.route('/ping', methods=['GET'])
+def ping():
+   from datetime import datetime
+   return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 #
 #
 ################################################################################
