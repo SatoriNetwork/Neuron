@@ -6,34 +6,34 @@
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
 from flask_cors import CORS
 # from typing import Union
-# from functools import wraps, partial
+from functools import wraps, partial
 import os
 import sys
-# import json
+import json
 import secrets
-# import webbrowser
+import webbrowser
 import time
 import traceback
-# import pandas as pd
-# import threading
-# from queue import Queue
-# from waitress import serve  # necessary ?
+import pandas as pd
+import threading
+from queue import Queue
+from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
-# from satorilib.concepts.structs import StreamId, StreamOverviews
-# from satorilib.api.wallet.wallet import TransactionFailure
-# from satorilib.api.time import timeToSeconds
-# from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
-# from satorilib.utils import getRandomName, getRandomQuote
-# from satorisynapse import Envelope, Signal
-# from satorineuron import VERSION, MOTTO
+from satorilib.concepts.structs import StreamId, StreamOverviews
+from satorilib.api.wallet.wallet import TransactionFailure
+from satorilib.api.time import timeToSeconds
+from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.utils import getRandomName, getRandomQuote
+from satorisynapse import Envelope, Signal
+from satorineuron import VERSION, MOTTO
 from satorineuron import VERSION, config
 from satorineuron import logging
-# from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
-# from satorineuron.web import forms
+from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
+from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
-# from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
+from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
 logging.info(f'verison: {VERSION}', print=True)
 
@@ -53,11 +53,11 @@ updateTime = 0
 ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 # DELEGATE = config.get().get('delegate', None)
-# CORS(app, origins=[{
-#    'local': 'http://192.168.0.10:5002',
-#    'dev': 'http://localhost:5002',
-#    'test': 'https://test.satorinet.io',
-#    'prod': 'https://satorinet.io'}[ENV]])
+CORS(app, origins=[{
+   'local': 'http://192.168.0.10:5002',
+   'dev': 'http://localhost:5002',
+   'test': 'https://test.satorinet.io',
+   'prod': 'https://satorinet.io'}[ENV]])
 
 
 ###############################################################################
