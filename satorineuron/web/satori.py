@@ -1666,6 +1666,20 @@ def voteSubmitManifestWallet():
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
+@app.route('/system_metrics', methods=['GET'])
+def voteSubmitManifestWallet():
+    from satorilib.api import system
+    return jsonify({
+        'hostname': os.uname().nodename,
+        'cpu_usage_percent': system.getProcessorUsage(),
+        'memory': system.getRamDetails(),
+        'swap': system.getSwapDetails(),
+        'disk': system.getDiskDetails(),
+        'uptime': system.getUptime(),
+        'version': VERSION,
+        }), 200
+
+
 # @app.route('/vote/submit/manifest/vault', methods=['POST'])
 # @authRequired
 # def voteSubmitManifestVault():
