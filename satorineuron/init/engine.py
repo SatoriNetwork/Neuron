@@ -94,6 +94,13 @@ def getEngine(
         kwargs = {
             'hyperParameters': [
                 HyperParameter(
+                    name='lookback_len',
+                    value=1,
+                    kind=int,
+                    limit=1,
+                    minimum=1,
+                    maximum=64),
+                HyperParameter(
                     name='n_estimators',
                     value=300,
                     kind=int,
@@ -120,7 +127,9 @@ def getEngine(
                     kind=int,
                     limit=1,
                     minimum=100,
-                    maximum=400), ],
+                    maximum=400),
+            ],
+            'xgbParams': ['n_estimators','learning_rate','max_depth','early_stopping_rounds'],
             'metrics':  {
                 # raw data features
                 'Raw': metrics.rawDataMetric,
