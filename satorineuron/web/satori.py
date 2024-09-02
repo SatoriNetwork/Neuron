@@ -1476,6 +1476,7 @@ def mineToAddress(address: str):
         return '', 200
     # the network portion should be whatever network I'm on.
     network = 'main'
+    start.details.wallet['rewardaddress'] = address
     vault = start.getVault(network=network)
     success, result = start.server.mineToAddress(
         vaultSignature=vault.sign(address),
@@ -1667,7 +1668,7 @@ def voteSubmitManifestWallet():
 
 
 @app.route('/system_metrics', methods=['GET'])
-def voteSubmitManifestWallet():
+def systemMetrics():
     from satorilib.api import system
     return jsonify({
         'hostname': os.uname().nodename,
@@ -1677,7 +1678,7 @@ def voteSubmitManifestWallet():
         'disk': system.getDiskDetails(),
         'uptime': system.getUptime(),
         'version': VERSION,
-        }), 200
+    }), 200
 
 
 # @app.route('/vote/submit/manifest/vault', methods=['POST'])
