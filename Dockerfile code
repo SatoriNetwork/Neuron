@@ -23,11 +23,11 @@ COPY Neuron/satorineuron/ /Satori/Neuron/satorineuron/
 COPY Neuron/setup.py /Satori/Neuron/setup.py
 COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
 
-RUN chmod -R 777 /Satori/Synapse
-RUN chmod -R 777 /Satori/Lib
-RUN chmod -R 777 /Satori/Wallet
-RUN chmod -R 777 /Satori/Engine
-RUN chmod -R 777 /Satori/Neuron
+RUN chmod -R 777 /Satori/Synapse && \
+    chmod -R 777 /Satori/Lib && \
+    chmod -R 777 /Satori/Wallet && \
+    chmod -R 777 /Satori/Engine && \
+    chmod -R 777 /Satori/Neuron
 
 # satori ui
 EXPOSE 24601
