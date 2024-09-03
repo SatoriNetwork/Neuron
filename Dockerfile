@@ -4,7 +4,7 @@
 
 # python:slim will eventually fail, if we need to revert try this:
 # FROM python:slim3.12.0b1-slim
-FROM python:3.9-slim as builder
+FROM python:3.9-slim AS builder
 
 RUN apt-get update && \
     apt-get install -y build-essential wget git vim cmake zip && \
@@ -115,7 +115,7 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # docker exec -it satorineuron bash
 
 
-FROM builder as builder1
+FROM builder AS builder1
 
 # copy to and run from ../ or C:\repos\Satori
 # (updating process is the only thing that requires git)
