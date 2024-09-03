@@ -40,9 +40,6 @@
           PRIVATE KEY:<br>{{ wallet.privateKey }}
           <br>
           <br>
-          SEED WORDS:<br>{{ wallet.words }}
-          <br>
-          <br>
         </div>
       </center>
     </div>
@@ -126,9 +123,9 @@
 <script>
 	function validateJs() {
 		return (
-			document.getElementById("address").value != "" && 
-      document.getElementById("address").value.startsWith(document.getElementById("walletAddress").innerHTML[0]) && 
-      document.getElementById("address").value.length == document.getElementById("walletAddress").innerHTML.length && 
+			document.getElementById("address").value != "" &&
+      document.getElementById("address").value.startsWith(document.getElementById("walletAddress").innerHTML[0]) &&
+      document.getElementById("address").value.length == document.getElementById("walletAddress").innerHTML.length &&
 			(document.getElementById("sweep").checked || document.getElementById("amount").value > 0));
 	}
   function sweepEverything() {

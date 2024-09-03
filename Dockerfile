@@ -4,7 +4,7 @@
 
 # python:slim will eventually fail, if we need to revert try this:
 # FROM python:slim3.12.0b1-slim
-FROM python:3.9-slim
+FROM python:3.9-slim as builder
 
 RUN apt-get update && \
     apt-get install -y build-essential wget git vim cmake zip && \
@@ -112,4 +112,68 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env ENV=prod satorinet/satorineuron:base ./start.sh
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse  -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:base bash
 # docker run --rm -it --name satorineuron satorinet/satorineuron:base bash
+# docker exec -it satorineuron bash
+
+
+FROM builder as builder1
+
+# copy to and run from ../ or C:\repos\Satori
+# (updating process is the only thing that requires git)
+# (vim for troubleshooting)
+
+# FROM satorinet/satorineuron:base
+
+#RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
+COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
+COPY Synapse/setup.py /Satori/Synapse/setup.py
+COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
+COPY Lib/satorilib /Satori/Lib/satorilib
+COPY Lib/setup.py /Satori/Lib/setup.py
+COPY Lib/requirements.txt /Satori/Lib/requirements.txt
+COPY Wallet/satoriwallet /Satori/Wallet/satoriwallet
+COPY Wallet/reqs /Satori/Wallet/reqs
+COPY Wallet/setup.py /Satori/Wallet/setup.py
+COPY Wallet/requirements.txt /Satori/Wallet/requirements.txt
+COPY Engine/satoriengine /Satori/Engine/satoriengine
+COPY Engine/setup.py /Satori/Engine/setup.py
+COPY Engine/requirements.txt /Satori/Engine/requirements.txt
+COPY Neuron/satorineuron/ /Satori/Neuron/satorineuron/
+#COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
+COPY Neuron/setup.py /Satori/Neuron/setup.py
+COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
+
+RUN chmod -R 777 /Satori/Synapse && \
+    chmod -R 777 /Satori/Lib && \
+    chmod -R 777 /Satori/Wallet && \
+    chmod -R 777 /Satori/Engine && \
+    chmod -R 777 /Satori/Neuron
+
+# satori ui
+EXPOSE 24601
+
+ENV IPFS_PATH=/Satori/Neuron/config/ipfs
+
+WORKDIR /Satori/Neuron/satorineuron/web
+
+#ENTRYPOINT [ "python" ]
+#CMD ["python", "./app.py" ]
+# this should be default
+CMD ["bash", "./start_from_image.sh"]
+
+# BUILD PROCESS:
+# copy to and run from ../ (cd ..)
+# \Satori> docker build --no-cache -f "Neuron/Dockerfile code" -t satorinet/satorineuron:latest .; docker push satorinet/satorineuron:latest
+# OR
+# \Satori> docker buildx create --use
+# \Satori> docker buildx build --no-cache  -f "Neuron/Dockerfile code" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:latest --push .
+
+# description: Miner environment and software for the Satori Network
+
+# RUN OPTIONS
+# python -m satorisynapse.run async
+# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env ENV=prod satorinet/satorineuron:latest ./start.sh
+# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env ENV=prod satorinet/satorineuron:latest bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:latest bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Users\jorda\AppData\Roaming\Satori\Neuron:/Satori/Neuron -v C:\Users\jorda\AppData\Roaming\Satori\Synapse:/Satori/Synapse -v C:\Users\jorda\AppData\Roaming\Satori\Lib:/Satori/Lib -v C:\Users\jorda\AppData\Roaming\Satori\Wallet:/Satori/Wallet -v C:\Users\jorda\AppData\Roaming\Satori\Engine:/Satori/Engine --env ENV=prod satorinet/satorineuron:latest bash
+# docker run --rm -it --name satorineuron satorinet/satorineuron:latest bash
 # docker exec -it satorineuron bash
