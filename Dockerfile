@@ -14,8 +14,6 @@ RUN apt-get update && \
     cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git && \
     cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git && \
     cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Neuron.git && \
-    cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
-    cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
     mkdir /Satori/Neuron/models && \
     chmod -R 777 /Satori/Synapse && \
     chmod -R 777 /Satori/Lib && \
@@ -23,17 +21,21 @@ RUN apt-get update && \
     chmod -R 777 /Satori/Engine && \
     chmod -R 777 /Satori/Neuron && \
     pip install --upgrade pip && \
-    pip install --no-cache-dir torch==2.3.1 && \
-    pip install --no-cache-dir transformers==4.41.2 && \
-    pip install --no-cache-dir /Satori/granite-tsfm && \
-    pip install --no-cache-dir /Satori/chronos-forecasting && \
     cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
     cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
     cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
     cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
     cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
-# python-evrmorelib needs cmake and zip
 
+    # larger version: add later.
+    #cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
+    #cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
+    #pip install --no-cache-dir torch==2.3.1 && \
+    #pip install --no-cache-dir transformers==4.41.2 && \
+    #pip install --no-cache-dir /Satori/granite-tsfm && \
+    #pip install --no-cache-dir /Satori/chronos-forecasting && \
+
+# python-evrmorelib needs cmake and zip
 # ipfs - unused
 #RUN wget https://dist.ipfs.tech/kubo/v0.21.0/kubo_v0.21.0_linux-amd64.tar.gz
 #RUN tar -xvzf kubo_v0.21.0_linux-amd64.tar.gz
