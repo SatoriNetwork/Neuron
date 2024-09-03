@@ -102,6 +102,12 @@ WORKDIR /Satori/Neuron/satorineuron/web
 #CMD ["python", "./app.py" ]
 
 # BUILD PROCESS:
+# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:latest .
+# \Satori> docker buildx build -f "Neuron/Dockerfile" --platform linux/amd64 -t satorinet/satorineuron:latest --load .
+# \Satori> docker buildx build -f "Neuron/Dockerfile" --platform linux/arm64 -t satorinet/satorineuron:latest --load .
+# \Satori> docker push satorinet/satorineuron:latest
+
+# BUILD-PUSH PROCESS:
 # copy to and run from ../ (cd ..)
 # \Satori> docker build --no-cache -f "Neuron/Dockerfile base" -t satorinet/satorineuron:base .
 # OR

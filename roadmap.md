@@ -1,9 +1,12 @@
 Todo Jordan
 
+Bugs
+ Datastream Assignment System reassigns all streams (not just for neurons that were inactive)
+
 Updates
  make less frequent docker images
   update code within image.
- installer docker config CPU usage limit 
+ installer docker config CPU usage limit
  mini version and full
 
 Engine
