@@ -344,7 +344,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         except Exception as _:
             referrer = None
         x = 30
+        attempt = 0
         while True:
+            attempt += 1
             try:
                 self.details = CheckinDetails(
                     self.server.checkin(referrer=referrer))
@@ -360,6 +362,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.subscriptions = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.subscriptions)]
+                if attempt < 5 and len(self.subscriptions) == 0:
+                    time.sleep(30)
+                    continue
                 logging.info('subscriptions:', len(
                     self.subscriptions), print=True)
                 # logging.info('subscriptions:', self.subscriptions, print=True)
