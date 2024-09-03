@@ -19,7 +19,7 @@ def monitorAndRestartSatori():
                     break
                 time.sleep(1)
             except KeyboardInterrupt:
-                print("Shutting down monitor...")
+                print("Shutting down ...")
                 process.terminate()
                 process.wait()
                 return
