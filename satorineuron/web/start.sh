@@ -11,4 +11,3 @@ if [ "$HEADLESS" = "True" ]; then
 else
     python app.py
 fi
-#
