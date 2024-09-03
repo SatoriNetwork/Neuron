@@ -4,16 +4,15 @@
     <div id="vaultwarningbr">
       {% include 'vault-warning.html' %}
     </div>
-    <br id="minetovaultbr">
-    {% include 'vault-minetovault.html' %}
+    <br id="rewardbr">
+    {% include 'vault-reward.html' %}
+    <br id="stakebr">
+    {% include 'vault-stake.html' %}
     <br id='balancebr'>
     {% include 'wallet-functions.html' %}
     <!-- put voting template here -->
     <br id="historybr">
     {% include 'wallet-history.html' %}
-    <!-- don't include autosecure feature -->
-    <!--<br id="autosecurebr">-->
-    <!--{ include 'vault-autosecure.html' }-->
     <br id="metadatabr">
     {% include 'wallet-meta.html' %}
     <br id="ethvaultbr">
@@ -23,7 +22,3 @@
     {% include 'vault-lock.html' %}
   {% endif %}
 {% endblock %}
-
-
-
-
