@@ -1676,8 +1676,13 @@ def systemMetrics():
         'memory': system.getRamDetails(),
         'swap': system.getSwapDetails(),
         'disk': system.getDiskDetails(),
+        'boot_time': system.getBootTime(),
         'uptime': system.getUptime(),
         'version': VERSION,
+        'processor': system.getProcessor(),
+        'processor_count': system.getProcessorCount(),
+        'ram_total_gb': system.getRam(),
+        'ram_available_percent': system.getRamAvailablePercentage(),
     }), 200
 
 
