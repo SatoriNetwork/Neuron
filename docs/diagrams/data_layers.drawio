@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="C5fJZ2jLE_RFz2CwqT79" name="Page-1">
-        <mxGraphModel dx="911" dy="607" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="367" dy="607" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -28,7 +28,7 @@
                 <mxCell id="7" style="edgeStyle=none;html=1;entryX=0.25;entryY=1;entryDx=0;entryDy=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" parent="1" source="5" target="6" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="570" y="345"/>
+                            <mxPoint x="520" y="345"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -41,12 +41,12 @@
                 <mxCell id="8" style="edgeStyle=none;html=1;entryX=1;entryY=0.75;entryDx=0;entryDy=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" parent="1" source="6" target="5" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="630" y="375"/>
+                            <mxPoint x="580" y="375"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="6" value="Server" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="540" y="150" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="490" y="150" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="18" value="calculate aspects of the transaction&lt;br&gt;&lt;br&gt;&amp;nbsp;grab all utxos for the transaction&lt;br&gt;&lt;br&gt;Sign each utxo&lt;br&gt;&lt;br&gt;broadcast the transaction to the electrumx server" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="130" y="490" width="110" height="210" as="geometry"/>
@@ -67,7 +67,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="21" value="Electrumx&lt;br&gt;Server" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="510" y="420" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="460" y="420" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="22" value="Local machine" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
                     <mxGeometry y="140" width="420" height="350" as="geometry"/>
@@ -88,7 +88,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="23" value="Blockchain" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="700" y="420" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="650" y="420" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="27" style="edgeStyle=none;html=1;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="13" target="4">
                     <mxGeometry relative="1" as="geometry"/>
