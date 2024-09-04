@@ -112,7 +112,7 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # \Satori> docker build --no-cache -f "Neuron/Dockerfile base" -t satorinet/satorineuron:base .
 # OR
 # \Satori> docker buildx create --use
-# \Satori> docker buildx build -f "Neuron/Dockerfile base" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:base --push .
+# \Satori> docker buildx build -f "Neuron/Dockerfile base" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:base --load .
 # delete the base one after you push it, we just need it local
 
 # RUN OPTIONS
@@ -156,6 +156,8 @@ RUN chmod -R 777 /Satori/Synapse && \
     chmod -R 777 /Satori/Engine && \
     chmod -R 777 /Satori/Neuron
 
+RUN apt-get update && apt-get install -y dos2unix && dos2unix start.sh && dos2unix start_from_image.sh
+
 # satori ui
 EXPOSE 24601
 
@@ -185,3 +187,10 @@ CMD ["bash", "./start_from_image.sh"]
 # docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Users\jorda\AppData\Roaming\Satori\Neuron:/Satori/Neuron -v C:\Users\jorda\AppData\Roaming\Satori\Synapse:/Satori/Synapse -v C:\Users\jorda\AppData\Roaming\Satori\Lib:/Satori/Lib -v C:\Users\jorda\AppData\Roaming\Satori\Wallet:/Satori/Wallet -v C:\Users\jorda\AppData\Roaming\Satori\Engine:/Satori/Engine --env ENV=prod satorinet/satorineuron:latest bash
 # docker run --rm -it --name satorineuron satorinet/satorineuron:latest bash
 # docker exec -it satorineuron bash
+
+
+
+# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:test --push .
+# \Satori> docker pull satorinet/satorineuron:test
+# \Satori> docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
+# \Satori> docker push satorinet/satorineuron:latest
