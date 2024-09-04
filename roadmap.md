@@ -10,15 +10,19 @@ Updates
  mini version and full
 
 Engine
- rebuild image including latest engine changes
+ DONE rebuild image including latest engine changes
  integrate Jerome stuff
  chronos xgboost ensemble
 
 Delegates
- break feature apart in UI and code
-  set reward address... (in vault, replace)
-  stake for... if reward to me...
+ DONE break feature apart in UI and code
+  DONE set reward address... (in vault, replace)
+  DONE stake for...
  make the delegate report
+  show on delegate table:
+   reward of worker
+   if their reward addres is our wallet or vault or other
+   checkbox for charity
 
 Streams
 

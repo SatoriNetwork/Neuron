@@ -2,8 +2,16 @@
 # (updating process is the only thing that requires git)
 # (vim for troubleshooting)
 
-FROM satorinet/satorineuron:base
+# python:slim will eventually fail, if we need to revert try this:
+# FROM python:slim3.12.0b1-slim
 
+FROM satorinet/satorineuron:latest
+
+# copy to and run from ../ or C:\repos\Satori
+# (updating process is the only thing that requires git)
+# (vim for troubleshooting)
+
+# FROM satorinet/satorineuron:base
 
 #RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
 COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
@@ -29,8 +37,6 @@ RUN chmod -R 777 /Satori/Synapse && \
     chmod -R 777 /Satori/Wallet && \
     chmod -R 777 /Satori/Engine && \
     chmod -R 777 /Satori/Neuron
-
-RUN apt-get update && apt-get install -y dos2unix && dos2unix start.sh && dos2unix start_from_image.sh
 
 # satori ui
 EXPOSE 24601

@@ -1672,12 +1672,18 @@ def systemMetrics():
     from satorilib.api import system
     return jsonify({
         'hostname': os.uname().nodename,
+        'cpu': system.getProcessor(),
+        'cpu_count': system.getProcessorCount(),
         'cpu_usage_percent': system.getProcessorUsage(),
         'memory': system.getRamDetails(),
+        'memory_total_gb': system.getRam(),
+        'memory_available_percent': system.getRamAvailablePercentage(),
         'swap': system.getSwapDetails(),
         'disk': system.getDiskDetails(),
+        'boot_time': system.getBootTime(),
         'uptime': system.getUptime(),
         'version': VERSION,
+        'timestamp': time.time(),
     }), 200
 
 
