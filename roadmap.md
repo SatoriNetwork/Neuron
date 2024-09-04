@@ -10,7 +10,7 @@ Updates
  mini version and full
 
 Engine
- rebuild image including latest engine changes
+ DONE rebuild image including latest engine changes
  integrate Jerome stuff
  chronos xgboost ensemble
 
