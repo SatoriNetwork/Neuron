@@ -112,7 +112,10 @@
     // example text '[{
     //   "parent": 1234,
     //   "child": 5678,
+    //   "charity": 0,
     //   "address": "EJzhjaTUDmRBRrBk7QhWn8ZWEzEwWBLbcy",
+    //   "name": "alias",
+    //   "reward": 0.11532413,
     //   "ts": "2024-08-16 02:25:00.575062+00:00",
     //   "deleted": "2024-08-16 02:25:00.575062+00:00"}]'
     let data = JSON.parse(text);
@@ -123,7 +126,9 @@
           <thead>
             <tr>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Remote Neuron</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Reward</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Charity</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Clear</th>
             </tr>
           </thead>
         <tbody>
@@ -140,6 +145,44 @@
                 <h6 class="mb-0 text-sm" title="${item.address}">${alias}</h6>
               </div>
             </td>
+        `;
+        tableHTML += `
+            <td>
+              <div class="py-1" style="display: inline-flex;">
+                <h6 class="mb-0 text-sm" title="most recent">${reward}</h6>
+              </div>
+            </td>
+        `;
+        tableHTML += `
+            <td>
+              <div class="py-1" style="display: inline-flex;">
+        `;
+        if (item.charity == 0) {
+          tableHTML += `
+              <h6 id="charityChildButton${item.child}" class="mb-0 text-lg" title="requiring rewards for stake" style="margin-left: 1rem; margin-right:1rem;">
+                <a href="#" onclick="charityProxyChild('${item.address}', '${item.child}')">
+                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                    <i class="material-icons" style="font-size: 24px;">box</i>
+                  </button>
+                </a>
+              </h6>
+          `;
+        } else {
+          tableHTML += `
+              <h6 id="charityNotChildButton${item.child}" class="mb-0 text-lg" title="giving stake without rewards" style="margin-left: 1rem; margin-right:1rem;">
+                <a href="#" onclick="charityNotProxyChild('${item.address}', '${item.child}')">
+                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                    <i class="material-icons" style="font-size: 24px;">check</i>
+                  </button>
+                </a>
+              </h6>
+          `;
+        }
+        tableHTML += `
+              </div>
+            </td>
+        `;
+        tableHTML += `
             <td>
               <div class="py-1" style="display: inline-flex;">
         `;
@@ -205,6 +248,35 @@
     // Set the innerHTML of the specified element
     document.getElementById('delegateStakeTable').innerHTML = tableHTML;
   }
+  function charityProxyChild(address, child) {
+    fetch('/proxy/child/charity/'+address+'/'+child, { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      document.getElementById('charityChildButton'+child).style.display = 'none';
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function charityNotProxyChild(address, child) {
+    fetch('/proxy/child/no_charity/'+address+'/'+child, { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      document.getElementById('charityNotChildButton'+child).style.display = 'none';
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
   function approveProxyChild(address, child) {
     fetch('/proxy/child/approve/'+address+'/'+child, { method: 'GET' })
     .then(response => {

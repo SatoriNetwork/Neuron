@@ -1537,6 +1537,24 @@ def proxyParentStatus():
     return f'Failed stakeProxyChildren: {result}', 400
 
 
+@app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
+@authRequired
+def charityProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyCharity(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyCharity: {result}', 400
+
+
+@app.route('/proxy/child/no_charity/<address>/<id>', methods=['GET'])
+@authRequired
+def charityNotProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyCharityNot(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyCharityNot: {result}', 400
+
+
 @app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
 @authRequired
 def approveProxyChild(address: str, id: int):
