@@ -125,10 +125,11 @@
         <table id="delegateChildren" class="table align-items-center mb-0">
           <thead>
             <tr>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Remote Neuron</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Reward</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Charity</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Clear</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the alias or address of the remote Neuron">Remote Neuron</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the rewards most recently earned by the remote Neuron">Reward</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the remote Neuron is or is not pointing its reward to this Neuron">Pointed</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="stake the remote Neuron regardless of their chosen reward address">Charity</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="remove staking for the remote Neuron">Remove</th>
             </tr>
           </thead>
         <tbody>
@@ -137,6 +138,7 @@
     data.forEach(item => {
         // Determine the alias (use empty string if not provided)
         let alias = item.name ? item.name : item.address;
+        let pointed = item.pointed == 1 ? 'Yes' : 'No';
         // Construct the table row for each item
         tableHTML += `
           <tr id="childRow${item.child}" class="yellow-hover">
@@ -149,7 +151,14 @@
         tableHTML += `
             <td>
               <div class="py-1" style="display: inline-flex;">
-                <h6 class="mb-0 text-sm" title="most recent">${reward}</h6>
+                <h6 class="mb-0 text-sm" title="most recent">${item.reward}</h6>
+              </div>
+            </td>
+        `;
+        tableHTML += `
+            <td>
+              <div class="py-1" style="display: inline-flex;">
+                <h6 class="mb-0 text-sm" title="">${pointed}</h6>
               </div>
             </td>
         `;
@@ -162,7 +171,7 @@
               <h6 id="charityChildButton${item.child}" class="mb-0 text-lg" title="requiring rewards for stake" style="margin-left: 1rem; margin-right:1rem;">
                 <a href="#" onclick="charityProxyChild('${item.address}', '${item.child}')">
                   <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
-                    <i class="material-icons" style="font-size: 24px;">box</i>
+                    <i class="material-icons" style="font-size: 24px;">remove</i>
                   </button>
                 </a>
               </h6>
