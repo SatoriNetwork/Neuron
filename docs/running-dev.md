@@ -1,0 +1,1 @@
+:24601 -p 5000:5000 -v /home/chaz/projects/satori/Neuron:/Satori/Neuron -v /home/chaz/projects/satori/Synapse:/Satori/Synapse -v /home/chaz/projects/satori/Lib:/Satori/Lib -v /home/chaz/projects/satori/Wallet:/Satori/Wallet -v /home/chaz/projects/satori/Engine:/Satori/Engine --env ENV=dev satorinet/satorineuron:latest bash
