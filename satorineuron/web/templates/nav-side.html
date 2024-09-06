@@ -189,6 +189,20 @@
       </li>
       {% endif %}
 
+      <li class="nav-item">
+        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Proposals' else '' }}" href="{{ url_for('proposals') }}" onclick="showWorking();">
+          <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+            <i class="material-icons opacity-10">ballot</i>
+          </div>
+          <span class="nav-link-text ms-1">Proposals</span>
+        </a>
+      </li>
+      {% if title=='Proposals' %}
+      <li class='sub-nav-item'>
+        <a href='#' onclick="scrollOrJumpTo('proposalsbr');">All Proposals</a>
+      </li>
+      {% endif %}
+
       <!-- CHAT - not necessary at this time
       <li class="nav-item">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Chat' else '' }}" href="{{ url_for('chatPage') }}" onclick="showWorking();">
