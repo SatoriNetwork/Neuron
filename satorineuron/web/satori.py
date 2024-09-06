@@ -85,45 +85,41 @@ while True:
         start = StartupDag(
             env=ENV,
             urlServer={
-                # TODO: local endpoint should be in a config file.
-                'local': 'http://192.168.0.10:5002',
-                'dev': 'http://localhost:5002',
-                'test': 'https://test.satorinet.io',
+                'dev': 'http://localhost:5000',
                 'prod': 'https://stage.satorinet.io'}[ENV],
+
+            
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://mundo.satorinet.io'}[ENV],
+                'prod': 'https://mundo.satorinet.io'
+            }[ENV],
             urlPubsubs={
                 'local': ['ws://192.168.0.10:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
-                'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
-            # 'prod': ['ws://pubsub2.satorinet.foundation:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
+                'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']
+            }[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
-                'prod': 'https://synergy.satorinet.io:24602'}[ENV],
-            isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
-
-        # print('building engine')
-        # start.buildEngine()
-        # threading.Thread(target=start.start, daemon=True).start()
-        logging.info(f'environment: {ENV}', print=True)
-        logging.info('Satori Neuron is starting...', color='green')
+                'prod': 'https://synergy.satorinet.io:24602'
+            }[ENV],
+            isDebug=sys.argv[1] if len(sys.argv) > 1 else False
+        )
+        
+        logging.info(f'environment: {ENV}', extra={'print': True})
+        logging.info('Satori Neuron is starting...', extra={'color': 'green'})
         break
     except ConnectionError as e:
-        # try again...
         traceback.print_exc()
-        logging.error(f'ConnectionError in app startup: {e}', color='red')
+        logging.error(f'ConnectionError in app startup: {e}', extra={'color': 'red'})
         time.sleep(30)
-    # except RemoteDisconnected as e:
     except Exception as e:
-        # try again...
         traceback.print_exc()
-        logging.error(f'Exception in app startup: {e}', color='red')
+        logging.error(f'Exception in app startup: {e}', extra={'color': 'red'})
         time.sleep(30)
 
 ###############################################################################
@@ -308,10 +304,7 @@ def favicon():
 @app.route('/static/<path:path>')
 @authRequired
 def sendStatic(path):
-    if start.vault is not None and not start.vault.isEncrypted:
-        return send_from_directory('static', path)
-    flash('please unlock the vault first')
-    return redirect(url_for('dashboard'))
+    return send_from_directory('static', path)
 
 
 @app.route('/upload_history_csv', methods=['POST'])
@@ -387,22 +380,19 @@ def unpause():
 @app.route('/backup/<target>', methods=['GET'])
 @authRequired
 def backup(target: str = 'satori'):
-    if start.vault is not None and not start.vault.isEncrypted:
-        outputPath = '/Satori/Neuron/satorineuron/web/static/download'
-        if target == 'satori':
-            from satorilib.api.disk.zip.zip import zipSelected
-            zipSelected(
-                folderPath=f'/Satori/Neuron/{target}',
-                outputPath=f'{outputPath}/{target}.zip',
-                selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
-        else:
-            from satorilib.api.disk.zip.zip import zipFolder
-            zipFolder(
-                folderPath=f'/Satori/Neuron/{target}',
-                outputPath=f'{outputPath}/{target}')
-        return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
-    flash('please unlock the vault first')
-    return redirect(url_for('dashboard'))
+    outputPath = '/Satori/Neuron/satorineuron/web/static/download'
+    if target == 'satori':
+        from satorilib.api.disk.zip.zip import zipSelected
+        zipSelected(
+            folderPath=f'/Satori/Neuron/{target}',
+            outputPath=f'{outputPath}/{target}.zip',
+            selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
+    else:
+        from satorilib.api.disk.zip.zip import zipFolder
+        zipFolder(
+            folderPath=f'/Satori/Neuron/{target}',
+            outputPath=f'{outputPath}/{target}')
+    return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
 
 
 @app.route('/restart', methods=['GET'])
@@ -608,7 +598,7 @@ def sendSatoriTransactionFromWallet(network: str = 'main'):
     # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
     result = sendSatoriTransactionUsing(
         start.getWallet(network=network), network, 'wallet')
-    if isinstance(result, str) and len(result) == 64:
+    if len(result) == 64:
         flash(str(result))
     return redirect(f'/wallet/{network}')
 
@@ -645,6 +635,9 @@ def sendSatoriTransactionUsing(
 
         # doesn't respect the cooldown
         myWallet.getUnspentSignatures(force=True)
+        if sendSatoriForm['address'] == start.getWallet(network=network).address:
+            # if we're sending to wallet we don't want it to auto send back to vault
+            disableAutosecure(network)
         try:
             # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronTransaction(
@@ -1425,6 +1418,8 @@ def vault():
             'walletIcon': 'lock',
             'image': getQRCode(start.vault.address),
             'network': start.network,  # change to main when ready
+            'retain': (start.vault.getAutosecureEntry() or {}).get('retain', 0),
+            'autosecured': start.vault.autosecured(),
             'minedtovault': start.mineToVault,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
@@ -1438,11 +1433,61 @@ def vault():
         'walletIcon': 'lock',
         'image': '',
         'network': start.network,  # change to main when ready
+        'autosecured': False,
         'minedtovault': start.mineToVault,  # start.server.minedToVault(),
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+
+
+@app.route('/enable_autosecure/<network>/<retainInWallet>', methods=['GET'])
+@authRequired
+def enableAutosecure(network: str = 'main', retainInWallet: int = 0):
+    try:
+        retainInWallet = int(retainInWallet)
+    except Exception as _:
+        retainInWallet = 0
+    if start.vault is None:
+        flash('Must unlock your vault to enable autosecure.')
+        return redirect('/dashboard')
+    # for this network open the wallet get the address
+    # config.get('autosecure')
+    # save the address to the autosecure config
+    # as the value save the map:
+    # {'address': vaultAddress, 'pubkey': vaultPubkey, 'sig': signature}
+    # make the signature sign the encrypted string representation of their vault
+    # plus the vaultAddress
+    # that way we can verify the signature is for this vault in the future.
+    # the config will be checked daily when value comes in.
+    config.add(
+        'autosecure',
+        data={
+            start.getWallet(network=network).address: {
+                **start.vault.authPayload(
+                    asDict=True,
+                    challenge=start.vault.address + start.vault.publicKey),
+                **{'retain': retainInWallet}
+            }
+        })
+    # start.getWallet(network=network).get() # we think this triggers the tx twice
+    return 'OK', 200
+
+
+@app.route('/disable_autosecure/<network>', methods=['GET'])
+@authRequired
+def disableAutosecure(network: str = 'main'):
+    if start.vault is None:
+        flash('Must unlock your vault to disable autosecure.')
+        return redirect('/dashboard')
+    # find the entry in the autosecure config of this wallet's nework address
+    # remove it, save the config
+    config.put(
+        'autosecure',
+        data={
+            k: v for k, v in config.get('autosecure').items()
+            if k != start.getWallet(network=network).address})
+    return 'OK', 200
 
 
 @app.route('/vault/report', methods=['GET'])
@@ -1463,45 +1508,11 @@ def reportVault(network: str = 'main'):
     return f'Failed to report vault: {result}', 400
 
 
-@app.route('/mining/to/address', methods=['GET'])
+@app.route('/mine_to_vault/status', methods=['GET'])
 @authRequired
-def mineToAddressStatus():
-    return str(start.server.mineToAddressStatus()), 200
-
-
-@app.route('/mine/to/address/<address>', methods=['GET'])
-@authRequired
-def mineToAddress(address: str):
-    if start.vault is None:
-        return '', 200
-    # the network portion should be whatever network I'm on.
-    network = 'main'
-    start.details.wallet['rewardaddress'] = address
-    vault = start.getVault(network=network)
-    success, result = start.server.mineToAddress(
-        vaultSignature=vault.sign(address),
-        vaultPubkey=vault.publicKey,
-        address=address)
-    if success:
-        return 'OK', 200
-    return f'Failed to report vault: {result}', 400
-
-
-@app.route('/stake/for/address/<address>', methods=['GET'])
-@authRequired
-def stakeForAddress(address: str):
-    if start.vault is None:
-        return '', 200
-    # the network portion should be whatever network I'm on.
-    network = 'main'
-    vault = start.getVault(network=network)
-    success, result = start.server.stakeForAddress(
-        vaultSignature=vault.sign(address),
-        vaultPubkey=vault.publicKey,
-        address=address)
-    if success:
-        return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+def mineToVaultStatus():
+    x = start.server.minedToVault()
+    return str(x), 200
 
 
 @app.route('/mine_to_vault/enable/<network>', methods=['GET'])
@@ -1535,24 +1546,6 @@ def proxyParentStatus():
     if success:
         return result, 200
     return f'Failed stakeProxyChildren: {result}', 400
-
-
-@app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
-@authRequired
-def charityProxyChild(address: str, id: int):
-    success, result = start.server.stakeProxyCharity(address, childId=id)
-    if success:
-        return result, 200
-    return f'Failed stakeProxyCharity: {result}', 400
-
-
-@app.route('/proxy/child/no_charity/<address>/<id>', methods=['GET'])
-@authRequired
-def charityNotProxyChild(address: str, id: int):
-    success, result = start.server.stakeProxyCharityNot(address, childId=id)
-    if success:
-        return result, 200
-    return f'Failed stakeProxyCharityNot: {result}', 400
 
 
 @app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
@@ -1663,6 +1656,44 @@ def vote():
         **getVotes(myWallet)}))
 
 
+
+
+
+
+@app.route('/proposals', methods=['GET'])
+@authRequired
+def proposals():
+    # my_wallet = start.getWallet(network=start.network)
+    proposals_data = start.server.getProposals()
+    context = {
+        'title': 'Proposals',
+        # 'wallet': my_wallet,
+        'proposals': proposals_data
+    }
+    return render_template('proposals.html', **getResp(context))
+
+@app.route('/proposals/data', methods=['GET'])
+def get_proposals():
+    try:
+        proposals = start.server.getProposals()
+        return jsonify({'proposals': proposals})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/proposals/vote', methods=['POST'])
+@authRequired
+def proposal_vote():
+    data = request.json
+    proposal_id = data.get('proposal_id')
+    vote = data.get('vote')
+    # wallet = start.getWallet(network=start.network)
+    success, message_or_proposal = start.server.submitProposalVote(proposal_id, vote)
+    if success:
+        return jsonify({'status': 'success', 'proposal': message_or_proposal}), 200
+    else:
+        return jsonify({'status': 'error', 'message': message_or_proposal}), 400
+    
+
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
 @authRequired
 def voteSubmitManifestWallet():
@@ -1685,60 +1716,38 @@ def voteSubmitManifestWallet():
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
-@app.route('/system_metrics', methods=['GET'])
-def systemMetrics():
-    from satorilib.api import system
-    return jsonify({
-        'hostname': os.uname().nodename,
-        'cpu': system.getProcessor(),
-        'cpu_count': system.getProcessorCount(),
-        'cpu_usage_percent': system.getProcessorUsage(),
-        'memory': system.getRamDetails(),
-        'memory_total_gb': system.getRam(),
-        'memory_available_percent': system.getRamAvailablePercentage(),
-        'swap': system.getSwapDetails(),
-        'disk': system.getDiskDetails(),
-        'boot_time': system.getBootTime(),
-        'uptime': system.getUptime(),
-        'version': VERSION,
-        'timestamp': time.time(),
-    }), 200
-
-
-# @app.route('/vote/submit/manifest/vault', methods=['POST'])
-# @authRequired
-# def voteSubmitManifestVault():
-#     # logging.debug(request.json, color='yellow')
-#     vaultPredictors = request.json.get('vaultPredictors')
-#     vaultOracles = request.json.get('vaultOracles')
-#     vaultInviters = request.json.get('vaultInviters')
-#     vaultCreators = request.json.get('vaultCreators')
-#     vaultManagers = request.json.get('vaultManagers')
-#     vaultPredictors = 0 if vaultPredictors.strip() == '' else int(vaultPredictors)
-#     vaultOracles = 0 if vaultOracles.strip() == '' else int(vaultOracles)
-#     vaultInviters = 0 if vaultInviters.strip() == '' else int(vaultInviters)
-#     vaultCreators = 0 if vaultCreators.strip() == '' else int(vaultCreators)
-#     vaultManagers = 0 if vaultManagers.strip() == '' else int(vaultManagers)
-#     if (
-#         (
-#             vaultPredictors > 0 or
-#             vaultOracles > 0 or
-#             vaultInviters > 0 or
-#             vaultCreators > 0 or
-#             vaultManagers > 0
-#         ) and start.vault is not None and start.vault.isDecrypted
-#     ):
-#         start.server.submitMaifestVote(
-#             start.getWallet(network=start.network),
-#             votes={
-#                 # TODO: authenticate the vault.
-#                 # 'vault': start.vault.address,
-#                 'predictors': vaultPredictors,
-#                 'oracles': vaultOracles,
-#                 'inviters': vaultInviters,
-#                 'creators': vaultCreators,
-#                 'managers': vaultManagers})
-#     return jsonify({'message': 'Manifest votes received successfully'}), 200
+@app.route('/vote/submit/manifest/vault', methods=['POST'])
+@authRequired
+def voteSubmitManifestVault():
+    # logging.debug(request.json, color='yellow')
+    vaultPredictors = request.json.get('vaultPredictors')
+    vaultOracles = request.json.get('vaultOracles')
+    vaultInviters = request.json.get('vaultInviters')
+    vaultCreators = request.json.get('vaultCreators')
+    vaultManagers = request.json.get('vaultManagers')
+    vaultPredictors = 0 if vaultPredictors.strip() == '' else int(vaultPredictors)
+    vaultOracles = 0 if vaultOracles.strip() == '' else int(vaultOracles)
+    vaultInviters = 0 if vaultInviters.strip() == '' else int(vaultInviters)
+    vaultCreators = 0 if vaultCreators.strip() == '' else int(vaultCreators)
+    vaultManagers = 0 if vaultManagers.strip() == '' else int(vaultManagers)
+    if (
+        (
+            vaultPredictors > 0 or
+            vaultOracles > 0 or
+            vaultInviters > 0 or
+            vaultCreators > 0 or
+            vaultManagers > 0
+        ) and start.vault is not None and start.vault.isDecrypted
+    ):
+        start.server.submitMaifestVote(
+            start.vault,
+            votes={
+                'predictors': vaultPredictors,
+                'oracles': vaultOracles,
+                'inviters': vaultInviters,
+                'creators': vaultCreators,
+                'managers': vaultManagers})
+    return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
@@ -1890,6 +1899,8 @@ def triggerRelay(topic: str = None):
         flash('failed to relay', 'error')
     return redirect(url_for('dashboard'))
 
+
+
 ###############################################################################
 ## Routes - subscription ######################################################
 ###############################################################################
@@ -1897,7 +1908,7 @@ def triggerRelay(topic: str = None):
 # unused - we're not using any other networks yet, but when we do we can pass
 # their values to this and have it diseminate
 # @app.route('/subscription/update/', methods=['POST'])
-# def update():
+# def update():             
 #    """
 #    returns nothing
 #    ---
