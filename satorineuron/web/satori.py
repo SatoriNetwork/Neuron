@@ -89,7 +89,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -584,6 +584,24 @@ def miningModeOn():
 @authRequired
 def miningModeOff():
     return str(start.setMiningMode(False)), 200
+
+
+@app.route('/delegate/get', methods=['GET'])
+@authRequired
+def delegateGet():
+    success, msg = start.server.delegateGet()
+    if success:
+        return str(msg), 200
+    return str('failure'), 400
+
+
+@app.route('/delegate/remove', methods=['GET'])
+@authRequired
+def delegateRemove():
+    success, msg = start.server.delegateRemove()
+    if success:
+        return str(msg), 200
+    return str('failure'), 400
 
 
 @app.route('/stake/check', methods=['GET'])
@@ -1453,6 +1471,7 @@ def reportVault(network: str = 'main'):
     # the network portion should be whatever network I'm on.
     vault = start.getVault(network=network)
     vaultAddress = vault.address
+    print(vault.publicKey)
     success, result = start.server.reportVault(
         walletSignature=start.getWallet(network=network).sign(vaultAddress),
         vaultSignature=vault.sign(vaultAddress),
