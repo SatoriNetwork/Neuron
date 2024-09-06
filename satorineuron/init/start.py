@@ -362,7 +362,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.subscriptions = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.subscriptions)]
-                if attempt < 5 and len(self.subscriptions) == 0:
+                if attempt < 5 and (self.details is None or len(self.subscriptions) == 0):
                     time.sleep(30)
                     continue
                 logging.info('subscriptions:', len(
