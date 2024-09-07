@@ -36,7 +36,7 @@ from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
-logging.info(f'verison: {VERSION}', print=True)
+logging.info(f'version: {VERSION}', print=True)
 
 
 ###############################################################################
@@ -89,7 +89,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
