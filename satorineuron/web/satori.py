@@ -36,7 +36,7 @@ from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
-logging.info(f'verison: {VERSION}', print=True)
+logging.info(f'version: {VERSION}', print=True)
 
 
 ###############################################################################
@@ -584,6 +584,24 @@ def miningModeOn():
 @authRequired
 def miningModeOff():
     return str(start.setMiningMode(False)), 200
+
+
+@app.route('/delegate/get', methods=['GET'])
+@authRequired
+def delegateGet():
+    success, msg = start.server.delegateGet()
+    if success:
+        return str(msg), 200
+    return str('failure'), 400
+
+
+@app.route('/delegate/remove', methods=['GET'])
+@authRequired
+def delegateRemove():
+    success, msg = start.server.delegateRemove()
+    if success:
+        return str(msg), 200
+    return str('failure'), 400
 
 
 @app.route('/stake/check', methods=['GET'])
@@ -1453,6 +1471,7 @@ def reportVault(network: str = 'main'):
     # the network portion should be whatever network I'm on.
     vault = start.getVault(network=network)
     vaultAddress = vault.address
+    print(vault.publicKey)
     success, result = start.server.reportVault(
         walletSignature=start.getWallet(network=network).sign(vaultAddress),
         vaultSignature=vault.sign(vaultAddress),
@@ -1535,6 +1554,24 @@ def proxyParentStatus():
     if success:
         return result, 200
     return f'Failed stakeProxyChildren: {result}', 400
+
+
+@app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
+@authRequired
+def charityProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyCharity(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyCharity: {result}', 400
+
+
+@app.route('/proxy/child/no_charity/<address>/<id>', methods=['GET'])
+@authRequired
+def charityNotProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyCharityNot(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyCharityNot: {result}', 400
 
 
 @app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])

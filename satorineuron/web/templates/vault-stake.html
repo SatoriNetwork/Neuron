@@ -112,7 +112,10 @@
     // example text '[{
     //   "parent": 1234,
     //   "child": 5678,
+    //   "charity": 0,
     //   "address": "EJzhjaTUDmRBRrBk7QhWn8ZWEzEwWBLbcy",
+    //   "name": "alias",
+    //   "reward": 0.11532413,
     //   "ts": "2024-08-16 02:25:00.575062+00:00",
     //   "deleted": "2024-08-16 02:25:00.575062+00:00"}]'
     let data = JSON.parse(text);
@@ -122,16 +125,30 @@
         <table id="delegateChildren" class="table align-items-center mb-0">
           <thead>
             <tr>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Remote Neuron</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the alias or address of the remote Neuron">Remote Neuron</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the rewards most recently earned by the remote Neuron">Reward</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the amount of stake this delegate Neuron is providing the remote Neuron. Can take up to 24 day to update.">Stake</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the remote Neuron is or is not pointing its reward to this Neuron">Pointed</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="stake the remote Neuron regardless of their chosen reward address">Charity</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="remove staking for the remote Neuron">Remove</th>
             </tr>
           </thead>
         <tbody>
     `;
+    let totalCount = 0;
+    let totalReward = 0;
+    let totalStake = 0;
     // Iterate over each item in the JSON array
     data.forEach(item => {
         // Determine the alias (use empty string if not provided)
         let alias = item.name ? item.name : item.address;
+        let pointed = item.pointed == 1 ? 'Yes' : 'No';
+        let satori = item.child_satori ? parseFloat(item.child_satori) : 0;
+        let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= 5 ? 0: 5); // Convert proxy to float
+        let reward = parseFloat(item.reward); // Convert reward to float
+        totalCount += 1;
+        totalReward += isNaN(reward) ? 0 : reward; // Add reward, ensure NaN doesn't get added
+        totalStake += isNaN(proxy) ? 0 : proxy;    // Add proxy, ensure NaN doesn't get added
         // Construct the table row for each item
         tableHTML += `
           <tr id="childRow${item.child}" class="yellow-hover">
@@ -140,6 +157,58 @@
                 <h6 class="mb-0 text-sm" title="${item.address}">${alias}</h6>
               </div>
             </td>
+        `;
+        tableHTML += `
+            <td>
+              <div class="py-1" style="display: inline-flex;">
+                <h6 class="mb-0 text-sm" title="most recent">${item.reward}</h6>
+              </div>
+            </td>
+        `;
+        tableHTML += `
+            <td>
+              <div class="py-1" style="display: inline-flex;">
+                <h6 class="mb-0 text-sm" title="most recent">${proxy}</h6>
+              </div>
+            </td>
+        `;
+        tableHTML += `
+            <td>
+              <div class="py-1" style="display: inline-flex;">
+                <h6 class="mb-0 text-sm" title="pointing rewards to delegate?">${pointed}</h6>
+              </div>
+            </td>
+        `;
+        tableHTML += `
+            <td>
+              <div class="py-1" style="display: inline-flex;">
+        `;
+        if (item.charity == 0) {
+          tableHTML += `
+              <h6 id="charityChildButton${item.child}" class="mb-0 text-lg" title="requiring rewards for stake" style="margin-left: 1rem; margin-right:1rem;">
+                <a href="#" onclick="charityProxyChild('${item.address}', '${item.child}')">
+                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                    <i class="material-icons" style="font-size: 24px;">remove</i>
+                  </button>
+                </a>
+              </h6>
+          `;
+        } else {
+          tableHTML += `
+              <h6 id="charityNotChildButton${item.child}" class="mb-0 text-lg" title="giving stake without rewards" style="margin-left: 1rem; margin-right:1rem;">
+                <a href="#" onclick="charityNotProxyChild('${item.address}', '${item.child}')">
+                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+                    <i class="material-icons" style="font-size: 24px;">check</i>
+                  </button>
+                </a>
+              </h6>
+          `;
+        }
+        tableHTML += `
+              </div>
+            </td>
+        `;
+        tableHTML += `
             <td>
               <div class="py-1" style="display: inline-flex;">
         `;
@@ -198,6 +267,51 @@
     });
     // Close the table and div tags
     tableHTML += `
+      <tr class="yellow-hover">
+        <td>
+          <div class="py-1">
+            <h6 class="mb-0 text-sm text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="how many Neurons this delegate stakes for">Total Neuron Count</h6>
+          </div>
+        </td>
+    `;
+    tableHTML += `
+        <td>
+          <div class="py-1" style="display: inline-flex;">
+            <h6 class="mb-0 text-sm text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="total most recent reward">Total Reward</h6>
+          </div>
+        </td>
+    `;
+    tableHTML += `
+        <td>
+          <div class="py-1" style="display: inline-flex;">
+            <h6 class="mb-0 text-sm text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="total most recent stake used">Total Stake Used</h6>
+          </div>
+        </td>
+    `;
+    tableHTML += `
+      <tr class="yellow-hover">
+        <td>
+          <div class="py-1">
+            <h6 class="mb-0 text-sm" title="how many Neurons this delegate stakes for" style="font-weight: bold;">${totalCount}</h6>
+          </div>
+        </td>
+    `;
+    tableHTML += `
+        <td>
+          <div class="py-1" style="display: inline-flex;">
+            <h6 class="mb-0 text-sm" title="total most recent reward" style="font-weight: bold;">${totalReward}</h6>
+          </div>
+        </td>
+    `;
+    tableHTML += `
+        <td>
+          <div class="py-1" style="display: inline-flex;">
+            <h6 class="mb-0 text-sm" title="total most recent stake used" style="font-weight: bold;">${totalStake}</h6>
+          </div>
+        </td>
+    `;
+
+    tableHTML += `
           </tbody>
         </table>
       </div>
@@ -205,6 +319,35 @@
     // Set the innerHTML of the specified element
     document.getElementById('delegateStakeTable').innerHTML = tableHTML;
   }
+  function charityProxyChild(address, child) {
+    fetch('/proxy/child/charity/'+address+'/'+child, { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      document.getElementById('charityChildButton'+child).style.display = 'none';
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function charityNotProxyChild(address, child) {
+    fetch('/proxy/child/no_charity/'+address+'/'+child, { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      document.getElementById('charityNotChildButton'+child).style.display = 'none';
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
   function approveProxyChild(address, child) {
     fetch('/proxy/child/approve/'+address+'/'+child, { method: 'GET' })
     .then(response => {

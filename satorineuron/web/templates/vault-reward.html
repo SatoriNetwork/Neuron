@@ -56,6 +56,8 @@
             <p id='minigRewardConfirmation'></p>
           </div>
         </div>
+        <div id='myDelegate'>
+        </div>
       </div>
     </div>
   </div>
@@ -101,9 +103,55 @@
         document.getElementById("minigReward").value = text;
       }).catch(error => console.error('Error:', error));
     }
+    function getMyDelegate() {
+      fetch('/delegate/get', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(text => {
+        console.log(text);
+        if (text == '') {
+          document.getElementById("myDelegate").innerHTML = '';
+        } else {
+          document.getElementById('myDelegate').innerHTML = `
+          <div class="row" style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
+            <div class="col-xl-3 col-sm-3 mb-xl-0">
+              <center>
+                <p class="mb-1 {% if darkmode %}dark-colors{% endif %}", style="padding-top: .25rem;">
+                  My Delegate:
+                </p>
+              <center>
+            </div>
+            <div class="col-xl-6 col-sm-6 mb-xl-0 text-center">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">
+                <div class="d-flex justify-content-center px-3 py-1" style="padding-right: 1rem; margin: 0 auto;">
+                  <p class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;color: grey;">
+                    ${text}
+                  </p>
+                </div>
+              </h6>
+            </div>
+            <div class="col-xl-3 col-sm-3 mb-xl-0">
+              <h6 class="mb-0 text-lg" title="remove" style="margin-left: 1rem; margin-right:1rem;">
+                <a href="#" onclick="removeDelegate()">
+                  <button class="btn btn-link text-dark fixed-plugin-close-button">
+                    <i class="material-icons" style="font-size: 24px;">clear</i>
+                  </button>
+                </a>
+              </h6>
+            </div>
+          </div>
+          `;
+        }
+      }).catch(error => console.error('Error:', error));
+    }
     document.addEventListener('DOMContentLoaded', (event) => {
       reportVault();
       getMineToAddressStatus();
+      getMyDelegate();
     });
     function setRewardAddress() {
       address = document.getElementById("minigReward").value;
@@ -125,6 +173,21 @@
       document.getElementById("minigRewardConfirmation").innerHTML = 'Unable to save.';
       console.error('Error:', error);
     });
+  }
+  function removeDelegate() {
+    fetch('/delegate/remove', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+      if (text == 'OK') {
+        document.getElementById("myDelegate").innerHTML = '';
+      }
+    }).catch(error => console.error('Error:', error));
   }
 </script>
 {% endblock %}
