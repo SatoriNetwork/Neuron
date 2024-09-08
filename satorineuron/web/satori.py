@@ -1032,7 +1032,6 @@ def fetchWalletStatsDaily():
     required_columns = ['placement', 'competitors']
     if not all(col in df.columns for col in required_columns):
         return 'No stats available.', 200
-    print(df)
     # Calculate the normalized placement for each row
     df['normalized_placement'] = df['placement'] / df['competitors']
     # Calculate the average of normalized placements
