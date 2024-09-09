@@ -142,8 +142,6 @@ class StartupDagStruct(object):
     #    '''
     #    '''
     #    pass
-    def autosecure(self):
-        ''' starts autosecure process '''
 
     def pause(self, timeout: int = 60):
         ''' pause the engine. '''

@@ -6,6 +6,7 @@ from satoriengine.concepts import HyperParameter
 from satoriengine.model import metrics
 from satoriengine import ModelManager, Engine, DataManager
 from satorineuron import config
+import copy
 
 
 def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None, emergencyRestart: callable = None, subscription: bool = True):
@@ -93,6 +94,13 @@ def getEngine(
         kwargs = {
             'hyperParameters': [
                 HyperParameter(
+                    name='lookback_len',
+                    value=1,
+                    kind=int,
+                    limit=1,
+                    minimum=1,
+                    maximum=64),
+                HyperParameter(
                     name='n_estimators',
                     value=300,
                     kind=int,
@@ -119,7 +127,9 @@ def getEngine(
                     kind=int,
                     limit=1,
                     minimum=100,
-                    maximum=400), ],
+                    maximum=400),
+            ],
+            'xgbParams': ['n_estimators','learning_rate','max_depth','early_stopping_rounds'],
             'metrics':  {
                 # raw data features
                 'Raw': metrics.rawDataMetric,
@@ -171,7 +181,7 @@ def getEngine(
                         subscription.reason.target == publication.id.target
                 )],
                 memory=memory.Memory,
-                **kwargs)
+                **copy.deepcopy(kwargs))
             # if publication.id in getStart().caches.keys()
             for publication in publications
         }

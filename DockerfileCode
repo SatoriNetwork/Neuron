@@ -2,8 +2,16 @@
 # (updating process is the only thing that requires git)
 # (vim for troubleshooting)
 
-FROM satorinet/satorineuron:base
+# python:slim will eventually fail, if we need to revert try this:
+# FROM python:slim3.12.0b1-slim
 
+FROM satorinet/satorineuron:latest
+
+# copy to and run from ../ or C:\repos\Satori
+# (updating process is the only thing that requires git)
+# (vim for troubleshooting)
+
+# FROM satorinet/satorineuron:base
 
 #RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
 COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
@@ -61,3 +69,10 @@ CMD ["bash", "./start_from_image.sh"]
 # docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Users\jorda\AppData\Roaming\Satori\Neuron:/Satori/Neuron -v C:\Users\jorda\AppData\Roaming\Satori\Synapse:/Satori/Synapse -v C:\Users\jorda\AppData\Roaming\Satori\Lib:/Satori/Lib -v C:\Users\jorda\AppData\Roaming\Satori\Wallet:/Satori/Wallet -v C:\Users\jorda\AppData\Roaming\Satori\Engine:/Satori/Engine --env ENV=prod satorinet/satorineuron:latest bash
 # docker run --rm -it --name satorineuron satorinet/satorineuron:latest bash
 # docker exec -it satorineuron bash
+
+
+
+# \Satori> docker buildx build --no-cache -f "Neuron/DockerfileCode" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:test --push .
+# \Satori> docker pull satorinet/satorineuron:test
+# \Satori> docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
+# \Satori> docker push satorinet/satorineuron:latest

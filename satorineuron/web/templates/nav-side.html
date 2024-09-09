@@ -35,7 +35,7 @@
       </li>
       {% endif %}
 
-	    <!--heading not necessary 
+	    <!--heading not necessary
 	    <li class="nav-item mt-3">
         <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8"></h6>
       </li>-->
@@ -104,7 +104,7 @@
       {% endif %}
       <script>
         document.getElementById('gotoWalletMain').addEventListener(
-          'click', 
+          'click',
           function(event) {
             window.location.href =document.getElementById('urlWalletMain').innerHTML;
             showWorking();
@@ -115,7 +115,7 @@
           var dropdownContent = event.currentTarget.nextElementSibling;
           dropdownContent.classList.toggle("sidenav-show");
         }
-        
+
         // Close the dropdown if the user clicks outside of it
         window.onclick = function(event) {
           if (!event.target.matches('.sidenav-dropdown-chevron, .sidenav-dropdown-chevron *')) {
@@ -128,10 +128,10 @@
             }
           }
         }
-        
+
       </script>
 
-      
+
       <!-- this will be a page that shows all our predictions and all our subscriptions and what feeds which.
       <li class="nav-item">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Predictions' else '' }}" href="{{ url_for('dashboard') }}">
@@ -155,18 +155,15 @@
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('vaultwarningbr');">Warning</a>
       </li>
-      <!--<li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('minetovaultbr');">Mine-to-Vault</a>
-      </li>-->
+      <li class='sub-nav-item'>
+        <a href='#' onclick="scrollOrJumpTo('rewardbr');">Reward Address</a>
+      </li>
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('balancebr');">Balance</a>
       </li>
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('historybr');">Transaction History</a>
       </li>
-      <!--<li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('autosecurebr');">Auto-Secure</a>
-      </li>-->
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('metadatabr');">Metadata</a>
       </li>
@@ -202,7 +199,7 @@
         </a>
       </li>
       -->
-      <!--UNUSED FOR NOW 
+      <!--UNUSED FOR NOW
       <li class="nav-item">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Configuration' else '' }}" href="{{ url_for('editConfiguration') }}" onclick="showWorking();">
           <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
@@ -259,4 +256,3 @@
   <!--
 -->
 </aside>
-   

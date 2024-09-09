@@ -6,13 +6,14 @@
 # FROM python:slim3.12.0b1-slim
 FROM python:3.9-slim
 
-RUN apt-get update
-RUN apt-get install -y build-essential
-RUN apt-get install -y wget
-RUN apt-get install -y git
-RUN apt-get install -y vim
+RUN apt-get update && \
+apt-get install -y build-essential && \
+apt-get install -y wget && \
+apt-get install -y git && \
+apt-get install -y vim && \
 # for making python-evrmorelib
-RUN apt-get install -y cmake
+apt-get install -y cmake && \
+apt-get clean
 
 # ipfs - unused
 #RUN wget https://dist.ipfs.tech/kubo/v0.21.0/kubo_v0.21.0_linux-amd64.tar.gz
@@ -62,21 +63,23 @@ RUN mkdir /Satori
 # RUN chmod -R 777 /Satori/Engine
 # RUN chmod -R 777 /Satori/Neuron
 
-RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git
-RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git
-RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git
-RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git
-RUN cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git
-RUN cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
+RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git && \
+cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git && \
+cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git && \
+cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git && \
+cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
+cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
 
-RUN pip install --upgrade pip
-RUN pip install /Satori/granite-tsfm
-RUN pip install /Satori/chronos-forecasting
-RUN cd /Satori/Synapse && pip install -r requirements.txt && python setup.py develop
-RUN cd /Satori/Lib && pip install -r requirements.txt && python setup.py develop
-RUN cd /Satori/Wallet && pip install -r requirements.txt && python setup.py develop
-RUN cd /Satori/Engine && pip install -r requirements.txt && python setup.py develop
-# RUN cd /Satori/Neuron && pip install -r requirements.txt && python setup.py develop
+RUN pip install --upgrade pip && \
+pip install --no-cache-dir torch==2.3.1 && \
+pip install --no-cache-dir transformers==4.41.2 && \
+pip install --no-cache-dir /Satori/granite-tsfm && \
+pip install --no-cache-dir /Satori/chronos-forecasting && \
+cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+# cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
 
 ## no need for ollama at this time.
 #RUN apt-get install -y curl
