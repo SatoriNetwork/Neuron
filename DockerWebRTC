@@ -8,14 +8,17 @@
 FROM satorinet/satorineuron:latest
 # Install WebRTC
 RUN pip install aiortc
+RUN pip install websockets
 RUN chmod -R 777 /Satori/Synapse && \
     chmod -R 777 /Satori/Lib && \
     chmod -R 777 /Satori/Wallet && \
     chmod -R 777 /Satori/Engine && \
     chmod -R 777 /Satori/Neuron
 
-RUN apt-get update && apt-get install -y dos2unix && dos2unix start.sh && dos2unix start_from_image.sh
-
+# RUN apt-get update && apt-get install -y dos2unix && dos2unix start.sh && dos2unix start_from_image.sh
+RUN apt-get update && apt-get install -y dos2unix \
+    libavdevice-dev libavfilter-dev libopus-dev libvpx-dev pkg-config && \
+    dos2unix start.sh && dos2unix start_from_image.sh
 # satori ui
 EXPOSE 24601
 
@@ -30,7 +33,7 @@ CMD ["bash", "./start_from_image.sh"]
 
 # BUILD PROCESS:
 # copy to and run from ../ (cd ..)
-# \Satori> docker build --no-cache -f "Neuron/DockerWebRTC " -t satorinet/satorineuron:WebRTC .
+# \Satori> docker build --no-cache -f "Neuron/DockerWebRTC" -t satorinet/satorineuron:WebRTC .
 
 # description: Miner environment and software for the Satori Network
 
