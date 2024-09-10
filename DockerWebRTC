@@ -1,0 +1,38 @@
+# copy to and run from ../ or C:\repos\Satori
+# (updating process is the only thing that requires git)
+# (vim for troubleshooting)
+
+# python:slim will eventually fail, if we need to revert try this:
+# FROM python:slim3.12.0b1-slim
+
+FROM satorinet/satorineuron:latest
+# Install WebRTC
+RUN pip install aiortc
+RUN chmod -R 777 /Satori/Synapse && \
+    chmod -R 777 /Satori/Lib && \
+    chmod -R 777 /Satori/Wallet && \
+    chmod -R 777 /Satori/Engine && \
+    chmod -R 777 /Satori/Neuron
+
+RUN apt-get update && apt-get install -y dos2unix && dos2unix start.sh && dos2unix start_from_image.sh
+
+# satori ui
+EXPOSE 24601
+
+ENV IPFS_PATH=/Satori/Neuron/config/ipfs
+
+WORKDIR /Satori/Neuron/satorineuron/web
+
+#ENTRYPOINT [ "python" ]
+#CMD ["python", "./app.py" ]
+# this should be default
+CMD ["bash", "./start_from_image.sh"]
+
+# BUILD PROCESS:
+# copy to and run from ../ (cd ..)
+# \Satori> docker build --no-cache -f "Neuron/DockerWebRTC " -t satorinet/satorineuron:WebRTC .
+
+# description: Miner environment and software for the Satori Network
+
+# RUN OPTIONS
+# docker run --rm -it --name satorineuron -v c:\repos\Satori\Neuron:/Satori/Neuron  satorinet/satorineuron:WebRTC bash
