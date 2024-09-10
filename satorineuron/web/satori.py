@@ -7,6 +7,7 @@
 from flask_cors import CORS
 from typing import Union
 from functools import wraps, partial
+import requests
 import os
 import sys
 import json
@@ -85,7 +86,7 @@ while True:
         start = StartupDag(
             env=ENV,
             urlServer={
-                'dev': 'http://127.0.0.1:5000',
+                'dev': 'http://192.168.1.177:5000',
                 'prod': 'https://stage.satorinet.io'}[ENV],
 
             
@@ -1659,7 +1660,13 @@ def vote():
 
 
 
-
+@app.route('/tester')
+def test_connections():
+    try:
+        response = requests.get('http://192.168.1.177:5000/proposals', timeout=5)
+        return jsonify({"status": "success", "message": "API is working correctly"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/proposals', methods=['GET'])
 @authRequired
@@ -1694,7 +1701,16 @@ def proposal_vote():
     else:
         return jsonify({'status': 'error', 'message': message_or_proposal}), 400
     
-
+@app.route('/test', methods=['GET'])
+def test_connection():
+    try:
+        success, result = start.server.testConnection()
+        if success:
+            return jsonify({'status': 'success', 'message': 'API is working correctly', 'details': result}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'API test failed', 'details': result}), 500
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
 @authRequired
 def voteSubmitManifestWallet():
