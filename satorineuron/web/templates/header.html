@@ -118,32 +118,32 @@
         {% endif %}
         <li class="nav-item dropdown pe-2 d-flex align-items-center">
           <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonBackup" data-bs-toggle="dropdown" aria-expanded="false">
-            <!--<i class="fa fa-play cursor-pointer"></i>-->
             <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">file_download</i>
             <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Backup</span>
           </a>
-          <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButtonBackup">
-            <!--<li class="mb-2">-->
-            <!--  <a class="dropdown-item border-radius-md" href="{{ url_for('backup', target='satori') }}">-->
-            <!--  <div class="d-flex py-1">-->
-            <!--    <div class="d-flex flex-column justify-content-center">-->
-            <!--    <h6 class="text-sm font-weight-normal mb-1">-->
-            <!--      <span class="font-weight-bold">Entire Neuron</span>-->
-            <!--    </h6>-->
-            <!--    </div>-->
-            <!--  </div>-->
-            <!--  </a>-->
-            <!--</li>-->
+          <ul class="dropdown-menu dropdown-menu-end px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButtonBackup">
             <li class="mb-2">
               <a class="dropdown-item border-radius-md" href="{{ url_for('backup', target='wallet') }}">
-              <div class="d-flex py-1">
-                <div class="d-flex flex-column justify-content-center">
-                <h6 class="text-sm font-weight-normal mb-1">
-                  <span class="font-weight-bold">Wallet and Vault</span>
-                </h6>
+                <div class="d-flex py-1">
+                  <div class="d-flex flex-column justify-content-center">
+                    <h6 class="text-sm font-weight-normal mb-1">
+                      <span class="font-weight-bold">Backup Wallet and Vault</span>
+                    </h6>
+                  </div>
                 </div>
-              </div>
               </a>
+            </li>
+            <li class="mb-2">
+              <a class="dropdown-item border-radius-md" href="#" onclick="document.getElementById('import-wallet-input').click();">
+                <div class="d-flex py-1">
+                  <div class="d-flex flex-column justify-content-center">
+                    <h6 class="text-sm font-weight-normal mb-1">
+                      <span class="font-weight-bold">Import Wallet</span>
+                    </h6>
+                  </div>
+                </div>
+              </a>
+              <input id="import-wallet-input" type="file" webkitdirectory directory multiple style="display: none;" onchange="importWallet(this.files)">
             </li>
           </ul>
         </li>
@@ -268,6 +268,40 @@
     </div>
   </div>
 </nav>
+<script>
+  function importWallet(files) {
+    const walletFolder = Array.from(files).find(file => file.webkitRelativePath.split('/')[0] === 'wallet');
+    
+    if (!walletFolder) {
+      alert('Please select a folder named "wallet".');
+      return;
+    }
+  
+    const formData = new FormData();
+    Array.from(files).forEach(file => {
+      if (file.webkitRelativePath.startsWith('wallet/')) {
+        formData.append('files', file, file.webkitRelativePath);
+      }
+    });
+  
+    fetch('/import_wallet', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Wallet imported successfully!');
+      } else {
+        alert('Failed to import wallet: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while importing the wallet.');
+    });
+  }
+  </script>
 <script>
   function confirmEnableNeuronLock(event) {
       if (!confirm("Are you sure you want to enable Neuron Lock?\n(You must know your vault password to get in)")) {
