@@ -9,6 +9,11 @@ async def send_offer(websocket):
     # Create a WebRTC connection
     pc = RTCPeerConnection()
 
+    pc.addIceCandidate({
+        'urls': ['stun:stun.l.google.com:19302']
+    })
+
+
     # Create a data channel
     channel = pc.createDataChannel("chat")
 
@@ -68,12 +73,7 @@ async def send_offer(websocket):
     # Add STUN server (Google's public one)
     await pc.addIceCandidate(ice_candidate)  # Await the coroutine
 
-    await pc.addIceCandidate({
-        "sdpMid":"0",
-        "sdpMLineIndex":0,
-        'urls': ['stun:stun.l.google.com:19302']
-    })
-
+   
     return pc
 
 
