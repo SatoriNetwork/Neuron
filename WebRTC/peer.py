@@ -15,16 +15,13 @@ async def send_offer(websocket):
     # pc = RTCPeerConnection()
      # Create a WebRTC configuration
     config = RTCConfiguration(
-        iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302",
-            "stun:stun2.l.google.com:19302",
-            "stun:stun3.l.google.com:19302",
-            "stun:stun4.l.google.com:19302",])]
+        iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])]
     )
 
     # Create a WebRTC connection with the configuration
     pc = RTCPeerConnection(configuration=config)
 
-    # pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
+    pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
 
 
 
