@@ -15,7 +15,10 @@ async def send_offer(websocket):
     # pc = RTCPeerConnection()
      # Create a WebRTC configuration
     config = RTCConfiguration(
-        iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])]
+        iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302",
+            "stun:stun2.l.google.com:19302",
+            "stun:stun3.l.google.com:19302",
+            "stun:stun4.l.google.com:19302",])]
     )
 
     # Create a WebRTC connection with the configuration
@@ -110,115 +113,3 @@ async def main(uri: str = "ws://localhost:8765"):
 if __name__ == "__main__":
     asyncio.run(main(
         uri=sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"))
-# import sys
-# import asyncio
-# import websockets
-# from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
-# from aiortc.contrib.signaling import object_from_string, object_to_string
-
-# # Use only STUN server for now
-# ICE_SERVERS = [
-#     RTCIceServer(urls="stun:stun.l.google.com:19302"),
-# ]
-
-# async def create_peer_connection():
-#     config = RTCConfiguration(iceServers=ICE_SERVERS)
-#     pc = RTCPeerConnection(configuration=config)
-
-#     @pc.on("icegatheringstatechange")
-#     async def on_icegatheringstatechange():
-#         print(f"ICE gathering state changed to: {pc.iceGatheringState}")
-
-#     @pc.on("iceconnectionstatechange")
-#     async def on_iceconnectionstatechange():
-#         print(f"ICE connection state changed to: {pc.iceConnectionState}")
-
-#     @pc.on("connectionstatechange")
-#     async def on_connectionstatechange():
-#         print(f"Connection state changed to: {pc.connectionState}")
-#         if pc.connectionState == "failed":
-#             await pc.close()
-#             print("Connection failed, peer connection closed.")
-
-#     return pc
-
-# async def exchange_offer_answer(pc, websocket):
-#     offer = await pc.createOffer()
-#     await pc.setLocalDescription(offer)
-#     print("Sending offer")
-#     await websocket.send(object_to_string(pc.localDescription))
-
-#     print("Waiting for answer")
-#     answer_str = await websocket.recv()
-#     answer = object_from_string(answer_str)
-#     print("Received answer")
-#     await pc.setRemoteDescription(answer)
-
-# async def run_peer(uri="ws://localhost:8765"):
-#     async with websockets.connect(uri) as websocket:
-#         pc = await create_peer_connection()
-        
-#         channel = pc.createDataChannel("chat")
-
-#         @channel.on("open")
-#         def on_open():
-#             print("Data channel is open")
-#             channel.send("Hello World")
-#             print("Sent: Hello World")
-
-#         @channel.on("message")
-#         def on_message(message):
-#             print(f"Received: {message}")
-
-#         # Determine if this peer should make an offer or wait for one
-#         offer = await websocket.recv()
-#         if offer == "create_offer":
-#             # This peer creates the offer
-#             await create_and_send_offer(pc, websocket)
-#         else:
-#             # This peer receives the offer and creates an answer
-#             await handle_offer_and_send_answer(pc, websocket, offer)
-
-#         # Wait for ICE gathering to complete or timeout after 10 seconds
-#         gathering_complete = asyncio.Event()
-        
-#         @pc.on("icegatheringstatechange")
-#         async def on_icegatheringstatechange():
-#             if pc.iceGatheringState == "complete":
-#                 gathering_complete.set()
-        
-#         try:
-#             await asyncio.wait_for(gathering_complete.wait(), timeout=10.0)
-#         except asyncio.TimeoutError:
-#             print("ICE gathering timed out, proceeding anyway")
-
-#         # Keep the connection alive
-#         while pc.connectionState not in ["closed", "failed"]:
-#             await asyncio.sleep(1)
-
-#         await pc.close()
-
-# async def create_and_send_offer(pc, websocket):
-#     offer = await pc.createOffer()
-#     await pc.setLocalDescription(offer)
-#     print("Sending offer")
-#     await websocket.send(object_to_string(pc.localDescription))
-    
-#     print("Waiting for answer")
-#     answer_str = await websocket.recv()
-#     answer = object_from_string(answer_str)
-#     print("Received answer")
-#     await pc.setRemoteDescription(answer)
-
-# async def handle_offer_and_send_answer(pc, websocket, offer):
-#     offer = object_from_string(offer)
-#     await pc.setRemoteDescription(offer)
-    
-#     answer = await pc.createAnswer()
-#     await pc.setLocalDescription(answer)
-#     print("Sending answer")
-#     await websocket.send(object_to_string(pc.localDescription))
-
-# if __name__ == "__main__":
-#     uri = sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"
-#     asyncio.run(run_peer(uri))
