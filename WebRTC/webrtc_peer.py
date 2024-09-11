@@ -5,7 +5,7 @@ from aiortc import RTCPeerConnection, RTCSessionDescription
 class ManualSignalingPeer:
     def __init__(self):
         self.pc = RTCPeerConnection()
-        self.pc.addIceServer({'urls': 'stun:stun.l.google.com:19302'})
+        self.pc.add_ice_server('stun:stun.l.google.com:19302')  # Updated method name
         self.dc = self.pc.createDataChannel("chat")
         
         @self.dc.on("open")
