@@ -416,7 +416,7 @@ def import_wallet():
         return jsonify({'success': False, 'message': 'No files part in the request'})
 
     files = request.files.getlist('files')
-    
+
     wallet_path = '/Satori/Neuron/wallet'
     temp_path = '/Satori/Neuron/temp_wallet'
 
@@ -426,7 +426,7 @@ def import_wallet():
     try:
         for file in files:
             if file.filename.startswith('wallet/'):
-                file_path = os.path.join(temp_path, file.filename[7:])  
+                file_path = os.path.join(temp_path, file.filename[7:])
                 os.makedirs(os.path.dirname(file_path), exist_ok=True)
                 file.save(file_path)
 
