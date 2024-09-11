@@ -112,6 +112,7 @@ import asyncio
 import websockets
 import tracemalloc
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RTCConfiguration, RTCIceServer
+import json
 
 # Enable tracemalloc to get detailed memory allocation traceback
 tracemalloc.start()
@@ -128,12 +129,25 @@ async def send_offer(websocket):
     @channel.on("open")
     def on_open():
         print("Data channel is open")
-        channel.send("Hello World")
+        message = json.dumps({"type": "message", "content": "Hello World"})
+        channel.send(message)
+        print(f"Sent: {message}")
 
     # Define the on_message event handler
     @channel.on("message")
     def on_message(message):
-        print(f"Received message: {message}")
+        # print(f"Received message: {message}")
+        try:
+            data = json.loads(message)
+            if data["type"] == "message":
+                print(f"Received message: {data['content']}")
+            else:
+                print(f"Received unknown message type: {message}")
+        except json.JSONDecodeError:
+            print(f"Received non-JSON message: {message}")
+        except KeyError:
+            print(f"Received malformed JSON message: {message}")
+
 
     # Log ICE connection state changes
     @pc.on("iceconnectionstatechange")
