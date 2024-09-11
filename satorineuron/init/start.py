@@ -315,7 +315,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createServerConn()
         self.checkin()
         self.verifyCaches()
-        self.startSynergyEngine()
+        # self.startSynergyEngine()
         self.subConnect()
         self.pubsConnect()
         if self.isDebug:
