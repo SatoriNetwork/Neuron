@@ -124,16 +124,19 @@ async def send_offer(websocket):
     # Create a data channel
     channel = pc.createDataChannel("chat")
 
+    @pc.on("datachannel")
+    def on_datachannel(channel):
+        print(f"New data channel created: {channel.label}")
     # Define the on_open event handler
-    @channel.on("open")
-    def on_open():
-        print("Data channel is open")
-        channel.send("Hello World")
+        @channel.on("open")
+        def on_open():
+            print("Data channel is open")
+            channel.send("Hello World")
 
-    # Define the on_message event handler
-    @channel.on("message")
-    def on_message(message):
-        print(f"Received message: {message}")
+        # Define the on_message event handler
+        @channel.on("message")
+        def on_message(message):
+            print(f"Received message: {message}")
 
     # Log ICE connection state changes
     @pc.on("iceconnectionstatechange")
@@ -142,6 +145,15 @@ async def send_offer(websocket):
         if pc.iceConnectionState == "failed":
             await pc.close()
             print("Connection failed, peer connection closed.")
+    
+    @pc.on("connectionstatechange")
+    async def on_connectionstatechange():
+        print(f"Connection state changed to: {pc.connectionState}")
+        if pc.connectionState == "connected":
+            print("WebRTC connection established successfully!")
+        elif pc.connectionState == "failed":
+            print("WebRTC connection failed.")
+            await pc.close()
 
     # Create an SDP offer
     offer = await pc.createOffer()
@@ -181,11 +193,16 @@ async def main(uri: str = "ws://localhost:8765"):
         print("Connected to signaling server")
         pc = await send_offer(websocket)
         try:
-            # Keep the main coroutine running
-            await asyncio.Future()
+            while True:
+                await asyncio.sleep(1)
+                if pc.connectionState == "connected":
+                    print("Connection is stable. You can start sending messages.")
+                elif pc.connectionState == "failed":
+                    print("Connection failed. Exiting.")
+                    break
         finally:
-            # Close the peer connection when the program exits
             await pc.close()
+            print("Peer connection closed.")
 
 if __name__ == "__main__":
     asyncio.run(main(uri=sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"))
