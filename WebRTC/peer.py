@@ -4,11 +4,11 @@ import asyncio
 import websockets
 import tracemalloc
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
-import logging
+# import logging
 
 # Enable tracemalloc to get detailed memory allocation traceback
 tracemalloc.start()
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 async def send_offer(websocket):
     # Create a WebRTC connection
@@ -35,24 +35,24 @@ async def send_offer(websocket):
         print("Data channel is open")
         channel.send("Hello World")
     
-    @channel.on("close")
-    def on_close():
-        logging.info("Data channel is closed")
+    # @channel.on("close")
+    # def on_close():
+    #     logging.info("Data channel is closed")
 
-    @channel.on("error")
-    def on_error(error):
-        logging.error(f"Data channel error: {error}")
+    # @channel.on("error")
+    # def on_error(error):
+    #     logging.error(f"Data channel error: {error}")
 
     @channel.on("message")
     def on_message(message):
         print(f"Received message: {message}")
 
-    @pc.on("connectionstatechange")
-    async def on_connectionstatechange():
-        logging.info(f"Connection state is {pc.connectionState}")
-        if pc.connectionState == "failed":
-            await pc.close()
-            logging.error("Connection failed, closing peer connection")
+    # @pc.on("connectionstatechange")
+    # async def on_connectionstatechange():
+    #     logging.info(f"Connection state is {pc.connectionState}")
+    #     if pc.connectionState == "failed":
+    #         await pc.close()
+    #         logging.error("Connection failed, closing peer connection")
 
 
     # # Sending a message over the data channel
