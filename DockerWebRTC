@@ -38,4 +38,6 @@ CMD ["bash", "./start_from_image.sh"]
 # description: Miner environment and software for the Satori Network
 
 # RUN OPTIONS
-# docker run --rm -it --name satorineuron -v c:\repos\Satori\Neuron:/Satori/Neuron  satorinet/satorineuron:WebRTC bash
+# docker run --rm -it --name webrtc_peer -v c:\repos\Satori\Neuron\WebRTC:/Satori/Neuron/WebRTC satorinet/satorineuron:WebRTC bash
+# docker run --rm -it --name webrtc_server -v c:\repos\Satori\Neuron\WebRTC:/Satori/Neuron/WebRTC satorinet/satorineuron:WebRTC bash /Satori/Neuron/WebRTC/server.sh
+# docker exec -it webrtc_server bash
