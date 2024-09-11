@@ -57,7 +57,7 @@ async def send_offer(websocket):
     ice_candidate = RTCIceCandidate(
         sdpMid="0",
         sdpMLineIndex=0,
-        candidate="candidate:9333c84bcc1b0bf56713df9036e6b4d9 1 udp 2130706431 172.17.0.2 52206 typ host"
+        # candidate="candidate:9333c84bcc1b0bf56713df9036e6b4d9 1 udp 2130706431 172.17.0.2 52206 typ host"
     )
     await pc.addIceCandidate(ice_candidate)  # Await the coroutine
 
