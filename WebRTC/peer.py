@@ -179,13 +179,13 @@ async def main(uri: str = "ws://localhost:8765"):
     # Connect to the WebSocket signaling server
     async with websockets.connect(uri) as websocket:
         print("Connected to signaling server")
-        pc = await send_offer(websocket)
-        try:
-            # Keep the main coroutine running
-            await asyncio.Future()
-        finally:
-            # Close the peer connection when the program exits
-            await pc.close()
+        await send_offer(websocket)
+        # try:
+        #     # Keep the main coroutine running
+        #     await asyncio.Future()
+        # finally:
+        #     # Close the peer connection when the program exits
+        #     await pc.close()
 
 if __name__ == "__main__":
     asyncio.run(main(uri=sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"))
