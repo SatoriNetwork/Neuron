@@ -151,7 +151,7 @@ async def exchange_offer_answer(pc, websocket):
     print("Received answer")
     await pc.setRemoteDescription(answer)
 
-async def run_peer(uri):
+async def run_peer(uri="ws://localhost:8765"):
     async with websockets.connect(uri) as websocket:
         pc = await create_peer_connection()
         
