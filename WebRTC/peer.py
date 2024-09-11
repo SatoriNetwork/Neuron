@@ -37,7 +37,7 @@ async def send_offer(websocket):
     await pc.setLocalDescription(offer)
 
      # Print the SDP offer for debugging
-    # print("SDP Offer:\n", pc.localDescription.sdp)
+    print("SDP Offer:\n", pc.localDescription.sdp)
     # print("SDP Offer:\n",offer.sdp)
 
     # Send the SDP offer via WebSocket to the signaling server
@@ -49,7 +49,7 @@ async def send_offer(websocket):
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
 
      # Print the SDP answer for debugging
-    # print("SDP Answer:\n", answer.sdp)
+    print("SDP Answer:\n", answer.sdp)
 
     # Validate the SDP answer
     if "a=setup:active" not in answer.sdp and "a=setup:passive" not in answer.sdp:
