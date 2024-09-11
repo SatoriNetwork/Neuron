@@ -89,7 +89,7 @@ while True:
                 'dev': 'http://192.168.1.177:5000',
                 'prod': 'https://stage.satorinet.io'}[ENV],
 
-            
+
             urlMundo={
                 'local': 'http://192.16`8.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -110,13 +110,14 @@ while True:
             }[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False
         )
-        
+
         logging.info(f'environment: {ENV}', extra={'print': True})
         logging.info('Satori Neuron is starting...', extra={'color': 'green'})
         break
     except ConnectionError as e:
         traceback.print_exc()
-        logging.error(f'ConnectionError in app startup: {e}', extra={'color': 'red'})
+        logging.error(f'ConnectionError in app startup: {e}', extra={
+                      'color': 'red'})
         time.sleep(30)
     except Exception as e:
         traceback.print_exc()
@@ -1658,16 +1659,6 @@ def vote():
         **getVotes(myWallet)}))
 
 
-
-
-@app.route('/tester')
-def test_connections():
-    try:
-        response = requests.get('http://192.168.1.177:5000/proposals', timeout=5)
-        return jsonify({"status": "success", "message": "API is working correctly"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
 @app.route('/proposals', methods=['GET'])
 @authRequired
 def proposals():
@@ -1680,6 +1671,7 @@ def proposals():
     }
     return render_template('proposals.html', **getResp(context))
 
+
 @app.route('/proposals/data', methods=['GET'])
 def get_proposals():
     try:
@@ -1688,24 +1680,26 @@ def get_proposals():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+
 @app.route('/proposals/vote', methods=['POST'])
 def proposal_vote():
     try:
         data = request.json
         proposal_id = data.get('proposal_id')
         vote = data.get('vote')
-        
+
         if not proposal_id or vote is None:
             return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
-        
+
         success, result = start.server.submitProposalVote(proposal_id, vote)
-        
+
         if success:
             return jsonify({'status': 'success', 'proposal': result}), 200
         else:
             return jsonify({'status': 'error', 'message': result}), 400
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 @app.route('/test', methods=['GET'])
 def test_connection():
@@ -1717,6 +1711,8 @@ def test_connection():
             return jsonify({'status': 'error', 'message': 'API test failed', 'details': result}), 500
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
 @authRequired
 def voteSubmitManifestWallet():
@@ -1923,7 +1919,6 @@ def triggerRelay(topic: str = None):
     return redirect(url_for('dashboard'))
 
 
-
 ###############################################################################
 ## Routes - subscription ######################################################
 ###############################################################################
@@ -1931,7 +1926,7 @@ def triggerRelay(topic: str = None):
 # unused - we're not using any other networks yet, but when we do we can pass
 # their values to this and have it diseminate
 # @app.route('/subscription/update/', methods=['POST'])
-# def update():             
+# def update():
 #    """
 #    returns nothing
 #    ---
