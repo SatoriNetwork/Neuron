@@ -56,7 +56,7 @@ async def send_offer(websocket):
     # Add STUN server (Google's public one)
     # RTCIceCandidate() 
 
-    pc.addIceCandidate({
+    await pc.addIceCandidate({
         'urls': ['stun:stun.l.google.com:19302']
     })
 
