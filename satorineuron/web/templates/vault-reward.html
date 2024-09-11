@@ -90,7 +90,7 @@
   }
   function getMineToAddressStatus() {
     console.log('getMineToAddressStatus');
-    fetch('/mining/to/address', { method: 'GET' })
+    return fetch('/mining/to/address', { method: 'GET' })
       .then(response => {
         if (response.ok) {
           return response.text();
@@ -101,6 +101,7 @@
         console.log('getMineToAddressStatus...');
         console.log(text);
         document.getElementById("minigReward").value = text;
+        return text;
       }).catch(error => console.error('Error:', error));
     }
     function getMyDelegate() {
@@ -150,8 +151,15 @@
     }
     document.addEventListener('DOMContentLoaded', (event) => {
       reportVault();
-      getMineToAddressStatus();
+      getMineToAddressStatus().then(text => {
+        //if (document.getElementById("minigReward").value == '')
+        if (text == '') {
+          document.getElementById("minigReward").value = '{{ wallet.address }}';
+          setRewardAddress();
+        }
+      });
       getMyDelegate();
+
     });
     function setRewardAddress() {
       address = document.getElementById("minigReward").value;
