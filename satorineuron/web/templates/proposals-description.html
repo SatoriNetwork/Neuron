@@ -1,0 +1,135 @@
+{% block content %}
+{% for proposal in proposals %}
+<div class="row mb-0">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl mt-n4 position-absolute">
+          <i class="material-icons opacity-10">thumbs_up_down</i>
+        </div>
+        <div class="text-end pt-1">
+            <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align: center;">{{ proposal.title }}</h4>
+        </div>
+      </div>
+
+      <!-- Image Section -->
+      <center>
+      <div class="card-body">
+        <img src="{{ proposal.image_url }}" alt="{{ proposal.title }}" class="img-fluid" style="max-width: 100%; height: auto;"/>
+      </div>
+
+      <!-- Description Section -->
+      <p id="explaVault" class="mb-1 {% if darkmode %}dark-colors{% endif %}">
+        {{ proposal.description }}
+        <br>
+        <br>
+        Yes Votes: <span id="yes-votes-{{ proposal.id }}">{{ proposal.yes_votes }}</span>
+        <br>
+        No Votes: <span id="no-votes-{{ proposal.id }}">{{ proposal.no_votes }}</span>
+        <br>
+
+        <!-- Vote Buttons -->
+        <button id="yes-btn-{{ proposal.id }}" class="vote-btn" onclick="submitVote('{{ proposal.id }}', 'yes')">Vote Yes</button>
+        <button id="no-btn-{{ proposal.id }}" class="vote-btn" onclick="submitVote('{{ proposal.id }}', 'no')">Vote No</button>
+        <br>
+
+        <!-- Message for already voted users -->
+        <span id="voted-message-{{ proposal.id}}" class="voted-message" style="display: none;">You have already voted for this proposal.</span>
+        <br>
+        <br>
+      </p>
+      </center>
+    </div>
+  </div>
+</div>
+<br>
+<br>
+{% endfor %}
+{% endblock %}
+
+
+<script>
+   document.addEventListener('DOMContentLoaded', (event) => {
+    fetchProposals();
+});
+
+function fetchProposals() {
+    fetch('/proposals/data', { method: 'GET' })
+    .then(response => response.json())
+    .then(data => {
+        updateProposalsUI(data.proposals);
+    }).catch(error => console.error('Error:', error));
+}
+
+function updateProposalsUI(proposals) {
+    proposals.forEach(proposal => {
+        // Update UI with fetched data
+        document.getElementById('yes-votes-' + proposal.id).innerText = proposal.yes_votes;
+        document.getElementById('no-votes-' + proposal.id).innerText = proposal.no_votes;
+
+        // Check if the user has already voted
+        // const userVote = //ask server
+        // if (userVote) {
+        //     updateButtons(proposal.id, userVote);
+        // }
+    });
+}
+
+function submitVote(proposalId, vote) {
+    fetch('/proposals/vote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            proposal_id: proposalId,
+            vote: vote
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Server response:', data);  // Log the entire response
+        if (data.status === 'success') {
+            const proposal = data.proposal;
+            if (proposal && proposal.id) {
+                document.getElementById('yes-votes-' + proposal.id).innerText = proposal.yes_votes;
+                document.getElementById('no-votes-' + proposal.id).innerText = proposal.no_votes;
+                updateButtons(proposal.id, vote);
+                console.log('Vote submitted successfully');
+            } else {
+                console.error('Invalid proposal data in response:', proposal);
+            }
+        } else {
+            console.error('Vote failed:', data.message);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
+
+function updateButtons(proposalId, vote) {
+    const yesButton = document.getElementById('yes-btn-' + proposalId);
+    const noButton = document.getElementById('no-btn-' + proposalId);
+    const votedMessage = document.getElementById('voted-message-' + proposalId);
+
+    yesButton.disabled = true;
+    noButton.disabled = true;
+
+    if (vote === 'yes') {
+        yesButton.classList.add('btn-selected');
+    } else {
+        noButton.classList.add('btn-selected');
+    }
+
+    votedMessage.style.display = 'block';
+}
+
+// Function to periodically update all proposals
+function updateAllProposals() {
+    fetchProposals();
+}
+
+// Set up periodic updates
+
+</script>
