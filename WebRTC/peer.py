@@ -12,6 +12,12 @@ async def send_offer(websocket):
     # Create a data channel
     channel = pc.createDataChannel("chat")
 
+    # Define the on_open event handler
+    @channel.on("open")
+    def on_open():
+        print("Data channel is open")
+        channel.send("Hello from peer")
+
     @channel.on("message")
     def on_message(message):
         print(f"Received message: {message}")
@@ -25,12 +31,23 @@ async def send_offer(websocket):
     offer = await pc.createOffer()
     await pc.setLocalDescription(offer)
 
+     # Print the SDP offer for debugging
+    print("SDP Offer:\n", pc.localDescription.sdp)
+
     # Send the SDP offer via WebSocket to the signaling server
     await websocket.send(pc.localDescription.sdp)
 
     # Wait for the SDP answer
     answer_sdp = await websocket.recv()
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
+
+     # Print the SDP answer for debugging
+    print("SDP Answer:\n", answer.sdp)
+
+    # Validate the SDP answer
+    if "a=setup:active" not in answer.sdp and "a=setup:passive" not in answer.sdp:
+        raise ValueError("DTLS setup attribute must be 'active' or 'passive' for an answer")
+
     await pc.setRemoteDescription(answer)
 
     # Handle ICE candidate exchange here if needed (for now, we can skip)
