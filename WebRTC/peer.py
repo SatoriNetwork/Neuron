@@ -135,9 +135,10 @@ async def send_offer(websocket):
     await pc.setRemoteDescription(answer)
     print("Set remote description")
 
-    # Keep the connection alive
-    while True:
-        await asyncio.sleep(1)
+    # # Keep the connection alive
+    # while True:
+    #     await asyncio.sleep(1)
+    return pc
 
 async def main(uri: str = "ws://localhost:8765"):
     async with websockets.connect(uri) as websocket:
