@@ -58,20 +58,7 @@ async def send_offer(websocket):
     await pc.setRemoteDescription(answer)
     #candidate="9333c84bcc1b0bf56713df9036e6b4d9 1 udp 2130706431 172.17.0.2 52206 typ host"
     # Handle ICE candidate exchange here if needed (for now, we can skip)
-    # ice_candidate = RTCIceCandidate(
-    #     component=1,
-    #     foundation="1",
-    #     ip="172.17.0.2",
-    #     port=52206,
-    #     priority=2130706431,
-    #     protocol="udp",
-    #     type="host",
-    #     sdpMid="0",
-    #     sdpMLineIndex=0
-    # )
-
-    # # Add STUN server (Google's public one)
-    # await pc.addIceCandidate(ice_candidate)  # Await the coroutine
+    # RTCIceCandidate()
 
    
     return pc
