@@ -3,17 +3,24 @@ import sys
 import asyncio
 import websockets
 import tracemalloc
-from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel, RTCIceCandidate
+from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel, RTCIceCandidate, RTCConfiguration, RTCIceServer
 
 # Enable tracemalloc to get detailed memory allocation traceback
 tracemalloc.start()
 
 async def send_offer(websocket):
     # Create a WebRTC connection
-    pc = RTCPeerConnection()
+    # pc = RTCPeerConnection()
+     # Create a WebRTC configuration
+    config = RTCConfiguration(
+        iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])]
+    )
+
+    # Create a WebRTC connection with the configuration
+    pc = RTCPeerConnection(configuration=config)
 
     # pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
-    pc.addIceServer('stun:stun.l.google.com:19302')
+    # pc.addIceServer('stun:stun.l.google.com:19302')
 
 
 
