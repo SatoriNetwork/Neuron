@@ -1835,6 +1835,48 @@ def voteRemoveAllSanction():
     return jsonify({'message': 'Stream votes received successfully'}), 200
 
 
+@app.route('/proposals', methods=['GET'])
+@authRequired
+def proposals():
+    # my_wallet = start.getWallet(network=start.network)
+    proposals_data = start.server.getProposals()
+    context = {
+        'title': 'Proposals',
+        # 'wallet': my_wallet,
+        'proposals': proposals_data
+    }
+    return render_template('proposals.html', **getResp(context))
+
+
+@app.route('/proposals/data', methods=['GET'])
+def get_proposals():
+    try:
+        proposals = start.server.getProposals()
+        return jsonify({'proposals': proposals})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/proposals/vote', methods=['POST'])
+def proposal_vote():
+    try:
+        data = request.json
+        proposal_id = data.get('proposal_id')
+        vote = data.get('vote')
+
+        if not proposal_id or vote is None:
+            return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
+
+        success, result = start.server.submitProposalVote(proposal_id, vote)
+
+        if success:
+            return jsonify({'status': 'success', 'proposal': result}), 200
+        else:
+            return jsonify({'status': 'error', 'message': result}), 400
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 @app.route('/relay_csv', methods=['GET'])
 @authRequired
 def relayCsv():
