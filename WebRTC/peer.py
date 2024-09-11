@@ -13,7 +13,7 @@ async def send_offer(websocket):
     pc = RTCPeerConnection()
 
     # pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
-    pc.addIceCandidate('stun:stun.l.google.com:19302')
+    pc.addIceServer('stun:stun.l.google.com:19302')
 
 
 
