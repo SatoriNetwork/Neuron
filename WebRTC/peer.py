@@ -110,99 +110,80 @@
 import sys
 import asyncio
 import websockets
-import tracemalloc
-from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RTCConfiguration, RTCIceServer
+from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
+from aiortc.contrib.signaling import object_from_string, object_to_string
 
-# Enable tracemalloc to get detailed memory allocation traceback
-tracemalloc.start()
+# Use both STUN and TURN servers
+ICE_SERVERS = [
+    RTCIceServer(urls="stun:stun.l.google.com:19302"),
+    RTCIceServer(
+        urls="turn:your-turn-server.com:3478",
+        username="your-username",
+        credential="your-password"
+    )
+]
 
-async def send_offer(websocket):
-    # WebRTC configuration with STUN server
-    config = RTCConfiguration(iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])])
+async def create_peer_connection():
+    config = RTCConfiguration(iceServers=ICE_SERVERS)
     pc = RTCPeerConnection(configuration=config)
 
-    # Create a data channel
-    channel = pc.createDataChannel("chat")
+    @pc.on("icegatheringstatechange")
+    async def on_icegatheringstatechange():
+        print(f"ICE gathering state changed to: {pc.iceGatheringState}")
 
-    @pc.on("datachannel")
-    def on_datachannel(channel):
-        print(f"New data channel created: {channel.label}")
-    # Define the on_open event handler
+    @pc.on("iceconnectionstatechange")
+    async def on_iceconnectionstatechange():
+        print(f"ICE connection state changed to: {pc.iceConnectionState}")
+
+    @pc.on("connectionstatechange")
+    async def on_connectionstatechange():
+        print(f"Connection state changed to: {pc.connectionState}")
+        if pc.connectionState == "failed":
+            await pc.close()
+            print("Connection failed, peer connection closed.")
+
+    return pc
+
+async def exchange_offer_answer(pc, websocket):
+    offer = await pc.createOffer()
+    await pc.setLocalDescription(offer)
+    print("Sending offer")
+    await websocket.send(object_to_string(pc.localDescription))
+
+    print("Waiting for answer")
+    answer_str = await websocket.recv()
+    answer = object_from_string(answer_str)
+    print("Received answer")
+    await pc.setRemoteDescription(answer)
+
+async def run_peer(uri):
+    async with websockets.connect(uri) as websocket:
+        pc = await create_peer_connection()
+        
+        channel = pc.createDataChannel("chat")
+
         @channel.on("open")
         def on_open():
             print("Data channel is open")
             channel.send("Hello World")
+            print("Sent: Hello World")
 
-        # Define the on_message event handler
         @channel.on("message")
         def on_message(message):
-            print(f"Received message: {message}")
+            print(f"Received: {message}")
 
-    # Log ICE connection state changes
-    @pc.on("iceconnectionstatechange")
-    async def on_iceconnectionstatechange():
-        print(f"ICE connection state is {pc.iceConnectionState}")
-        if pc.iceConnectionState == "failed":
-            await pc.close()
-            print("Connection failed, peer connection closed.")
-    
-    @pc.on("connectionstatechange")
-    async def on_connectionstatechange():
-        print(f"Connection state changed to: {pc.connectionState}")
-        if pc.connectionState == "connected":
-            print("WebRTC connection established successfully!")
-        elif pc.connectionState == "failed":
-            print("WebRTC connection failed.")
-            await pc.close()
+        await exchange_offer_answer(pc, websocket)
 
-    # Create an SDP offer
-    offer = await pc.createOffer()
-    await pc.setLocalDescription(offer)
-    print("SDP Offer created and sent to signaling server")
+        # Wait for ICE gathering to complete
+        while pc.iceGatheringState != "complete":
+            await asyncio.sleep(0.1)
 
-    # Send the SDP offer via WebSocket to the signaling server
-    await websocket.send(pc.localDescription.sdp)
+        # Keep the connection alive
+        while pc.connectionState not in ["closed", "failed"]:
+            await asyncio.sleep(1)
 
-    # Wait for the SDP answer
-    print("Waiting for SDP answer from signaling server...")
-    answer_sdp = await websocket.recv()
-
-    # Optional: Modify SDP answer (based on your original code)
-    answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active")
-    print(f"Received SDP Answer:\n{answer_sdp}")
-    answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
-
-    # Validate the SDP answer
-    if "a=setup:active" not in answer.sdp and "a=setup:passive" not in answer.sdp:
-        raise ValueError("DTLS setup attribute must be 'active' or 'passive' for an answer")
-
-    await pc.setRemoteDescription(answer)
-
-    # Handle ICE candidate exchange (this was previously skipped)
-    @pc.on("icecandidate")
-    async def on_icecandidate(candidate):
-        if candidate:
-            print(f"New ICE candidate found: {candidate}")
-            await websocket.send(candidate.to_sdp())
-
-    return pc
-
-async def main(uri: str = "ws://localhost:8765"):
-    # Connect to the WebSocket signaling server
-    async with websockets.connect(uri) as websocket:
-        print("Connected to signaling server")
-        pc = await send_offer(websocket)
-        try:
-            while True:
-                await asyncio.sleep(1)
-                if pc.connectionState == "connected":
-                    print("Connection is stable. You can start sending messages.")
-                elif pc.connectionState == "failed":
-                    print("Connection failed. Exiting.")
-                    break
-        finally:
-            await pc.close()
-            print("Peer connection closed.")
+        await pc.close()
 
 if __name__ == "__main__":
-    asyncio.run(main(uri=sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"))
+    uri = sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"
+    asyncio.run(run_peer(uri))
