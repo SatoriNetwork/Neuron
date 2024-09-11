@@ -112,9 +112,7 @@ import asyncio
 import websockets
 import tracemalloc
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RTCConfiguration, RTCIceServer
-import logging
 
-logging.basicConfig(level=logging.DEBUG)
 # Enable tracemalloc to get detailed memory allocation traceback
 tracemalloc.start()
 
@@ -131,13 +129,11 @@ async def send_offer(websocket):
     def on_open():
         print("Data channel is open")
         channel.send("Hello World")
-        logging.info("Sent: Hello World")
 
     # Define the on_message event handler
     @channel.on("message")
     def on_message(message):
         print(f"Received message: {message}")
-        logging.info(f"Sent echo: You said: {message}")
 
     # Log ICE connection state changes
     @pc.on("iceconnectionstatechange")
@@ -183,7 +179,7 @@ async def main(uri: str = "ws://localhost:8765"):
     # Connect to the WebSocket signaling server
     async with websockets.connect(uri) as websocket:
         print("Connected to signaling server")
-        pc = await send_offer(websocket)
+        pc =await send_offer(websocket)
         try:
             # Keep the main coroutine running
             await asyncio.Future()
