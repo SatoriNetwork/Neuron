@@ -129,6 +129,7 @@ async def send_offer(websocket):
     # Wait for the SDP answer
     answer_sdp = await websocket.recv()
     print("Received remote description")
+    answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active")  # Modify the SDP answer
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
 
     await pc.setRemoteDescription(answer)
