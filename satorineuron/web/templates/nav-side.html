@@ -65,7 +65,7 @@
           <a href="{{ url_for('wallet', network='test') }}" onclick="showWorking();">Test</a>
         </div>
         </li>-->
-      {% if wallet.balance > 0 %}
+      {% if wallet.balance is not none and wallet.balance > 0 %}
         <li class="nav-item sidenav-dropdown-chevron">
           <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="#" onclick="toggleDropdown(event);">
             <div class="d-flex justify-content-between align-items-center w-100">
@@ -172,7 +172,7 @@
             <a href='#' onclick="scrollOrJumpTo('ethvaultbr');">Ethereum Address</a>
           </li>
         {% else %}
-          {% if wallet.balance == 0 %}
+          {% if wallet.balance is not none and wallet.balance == 0 %}
             <li class="sub-nav-item" >
               <a href="{{ url_for('wallet', network='main') }}" onclick="showWorking();" class="{{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}">
                 <i class="material-icons opacity-10" style="padding-right: 8px;">wallet</i>
