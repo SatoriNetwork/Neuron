@@ -4,11 +4,11 @@ import asyncio
 import websockets
 import tracemalloc
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
-# import logging
+import logging
 
 # Enable tracemalloc to get detailed memory allocation traceback
 tracemalloc.start()
-# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 async def send_offer(websocket):
     # Create a WebRTC connection
@@ -22,43 +22,39 @@ async def send_offer(websocket):
     pc = RTCPeerConnection(configuration=config)
 
     # pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
-    # pc.addIceServer('stun:stun.l.google.com:19302')
 
 
 
     # Create a data channel
     channel = pc.createDataChannel("chat")
-
+    logging.debug("Data channel created")
     # Define the on_open event handler
     @channel.on("open")
     def on_open():
-        print("Data channel is open")
+        logging.info("Data channel is open")
         channel.send("Hello World")
+        logging.info("Sent: Hello World")
     
-    # @channel.on("close")
-    # def on_close():
-    #     logging.info("Data channel is closed")
-
-    # @channel.on("error")
-    # def on_error(error):
-    #     logging.error(f"Data channel error: {error}")
 
     @channel.on("message")
     def on_message(message):
         print(f"Received message: {message}")
+        logging.info(f"Received message: {message}")
 
-    # @pc.on("connectionstatechange")
-    # async def on_connectionstatechange():
-    #     logging.info(f"Connection state is {pc.connectionState}")
-    #     if pc.connectionState == "failed":
-    #         await pc.close()
-    #         logging.error("Connection failed, closing peer connection")
+    @pc.on("datachannel")
+    def on_datachannel(channel):
+        logging.info(f"New data channel created: {channel.label}")
 
 
-    # # Sending a message over the data channel
-    # @channel.on("open")
-    # def on_open():
-    #     channel.send("Hello from peer")
+    @pc.on("connectionstatechange")
+    async def on_connectionstatechange():
+        logging.info(f"Connection state changed to: {pc.connectionState}")
+        if pc.connectionState == "connected":
+            logging.info("WebRTC connection established")
+        elif pc.connectionState == "failed":
+            logging.error("WebRTC connection failed")
+            await pc.close()
+
 
     # Create an SDP offer
     offer = await pc.createOffer()
@@ -89,9 +85,16 @@ async def send_offer(websocket):
     
    
     # return pc
-    while True:
+    # Wait for the connection to be established
+    while pc.connectionState != "connected":
+        await asyncio.sleep(1)
+        logging.debug(f"Waiting for connection... Current state: {pc.connectionState}")
+
+    # Keep the connection alive
+    while pc.connectionState == "connected":
         await asyncio.sleep(1)
 
+    logging.info("Connection closed or failed")
 
 async def main(uri: str = "ws://localhost:8765"):
     # Connect to the WebSocket signaling server
