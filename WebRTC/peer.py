@@ -59,6 +59,19 @@ async def send_offer(websocket):
 
     # Handle ICE candidate exchange here if needed (for now, we can skip)
     # RTCIceCandidate()
+    ice_candidate = RTCIceCandidate(
+        component=1,
+        foundation="1",
+        ip="172.17.0.2",
+        port=52206,
+        priority=2130706431,
+        protocol="udp",
+        type="host",
+        sdpMid="0",
+        sdpMLineIndex=0
+    )
+    await pc.addIceCandidate(ice_candidate)  # Await the coroutine
+
 
    
     return pc
