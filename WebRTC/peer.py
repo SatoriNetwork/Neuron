@@ -38,7 +38,7 @@ async def send_offer(websocket):
 
      # Print the SDP offer for debugging
     # print("SDP Offer:\n", pc.localDescription.sdp)
-    print("SDP Offer:\n",offer.sdp)
+    # print("SDP Offer:\n",offer.sdp)
 
     # Send the SDP offer via WebSocket to the signaling server
     await websocket.send(pc.localDescription.sdp)
@@ -49,14 +49,14 @@ async def send_offer(websocket):
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
 
      # Print the SDP answer for debugging
-    print("SDP Answer:\n", answer.sdp)
+    # print("SDP Answer:\n", answer.sdp)
 
     # Validate the SDP answer
     if "a=setup:active" not in answer.sdp and "a=setup:passive" not in answer.sdp:
         raise ValueError("DTLS setup attribute must be 'active' or 'passive' for an answer")
 
     await pc.setRemoteDescription(answer)
-    #candidate="9333c84bcc1b0bf56713df9036e6b4d9 1 udp 2130706431 172.17.0.2 52206 typ host"
+    
     # Handle ICE candidate exchange here if needed (for now, we can skip)
     # RTCIceCandidate()
 
