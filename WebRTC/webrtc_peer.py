@@ -1,48 +1,66 @@
-import asyncio 
-import websockets 
-from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel 
+import asyncio
+import json
+from aiortc import RTCPeerConnection, RTCSessionDescription
 
-async def send_offer(websocket): 
-    # Create a WebRTC connection
-    pc = RTCPeerConnection() 
+class ManualSignalingPeer:
+    def __init__(self):
+        self.pc = RTCPeerConnection()
+        self.pc.addIceServer({'urls': 'stun:stun.l.google.com:19302'})
+        self.dc = self.pc.createDataChannel("chat")
+        
+        @self.dc.on("open")
+        def on_open():
+            print("Data channel is open")
+        
+        @self.dc.on("message")
+        def on_message(message):
+            print(f"Received: {message}")
 
-    # Add STUN server (Google's public one)
-    pc.addIceServer({'urls': 'stun:stun.l.google.com:19302'})
+    async def create_offer(self):
+        offer = await self.pc.createOffer()
+        await self.pc.setLocalDescription(offer)
+        return self.pc.localDescription.sdp
 
-    # Create a data channel 
-    channel = pc.createDataChannel("chat") 
+    async def set_remote_description(self, sdp):
+        await self.pc.setRemoteDescription(RTCSessionDescription(sdp=sdp, type="answer"))
 
-    # Define the on_open event handler
-    @channel.on("open")
-    def on_open():
-        print("Data channel is open")
-        channel.send("Hello from peer")
+    async def create_answer(self, offer_sdp):
+        offer = RTCSessionDescription(sdp=offer_sdp, type="offer")
+        await self.pc.setRemoteDescription(offer)
+        answer = await self.pc.createAnswer()
+        await self.pc.setLocalDescription(answer)
+        return self.pc.localDescription.sdp
 
-    @channel.on("message") 
-    def on_message(message):
-        print(f"Received message: {message}") 
+    def send_message(self, message):
+        self.dc.send(message)
 
-    # Create an SDP offer 
-    offer = await pc.createOffer() 
-    await pc.setLocalDescription(offer) 
-
-    # Send the SDP offer via WebSocket to the signaling server 
-    await websocket.send(pc.localDescription.sdp)
-
-     # Wait for the SDP
-    answer_sdp = await websocket.recv() 
-    answer = RTCSessionDescription(sdp=answer_sdp, type="answer") 
-    await pc.setRemoteDescription(answer)
-
-     # Handle ICE candidate exchange here if needed (for now,we can skip) 
-    return pc 
-
-async def main():    
-    # Connect to the WebSocket signaling server 
-    uri= "ws://localhost:8765" 
-    async with websockets.connect(uri) as websocket: 
-        await send_offer(websocket)
-
-#Run the main function
-asyncio.run(main())
+async def main():
+    peer = ManualSignalingPeer()
     
+    # For the offering peer
+    offer = await peer.create_offer()
+    print("Offer SDP:")
+    print(json.dumps(offer))
+    
+    # For the answering peer (on another machine)
+    # Paste the offer SDP here
+    remote_offer = input("Enter the remote offer SDP: ")
+    answer = await peer.create_answer(remote_offer)
+    print("Answer SDP:")
+    print(json.dumps(answer))
+    
+    # Back on the offering peer
+    # Paste the answer SDP here
+    remote_answer = input("Enter the remote answer SDP: ")
+    await peer.set_remote_description(remote_answer)
+    
+    # Now the connection should be established
+    while True:
+        message = input("Enter a message to send (or 'quit' to exit): ")
+        if message.lower() == 'quit':
+            break
+        peer.send_message(message)
+        await asyncio.sleep(1)
+
+if __name__ == "__main__":
+    asyncio.run(main())
