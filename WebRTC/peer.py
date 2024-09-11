@@ -12,7 +12,9 @@ async def send_offer(websocket):
     # Create a WebRTC connection
     pc = RTCPeerConnection()
 
-    pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
+    # pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
+    pc.addIceServer({'urls': ['stun:stun.l.google.com:19302']})
+
 
 
     # Create a data channel
