@@ -22,10 +22,10 @@ async def send_offer(websocket):
     def on_message(message):
         print(f"Received message: {message}")
 
-    # Sending a message over the data channel
-    @channel.on("open")
-    def on_open():
-        channel.send("Hello from peer")
+    # # Sending a message over the data channel
+    # @channel.on("open")
+    # def on_open():
+    #     channel.send("Hello from peer")
 
     # Create an SDP offer
     offer = await pc.createOffer()
