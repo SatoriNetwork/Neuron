@@ -115,7 +115,7 @@
       <hr class="dark horizontal my-0">
       <div class="card-footer p-1">
         <center><p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
-          Transaction fees will be added during the send process. If {% if network=='main' %}Evrmore{% else %}Ravencoin{% endif %} is available the transaction fee will be no more than the required reserves of 0.25 {% if network=='main' %}EVR{% else %}RVN{% endif %}EVR, often much less. If there is not more than .25 EVR in the wallet the transaction fee will be {{ wallet.satoriFee }} SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://moontree.com/'>Moontree</a> or <a href='https://github.com/EvrmoreOrg/electrum-evrmore/releases'>the Electrum-Evrmore wallet</a>.</p></center>
+          Transaction fees will be added during the send process. If {% if network=='main' %}Evrmore{% else %}Ravencoin{% endif %} is available the transaction fee will be no more than the required reserves of 0.25 {% if network=='main' %}EVR{% else %}RVN{% endif %}, often much less. If there is not more than .25 EVR in the wallet the transaction fee will be {{ '%.8f' | format(wallet.satoriFee) }} SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://moontree.com/'>Moontree</a> or <a href='https://github.com/EvrmoreOrg/electrum-evrmore/releases'>the Electrum-Evrmore wallet</a>.</p></center>
       </div>
     </div>
   </div>

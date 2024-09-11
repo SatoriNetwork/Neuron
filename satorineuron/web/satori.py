@@ -7,7 +7,7 @@
 from flask_cors import CORS
 from typing import Union
 from functools import wraps, partial
-import requests
+import shutil
 import os
 import sys
 import json
@@ -37,7 +37,7 @@ from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
-logging.info(f'verison: {VERSION}', print=True)
+logging.info(f'version: {VERSION}', print=True)
 
 
 ###############################################################################
@@ -397,6 +397,51 @@ def backup(target: str = 'satori'):
     return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
 
 
+@app.route('/import_wallet', methods=['POST'])
+@authRequired
+def import_wallet():
+    if start.vault is None or start.vault.isEncrypted:
+        return jsonify({'success': False, 'message': 'Please unlock the vault first'})
+
+    if 'files' not in request.files:
+        return jsonify({'success': False, 'message': 'No files part in the request'})
+
+    files = request.files.getlist('files')
+
+    wallet_path = '/Satori/Neuron/wallet'
+    temp_path = '/Satori/Neuron/temp_wallet'
+
+    # Create a temporary directory
+    os.makedirs(temp_path, exist_ok=True)
+
+    try:
+        for file in files:
+            if file.filename.startswith('wallet/'):
+                file_path = os.path.join(temp_path, file.filename[7:])
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                file.save(file_path)
+
+        # Backup current wallet
+        if os.path.exists(wallet_path):
+            shutil.move(wallet_path, wallet_path + '_backup')
+
+        # Move new wallet into place
+        shutil.move(temp_path, wallet_path)
+
+        return jsonify({'success': True})
+    except Exception as e:
+        # If any error occurs, restore the old wallet
+        if os.path.exists(wallet_path + '_backup'):
+            shutil.rmtree(wallet_path, ignore_errors=True)
+            shutil.move(wallet_path + '_backup', wallet_path)
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        # Clean up
+        shutil.rmtree(temp_path, ignore_errors=True)
+        if os.path.exists(wallet_path + '_backup'):
+            shutil.rmtree(wallet_path + '_backup', ignore_errors=True)
+
+
 @app.route('/restart', methods=['GET'])
 @authRequired
 def restart():
@@ -578,20 +623,29 @@ def miningModeOff():
     return str(start.setMiningMode(False)), 200
 
 
+@app.route('/delegate/get', methods=['GET'])
+@authRequired
+def delegateGet():
+    success, msg = start.server.delegateGet()
+    if success:
+        return str(msg), 200
+    return str('failure'), 400
+
+
+@app.route('/delegate/remove', methods=['GET'])
+@authRequired
+def delegateRemove():
+    success, msg = start.server.delegateRemove()
+    if success:
+        return str(msg), 200
+    return str('failure'), 400
+
+
 @app.route('/stake/check', methods=['GET'])
 @authRequired
 def stakeCheck():
     status = start.performStakeCheck()
     return str(status), 200
-
-
-@app.route('/stake/proxy/request/<address>', methods=['GET'])
-@authRequired
-def stakeProxyRequest(address: str):
-    success, msg = start.server.stakeProxyRequest(address)
-    if success:
-        return str('ok'), 200
-    return str('failure'), 400
 
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
@@ -1454,27 +1508,18 @@ def enableAutosecure(network: str = 'main', retainInWallet: int = 0):
     if start.vault is None:
         flash('Must unlock your vault to enable autosecure.')
         return redirect('/dashboard')
-    # for this network open the wallet get the address
-    # config.get('autosecure')
-    # save the address to the autosecure config
-    # as the value save the map:
-    # {'address': vaultAddress, 'pubkey': vaultPubkey, 'sig': signature}
-    # make the signature sign the encrypted string representation of their vault
-    # plus the vaultAddress
-    # that way we can verify the signature is for this vault in the future.
-    # the config will be checked daily when value comes in.
-    config.add(
-        'autosecure',
-        data={
-            start.getWallet(network=network).address: {
-                **start.vault.authPayload(
-                    asDict=True,
-                    challenge=start.vault.address + start.vault.publicKey),
-                **{'retain': retainInWallet}
-            }
-        })
-    # start.getWallet(network=network).get() # we think this triggers the tx twice
-    return 'OK', 200
+    # the network portion should be whatever network I'm on.
+    vault = start.getVault(network=network)
+    vaultAddress = vault.address
+    print(vault.publicKey)
+    success, result = start.server.reportVault(
+        walletSignature=start.getWallet(network=network).sign(vaultAddress),
+        vaultSignature=vault.sign(vaultAddress),
+        vaultPubkey=vault.publicKey,
+        address=vaultAddress)
+    if success:
+        return 'OK', 200
+    return f'Failed to report vault: {result}', 400
 
 
 @app.route('/disable_autosecure/<network>', methods=['GET'])
@@ -1551,22 +1596,22 @@ def proxyParentStatus():
     return f'Failed stakeProxyChildren: {result}', 400
 
 
-@app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
+@app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
 @authRequired
-def approveProxyChild(address: str, id: int):
-    success, result = start.server.stakeProxyApprove(address, childId=id)
+def charityProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyCharity(address, childId=id)
     if success:
         return result, 200
-    return f'Failed stakeProxyApprove: {result}', 400
+    return f'Failed stakeProxyCharity: {result}', 400
 
 
-@app.route('/proxy/child/deny/<address>/<id>', methods=['GET'])
+@app.route('/proxy/child/no_charity/<address>/<id>', methods=['GET'])
 @authRequired
-def denyProxyChild(address: str, id: int):
-    success, result = start.server.stakeProxyDeny(address, childId=id)
+def charityNotProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyCharityNot(address, childId=id)
     if success:
         return result, 200
-    return f'Failed stakeProxyDeny: {result}', 400
+    return f'Failed stakeProxyCharityNot: {result}', 400
 
 
 @app.route('/proxy/child/remove/<address>/<id>', methods=['GET'])

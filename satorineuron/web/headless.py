@@ -35,7 +35,7 @@ from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
-logging.info(f'verison: {VERSION}', print=True)
+logging.info(f'version: {VERSION}', print=True)
 
 ###############################################################################
 ## Globals ####################################################################
@@ -54,10 +54,10 @@ ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 # DELEGATE = config.get().get('delegate', None)
 CORS(app, origins=[{
-   'local': 'http://192.168.0.10:5002',
-   'dev': 'http://localhost:5002',
-   'test': 'https://test.satorinet.io',
-   'prod': 'https://satorinet.io'}[ENV]])
+    'local': 'http://192.168.0.10:5002',
+    'dev': 'http://localhost:5002',
+    'test': 'https://test.satorinet.io',
+    'prod': 'https://satorinet.io'}[ENV]])
 
 
 ###############################################################################
@@ -91,7 +91,7 @@ while True:
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
         # if DELEGATE is not None:
-        #     wallet = start.details.wallet 
+        #     wallet = start.details.wallet
         #     if isinstance(wallet.rewardaddress, str) and wallet.rewardaddress not in [wallet.address, wallet.vaultaddress, DELEGATE]:
         #         start.server.stakeProxyRequest(DELEGATE)
         logging.info('Satori Neuron is starting...', color='green')
@@ -114,15 +114,19 @@ while True:
 ################################################################################
 #
 #
+
+
 @app.errorhandler(404)
 def not_found(e):
-   return render_template('404.html'), 404
+    return render_template('404.html'), 404
 
 
 @app.route('/ping', methods=['GET'])
 def ping():
-   from datetime import datetime
-   return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    from datetime import datetime
+    return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+
+
 #
 #
 ################################################################################
@@ -131,10 +135,9 @@ def ping():
 #
 #
 if __name__ == '__main__':
-   app.run(
-       host='127.0.0.1',
-       port=config.flaskPort(),
-       threaded=True,
-       debug=debug,
-       use_reloader=False)
-
+    app.run(
+        host='127.0.0.1',
+        port=config.flaskPort(),
+        threaded=True,
+        debug=debug,
+        use_reloader=False)

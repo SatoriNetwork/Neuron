@@ -101,9 +101,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
-        self.restartThread = threading.Thread(
-            target=self.restartEverythingPeriodic, daemon=True)
-        self.restartThread.start()
+        if not config.get().get('disable_restart', False):
+            self.restartThread = threading.Thread(
+                target=self.restartEverythingPeriodic, daemon=True)
+            self.restartThread.start()
         self.checkinCheckThread = threading.Thread(
             target=self.checkinCheck, daemon=True)
         self.checkinCheckThread.start()
@@ -302,25 +303,25 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return vault
 
     def start(self):
-        # ''' start the satori engine. '''
-        # # while True:
-        # if self.ranOnce:
-        #     time.sleep(60*60)
-        # self.ranOnce = True
-        # self.setMiningMode()
-        # self.createRelayValidation()
+        ''' start the satori engine. '''
+        # while True:
+        if self.ranOnce:
+            time.sleep(60*60)
+        self.ranOnce = True
+        self.setMiningMode()
+        self.createRelayValidation()
         self.getWallet()
-        # self.getVault()
-        self.create_server_conn()
-        # self.checkin()
-        # self.verifyCaches()
-        # # self.startSynergyEngine()
-        # self.subConnect()
-        # self.pubsConnect()
-        # if self.isDebug:
-        #     return
-        # self.startRelay()
-        # self.buildEngine()
+        self.getVault()
+        self.createServerConn()
+        self.checkin()
+        self.verifyCaches()
+        self.startSynergyEngine()
+        self.subConnect()
+        self.pubsConnect()
+        if self.isDebug:
+            return
+        self.startRelay()
+        self.buildEngine()
         time.sleep(60*60*24)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
@@ -333,14 +334,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
         logging.info('started relay validation engine', color='green')
-    def create_server_conn(self):
+
+    def createServerConn(self):
         logging.debug(self.urlServer, color='teal')
         self.server = SatoriServerClient(
             self.wallet, url=self.urlServer, sendingUrl=self.urlMundo)
 
-
     def checkin(self):
-      
         try:
             referrer = open(
                 config.root('config', 'referral.txt'),
@@ -366,7 +366,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.subscriptions = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.subscriptions)]
-                if attempt < 5 and len(self.subscriptions) == 0:
+                if attempt < 5 and (self.details is None or len(self.subscriptions) == 0):
                     time.sleep(30)
                     continue
                 logging.info('subscriptions:', len(
