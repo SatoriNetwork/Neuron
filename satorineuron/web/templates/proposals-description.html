@@ -49,7 +49,7 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', (event) => {
+   document.addEventListener('DOMContentLoaded', (event) => {
     fetchProposals();
 });
 
@@ -57,22 +57,25 @@ function fetchProposals() {
     fetch('/proposals/data', { method: 'GET' })
     .then(response => response.json())
     .then(data => {
-        data.proposals.forEach(proposal => {
-            // Update UI with fetched data
-            document.getElementById('yes-votes-' + proposal.id).innerText = proposal.yes_votes;
-            document.getElementById('no-votes-' + proposal.id).innerText = proposal.no_votes;
-
-            // Check if the user has already voted
-        //     const userVote = //ask server
-            // if (userVote) {
-            //     updateButtons(proposal.id, userVote);
-            // }
-        });
+        updateProposalsUI(data.proposals);
     }).catch(error => console.error('Error:', error));
 }
 
-function submitVote(proposalId, vote) {
+function updateProposalsUI(proposals) {
+    proposals.forEach(proposal => {
+        // Update UI with fetched data
+        document.getElementById('yes-votes-' + proposal.id).innerText = proposal.yes_votes;
+        document.getElementById('no-votes-' + proposal.id).innerText = proposal.no_votes;
 
+        // Check if the user has already voted
+        // const userVote = //ask server
+        // if (userVote) {
+        //     updateButtons(proposal.id, userVote);
+        // }
+    });
+}
+
+function submitVote(proposalId, vote) {
     fetch('/proposals/vote', {
         method: 'POST',
         headers: {
@@ -85,12 +88,17 @@ function submitVote(proposalId, vote) {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Server response:', data);  // Log the entire response
         if (data.status === 'success') {
             const proposal = data.proposal;
-            document.getElementById('yes-votes-' + proposal.id).innerText = proposal.yes_votes;
-            document.getElementById('no-votes-' + proposal.id).innerText = proposal.no_votes;
-            updateButtons(proposal.id, vote);
-            console.log(data.status);
+            if (proposal && proposal.id) {
+                document.getElementById('yes-votes-' + proposal.id).innerText = proposal.yes_votes;
+                document.getElementById('no-votes-' + proposal.id).innerText = proposal.no_votes;
+                updateButtons(proposal.id, vote);
+                console.log('Vote submitted successfully');
+            } else {
+                console.error('Invalid proposal data in response:', proposal);
+            }
         } else {
             console.error('Vote failed:', data.message);
         }
@@ -116,5 +124,12 @@ function updateButtons(proposalId, vote) {
 
     votedMessage.style.display = 'block';
 }
+
+// Function to periodically update all proposals
+function updateAllProposals() {
+    fetchProposals();
+}
+
+// Set up periodic updates
 
 </script>
