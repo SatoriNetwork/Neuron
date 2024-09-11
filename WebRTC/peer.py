@@ -21,7 +21,7 @@ async def send_offer(websocket):
     @channel.on("open")
     def on_open():
         print("Data channel is open")
-        channel.send("Hello from peer")
+        channel.send("Hello World")
 
     @channel.on("message")
     def on_message(message):
@@ -56,7 +56,7 @@ async def send_offer(websocket):
         raise ValueError("DTLS setup attribute must be 'active' or 'passive' for an answer")
 
     await pc.setRemoteDescription(answer)
-    
+
     # Handle ICE candidate exchange here if needed (for now, we can skip)
     # RTCIceCandidate()
 
