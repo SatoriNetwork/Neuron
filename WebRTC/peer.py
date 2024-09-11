@@ -68,7 +68,7 @@ async def send_offer(websocket):
     # Add STUN server (Google's public one)
     await pc.addIceCandidate(ice_candidate)  # Await the coroutine
 
-    pc.addIceCandidate({
+    await pc.addIceCandidate({
         'urls': ['stun:stun.l.google.com:19302']
     })
 
