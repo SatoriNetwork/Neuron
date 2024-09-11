@@ -167,7 +167,14 @@ async def run_peer(uri="ws://localhost:8765"):
         def on_message(message):
             print(f"Received: {message}")
 
-        await exchange_offer_answer(pc, websocket)
+        # Determine if this peer should make an offer or wait for one
+        offer = await websocket.recv()
+        if offer == "create_offer":
+            # This peer creates the offer
+            await create_and_send_offer(pc, websocket)
+        else:
+            # This peer receives the offer and creates an answer
+            await handle_offer_and_send_answer(pc, websocket, offer)
 
         # Wait for ICE gathering to complete or timeout after 10 seconds
         gathering_complete = asyncio.Event()
@@ -187,6 +194,27 @@ async def run_peer(uri="ws://localhost:8765"):
             await asyncio.sleep(1)
 
         await pc.close()
+
+async def create_and_send_offer(pc, websocket):
+    offer = await pc.createOffer()
+    await pc.setLocalDescription(offer)
+    print("Sending offer")
+    await websocket.send(object_to_string(pc.localDescription))
+    
+    print("Waiting for answer")
+    answer_str = await websocket.recv()
+    answer = object_from_string(answer_str)
+    print("Received answer")
+    await pc.setRemoteDescription(answer)
+
+async def handle_offer_and_send_answer(pc, websocket, offer):
+    offer = object_from_string(offer)
+    await pc.setRemoteDescription(offer)
+    
+    answer = await pc.createAnswer()
+    await pc.setLocalDescription(answer)
+    print("Sending answer")
+    await websocket.send(object_to_string(pc.localDescription))
 
 if __name__ == "__main__":
     uri = sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"
