@@ -113,14 +113,9 @@ import websockets
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
 from aiortc.contrib.signaling import object_from_string, object_to_string
 
-# Use both STUN and TURN servers
+# Use only STUN server for now
 ICE_SERVERS = [
     RTCIceServer(urls="stun:stun.l.google.com:19302"),
-    RTCIceServer(
-        urls="turn:your-turn-server.com:3478",
-        username="your-username",
-        credential="your-password"
-    )
 ]
 
 async def create_peer_connection():
@@ -174,9 +169,18 @@ async def run_peer(uri):
 
         await exchange_offer_answer(pc, websocket)
 
-        # Wait for ICE gathering to complete
-        while pc.iceGatheringState != "complete":
-            await asyncio.sleep(0.1)
+        # Wait for ICE gathering to complete or timeout after 10 seconds
+        gathering_complete = asyncio.Event()
+        
+        @pc.on("icegatheringstatechange")
+        async def on_icegatheringstatechange():
+            if pc.iceGatheringState == "complete":
+                gathering_complete.set()
+        
+        try:
+            await asyncio.wait_for(gathering_complete.wait(), timeout=10.0)
+        except asyncio.TimeoutError:
+            print("ICE gathering timed out, proceeding anyway")
 
         # Keep the connection alive
         while pc.connectionState not in ["closed", "failed"]:
