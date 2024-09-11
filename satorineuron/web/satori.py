@@ -611,15 +611,6 @@ def stakeCheck():
     return str(status), 200
 
 
-@app.route('/stake/proxy/request/<address>', methods=['GET'])
-@authRequired
-def stakeProxyRequest(address: str):
-    success, msg = start.server.stakeProxyRequest(address)
-    if success:
-        return str('ok'), 200
-    return str('failure'), 400
-
-
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
 @authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
@@ -1572,24 +1563,6 @@ def charityNotProxyChild(address: str, id: int):
     if success:
         return result, 200
     return f'Failed stakeProxyCharityNot: {result}', 400
-
-
-@app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
-@authRequired
-def approveProxyChild(address: str, id: int):
-    success, result = start.server.stakeProxyApprove(address, childId=id)
-    if success:
-        return result, 200
-    return f'Failed stakeProxyApprove: {result}', 400
-
-
-@app.route('/proxy/child/deny/<address>/<id>', methods=['GET'])
-@authRequired
-def denyProxyChild(address: str, id: int):
-    success, result = start.server.stakeProxyDeny(address, childId=id)
-    if success:
-        return result, 200
-    return f'Failed stakeProxyDeny: {result}', 400
 
 
 @app.route('/proxy/child/remove/<address>/<id>', methods=['GET'])

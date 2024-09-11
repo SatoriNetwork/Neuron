@@ -65,42 +65,44 @@
           <a href="{{ url_for('wallet', network='test') }}" onclick="showWorking();">Test</a>
         </div>
         </li>-->
-      <li class="nav-item sidenav-dropdown-chevron">
-        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="#" onclick="toggleDropdown(event);">
-          <div class="d-flex justify-content-between align-items-center w-100">
-            <div id='urlWalletMain' style='display:none;'>{{ url_for('wallet', network='main') }}</div>
-            <div id='gotoWalletMain' class="d-flex align-items-center" style='z-index:2;'>
-              <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                <i class="material-icons opacity-10">wallet</i>
+      {% if wallet.balance > 0 %}
+        <li class="nav-item sidenav-dropdown-chevron">
+          <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="#" onclick="toggleDropdown(event);">
+            <div class="d-flex justify-content-between align-items-center w-100">
+              <div id='urlWalletMain' style='display:none;'>{{ url_for('wallet', network='main') }}</div>
+              <div id='gotoWalletMain' class="d-flex align-items-center" style='z-index:2;'>
+                <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                  <i class="material-icons opacity-10">wallet</i>
+                </div>
+                <span class="nav-link-text">Wallet</span>
               </div>
-              <span class="nav-link-text">Wallet</span>
+              <i class="material-icons opacity-10">expand_more</i>
             </div>
-            <i class="material-icons opacity-10">expand_more</i>
+          </a>
+          <div class="sidenav-dropdown-content">
+            <a href="{{ url_for('wallet', network='main') }}" onclick="showWorking();">Mainnet</a>
+            <a href="{{ url_for('wallet', network='test') }}" onclick="showWorking();">Testnet</a>
           </div>
-        </a>
-        <div class="sidenav-dropdown-content">
-          <a href="{{ url_for('wallet', network='main') }}" onclick="showWorking();">Mainnet</a>
-          <a href="{{ url_for('wallet', network='test') }}" onclick="showWorking();">Testnet</a>
-        </div>
-      </li>
-      {% if title=='Wallet' %}
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('top-navbar-title');">Balance</a>
-      </li>
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('aliasbr');">Alias</a>
-      </li>
-        {% if vaultIsSetup %}
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('walletlockbr');">Lock</a>
-      </li>
+        </li>
+        {% if title=='Wallet' %}
+        <li class='sub-nav-item'>
+          <a href='#' onclick="scrollOrJumpTo('top-navbar-title');">Balance</a>
+        </li>
+        <li class='sub-nav-item'>
+          <a href='#' onclick="scrollOrJumpTo('aliasbr');">Alias</a>
+        </li>
+        <!--{ if vaultIsSetup }
+        <li class='sub-nav-item'>
+          <a href='#' onclick="scrollOrJumpTo('walletlockbr');">Lock</a>
+        </li>
+          { endif }-->
+        <li class='sub-nav-item'>
+          <a href='#' onclick="scrollOrJumpTo('historybr');">Transaction History</a>
+        </li>
+        <li class='sub-nav-item'>
+          <a href='#' onclick="scrollOrJumpTo('metadatabr');">Metadata</a>
+        </li>
         {% endif %}
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('historybr');">Transaction History</a>
-      </li>
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('metadatabr');">Metadata</a>
-      </li>
       {% endif %}
       <script>
         document.getElementById('gotoWalletMain').addEventListener(
@@ -128,7 +130,6 @@
             }
           }
         }
-
       </script>
 
 
@@ -150,26 +151,35 @@
           <span class="nav-link-text ms-1">Vault</span>
         </a>
       </li>
-      {% if title=='Vault' %}
+      {% if title=='Vault' or title=='Wallet' %}
         {% if vaultOpened %}
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('vaultwarningbr');">Warning</a>
-      </li>
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('rewardbr');">Reward Address</a>
-      </li>
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('balancebr');">Balance</a>
-      </li>
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('historybr');">Transaction History</a>
-      </li>
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('metadatabr');">Metadata</a>
-      </li>
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('ethvaultbr');">Ethereum Address</a>
-      </li>
+          <li class='sub-nav-item'>
+            <a href='#' onclick="scrollOrJumpTo('vaultwarningbr');">Warning</a>
+          </li>
+          <li class='sub-nav-item'>
+            <a href='#' onclick="scrollOrJumpTo('rewardbr');">Reward Address</a>
+          </li>
+          <li class='sub-nav-item'>
+            <a href='#' onclick="scrollOrJumpTo('balancebr');">Balance</a>
+          </li>
+          <li class='sub-nav-item'>
+            <a href='#' onclick="scrollOrJumpTo('historybr');">Transaction History</a>
+          </li>
+          <li class='sub-nav-item'>
+            <a href='#' onclick="scrollOrJumpTo('metadatabr');">Metadata</a>
+          </li>
+          <li class='sub-nav-item'>
+            <a href='#' onclick="scrollOrJumpTo('ethvaultbr');">Ethereum Address</a>
+          </li>
+        {% else %}
+          {% if wallet.balance == 0 %}
+            <li class="sub-nav-item" >
+              <a href="{{ url_for('wallet', network='main') }}" onclick="showWorking();" class="{{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}">
+                <i class="material-icons opacity-10" style="padding-right: 8px;">wallet</i>
+                <span class="nav-link-text">Wallet</span>
+              </a>
+            </li>
+          {% endif %}
         {% endif %}
       {% endif %}
       <li class="nav-item">
