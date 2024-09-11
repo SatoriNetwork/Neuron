@@ -104,7 +104,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if not config.get().get('disable_restart', False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True)
-        self.restartThread.start()
+            self.restartThread.start()
         self.checkinCheckThread = threading.Thread(
             target=self.checkinCheck, daemon=True)
         self.checkinCheckThread.start()
