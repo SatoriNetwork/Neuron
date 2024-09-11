@@ -99,13 +99,13 @@ async def send_offer(websocket):
 async def main(uri: str = "ws://localhost:8765"):
     # Connect to the WebSocket signaling server
     async with websockets.connect(uri) as websocket:
-        pc = await send_offer(websocket)
-        try:
-            # Keep the main coroutine running
-            await asyncio.Future()
-        finally:
-            # Close the peer connection when the program exits
-            await pc.close()
+        await send_offer(websocket)
+        # try:
+        #     # Keep the main coroutine running
+        #     await asyncio.Future()
+        # finally:
+        #     # Close the peer connection when the program exits
+        #     await pc.close()
 
 if __name__ == "__main__":
     asyncio.run(main(
