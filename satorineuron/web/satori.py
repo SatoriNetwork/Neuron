@@ -1689,18 +1689,24 @@ def get_proposals():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/proposals/vote', methods=['POST'])
-@authRequired
 def proposal_vote():
-    data = request.json
-    proposal_id = data.get('proposal_id')
-    vote = data.get('vote')
-    # wallet = start.getWallet(network=start.network)
-    success, message_or_proposal = start.server.submitProposalVote(proposal_id, vote)
-    if success:
-        return jsonify({'status': 'success', 'proposal': message_or_proposal}), 200
-    else:
-        return jsonify({'status': 'error', 'message': message_or_proposal}), 400
-    
+    try:
+        data = request.json
+        proposal_id = data.get('proposal_id')
+        vote = data.get('vote')
+        
+        if not proposal_id or vote is None:
+            return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
+        
+        success, result = start.server.submitProposalVote(proposal_id, vote)
+        
+        if success:
+            return jsonify({'status': 'success', 'proposal': result}), 200
+        else:
+            return jsonify({'status': 'error', 'message': result}), 400
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/test', methods=['GET'])
 def test_connection():
     try:
