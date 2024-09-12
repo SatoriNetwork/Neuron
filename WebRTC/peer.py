@@ -104,7 +104,7 @@ async def send_offer(websocket):
    
     # return pc
     # Wait for the connection to be established
-    connection_timeout = 30  # seconds
+    connection_timeout = 60  # Increased to 60 seconds
     start_time = asyncio.get_event_loop().time()
     while pc.connectionState != "connected":
         if asyncio.get_event_loop().time() - start_time > connection_timeout:
@@ -112,6 +112,8 @@ async def send_offer(websocket):
             break
         await asyncio.sleep(1)
         logging.debug(f"Waiting for connection... Current state: {pc.connectionState}")
+        logging.debug(f"ICE connection state: {pc.iceConnectionState}")
+        logging.debug(f"ICE gathering state: {pc.iceGatheringState}")
 
     if pc.connectionState == "connected":
         logging.info("WebRTC connection established successfully")
@@ -119,7 +121,9 @@ async def send_offer(websocket):
         while pc.connectionState == "connected":
             await asyncio.sleep(1)
     else:
-        logging.error("Failed to establish WebRTC connection")
+        logging.error(f"Failed to establish WebRTC connection. Final state: {pc.connectionState}")
+        logging.error(f"Final ICE connection state: {pc.iceConnectionState}")
+        logging.error(f"Final ICE gathering state: {pc.iceGatheringState}")
 
     # Close the peer connection
     await pc.close()
