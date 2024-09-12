@@ -88,6 +88,12 @@
       </li>
       {% if title=='Vault' or title=='Wallet' %}
         {% if vaultOpened %}
+          <li class="sub-nav-item" >
+            <a href="{{ url_for('wallet', network='main') }}" onclick="showWorking();" class="{{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}">
+              <i class="material-icons opacity-10" style="padding-right: 8px;">wallet</i>
+              <span class="nav-link-text">Wallet</span>
+            </a>
+          </li>
           <li class='sub-nav-item'>
             <a href='#' onclick="scrollOrJumpTo('vaultwarningbr');">Warning</a>
           </li>
