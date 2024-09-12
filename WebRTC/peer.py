@@ -1,5 +1,6 @@
 # webrtc_peer.py
 import sys
+import os
 import asyncio
 import websockets
 import tracemalloc
@@ -9,14 +10,21 @@ import logging
 # Enable tracemalloc to get detailed memory allocation traceback
 tracemalloc.start()
 logging.basicConfig(level=logging.DEBUG)
+# Twilio credentials
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+
 
 async def send_offer(websocket):
     # Create a WebRTC connection
     # pc = RTCPeerConnection()
      # Create a WebRTC configuration
     config = RTCConfiguration(
-        iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])]
+        iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"]),
+                    RTCIceServer(urls=['turn:global.turn.twilio.com:3478?transport=udp'], username=TWILIO_ACCOUNT_SID, credential=TWILIO_AUTH_TOKEN)
+        ]
     )
+    #'turn:global.turn.twilio.com:3478?transport=udp'
 
     # Create a WebRTC connection with the configuration
     pc = RTCPeerConnection(configuration=config)
@@ -86,9 +94,9 @@ async def send_offer(websocket):
    
     # return pc
     # Wait for the connection to be established
-    while pc.connectionState != "connected":
-        await asyncio.sleep(1)
-        logging.debug(f"Waiting for connection... Current state: {pc.connectionState}")
+    # while pc.connectionState != "connected":
+    #     await asyncio.sleep(1)
+    #     logging.debug(f"Waiting for connection... Current state: {pc.connectionState}")
 
     # Keep the connection alive
     while pc.connectionState == "connected":
