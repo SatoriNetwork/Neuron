@@ -6,6 +6,7 @@ import websockets
 import tracemalloc
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
 import logging
+from twilio.rest import Client
 
 # Enable tracemalloc to get detailed memory allocation traceback
 tracemalloc.start()
@@ -14,22 +15,35 @@ logging.basicConfig(level=logging.DEBUG)
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 
+def get_turn_credentials():
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    token = client.tokens.create()
 
+     
+    ice_servers = []
+    for server in token.ice_servers:
+        urls = server['url'] if isinstance(server['url'], list) else [server['url']]
+        username = server.get('username')
+        credential = server.get('credential')
+        
+        ice_server = RTCIceServer(urls=urls, username=username, credential=credential)
+        ice_servers.append(ice_server)
+    
+    logging.debug(f"ICE Servers: {ice_servers}")
+    return ice_servers
 async def send_offer(websocket):
     # Create a WebRTC connection
     # pc = RTCPeerConnection()
-     # Create a WebRTC configuration
-    config = RTCConfiguration(
-        iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"]),
-                    RTCIceServer(urls=['turn:global.turn.twilio.com:3478?transport=udp'], username=TWILIO_ACCOUNT_SID, credential=TWILIO_AUTH_TOKEN)
-        ]
-    )
-    #'turn:global.turn.twilio.com:3478?transport=udp'
+    # Get TURN server credentials from Twilio
+    ice_servers = get_turn_credentials()
+     # Create a WebRTC configuration with STUN and TURN servers
+    config = RTCConfiguration(iceServers=ice_servers)
+
 
     # Create a WebRTC connection with the configuration
     pc = RTCPeerConnection(configuration=config)
 
-    pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
+    # pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
 
 
 
@@ -68,9 +82,6 @@ async def send_offer(websocket):
     offer = await pc.createOffer()
     await pc.setLocalDescription(offer)
 
-     # Print the SDP offer for debugging
-    # print("SDP Offer:\n", pc.localDescription.sdp)
-
     # Send the SDP offer via WebSocket to the signaling server
     await websocket.send(pc.localDescription.sdp)
 
@@ -80,7 +91,6 @@ async def send_offer(websocket):
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
 
      # Print the SDP answer for debugging
-    # print("SDP Answer:\n", answer.sdp)
 
     # Validate the SDP answer
     if "a=setup:active" not in answer.sdp and "a=setup:passive" not in answer.sdp:
@@ -108,12 +118,6 @@ async def main(uri: str = "ws://localhost:8765"):
     # Connect to the WebSocket signaling server
     async with websockets.connect(uri) as websocket:
         await send_offer(websocket)
-        # try:
-        #     # Keep the main coroutine running
-        #     await asyncio.Future()
-        # finally:
-        #     # Close the peer connection when the program exits
-        #     await pc.close()
 
 if __name__ == "__main__":
     asyncio.run(main(
