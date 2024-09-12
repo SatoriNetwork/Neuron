@@ -74,8 +74,8 @@ async def send_offer(websocket):
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
 
     # Validate the SDP answer
-    if "a=setup:active" not in answer.sdp and "a=setup:passive" not in answer.sdp:
-        raise ValueError("DTLS setup attribute must be 'active' or 'passive' for an answer")
+    if not any(setup in answer.sdp for setup in ["a=setup:active", "a=setup:passive", "a=setup:actpass"]):
+        raise ValueError("DTLS setup attribute must be 'active', 'passive', or 'actpass' for an answer")
 
     await pc.setRemoteDescription(answer)
 
