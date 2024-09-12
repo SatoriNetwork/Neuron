@@ -9,6 +9,7 @@ FROM satorinet/satorineuron:latest
 # Install WebRTC
 RUN pip install aiortc
 RUN pip install websockets
+RUN pip install twilio
 RUN chmod -R 777 /Satori/Synapse && \
     chmod -R 777 /Satori/Lib && \
     chmod -R 777 /Satori/Wallet && \
@@ -39,6 +40,8 @@ CMD ["bash", "./start_from_image.sh"]
 
 # RUN OPTIONS
 # docker run --rm -it --name webrtc_peer   -p 8765:8765 -v c:\repos\Satori\Neuron\WebRTC:/Satori/Neuron/WebRTC satorinet/satorineuron:WebRTC bash
+# docker run --rm -it --name webrtc_peer   -p 16384-32767:16384-32767/udp -v c:\repos\Satori\Neuron\WebRTC:/Satori/Neuron/WebRTC satorinet/satorineuron:WebRTC bash
 # docker run --rm -it --name webrtc_server -p 8765:8765 -v c:\repos\Satori\Neuron\WebRTC:/Satori/Neuron/WebRTC satorinet/satorineuron:WebRTC bash /Satori/Neuron/WebRTC/server.sh
 # docker exec -it webrtc_peer bash
-# docker run --rm -it --name webrtc_peer   -p 8765:8765 -v ~/Neuron/WebRTC:/Satori/Neuron/WebRTC satorinet/satorineuron:WebRTC bash
+# docker run --rm -it --name webrtc_peer   -p 16384-32767:16384-32767/udp -v ~/Neuron/WebRTC:/Satori/Neuron/WebRTC satorinet/satorineuron:WebRTC bash
+# docker run --rm -it --name webrtc_peer   p 8765:8765 -v ~/Neuron/WebRTC:/Satori/Neuron/WebRTC satorinet/satorineuron:WebRTC bash
