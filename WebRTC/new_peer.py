@@ -27,7 +27,8 @@ async def send_offer(websocket):
 
     # Create a WebRTC configuration with STUN and TURN servers
     config = RTCConfiguration(
-        iceServers=[RTCIceServer(**server) for server in ice_servers]
+        iceServers=[RTCIceServer(**{k: v for k, v in server.items() if k != 'url'}) for server in ice_servers]
+
     )
 
     # Create a WebRTC connection with the configuration
