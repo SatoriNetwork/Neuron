@@ -71,6 +71,7 @@ async def send_offer(websocket):
 
     # Wait for the SDP answer
     answer_sdp = await websocket.recv()
+    answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active") # Modify the SDP answer
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
 
     # Validate the SDP answer
