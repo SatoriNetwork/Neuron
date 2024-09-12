@@ -104,15 +104,26 @@ async def send_offer(websocket):
    
     # return pc
     # Wait for the connection to be established
-    # while pc.connectionState != "connected":
-    #     await asyncio.sleep(1)
-    #     logging.debug(f"Waiting for connection... Current state: {pc.connectionState}")
-
-    # Keep the connection alive
-    while pc.connectionState == "connected":
+    connection_timeout = 30  # seconds
+    start_time = asyncio.get_event_loop().time()
+    while pc.connectionState != "connected":
+        if asyncio.get_event_loop().time() - start_time > connection_timeout:
+            logging.error("Connection timed out")
+            break
         await asyncio.sleep(1)
+        logging.debug(f"Waiting for connection... Current state: {pc.connectionState}")
 
-    logging.info("Connection closed or failed")
+    if pc.connectionState == "connected":
+        logging.info("WebRTC connection established successfully")
+        # Keep the connection alive
+        while pc.connectionState == "connected":
+            await asyncio.sleep(1)
+    else:
+        logging.error("Failed to establish WebRTC connection")
+
+    # Close the peer connection
+    await pc.close()
+    logging.info("Connection closed")
 
 async def main(uri: str = "ws://localhost:8765"):
     # Connect to the WebSocket signaling server
