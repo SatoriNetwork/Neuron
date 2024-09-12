@@ -104,7 +104,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if not config.get().get('disable_restart', False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True)
-        self.restartThread.start()
+            self.restartThread.start()
         self.checkinCheckThread = threading.Thread(
             target=self.checkinCheck, daemon=True)
         self.checkinCheckThread.start()
@@ -312,6 +312,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.getWallet()
         self.getVault()
+        self.createServerConn()
         self.checkin()
         self.verifyCaches()
         # self.startSynergyEngine()
@@ -334,10 +335,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relayValidation = ValidateRelayStream()
         logging.info('started relay validation engine', color='green')
 
-    def checkin(self):
+    def createServerConn(self):
         logging.debug(self.urlServer, color='teal')
         self.server = SatoriServerClient(
             self.wallet, url=self.urlServer, sendingUrl=self.urlMundo)
+
+    def checkin(self):
         try:
             referrer = open(
                 config.root('config', 'referral.txt'),
