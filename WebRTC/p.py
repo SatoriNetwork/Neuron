@@ -69,9 +69,6 @@ async def send_offer(websocket):
     def on_icegatheringstatechange():
         logging.info(f"ICE gathering state changed to: {pc.iceGatheringState}")
 
-    # Increase ICE gathering timeout
-    pc.setConfiguration({"iceCandidatePoolSize": 0})
-
     # Create an SDP offer
     offer = await pc.createOffer()
     await pc.setLocalDescription(offer)
