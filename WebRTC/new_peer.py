@@ -109,6 +109,8 @@ def on_send_channel_state_change():
     print(f'Send channel state: {state}')
     if state == 'open':
         print("Send channel is open, ready for action! 🚀")
+        send_channel.send("Hello World")
+        print("Sent 'Hello World' message")
 
 def on_receive_channel_state_change():
     state = receive_channel.readyState
