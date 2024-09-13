@@ -1,105 +1,116 @@
-# peer.py (formerly webrtc_peer.py)
-import sys
 import asyncio
 import websockets
-import tracemalloc
-from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
-import logging
-from twilio.rest import Client
-import os
+from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel
 
-# Enable tracemalloc to get detailed memory allocation traceback
-tracemalloc.start()
-logging.basicConfig(level=logging.DEBUG)
+SIGNALING_SERVER = "ws://localhost:8765"  # Your signaling server address
 
-# Twilio credentials
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+local_connection = None
+remote_connection = None
+send_channel = None
+receive_channel = None
 
-def get_turn_credentials():
-    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-    token = client.tokens.create()
+async def signaling_loop(websocket):
+    async for message in websocket:
+        # Process incoming messages (SDP offers/answers or ICE candidates)
+        print(f"Received signaling message: {message}")
+        if 'sdp' in message:
+            desc = RTCSessionDescription(sdp=message['sdp'], type=message['type'])
+            if message['type'] == 'offer':
+                await remote_connection.setRemoteDescription(desc)
+                answer = await remote_connection.createAnswer()
+                await remote_connection.setLocalDescription(answer)
+                await websocket.send({'sdp': answer.sdp, 'type': answer.type})
+            else:
+                await local_connection.setRemoteDescription(desc)
+        elif 'candidate' in message:
+            candidate = message['candidate']
+            pc = remote_connection if local_connection.sctp.transport == message['to'] else local_connection
+            await pc.addIceCandidate(candidate)
 
-    
-    return token.ice_servers
+async def send_signaling_message(websocket, message):
+    await websocket.send(message)
+    print(f"Sent signaling message: {message}")
 
-async def send_offer(websocket):
-    # Get TURN server credentials from Twilio
-    ice_servers = get_turn_credentials()
+async def create_connection():
+    global local_connection, remote_connection, send_channel
 
-    # Log the entire ice_servers list
-    logging.info(f"All ICE Servers: {ice_servers}")
-    # Create a WebRTC configuration with STUN and TURN servers
-    config = RTCConfiguration(
-        iceServers=[RTCIceServer(**{k: v for k, v in server.items() if k != 'url'}) for server in ice_servers]
+    # Create local and remote peer connections
+    local_connection = RTCPeerConnection()
+    remote_connection = RTCPeerConnection()
 
-    )
+    print("Local and Remote peer connections created 🛠️")
 
-    # Create a WebRTC connection with the configuration
-    pc = RTCPeerConnection(configuration=config)
+    # Set up data channels
+    send_channel = local_connection.createDataChannel('sendDataChannel')
+    send_channel.on('open', on_send_channel_state_change)
+    send_channel.on('close', on_send_channel_state_change)
 
-    # Create a data channel
-    channel = pc.createDataChannel("chat")
-    logging.debug("Data channel created")
+    remote_connection.on('datachannel', receive_channel_callback)
 
-    @channel.on("open")
-    def on_open():
-        logging.info("Data channel is open")
-        channel.send("Hello World")
-        logging.info("Sent: Hello World")
+    # Exchange ICE candidates
+    local_connection.on('icecandidate', lambda e: on_ice_candidate(local_connection, e))
+    remote_connection.on('icecandidate', lambda e: on_ice_candidate(remote_connection, e))
 
-    @channel.on("message")
-    def on_message(message):
-        print(f"Received message: {message}")
-        logging.info(f"Received message: {message}")
+    # Connect to the signaling server
+    async with websockets.connect(SIGNALING_SERVER) as websocket:
+        # Create offer and send it via the signaling server
+        offer = await local_connection.createOffer()
+        await local_connection.setLocalDescription(offer)
+        await send_signaling_message(websocket, {'sdp': offer.sdp, 'type': offer.type})
 
-    @pc.on("datachannel")
-    def on_datachannel(channel):
-        logging.info(f"New data channel created: {channel.label}")
+        # Start listening for incoming signaling messages
+        await signaling_loop(websocket)
 
-    @pc.on("connectionstatechange")
-    async def on_connectionstatechange():
-        logging.info(f"Connection state changed to: {pc.connectionState}")
-        if pc.connectionState == "connected":
-            logging.info("WebRTC connection established")
-        elif pc.connectionState == "failed":
-            logging.error("WebRTC connection failed")
-            await pc.close()
+async def send_data(data):
+    global send_channel
+    send_channel.send(data)
+    print(f'Sent Data: {data}')
 
-    # Create an SDP offer
-    offer = await pc.createOffer()
-    await pc.setLocalDescription(offer)
+async def close_data_channels():
+    print("Closing data channels ⛔")
+    await send_channel.close()
+    await receive_channel.close()
+    await local_connection.close()
+    await remote_connection.close()
 
-    # Send the SDP offer via WebSocket to the signaling server
-    await websocket.send(pc.localDescription.sdp)
+def on_ice_candidate(pc, event):
+    # Send ICE candidate to signaling server
+    if event.candidate:
+        asyncio.ensure_future(send_signaling_message({
+            'candidate': event.candidate,
+            'to': 'remote' if pc == local_connection else 'local'
+        }))
+    print(f"{'Local' if pc == local_connection else 'Remote'} ICE candidate: {event.candidate}")
 
-    # Wait for the SDP answer
-    answer_sdp = await websocket.recv()
-    answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active") # Modify the SDP answer
-    answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
+def receive_channel_callback(event):
+    global receive_channel
+    print("Received data channel callback 🔄")
+    receive_channel = event.channel
+    receive_channel.on('message', on_receive_message)
+    receive_channel.on('open', on_receive_channel_state_change)
+    receive_channel.on('close', on_receive_channel_state_change)
 
-    # Validate the SDP answer
-    if not any(setup in answer.sdp for setup in ["a=setup:active", "a=setup:passive", "a=setup:actpass"]):
-        raise ValueError("DTLS setup attribute must be 'active', 'passive', or 'actpass' for an answer")
+def on_receive_message(message):
+    print(f"Received Message: {message}")
 
-    await pc.setRemoteDescription(answer)
+def on_send_channel_state_change():
+    state = send_channel.readyState
+    print(f'Send channel state: {state}')
+    if state == 'open':
+        print("Send channel is open, ready for action! 🚀")
 
-    # Wait for the connection to be established
-    while pc.connectionState != "connected":
-        await asyncio.sleep(1)
-        logging.debug(f"Waiting for connection... Current state: {pc.connectionState}")
+def on_receive_channel_state_change():
+    state = receive_channel.readyState
+    print(f'Receive channel state: {state}')
+    if state == 'open':
+        print("Receive channel is open, ready to receive messages 🎉")
 
-    # Keep the connection alive
-    while pc.connectionState == "connected":
-        await asyncio.sleep(1)
-
-    logging.info("Connection closed or failed")
-
-async def main(uri: str = "ws://localhost:8765"):
-    # Connect to the WebSocket signaling server
-    async with websockets.connect(uri) as websocket:
-        await send_offer(websocket)
-
+# Run the main loop
 if __name__ == "__main__":
-    asyncio.run(main(
-        uri=sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"))
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(create_connection())
+        loop.run_forever()
+    except KeyboardInterrupt:
+        print("Exiting... 🙌")
+        loop.run_until_complete(close_data_channels())
