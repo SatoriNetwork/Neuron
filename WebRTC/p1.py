@@ -5,6 +5,7 @@ import sys
 import logging
 import os
 from twilio.rest import Client
+import socket
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -24,7 +25,13 @@ def get_turn_credentials():
         username = server.get('username')
         credential = server.get('credential')
         
-        ice_server = RTCIceServer(urls=urls, username=username, credential=credential)
+        # Modify TURN server URLs to prefer TCP
+        tcp_urls = [url.replace('udp', 'tcp') for url in urls if 'turn:' in url]
+        if tcp_urls:
+            ice_server = RTCIceServer(urls=tcp_urls, username=username, credential=credential)
+        else:
+            ice_server = RTCIceServer(urls=urls, username=username, credential=credential)
+        
         ice_servers.append(ice_server)
     
     logging.debug(f"ICE Servers: {ice_servers}")
@@ -38,7 +45,7 @@ async def send_offer(websocket):
     config = RTCConfiguration(iceServers=ice_servers)
     # Create a WebRTC connection with the configuration
     pc = RTCPeerConnection(configuration=config)
-    logging.debug("RTCPeerConnection created with STUN and TURN servers")
+    logging.debug("RTCPeerConnection created with STUN and TURN servers (TCP preferred)")
 
     # Create a data channel
     channel = pc.createDataChannel("chat")
@@ -79,6 +86,8 @@ async def send_offer(websocket):
     def on_icecandidate(event):
         if event.candidate:
             logging.debug(f"New ICE candidate: {event.candidate.sdp}")
+            logging.debug(f"ICE candidate type: {event.candidate.type}")
+            logging.debug(f"ICE candidate protocol: {event.candidate.protocol}")
 
     # Wait for ICE gathering to complete or timeout
     ice_gathering_complete = asyncio.Event()
@@ -88,7 +97,7 @@ async def send_offer(websocket):
             ice_gathering_complete.set()
 
     try:
-        await asyncio.wait_for(ice_gathering_complete.wait(), timeout=30)  # Increased timeout to 30 seconds
+        await asyncio.wait_for(ice_gathering_complete.wait(), timeout=60)  # Increased timeout to 60 seconds
     except asyncio.TimeoutError:
         logging.warning("ICE gathering timed out, proceeding with available candidates")
 
@@ -112,11 +121,12 @@ async def send_offer(websocket):
     connection_complete = asyncio.Event()
     @pc.on("connectionstatechange")
     def on_connectionstatechange():
+        logging.info(f"Connection state changed to: {pc.connectionState}")
         if pc.connectionState in ["connected", "failed"]:
             connection_complete.set()
 
     try:
-        await asyncio.wait_for(connection_complete.wait(), timeout=60)  # Increased timeout to 60 seconds
+        await asyncio.wait_for(connection_complete.wait(), timeout=120)  # Increased timeout to 120 seconds
     except asyncio.TimeoutError:
         logging.error("Connection establishment timed out")
         await pc.close()
@@ -125,7 +135,7 @@ async def send_offer(websocket):
     if pc.connectionState == "connected":
         logging.info("WebRTC connection established successfully")
     else:
-        logging.error("Failed to establish WebRTC connection")
+        logging.error(f"Failed to establish WebRTC connection. Final state: {pc.connectionState}")
         await pc.close()
         return None, None
 
@@ -164,14 +174,23 @@ async def main(uri = "ws://localhost:8765"):
                 await pc.close()
                 logging.info("Peer connection closed")
                 break  # Exit the retry loop if successful
+        except websockets.exceptions.ConnectionClosed as e:
+            logging.error(f"WebSocket connection closed: {str(e)}")
+        except socket.gaierror as e:
+            logging.error(f"Network error: {str(e)}. Check your network connection and DNS settings.")
         except Exception as e:
             logging.error(f"Connection attempt {retry_count + 1} failed: {str(e)}")
-            retry_count += 1
-            if retry_count < max_retries:
-                logging.info(f"Retrying in 5 seconds...")
-                await asyncio.sleep(5)
-            else:
-                logging.error("Max retries reached. Unable to establish connection.")
+        
+        retry_count += 1
+        if retry_count < max_retries:
+            logging.info(f"Retrying in 5 seconds...")
+            await asyncio.sleep(5)
+        else:
+            logging.error("Max retries reached. Unable to establish connection.")
+            logging.info("Please check your network and firewall settings:")
+            logging.info("- Ensure TCP traffic is allowed, especially on ports 1024-65535")
+            logging.info("- If possible, test on a network without a firewall")
+            logging.info("- Consider implementing a fallback to UDP if TCP is blocked")
 
 if __name__ == "__main__":
     uri = sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"
