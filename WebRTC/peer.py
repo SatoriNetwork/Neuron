@@ -129,13 +129,25 @@ async def send_offer(websocket):
     answer_sdp = await websocket.recv()
     logging.debug("Received SDP answer from signaling server:\n" + answer_sdp)
 
-    # Ensure the answer SDP contains the correct DTLS setup attribute
-    if "a=setup:active" not in answer_sdp and "a=setup:passive" not in answer_sdp:
-        logging.warning("SDP answer missing DTLS setup attribute. Modifying answer.")
+    # Check for DTLS setup attribute and add it if missing
+    if "a=setup:" not in answer_sdp:
+        logging.warning("SDP answer missing DTLS setup attribute. Adding it.")
+        # Split the SDP into lines
+        sdp_lines = answer_sdp.split('\n')
+        # Find the media section (m=application)
+        for i, line in enumerate(sdp_lines):
+            if line.startswith('m=application'):
+                # Add the setup attribute right after the media line
+                sdp_lines.insert(i + 1, 'a=setup:active')
+                break
+        # Reconstruct the SDP
+        answer_sdp = '\n'.join(sdp_lines)
+    elif "a=setup:actpass" in answer_sdp:
+        logging.warning("SDP answer contains 'a=setup:actpass'. Changing to 'a=setup:active'.")
         answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active")
 
-    # Log the full SDP answer for further inspection
-    logging.debug(f"Full SDP answer:\n{answer_sdp}")
+    # Log the modified SDP answer
+    logging.debug(f"Modified SDP answer:\n{answer_sdp}")
 
     # Create an RTCSessionDescription from the received answer SDP
     try:
