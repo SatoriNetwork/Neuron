@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel
+import json
 
 SIGNALING_SERVER = "ws://localhost:8765"  # Your signaling server address
 
@@ -12,6 +13,7 @@ receive_channel = None
 async def signaling_loop(websocket):
     async for message in websocket:
         # Process incoming messages (SDP offers/answers or ICE candidates)
+        message = json.loads(message)
         print(f"Received signaling message: {message}")
         if 'sdp' in message:
             desc = RTCSessionDescription(sdp=message['sdp'], type=message['type'])
@@ -19,7 +21,7 @@ async def signaling_loop(websocket):
                 await remote_connection.setRemoteDescription(desc)
                 answer = await remote_connection.createAnswer()
                 await remote_connection.setLocalDescription(answer)
-                await websocket.send({'sdp': answer.sdp, 'type': answer.type})
+                await websocket.send(json.dumps({'sdp': answer.sdp, 'type': answer.type}))
             else:
                 await local_connection.setRemoteDescription(desc)
         elif 'candidate' in message:
@@ -28,7 +30,7 @@ async def signaling_loop(websocket):
             await pc.addIceCandidate(candidate)
 
 async def send_signaling_message(websocket, message):
-    await websocket.send(message)
+    await websocket.send(json.dumps(message))
     print(f"Sent signaling message: {message}")
 
 async def create_connection():
@@ -52,14 +54,19 @@ async def create_connection():
     remote_connection.on('icecandidate', lambda e: on_ice_candidate(remote_connection, e))
 
     # Connect to the signaling server
-    async with websockets.connect(SIGNALING_SERVER) as websocket:
-        # Create offer and send it via the signaling server
-        offer = await local_connection.createOffer()
-        await local_connection.setLocalDescription(offer)
-        await send_signaling_message(websocket, {'sdp': offer.sdp, 'type': offer.type})
+    try:
+        async with websockets.connect(SIGNALING_SERVER) as websocket:
+            # Create offer and send it via the signaling server
+            offer = await local_connection.createOffer()
+            await local_connection.setLocalDescription(offer)
+            await send_signaling_message(websocket, {'sdp': offer.sdp, 'type': offer.type})
 
-        # Start listening for incoming signaling messages
-        await signaling_loop(websocket)
+            # Start listening for incoming signaling messages
+            await signaling_loop(websocket)
+    except ConnectionRefusedError:
+        print(f"Failed to connect to signaling server at {SIGNALING_SERVER}")
+        print("Make sure the signaling server is running and the address is correct.")
+        return
 
 async def send_data(data):
     global send_channel
@@ -68,16 +75,20 @@ async def send_data(data):
 
 async def close_data_channels():
     print("Closing data channels ⛔")
-    await send_channel.close()
-    await receive_channel.close()
-    await local_connection.close()
-    await remote_connection.close()
+    if send_channel:
+        await send_channel.close()
+    if receive_channel:
+        await receive_channel.close()
+    if local_connection:
+        await local_connection.close()
+    if remote_connection:
+        await remote_connection.close()
 
 def on_ice_candidate(pc, event):
     # Send ICE candidate to signaling server
     if event.candidate:
-        asyncio.ensure_future(send_signaling_message({
-            'candidate': event.candidate,
+        asyncio.ensure_future(send_signaling_message(websockets.connect(SIGNALING_SERVER), {
+            'candidate': event.candidate.to_json(),
             'to': 'remote' if pc == local_connection else 'local'
         }))
     print(f"{'Local' if pc == local_connection else 'Remote'} ICE candidate: {event.candidate}")
@@ -114,3 +125,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Exiting... 🙌")
         loop.run_until_complete(close_data_channels())
+    finally:
+        loop.close()
