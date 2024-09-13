@@ -132,7 +132,7 @@ async def send_offer(websocket):
     # Ensure the answer SDP contains the correct DTLS setup attribute
     if "a=setup:active" not in answer_sdp and "a=setup:passive" not in answer_sdp:
         logging.warning("SDP answer missing DTLS setup attribute. Modifying answer.")
-        answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:passive")
+        answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active")
 
     # Log the full SDP answer for further inspection
     logging.debug(f"Full SDP answer:\n{answer_sdp}")
