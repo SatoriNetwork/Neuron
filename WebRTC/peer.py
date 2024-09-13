@@ -129,7 +129,7 @@ async def send_offer(websocket):
     answer_sdp = await websocket.recv()
     logging.debug("Received SDP answer from signaling server:\n" + answer_sdp)
 
-    # Check for DTLS setup attribute and add it if missing
+    # Ensure the answer SDP contains the correct DTLS setup attribute
     if "a=setup:" not in answer_sdp:
         logging.warning("SDP answer missing DTLS setup attribute. Adding it.")
         # Split the SDP into lines
@@ -156,8 +156,8 @@ async def send_offer(websocket):
         logging.debug("Remote description set")
     except Exception as e:
         logging.error(f"Error setting remote description: {e}")
-        logging.info("Requesting a new offer-answer exchange...")
-        return await send_offer(websocket)  # Restart the offer-answer exchange
+        logging.error(f"Problematic SDP:\n{answer_sdp}")
+        raise  # Re-raise the exception to handle it in the calling function
 
     # Wait for the connection to be established or fail
     connection_complete = asyncio.Event()
@@ -193,8 +193,13 @@ async def main(uri="ws://localhost:8765"):
         try:
             async with websockets.connect(uri, ping_interval=20, ping_timeout=20) as websocket:
                 logging.info("Connected to WebSocket signaling server")
-                pc, channel = await send_offer(websocket)
-                
+                try:
+                    pc, channel = await send_offer(websocket)
+                except Exception as e:
+                    logging.error(f"Error in send_offer: {e}")
+                    retry_count += 1
+                    continue
+
                 if pc is None or channel is None:
                     logging.error("Failed to establish connection")
                     retry_count += 1
