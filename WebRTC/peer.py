@@ -92,7 +92,7 @@ async def send_offer(websocket):
     
     # Ensure the answer SDP contains the correct DTLS setup attribute
     if "a=setup:active" not in answer_sdp and "a=setup:passive" not in answer_sdp:
-        answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active")
+        answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:passive")
     
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
 
@@ -100,12 +100,7 @@ async def send_offer(websocket):
     await pc.setRemoteDescription(answer)
 
     # Wait for the connection to be established
-    connection_timeout = 60  # 60 seconds timeout
-    start_time = asyncio.get_event_loop().time()
     while pc.connectionState != "connected" and pc.iceConnectionState != "connected":
-        if asyncio.get_event_loop().time() - start_time > connection_timeout:
-            logging.error("Connection timed out")
-            break
         await asyncio.sleep(1)
         logging.debug(f"Waiting for connection... Connection state: {pc.connectionState}, ICE connection state: {pc.iceConnectionState}")
 
