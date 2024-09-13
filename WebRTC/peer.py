@@ -1,6 +1,6 @@
 import asyncio
 import websockets
-from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel, RTCConfiguration, RTCIceServer
+from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
 import sys
 import logging
 import os
@@ -127,12 +127,25 @@ async def send_offer(websocket):
 
     # Wait for the SDP answer from the signaling server
     answer_sdp = await websocket.recv()
-    logging.debug("Received SDP answer from signaling server")
+    logging.debug("Received SDP answer from signaling server:\n" + answer_sdp)
 
-    # Apply SDP answer to the remote description
-    answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
-    await pc.setRemoteDescription(answer)
-    logging.debug("Remote description set")
+    # Ensure the answer SDP contains the correct DTLS setup attribute
+    if "a=setup:active" not in answer_sdp and "a=setup:passive" not in answer_sdp:
+        logging.warning("SDP answer missing DTLS setup attribute. Modifying answer.")
+        answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:passive")
+
+    # Log the full SDP answer for further inspection
+    logging.debug(f"Full SDP answer:\n{answer_sdp}")
+
+    # Create an RTCSessionDescription from the received answer SDP
+    try:
+        answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
+        await pc.setRemoteDescription(answer)
+        logging.debug("Remote description set")
+    except Exception as e:
+        logging.error(f"Error setting remote description: {e}")
+        logging.info("Requesting a new offer-answer exchange...")
+        return await send_offer(websocket)  # Restart the offer-answer exchange
 
     # Wait for the connection to be established or fail
     connection_complete = asyncio.Event()
