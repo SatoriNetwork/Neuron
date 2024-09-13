@@ -19,12 +19,16 @@ TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 def get_turn_credentials():
     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
     token = client.tokens.create()
+
+    
     return token.ice_servers
 
 async def send_offer(websocket):
     # Get TURN server credentials from Twilio
     ice_servers = get_turn_credentials()
 
+    # Log the entire ice_servers list
+    logging.info(f"All ICE Servers: {ice_servers}")
     # Create a WebRTC configuration with STUN and TURN servers
     config = RTCConfiguration(
         iceServers=[RTCIceServer(**{k: v for k, v in server.items() if k != 'url'}) for server in ice_servers]
