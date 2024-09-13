@@ -1,6 +1,6 @@
 import asyncio
 import websockets
-from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel
+from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel, RTCConfiguration, RTCIceServer
 import sys
 import logging
 
@@ -9,9 +9,13 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 
 async def send_offer(websocket):
     logging.info("Starting send_offer function")
-    # Create a WebRTC connection
-    pc = RTCPeerConnection()
-    logging.debug("RTCPeerConnection created")
+    # Create a WebRTC configuration with STUN server
+    config = RTCConfiguration([
+        RTCIceServer(urls='stun:stun.l.google.com:19302')
+    ])
+    # Create a WebRTC connection with the configuration
+    pc = RTCPeerConnection(configuration=config)
+    logging.debug("RTCPeerConnection created with STUN server")
 
     # Create a data channel
     channel = pc.createDataChannel("chat")
