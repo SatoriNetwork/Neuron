@@ -25,13 +25,7 @@ def get_turn_credentials():
         username = server.get('username')
         credential = server.get('credential')
         
-        # Modify TURN server URLs to prefer TCP
-        tcp_urls = [url.replace('udp', 'tcp') for url in urls if 'turn:' in url]
-        if tcp_urls:
-            ice_server = RTCIceServer(urls=tcp_urls, username=username, credential=credential)
-        else:
-            ice_server = RTCIceServer(urls=urls, username=username, credential=credential)
-        
+        ice_server = RTCIceServer(urls=urls, username=username, credential=credential)
         ice_servers.append(ice_server)
     
     logging.debug(f"ICE Servers: {ice_servers}")
@@ -45,7 +39,7 @@ async def send_offer(websocket):
     config = RTCConfiguration(iceServers=ice_servers)
     # Create a WebRTC connection with the configuration
     pc = RTCPeerConnection(configuration=config)
-    logging.debug("RTCPeerConnection created with STUN and TURN servers (TCP preferred)")
+    logging.debug("RTCPeerConnection created with STUN and TURN servers")
 
     # Create a data channel
     channel = pc.createDataChannel("chat")
@@ -188,9 +182,9 @@ async def main(uri = "ws://localhost:8765"):
         else:
             logging.error("Max retries reached. Unable to establish connection.")
             logging.info("Please check your network and firewall settings:")
-            logging.info("- Ensure TCP traffic is allowed, especially on ports 1024-65535")
+            logging.info("- Ensure UDP traffic is allowed, especially on ports 1024-65535")
             logging.info("- If possible, test on a network without a firewall")
-            logging.info("- Consider implementing a fallback to UDP if TCP is blocked")
+            logging.info("- Consider implementing a fallback to TCP if UDP is blocked")
 
 if __name__ == "__main__":
     uri = sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"
