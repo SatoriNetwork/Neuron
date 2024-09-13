@@ -92,7 +92,7 @@ async def send_offer(websocket):
     
     # Ensure the answer SDP contains the correct DTLS setup attribute
     if "a=setup:active" not in answer_sdp and "a=setup:passive" not in answer_sdp:
-        answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:passive")
+        answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active")
     
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
 
@@ -143,21 +143,3 @@ async def main(uri: str = "ws://localhost:8765"):
 if __name__ == "__main__":
     asyncio.run(main(
         uri=sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8765"))
-
-# The DTLS handshake failure (DEBUG:aiortc.rtcdtlstransport:RTCDtlsTransport(server) x DTLS handshake failed (connection error))
-# can occur due to several reasons:
-# 1. Firewall or NAT issues: The DTLS packets might be blocked by a firewall or NAT traversal might fail.
-# 2. Incompatible DTLS versions: The peers might be using incompatible DTLS versions.
-# 3. Certificate issues: There might be problems with the self-signed certificates used in the DTLS handshake.
-# 4. Network issues: Packet loss or high latency could cause the handshake to fail.
-# 5. Incorrect DTLS setup attribute: The 'setup' attribute in the SDP might be incorrectly set.
-
-# To troubleshoot:
-# 1. Ensure that the necessary ports are open in your firewall.
-# 2. Check that both peers are using compatible WebRTC implementations.
-# 3. Verify that the TURN server is correctly configured and accessible.
-# 4. Monitor network conditions and try the connection in a more stable network environment.
-# 5. Double-check the SDP handling, especially the 'setup' attribute (as done in this code).
-
-# If the issue persists, you may need to add more detailed logging to trace the exact point of failure
-# in the DTLS handshake process.
