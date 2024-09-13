@@ -3,7 +3,7 @@ import websockets
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel
 import json
 
-SIGNALING_SERVER = "ws://localhost:8765"  # Your signaling server address
+SIGNALING_SERVER = "ws://188.166.4.120:8765"  # Your signaling server address
 
 local_connection = None
 remote_connection = None
