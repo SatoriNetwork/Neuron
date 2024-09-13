@@ -1,4 +1,5 @@
-# webrtc_peer.py
+# WebRTC peer implementation for establishing a connection and data channel
+
 import sys
 import os
 import asyncio
@@ -8,18 +9,19 @@ from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, R
 import logging
 from twilio.rest import Client
 
-# Enable tracemalloc to get detailed memory allocation traceback
+# Enable tracemalloc for detailed memory allocation traceback
 tracemalloc.start()
 logging.basicConfig(level=logging.DEBUG)
-# Twilio credentials
+
+# Twilio credentials for TURN server access
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 
 def get_turn_credentials():
+    """Fetch TURN server credentials from Twilio"""
     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
     token = client.tokens.create()
 
-     
     ice_servers = []
     for server in token.ice_servers:
         urls = server['url'] if isinstance(server['url'], list) else [server['url']]
@@ -31,32 +33,27 @@ def get_turn_credentials():
     
     logging.debug(f"ICE Servers: {ice_servers}")
     return ice_servers
+
 async def send_offer(websocket):
-    # Create a WebRTC connection
-    # pc = RTCPeerConnection()
+    """Create and send a WebRTC offer, then handle the answer"""
     # Get TURN server credentials from Twilio
     ice_servers = get_turn_credentials()
-     # Create a WebRTC configuration with STUN and TURN servers
+    # Create a WebRTC configuration with STUN and TURN servers
     config = RTCConfiguration(iceServers=ice_servers)
-
 
     # Create a WebRTC connection with the configuration
     pc = RTCPeerConnection(configuration=config)
 
-    # pc.addIceCandidate({'urls': ['stun:stun.l.google.com:19302']})
-
-
-
     # Create a data channel
     channel = pc.createDataChannel("chat")
     logging.debug("Data channel created")
-    # Define the on_open event handler
+
+    # Define event handlers for the data channel
     @channel.on("open")
     def on_open():
         logging.info("Data channel is open")
         channel.send("Hello World")
         logging.info("Sent: Hello World")
-    
 
     @channel.on("message")
     def on_message(message):
@@ -67,7 +64,6 @@ async def send_offer(websocket):
     def on_datachannel(channel):
         logging.info(f"New data channel created: {channel.label}")
 
-
     @pc.on("connectionstatechange")
     async def on_connectionstatechange():
         logging.info(f"Connection state changed to: {pc.connectionState}")
@@ -77,6 +73,12 @@ async def send_offer(websocket):
             logging.error("WebRTC connection failed")
             await pc.close()
 
+    @pc.on("iceconnectionstatechange")
+    async def on_iceconnectionstatechange():
+        logging.info(f"ICE connection state changed to: {pc.iceConnectionState}")
+        if pc.iceConnectionState == "failed":
+            logging.error("ICE connection failed")
+            await pc.close()
 
     # Create an SDP offer
     offer = await pc.createOffer()
@@ -85,52 +87,42 @@ async def send_offer(websocket):
     # Send the SDP offer via WebSocket to the signaling server
     await websocket.send(pc.localDescription.sdp)
 
-    # Wait for the SDP answer
+    # Wait for and process the SDP answer
     answer_sdp = await websocket.recv()
-    answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active")  # Modify the SDP answer
+    
+    # Ensure the answer SDP contains the correct DTLS setup attribute
+    if "a=setup:active" not in answer_sdp and "a=setup:passive" not in answer_sdp:
+        answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:active")
+    
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
 
-     # Print the SDP answer for debugging
-
-    # Validate the SDP answer
-    if "a=setup:active" not in answer.sdp and "a=setup:passive" not in answer.sdp:
-        raise ValueError("DTLS setup attribute must be 'active' or 'passive' for an answer")
-
+    # Set remote description
     await pc.setRemoteDescription(answer)
 
-    # Handle ICE candidate exchange here if needed (for now, we can skip)
-    # RTCIceCandidate()
-    
-   
-    # return pc
     # Wait for the connection to be established
-    connection_timeout = 60  # Increased to 60 seconds
+    connection_timeout = 60  # 60 seconds timeout
     start_time = asyncio.get_event_loop().time()
-    while pc.connectionState != "connected":
+    while pc.connectionState != "connected" and pc.iceConnectionState != "connected":
         if asyncio.get_event_loop().time() - start_time > connection_timeout:
             logging.error("Connection timed out")
             break
         await asyncio.sleep(1)
-        logging.debug(f"Waiting for connection... Current state: {pc.connectionState}")
-        logging.debug(f"ICE connection state: {pc.iceConnectionState}")
-        logging.debug(f"ICE gathering state: {pc.iceGatheringState}")
+        logging.debug(f"Waiting for connection... Connection state: {pc.connectionState}, ICE connection state: {pc.iceConnectionState}")
 
-    if pc.connectionState == "connected":
+    if pc.connectionState == "connected" or pc.iceConnectionState == "connected":
         logging.info("WebRTC connection established successfully")
         # Keep the connection alive
-        while pc.connectionState == "connected":
+        while pc.connectionState == "connected" or pc.iceConnectionState == "connected":
             await asyncio.sleep(1)
     else:
-        logging.error(f"Failed to establish WebRTC connection. Final state: {pc.connectionState}")
-        logging.error(f"Final ICE connection state: {pc.iceConnectionState}")
-        logging.error(f"Final ICE gathering state: {pc.iceGatheringState}")
+        logging.error(f"Failed to establish WebRTC connection. Final states - Connection: {pc.connectionState}, ICE: {pc.iceConnectionState}")
 
     # Close the peer connection
     await pc.close()
     logging.info("Connection closed")
 
 async def main(uri: str = "ws://localhost:8765"):
-    # Connect to the WebSocket signaling server
+    """Main function to establish WebSocket connection and initiate WebRTC process"""
     async with websockets.connect(uri) as websocket:
         await send_offer(websocket)
 
