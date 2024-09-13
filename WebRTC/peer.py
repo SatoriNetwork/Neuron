@@ -80,6 +80,9 @@ async def send_offer(websocket):
             logging.error("ICE connection failed")
             await pc.close()
 
+    @pc.on("dtlsstatechange")
+    def on_dtlsstatechange():
+        logging.info(f"DTLS state changed to: {pc.dtlsTransport.state}")
     # Create an SDP offer
     offer = await pc.createOffer()
     await pc.setLocalDescription(offer)
@@ -99,8 +102,14 @@ async def send_offer(websocket):
     # Set remote description
     await pc.setRemoteDescription(answer)
 
-    # Wait for the connection to be established
+    # Wait for the connection to be established or fail
     while pc.connectionState != "connected" and pc.iceConnectionState != "connected":
+        
+        if pc.connectionState == "failed" or pc.iceConnectionState == "failed":
+            logging.error("Connection failed")
+            await pc.close()
+            return
+        
         await asyncio.sleep(1)
         logging.debug(f"Waiting for connection... Connection state: {pc.connectionState}, ICE connection state: {pc.iceConnectionState}")
 
