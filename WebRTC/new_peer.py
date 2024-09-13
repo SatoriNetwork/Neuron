@@ -2,6 +2,10 @@ import asyncio
 import websockets
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel
 import json
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 SIGNALING_SERVER = "ws://188.166.4.120:8765"  # Your signaling server address
 
@@ -14,7 +18,7 @@ async def signaling_loop(websocket):
     async for message in websocket:
         # Process incoming messages (SDP offers/answers or ICE candidates)
         message = json.loads(message)
-        print(f"Received signaling message: {message}")
+        logging.info(f"Received signaling message: {message}")
         if 'sdp' in message:
             desc = RTCSessionDescription(sdp=message['sdp'], type=message['type'])
             if message['type'] == 'offer':
@@ -28,11 +32,11 @@ async def signaling_loop(websocket):
             candidate = message['candidate']
             pc = remote_connection if local_connection.sctp.transport == message['to'] else local_connection
             await pc.addIceCandidate(candidate)
-            print(f"Added ICE candidate: {candidate}")
+            logging.info(f"Added ICE candidate: {candidate}")
 
 async def send_signaling_message(websocket, message):
     await websocket.send(json.dumps(message))
-    print(f"Sent signaling message: {message}")
+    logging.info(f"Sent signaling message: {message}")
 
 async def create_connection():
     global local_connection, remote_connection, send_channel
@@ -41,7 +45,7 @@ async def create_connection():
     local_connection = RTCPeerConnection()
     remote_connection = RTCPeerConnection()
 
-    print("Local and Remote peer connections created 🛠️")
+    logging.info("Local and Remote peer connections created 🛠️")
 
     # Set up data channels
     send_channel = local_connection.createDataChannel('sendDataChannel')
@@ -65,17 +69,17 @@ async def create_connection():
             # Start listening for incoming signaling messages
             await signaling_loop(websocket)
     except ConnectionRefusedError:
-        print(f"Failed to connect to signaling server at {SIGNALING_SERVER}")
-        print("Make sure the signaling server is running and the address is correct.")
+        logging.error(f"Failed to connect to signaling server at {SIGNALING_SERVER}")
+        logging.error("Make sure the signaling server is running and the address is correct.")
         return
 
 async def send_data(data):
     global send_channel
     send_channel.send(data)
-    print(f'Sent Data: {data}')
+    logging.info(f'Sent Data: {data}')
 
 async def close_data_channels():
-    print("Closing data channels ⛔")
+    logging.info("Closing data channels ⛔")
     if send_channel:
         await send_channel.close()
     if receive_channel:
@@ -93,32 +97,32 @@ def on_ice_candidate(pc, event):
             'candidate': candidate_json,
             'to': 'remote' if pc == local_connection else 'local'
         }))
-        print(f"{'Local' if pc == local_connection else 'Remote'} ICE candidate: {candidate_json}")
+        logging.info(f"{'Local' if pc == local_connection else 'Remote'} ICE candidate: {candidate_json}")
 
 def receive_channel_callback(event):
     global receive_channel
-    print("Received data channel callback 🔄")
+    logging.info("Received data channel callback 🔄")
     receive_channel = event.channel
     receive_channel.on('message', on_receive_message)
     receive_channel.on('open', on_receive_channel_state_change)
     receive_channel.on('close', on_receive_channel_state_change)
 
 def on_receive_message(message):
-    print(f"Received Message: {message}")
+    logging.info(f"Received Message: {message}")
 
 def on_send_channel_state_change():
     state = send_channel.readyState
-    print(f'Send channel state: {state}')
+    logging.info(f'Send channel state: {state}')
     if state == 'open':
-        print("Send channel is open, ready for action! 🚀")
+        logging.info("Send channel is open, ready for action! 🚀")
         send_channel.send("Hello World")
-        print("Sent 'Hello World' message")
+        logging.info("Sent 'Hello World' message")
 
 def on_receive_channel_state_change():
     state = receive_channel.readyState
-    print(f'Receive channel state: {state}')
+    logging.info(f'Receive channel state: {state}')
     if state == 'open':
-        print("Receive channel is open, ready to receive messages 🎉")
+        logging.info("Receive channel is open, ready to receive messages 🎉")
 
 # Run the main loop
 if __name__ == "__main__":
@@ -127,7 +131,7 @@ if __name__ == "__main__":
         loop.run_until_complete(create_connection())
         loop.run_forever()
     except KeyboardInterrupt:
-        print("Exiting... 🙌")
+        logging.info("Exiting... 🙌")
         loop.run_until_complete(close_data_channels())
     finally:
         loop.close()
