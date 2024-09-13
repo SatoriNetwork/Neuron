@@ -6,6 +6,7 @@ import logging
 import os
 from twilio.rest import Client
 import socket
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -70,10 +71,29 @@ async def send_offer(websocket):
     def on_icegatheringstatechange():
         logging.info(f"ICE gathering state changed to: {pc.iceGatheringState}")
 
-    # Create an SDP offer
-    offer = await pc.createOffer()
-    await pc.setLocalDescription(offer)
-    logging.debug("Local description set")
+    @pc.on("dtlsstatechange")
+    def on_dtls_state_change():
+        state = pc.dtlsTransport.state
+        print(f"DTLS state changed: {state}")
+        if state == "failed":
+            print("DTLS handshake failed.")
+
+    # Create an SDP offer with retry logic
+    retries = 5
+    backoff = 1
+    for attempt in range(retries):
+        try:
+            offer = await pc.createOffer()
+            await pc.setLocalDescription(offer)
+            logging.debug("Local description set")
+            break
+        except Exception as e:
+            logging.error(f"DTLS handshake failed: {e}. Retrying in {backoff} seconds...")
+            await asyncio.sleep(backoff)
+            backoff *= 2  # Exponential backoff
+        if attempt == retries - 1:
+            logging.error("Failed to create offer after multiple attempts")
+            return None, None
 
     # Log ICE candidates as they are gathered
     @pc.on("icecandidate")
@@ -82,6 +102,7 @@ async def send_offer(websocket):
             logging.debug(f"New ICE candidate: {event.candidate.sdp}")
             logging.debug(f"ICE candidate type: {event.candidate.type}")
             logging.debug(f"ICE candidate protocol: {event.candidate.protocol}")
+            print(f"Local ICE Candidate: {event.candidate}")
 
     # Wait for ICE gathering to complete or timeout
     ice_gathering_complete = asyncio.Event()
