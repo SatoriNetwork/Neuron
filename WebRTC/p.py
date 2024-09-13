@@ -43,8 +43,12 @@ async def send_offer(websocket):
     # Wait for the SDP answer
     answer_sdp = await websocket.recv()
     logging.debug("Received SDP answer from signaling server")
+    
+    # Ensure the answer SDP contains the correct DTLS setup attribute
+    if "a=setup:active" not in answer_sdp and "a=setup:passive" not in answer_sdp:
+        answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:passive")
+    
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
-    answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:passive")
     await pc.setRemoteDescription(answer)
     logging.debug("Remote description set")
 
