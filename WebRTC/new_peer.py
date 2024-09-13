@@ -28,6 +28,7 @@ async def signaling_loop(websocket):
             candidate = message['candidate']
             pc = remote_connection if local_connection.sctp.transport == message['to'] else local_connection
             await pc.addIceCandidate(candidate)
+            print(f"Added ICE candidate: {candidate}")
 
 async def send_signaling_message(websocket, message):
     await websocket.send(json.dumps(message))
@@ -87,11 +88,12 @@ async def close_data_channels():
 def on_ice_candidate(pc, event):
     # Send ICE candidate to signaling server
     if event.candidate:
+        candidate_json = event.candidate.to_json()
         asyncio.ensure_future(send_signaling_message(websockets.connect(SIGNALING_SERVER), {
-            'candidate': event.candidate.to_json(),
+            'candidate': candidate_json,
             'to': 'remote' if pc == local_connection else 'local'
         }))
-    print(f"{'Local' if pc == local_connection else 'Remote'} ICE candidate: {event.candidate}")
+        print(f"{'Local' if pc == local_connection else 'Remote'} ICE candidate: {candidate_json}")
 
 def receive_channel_callback(event):
     global receive_channel
