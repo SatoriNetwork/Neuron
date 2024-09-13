@@ -44,6 +44,7 @@ async def send_offer(websocket):
     answer_sdp = await websocket.recv()
     logging.debug("Received SDP answer from signaling server")
     answer = RTCSessionDescription(sdp=answer_sdp, type="answer")
+    answer_sdp = answer_sdp.replace("a=setup:actpass", "a=setup:passive")
     await pc.setRemoteDescription(answer)
     logging.debug("Remote description set")
 
