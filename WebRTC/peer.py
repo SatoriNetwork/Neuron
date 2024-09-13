@@ -123,8 +123,22 @@ async def send_offer(websocket):
 
 async def main(uri: str = "ws://localhost:8765"):
     """Main function to establish WebSocket connection and initiate WebRTC process"""
-    async with websockets.connect(uri) as websocket:
-        await send_offer(websocket)
+    retry_count = 0
+    max_retries = 3
+    
+    while retry_count < max_retries:
+        try:
+            async with websockets.connect(uri) as websocket:
+                await send_offer(websocket)
+                break  # If successful, break out of the retry loop
+        except Exception as e:
+            logging.error(f"Connection attempt {retry_count + 1} failed: {str(e)}")
+            retry_count += 1
+            if retry_count < max_retries:
+                logging.info(f"Retrying in 5 seconds...")
+                await asyncio.sleep(5)
+            else:
+                logging.error("Max retries reached. Unable to establish connection.")
 
 if __name__ == "__main__":
     asyncio.run(main(
