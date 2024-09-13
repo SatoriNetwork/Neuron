@@ -143,7 +143,7 @@ async def main(uri = "ws://localhost:8765"):
     
     while retry_count < max_retries:
         try:
-            async with websockets.connect(uri) as websocket:
+            async with websockets.connect(uri, ping_interval=20, ping_timeout=20) as websocket:
                 logging.info("Connected to WebSocket signaling server")
                 pc, channel = await send_offer(websocket)
                 
