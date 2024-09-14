@@ -9,7 +9,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Asia/Kolkata
+      - TZ=America/Denver
       - SERVERURL=auto #optional
       - SERVERPORT=8765 #optional
       - PEERS=1 #optional
