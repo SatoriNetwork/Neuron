@@ -9,17 +9,16 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Denver
-      - SERVERURL=auto #optional
-      - SERVERPORT=8765 #optional
-      - PEERS=1 #optional
-      - PEERDNS=auto #optional
-      - INTERNAL_SUBNET=10.13.13.1 #optional
+      - TZ=Etc/UTC
     volumes:
-      - ./config1:/config1
+      - ./config:/config
       - /lib/modules:/lib/modules
     ports:
-      - 8765:8765/udp
+      - 51820:51820/udp
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
-    restart: unless-stopped
+    networks:
+      - wireguard-net
+networks:
+  wireguard-net:
+    external: true
