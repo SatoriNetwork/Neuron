@@ -12,15 +12,13 @@ import os
 import sys
 import json
 import secrets
-import webbrowser
 import time
 import traceback
 import pandas as pd
-import threading
 import logging as log
 from logging.handlers import RotatingFileHandler
 from queue import Queue
-from waitress import serve  # necessary ?
+# from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
@@ -90,7 +88,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
