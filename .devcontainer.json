@@ -5,9 +5,9 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	// "image": "python:3.9-slim",
 	"build": { "dockerfile": "Dockerfile-dev", "args": {"GPU_FLAG": "off"} },
-	"runArgs": ["--env","ENV=prod"],
+	"runArgs": ["--env","ENV=prod", "--env","PREDICTOR=xgboost"],
 	// "build": { "dockerfile": "Dockerfile-dev", "args": {"GPU_FLAG": "on"} },
-	// "runArgs": ["--env","ENV=prod", "--env","GPU_FLAG=on", "--runtime=nvidia", "--gpus","all"],
+	// "runArgs": ["--env","ENV=prod", "--env","PREDICTOR=chronos", "--env","GPU_FLAG=on", "--runtime=nvidia", "--gpus","all"],
 	// "capAdd": ["SYS_ADMIN"],
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
