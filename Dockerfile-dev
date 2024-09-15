@@ -71,9 +71,15 @@ cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git && \
 cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
 cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
 
+ARG GPU_FLAG=off
+ENV GPU_FLAG=${GPU_FLAG}
 # for torch: cpu cu118 cu121 cu124 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --upgrade pip && \
-pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124 && \
+if [ "$GPU_FLAG" = "on" ]; then \
+pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
+else \
+pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu; \
+fi && \
 pip install --no-cache-dir transformers==4.44.2 && \
 pip install --no-cache-dir /Satori/granite-tsfm && \
 pip install --no-cache-dir /Satori/chronos-forecasting && \
