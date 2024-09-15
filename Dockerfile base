@@ -7,7 +7,7 @@
 FROM python:3.9-slim AS builder
 
 RUN apt-get update && \
-    apt-get install -y build-essential wget git vim cmake zip && \
+    apt-get install -y build-essential wget git vim cmake zip curl && \
     mkdir /Satori && \
     cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git && \
     cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git && \
