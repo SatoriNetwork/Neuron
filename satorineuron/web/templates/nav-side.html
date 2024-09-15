@@ -138,31 +138,31 @@
       </li>
       {% endif %}
       <script>
-        document.getElementById('gotoWalletMain').addEventListener(
-          'click',
-          function(event) {
-            window.location.href =document.getElementById('urlWalletMain').innerHTML;
-            showWorking();
-          });
-
-        function toggleDropdown(event) {
-          event.stopPropagation();
-          var dropdownContent = event.currentTarget.nextElementSibling;
-          dropdownContent.classList.toggle("sidenav-show");
-        }
-
-        // Close the dropdown if the user clicks outside of it
-        window.onclick = function(event) {
-          if (!event.target.matches('.sidenav-dropdown-chevron, .sidenav-dropdown-chevron *')) {
-            var dropdowns = document.getElementsByClassName("sidenav-dropdown-content");
-            for (var i = 0; i < dropdowns.length; i++) {
-              var openDropdown = dropdowns[i];
-              if (openDropdown.classList.contains('sidenav-show')) {
-                openDropdown.classList.remove('sidenav-show');
-              }
-            }
-          }
-        }
+        //document.getElementById('gotoWalletMain').addEventListener(
+        //  'click',
+        //  function(event) {
+        //    window.location.href =document.getElementById('urlWalletMain').innerHTML;
+        //    showWorking();
+        //  });
+        //
+        //function toggleDropdown(event) {
+        //  event.stopPropagation();
+        //  var dropdownContent = event.currentTarget.nextElementSibling;
+        //  dropdownContent.classList.toggle("sidenav-show");
+        //}
+        //
+        //// Close the dropdown if the user clicks outside of it
+        //window.onclick = function(event) {
+        //  if (!event.target.matches('.sidenav-dropdown-chevron, .sidenav-dropdown-chevron *')) {
+        //    var dropdowns = document.getElementsByClassName("sidenav-dropdown-content");
+        //    for (var i = 0; i < dropdowns.length; i++) {
+        //      var openDropdown = dropdowns[i];
+        //      if (openDropdown.classList.contains('sidenav-show')) {
+        //        openDropdown.classList.remove('sidenav-show');
+        //      }
+        //    }
+        //  }
+        //}
       </script>
 
 <!--
