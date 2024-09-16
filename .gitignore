@@ -23,7 +23,8 @@ data/*
 config/autosecure.yaml
 config/manifest.yaml
 config/relay.yaml
-*config.yaml
+config/config.yaml
+#git rm --cached config/config.yaml
 !data/.gitkeep
 models/*
 models/.gitkeep

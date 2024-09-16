@@ -190,7 +190,8 @@ CMD ["bash", "./start_from_image.sh"]
 
 
 
-# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:test --push .
+# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:test --push . ; docker pull satorinet/satorineuron:test
 # \Satori> docker pull satorinet/satorineuron:test
+# \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod satorinet/satorineuron:test bash
 # \Satori> docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # \Satori> docker push satorinet/satorineuron:latest
