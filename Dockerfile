@@ -9,11 +9,11 @@ FROM python:3.9-slim AS builder
 RUN apt-get update && \
     apt-get install -y build-essential wget git vim cmake zip curl && \
     mkdir /Satori && \
-    cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git && \
-    cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git && \
-    cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git && \
-    cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git && \
-    cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Neuron.git && \
+    cd /Satori && git clone https://github.com/SatoriNetwork/Synapse.git && \
+    cd /Satori && git clone https://github.com/SatoriNetwork/Lib.git && \
+    cd /Satori && git clone https://github.com/SatoriNetwork/Wallet.git && \
+    cd /Satori && git clone https://github.com/SatoriNetwork/Engine.git && \
+    cd /Satori && git clone https://github.com/SatoriNetwork/Neuron.git && \
     mkdir /Satori/Neuron/models && \
     chmod -R 777 /Satori/Synapse && \
     chmod -R 777 /Satori/Lib && \
@@ -190,8 +190,13 @@ CMD ["bash", "./start_from_image.sh"]
 
 
 
+# \Satori> docker buildx prune --all
+# \Satori> docker builder prune --all
+# \Satori> docker buildx create --use
 # \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:test --push . ; docker pull satorinet/satorineuron:test
 # \Satori> docker pull satorinet/satorineuron:test
 # \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod satorinet/satorineuron:test bash
 # \Satori> docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # \Satori> docker push satorinet/satorineuron:latest
+
+# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:test --push . ; docker pull satorinet/satorineuron:test ; docker tag satorinet/satorineuron:test satorinet/satorineuron:latest ; docker push satorinet/satorineuron:latest
