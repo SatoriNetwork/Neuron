@@ -50,8 +50,8 @@ class RawStreamRelayEngine(Cached):
         return 'unknown'
 
     def late(self, streamId: StreamId, mostRecentTSinSeconds: float) -> bool:
-        ''' 
-        returns false if the mostRecentTSinSeconds falls within the recent 
+        '''
+        returns false if the mostRecentTSinSeconds falls within the recent
         past according to the cadence and true if it's older than the cadence
         should allow
         '''
@@ -135,17 +135,19 @@ class RawStreamRelayEngine(Cached):
             'outgoing message:',
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
             data, timestamp, print=True)
-        getStart().publish(
+        start = getStart()
+        start.publish(
             topic=stream.streamId.topic(),
             data=data,
             observationTime=timestamp,
             observationHash=observationHash)
-        getStart().server.publish(
+        start.server.publish(
             topic=stream.streamId.topic(),
             data=data,
             observationTime=timestamp,
             observationHash=observationHash,
-            isPrediction=False)
+            isPrediction=False,
+            useAuthorizedCall=start.version[1] >= 2 and start.version[2] >= 6)
 
     def save(self, stream: Stream, data: str = None) -> CachedResult:
         self.latest[stream.streamId.topic()] = data

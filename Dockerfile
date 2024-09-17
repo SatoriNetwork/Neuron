@@ -25,7 +25,8 @@ RUN apt-get update && \
     cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
     cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
     cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
-    cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+    cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+    apt-get clean
 
     # larger version: add later.
     #cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
@@ -156,7 +157,7 @@ RUN chmod -R 777 /Satori/Synapse && \
     chmod -R 777 /Satori/Engine && \
     chmod -R 777 /Satori/Neuron
 
-RUN apt-get update && apt-get install -y dos2unix && dos2unix start.sh && dos2unix start_from_image.sh
+RUN apt-get update && apt-get install -y dos2unix && dos2unix start.sh && dos2unix start_from_image.sh && apt-get clean
 
 # satori ui
 EXPOSE 24601
