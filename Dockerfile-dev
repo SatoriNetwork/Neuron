@@ -68,6 +68,7 @@ RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git 
 cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git && \
 cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git && \
 cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git && \
+# cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Neuron.git && \
 cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
 cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
 
@@ -109,6 +110,7 @@ EXPOSE 24601
 
 #ENTRYPOINT [ "python" ]
 #CMD ["python", "./app.py" ]
+# CMD ["bash", "./start_from_image.sh"]
 
 # BUILD PROCESS:
 # copy to and run from ../ (cd ..)
