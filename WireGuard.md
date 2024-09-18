@@ -1,42 +1,37 @@
-WireGuard P2P Setup
+# WireGuard P2P Setup
 
-WireGuard creates a secure tunnel between the two machines. Once connected through the VPN, they can communicate directly over any port without worrying 
+WireGuard creates a secure tunnel between the two machines. Once connected through the VPN, they can communicate directly over any port without worrying.
 
 about firewalls, NAT, or port forwarding. All traffic between the two machines is encrypted and encapsulated inside the VPN tunnel.
 
 Steps to Set Up WireGuard:
 
-
-1. Install WireGuard:
+## 1. Install WireGuard
 
 You need to install WireGuard on both machines. On most Linux distributions, WireGuard is available in the default package manager:
 
 Ubuntu/Debian:
 
-    sudo apt install wireguard
+    `sudo apt install wireguard`
 
 CentOS/Fedora:
 
-    sudo dnf install wireguard-tools
+    `sudo dnf install wireguard-tools`
 
 Windows/Mac: You can download WireGuard clients from the official WireGuard website.
 
-
-
-
-2. Create a Docker Network
+## 2. Create a Docker Network
 
 First, create a Docker network for your WireGuard containers to use. This network isolates the VPN traffic:
 
-    docker network create wireguard-net
+    `docker network create wireguard-net`
 
+## 3. Create and Run the Docker Container
 
-
-
-3. Create and Run the Docker Container 
+choose a configuration path (make a folder such as /path/to/config), copy the path.
 
 If you want to run the container directly without Docker Compose, use:
-
+```
     docker run -d --name=wireguard \
     --cap-add=NET_ADMIN --cap-add=SYS_MODULE \
     -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC \
@@ -46,12 +41,11 @@ If you want to run the container directly without Docker Compose, use:
     --sysctl="net.ipv4.conf.all.src_valid_mark=1" \
     --network=wireguard-net \
     linuxserver/wireguard
-
-Replace /path/to/config with the path where you want to store WireGuard configuration files.
-
+```
+Be sure to replace /path/to/config with the path where you want to store WireGuard configuration files.
 
 If you prefer to manage your WireGuard containers using Docker Compose, create a docker-compose.yml file:
-
+```
     version: '3'
     services:
     wireguard:
@@ -65,7 +59,7 @@ If you prefer to manage your WireGuard containers using Docker Compose, create a
         - PGID=1000
         - TZ=Etc/UTC
         volumes:
-        - ./config:/config
+        - ./path/to/config:/config
         - /lib/modules:/lib/modules
         ports:
         - 51820:51820/udp
@@ -76,25 +70,23 @@ If you prefer to manage your WireGuard containers using Docker Compose, create a
     networks:
     wireguard-net:
         external: true
+```
 
 Start the WireGuard container:
 
-    docker-compose up -d
+    `docker-compose up -d`
 
-
-
-
-4. Generate Key Pairs:
+## 4. Generate Key Pairs
 
 Each machine will need to generate a public-private key pair for encryption.
 
 Exec into the running WireGuard container to generate key pairs:
 
-    docker exec -it wireguard /bin/bash
+    `docker exec -it wireguard /bin/bash`
 
 On each machine, run the following commands to generate the keys:
 
-    wg genkey | tee privatekey | wg pubkey > publickey
+    `wg genkey | tee privatekey | wg pubkey > publickey`
 
 This generates:
 
@@ -106,14 +98,12 @@ Example:
 
 ![alt text](<images/Screenshot 2024-09-16 165011.png>)
 
-
-
-5. Create WireGuard Configuration File:
+## 5. Create WireGuard Configuration File:
 
 On each machine, create a configuration file for WireGuard, name it as wg0.conf. For example, on machine A:
 
 On Machine A, create the configuration file:
-
+``
     [Interface]
     PrivateKey = <Machine A's private key>
     Address = 10.0.0.1/24  # Internal IP address for the VPN
@@ -124,9 +114,10 @@ On Machine A, create the configuration file:
     AllowedIPs = 10.0.0.2/32  # IP address for Machine B inside the VPN
     Endpoint = <Machine B's public IP>:51820  # Machine B's public IP and WireGuard port
     PersistentKeepalive = 25  # Keeps the connection alive
+```
 
 On Machine B, create a similar configuration:
-
+```
     [Interface]
     PrivateKey = <Machine B's private key>
     Address = 10.0.0.2/24  # Internal IP address for the VPN
@@ -137,6 +128,7 @@ On Machine B, create a similar configuration:
     AllowedIPs = 10.0.0.1/32  # IP address for Machine A inside the VPN
     Endpoint = <Machine A's public IP>:51820  # Machine A's public IP and WireGuard port
     PersistentKeepalive = 25  # Keeps the connection alive
+```
 
 Important:
 
@@ -152,19 +144,16 @@ The ListenPort is the port number on which WireGuard will listen for incoming co
 
 The PersistentKeepalive value ensures that the connection stays alive even if there is no traffic.
 
-
-
-
-6. Start the WireGuard Service
+## 6. Start the WireGuard Service
 
 Inside the container, start the WireGuard service:
-
+```
     wg-quick up wg0     # It will look in the location /etc/wireguard/wg0.conf , On each machine, so create a file at /etc/wireguard/wg0.conf.
-        
+```
             or
-
+```
     wg-quick up /path/to/wg0.conf
-
+```
 
 This starts the WireGuard service and connects the two machines.
 
@@ -172,23 +161,20 @@ This starts the WireGuard service and connects the two machines.
 
 ![alt text](<images/Screenshot (2).png>)
 
-    wg-quick down wg0
+   `wg-quick down wg0`
 
             or
 
-    wg-quick down /path/to/wg0.conf
+    `wg-quick down /path/to/wg0.conf`
 
 
 This ends the WireGuard service.
 
-
-
-
-7. Verify the Connection is Active
+## 7. Verify the Connection is Active
 
 You can verify the connection by checking the WireGuard status:
 
-    wg 
+    `wg`
 
 This will show the current status of the WireGuard connection and the peers connected to the VPN.
 
@@ -196,16 +182,13 @@ Example:
 
 ![alt text](<images/Screenshot 2024-09-16 163946.png>)
 
-
-
-
-8. Verify the VPN Connection:
+## 8. Verify the VPN Connection
 
 To ensure that the VPN is working, you can ping the other machine's internal VPN IP address (e.g., 10.0.0.2 from Machine A and 10.0.0.1 from Machine B).
 
-    ping 10.0.0.2  # From Machine A & B
+    `ping 10.0.0.2`  # From Machine A & B
 
-    ping 10.0.0.1  # From Machine A & B
+    `ping 10.0.0.1`  # From Machine A & B
 
 If the ping is successful, the two machines are now connected over the VPN.
 
@@ -213,32 +196,24 @@ Example:
 
 ![alt text](<images/Screenshot 2024-09-16 162150.png>)
 
+## 9. Listen to Port
 
 
-9. Listen to Port:
-
-
-        nc -l -v -p 51820 # Use it in Machine A or Machine B to listen to the given port.
-
+        `nc -l -v -p 51820` # Use it in Machine A or Machine B to listen to the given port.
 
 Example:
 
 ![alt text](<images/Screenshot 2024-09-16 155930.png>)
 
+## 10. Send Message
 
 
+        `echo "Hello from Machine B" | nc 10.0.0.1 51820`     # If MAchine A is listening, run it on Machine B
 
-10. Send Message:
-
-
-        echo "Hello from Machine B" | nc 10.0.0.1 51820     # If MAchine A is listening, run it on Machine B
- 
 
                                 or
 
-        echo "Hello from Machine A" | nc 10.0.0.2 51820     # If MAchine B is listening, run it on MAchine A
- 
-
+        `echo "Hello from Machine A" | nc 10.0.0.2 51820`     # If MAchine B is listening, run it on MAchine A
 
 Example:
 
