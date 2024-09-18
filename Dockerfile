@@ -97,6 +97,8 @@ EXPOSE 24601
 #EXPOSE 4001 5001 23384
 #EXPOSE 3000
 
+ENV IPFS_PATH=/Satori/Neuron/config/ipfs
+
 WORKDIR /Satori/Neuron/satorineuron/web
 
 #ENTRYPOINT [ "python" ]
@@ -122,7 +124,6 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse  -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:base bash
 # docker run --rm -it --name satorineuron satorinet/satorineuron:base bash
 # docker exec -it satorineuron bash
-
 
 FROM builder AS builder1
 
@@ -159,12 +160,6 @@ RUN chmod -R 777 /Satori/Synapse && \
 
 RUN apt-get update && apt-get install -y dos2unix && dos2unix start.sh && dos2unix start_from_image.sh && apt-get clean
 
-# satori ui
-EXPOSE 24601
-
-ENV IPFS_PATH=/Satori/Neuron/config/ipfs
-
-WORKDIR /Satori/Neuron/satorineuron/web
 
 #ENTRYPOINT [ "python" ]
 #CMD ["python", "./app.py" ]
