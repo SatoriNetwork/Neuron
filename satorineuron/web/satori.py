@@ -86,13 +86,13 @@ while True:
         start = StartupDag(
             env=ENV,
             urlServer={
-                'dev': 'http://192.168.1.177:5000',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'dev': 'https://central.satorinet.io',
+                'prod': 'https://central.satorinet.io'}[ENV],
 
             
             urlMundo={
-                'local': 'http://192.16`8.0.10:5002',
-                'dev': 'http://localhost:5002',
+                'local': 'https://stage.satorinet.io',
+                'dev': 'https://stage.satorinet.io',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'
             }[ENV],
@@ -1660,53 +1660,106 @@ def vote():
 
 
 
-@app.route('/tester')
-def test_connections():
-    try:
-        response = requests.get('http://192.168.1.177:5000/proposals', timeout=5)
-        return jsonify({"status": "success", "message": "API is working correctly"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route('/proposals', methods=['GET'])
-@authRequired
 def proposals():
-    # my_wallet = start.getWallet(network=start.network)
-    proposals_data = start.server.getProposals()
-    context = {
-        'title': 'Proposals',
-        # 'wallet': my_wallet,
-        'proposals': proposals_data
-    }
-    return render_template('proposals.html', **getResp(context))
-
-@app.route('/proposals/data', methods=['GET'])
-def get_proposals():
     try:
-        proposals = start.server.getProposals()
-        return jsonify({'proposals': proposals})
+        proposals_data = start.server.getProposals()
+        
+        # Check if the request wants a JSON response
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({
+                'status': 'success',
+                'proposals': proposals_data
+            })
+        
+        # Otherwise, render the HTML template
+        context = {
+            'title': 'Proposals',
+            'proposals': proposals_data
+        }
+        return render_template('proposals.html', **getResp(context))
+    
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
+        error_message = f"Failed to fetch proposals: {str(e)}"
+        print(error_message)  # Log the error
+        
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({
+                'status': 'error',
+                'message': error_message
+            }), 500
+        
+        # For HTML requests, you might want to render an error template
+        return render_template('error.html', message=error_message), 500
 @app.route('/proposals/vote', methods=['POST'])
 def proposal_vote():
     try:
         data = request.json
         proposal_id = data.get('proposal_id')
         vote = data.get('vote')
-        
         if not proposal_id or vote is None:
             return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
-        
         success, result = start.server.submitProposalVote(proposal_id, vote)
-        
         if success:
             return jsonify({'status': 'success', 'proposal': result}), 200
         else:
             return jsonify({'status': 'error', 'message': result}), 400
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+import logging
 
+
+
+
+@app.route('/proposal/votes/get/<proposal_id>', methods=['GET'])
+def get_proposal_votes(proposal_id):
+    try:
+        votes = start.server.getProposalVotes(proposal_id)
+        if votes:
+            return jsonify({
+                'status': 'success',
+                'yes_votes': votes.get('yes_votes', 0),
+                'no_votes': votes.get('no_votes', 0)
+            }), 200
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to fetch vote counts'
+            }), 404
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/create-proposal', methods=['GET', 'POST'])
+def create_proposal():
+    if request.method == 'GET':
+        # Render the create proposal template
+        return render_template('create-proposal.html', title='Create New Proposal')
+    
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            print(f"Received proposal data: {json.dumps(data, indent=2)}")
+            
+            success, result = start.server.submitProposal(data)
+            
+            if success:
+                print(f"Proposal created successfully: {json.dumps(result, indent=2)}")
+                return jsonify({'status': 'success', 'message': 'Proposal created successfully', 'proposal': result}), 200
+            else:
+                error_message = result.get('error', 'Failed to create proposal')
+                print(f"Failed to create proposal: {error_message}")
+                return jsonify({'status': 'error', 'message': error_message}), 400
+        except Exception as e:
+            error_message = f"Error in create_proposal route: {str(e)}"
+            print(error_message)
+            print(traceback.format_exc())
+            return jsonify({'status': 'error', 'message': 'Server error occurred'}), 500
 @app.route('/test', methods=['GET'])
 def test_connection():
     try:

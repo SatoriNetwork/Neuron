@@ -1,0 +1,106 @@
+{% extends "basic.html" %}
+{% block content %}
+<div class="container mt-5">
+  <div class="proposal-form">
+      <h2>Create New Proposal</h2>
+      <form id="create-proposal-form">
+          <div class="form-group">
+              <label for="title">Title</label>
+              <input type="text" class="form-control" id="title" name="title" required>
+          </div>
+          <div class="form-group">
+              <label for="description">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+              <label>Options</label>
+              <div id="options-container">
+                  <div class="input-group mb-2">
+                      <input type="text" class="form-control option-input" placeholder="Option" required>
+                      <div class="input-group-append">
+                          <button type="button" class="btn btn-danger remove-option">Remove</button>
+                      </div>
+                  </div>
+              </div>
+              <button type="button" id="add-option" class="btn btn-secondary mt-2">Add Option</button>
+          </div>
+          <div class="form-group">
+              <label for="expires">Expiration Date</label>
+              <input type="date" class="form-control" id="expires" name="expires" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit Proposal</button>
+      </form>
+  </div>
+</div>
+
+<script>
+  function submitProposal(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const proposalData = {
+        title: form.title.value,
+        description: form.description.value,
+        options: Array.from(form.querySelectorAll('.option-input')).map(input => input.value),
+        expires: form.expires.value // This will be in YYYY-MM-DD format
+    };
+    
+    console.log('Submitting proposal:', proposalData);
+
+    fetch('/create-proposal', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(proposalData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            console.log('Proposal created successfully:', data);
+            alert('Proposal created successfully!');
+            window.location.href = '/proposals';  // Redirect to proposals list
+        } else {
+            console.error('Error creating proposal:', data);
+            alert('Failed to create proposal: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('An error occurred while creating the proposal. Please check the console for more details.');
+    });
+  }
+  
+  // Add event listener to the form
+  document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('create-proposal-form');
+      form.addEventListener('submit', submitProposal);
+  });
+  
+  // Add option functionality
+  document.addEventListener('DOMContentLoaded', function() {
+      const addOptionBtn = document.getElementById('add-option');
+      const optionsContainer = document.getElementById('options-container');
+  
+      addOptionBtn.addEventListener('click', function() {
+          const newOption = document.createElement('div');
+          newOption.className = 'input-group mb-2';
+          newOption.innerHTML = `
+              <input type="text" class="form-control option-input" placeholder="Option" required>
+              <div class="input-group-append">
+                  <button type="button" class="btn btn-danger remove-option">Remove</button>
+              </div>
+          `;
+          optionsContainer.appendChild(newOption);
+      });
+  
+      optionsContainer.addEventListener('click', function(e) {
+          if (e.target.classList.contains('remove-option')) {
+              e.target.closest('.input-group').remove();
+          }
+      });
+  });
+  </script>
+
+{% include 'footer-on-front.html' %}
+{% endblock %}
