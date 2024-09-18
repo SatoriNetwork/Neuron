@@ -86,7 +86,7 @@ while True:
         start = StartupDag(
             env=ENV,
             urlServer={
-                'dev': 'https://central.satorinet.io',
+                'dev': 'https://stage.satorinet.io',
                 'prod': 'https://central.satorinet.io'}[ENV],
 
             
@@ -1693,35 +1693,77 @@ def proposals():
         
         # For HTML requests, you might want to render an error template
         return render_template('error.html', message=error_message), 500
+import json
+
+import json
+from datetime import datetime, timezone
+
 @app.route('/proposals/vote', methods=['POST'])
 def proposal_vote():
     try:
         data = request.json
         proposal_id = data.get('proposal_id')
         vote = data.get('vote')
+        
         if not proposal_id or vote is None:
             return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
-        success, result = start.server.submitProposalVote(proposal_id, vote)
+        
+        # Ensure proposal_id is a string
+        proposal_id = str(proposal_id)
+        
+        # Fetch all proposals
+        proposals = start.server.getProposals()
+        
+        # Find the specific proposal
+        proposal = next((p for p in proposals if str(p['id']) == proposal_id), None)
+        
+        if not proposal:
+            return jsonify({'status': 'error', 'message': 'Proposal not found'}), 404
+        
+        # Parse the options
+        try:
+            options = json.loads(json.loads(proposal['options']))
+        except json.JSONDecodeError:
+            return jsonify({'status': 'error', 'message': 'Invalid options format in proposal'}), 500
+        
+        # Validate the vote
+        if vote not in options:
+            return jsonify({'status': 'error', 'message': f'Invalid vote. Valid options are: {", ".join(options)}'}), 400
+        
+        # Prepare the vote data according to VoteSchema
+        vote_data = {
+            'proposal_id': proposal_id,
+            'vote': vote,
+            'ts': datetime.now(timezone.utc).isoformat()
+            # Note: wallet_id and satori should be handled by server.py based on authentication
+            # deleted is not set as this is a new vote
+        }
+        
+        # Log the data being sent to server.py
+        app.logger.info(f"Sending to server: {vote_data}")
+        
+        # Call server function with prepared data
+        success, result = start.server.submitProposalVote(vote_data['proposal_id'], vote_data['vote'])
+        
         if success:
-            return jsonify({'status': 'success', 'proposal': result}), 200
+            return jsonify({'status': 'success', 'message': 'Vote submitted successfully'}), 200
         else:
-            return jsonify({'status': 'error', 'message': result}), 400
+            # Log the error message
+            app.logger.error(f"Vote submission failed: {result}")
+            return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
     except Exception as e:
+        # Log the exception
+        app.logger.exception("Exception in proposal_vote")
         return jsonify({'status': 'error', 'message': str(e)}), 500
-import logging
 
-
-
-
-@app.route('/proposal/votes/get/<proposal_id>', methods=['GET'])
-def get_proposal_votes(proposal_id):
+@app.route('/proposal/votes/get/<int:id>', methods=['GET'])
+def get_proposal_votes(id):
     try:
-        votes = start.server.getProposalVotes(proposal_id)
+        votes = start.server.getProposalVotes(str(id))  # Convert id to string as per the function signature
         if votes:
             return jsonify({
                 'status': 'success',
-                'yes_votes': votes.get('yes_votes', 0),
-                'no_votes': votes.get('no_votes', 0)
+                'votes': votes
             }), 200
         else:
             return jsonify({
@@ -1733,7 +1775,6 @@ def get_proposal_votes(proposal_id):
             'status': 'error',
             'message': str(e)
         }), 500
-
 
 @app.route('/create-proposal', methods=['GET', 'POST'])
 def create_proposal():
