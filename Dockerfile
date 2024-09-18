@@ -125,32 +125,33 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # docker run --rm -it --name satorineuron satorinet/satorineuron:base bash
 # docker exec -it satorineuron bash
 
-FROM builder AS builder1
-
-# copy to and run from ../ or C:\repos\Satori
-# (updating process is the only thing that requires git)
-# (vim for troubleshooting)
-
-# FROM satorinet/satorineuron:base
-
-#RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
-COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
-COPY Synapse/setup.py /Satori/Synapse/setup.py
-COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
-COPY Lib/satorilib /Satori/Lib/satorilib
-COPY Lib/setup.py /Satori/Lib/setup.py
-COPY Lib/requirements.txt /Satori/Lib/requirements.txt
-COPY Wallet/satoriwallet /Satori/Wallet/satoriwallet
-COPY Wallet/reqs /Satori/Wallet/reqs
-COPY Wallet/setup.py /Satori/Wallet/setup.py
-COPY Wallet/requirements.txt /Satori/Wallet/requirements.txt
-COPY Engine/satoriengine /Satori/Engine/satoriengine
-COPY Engine/setup.py /Satori/Engine/setup.py
-COPY Engine/requirements.txt /Satori/Engine/requirements.txt
-COPY Neuron/satorineuron/ /Satori/Neuron/satorineuron/
-#COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
-COPY Neuron/setup.py /Satori/Neuron/setup.py
-COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
+# splitting into two stages wasn't actually helpful.
+# FROM builder AS builder1
+#
+# # copy to and run from ../ or C:\repos\Satori
+# # (updating process is the only thing that requires git)
+# # (vim for troubleshooting)
+#
+# # FROM satorinet/satorineuron:base
+#
+# #RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
+# COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
+# COPY Synapse/setup.py /Satori/Synapse/setup.py
+# COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
+# COPY Lib/satorilib /Satori/Lib/satorilib
+# COPY Lib/setup.py /Satori/Lib/setup.py
+# COPY Lib/requirements.txt /Satori/Lib/requirements.txt
+# COPY Wallet/satoriwallet /Satori/Wallet/satoriwallet
+# COPY Wallet/reqs /Satori/Wallet/reqs
+# COPY Wallet/setup.py /Satori/Wallet/setup.py
+# COPY Wallet/requirements.txt /Satori/Wallet/requirements.txt
+# COPY Engine/satoriengine /Satori/Engine/satoriengine
+# COPY Engine/setup.py /Satori/Engine/setup.py
+# COPY Engine/requirements.txt /Satori/Engine/requirements.txt
+# COPY Neuron/satorineuron/ /Satori/Neuron/satorineuron/
+# #COPY Neuron/config/config.yaml /Satori/Neuron/config/config.yaml
+# COPY Neuron/setup.py /Satori/Neuron/setup.py
+# COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
 
 RUN chmod -R 777 /Satori/Synapse && \
     chmod -R 777 /Satori/Lib && \
