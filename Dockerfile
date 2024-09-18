@@ -14,13 +14,17 @@ RUN apt-get update && \
     apt-get install -y git && \
     apt-get install -y vim && \
     apt-get install -y cmake && \
-    apt-get install -y dos2unix && dos2unix start.sh && dos2unix start_from_image.sh && \
+    apt-get install -y dos2unix && \
     apt-get clean
     # TODO: need zip? I think it was just used for IPFS install
     #apt-get install -y zip
-    # NOTE: dos2unix line is used to convert line endings from Windows to Unix format
 
 # TODO: test 777 permissions
+    #chmod -R 777 /Satori/Synapse && \
+    #chmod -R 777 /Satori/Lib && \
+    #chmod -R 777 /Satori/Wallet && \
+    #chmod -R 777 /Satori/Engine && \
+    #chmod -R 777 /Satori/Neuron && \
 ## File system setup
 ARG BRANCH_FLAG=main
 RUN mkdir /Satori && \
@@ -32,15 +36,16 @@ RUN mkdir /Satori && \
     cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
     cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
     mkdir /Satori/Neuron/models && \
-    chmod -R 777 /Satori/Synapse && \
-    chmod -R 777 /Satori/Lib && \
-    chmod -R 777 /Satori/Wallet && \
-    chmod -R 777 /Satori/Engine && \
-    chmod -R 777 /Satori/Neuron
+    mkdir /Satori/Neuron/models/huggingface && \
+    chmod +x /Satori/Neuron/satorineuron/web/start.sh && \
+    chmod +x /Satori/Neuron/satorineuron/web/start_from_image.sh && \
+    dos2unix /Satori/Neuron/satorineuron/web/start.sh && dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
+    # NOTE: dos2unix line is used to convert line endings from Windows to Unix format
 
 ## Install everything
 ARG GPU_FLAG=off
 ENV GPU_FLAG=${GPU_FLAG}
+ENV HF_HOME=/Satori/Neuron/models/huggingface
 # for torch: cpu cu118 cu121 cu124 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --upgrade pip && \
     if [ "$GPU_FLAG" = "on" ]; then \
@@ -115,10 +120,12 @@ CMD ["bash", "./start_from_image.sh"]
 # \Satori> docker buildx prune --all
 # \Satori> docker builder prune --all
 # \Satori> docker buildx create --use
-# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=dev -t satorinet/satorineuron:test     --push .
-# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64             --build-arg GPU_FLAG=on  --build-arg BRANCH_FLAG=dev -t satorinet/satorineuron:test-gpu --push .
+# dev version:
+# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=dev  -t satorinet/satorineuron:test     --push .
+# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test     --push .
+# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64             --build-arg GPU_FLAG=on  --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test-gpu --push .
 # \Satori> docker pull satorinet/satorineuron:test
-# \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod satorinet/satorineuron:test bash
+# \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod --env PREDICTOR=ttm satorinet/satorineuron:test bash
 # \Satori> docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # \Satori> docker push satorinet/satorineuron:latest
 
