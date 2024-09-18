@@ -231,12 +231,12 @@ Example:
 10. Send Message:
 
 
-    echo "Hello from Machine B" | nc 10.0.0.1 51820 # If MAchine A is listening, run it on Machine B
+    echo "Hello from Machine B" | nc 10.0.0.1 51820     # If MAchine A is listening, run it on Machine B
  
 
                                 or
 
-    echo "Hello from Machine A" | nc 10.0.0.2 51820 # If MAchine B is listening, run it on MAchine A
+    echo "Hello from Machine A" | nc 10.0.0.2 51820     # If MAchine B is listening, run it on MAchine A
  
 
 
