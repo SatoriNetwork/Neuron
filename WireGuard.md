@@ -32,15 +32,8 @@ choose a configuration path (make a folder such as /path/to/config), copy the pa
 
 If you want to run the container directly without Docker Compose, use:
 ```
-    docker run -d --name=wireguard \
-    --cap-add=NET_ADMIN --cap-add=SYS_MODULE \
-    -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC \
-    -v /path/to/config:/config \
-    -v /lib/modules:/lib/modules \
-    -p 51820:51820/udp \
-    --sysctl="net.ipv4.conf.all.src_valid_mark=1" \
-    --network=wireguard-net \
-    linuxserver/wireguard
+    docker run -d --name=wireguard --cap-add=NET_ADMIN --cap-add=SYS_MODULE -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC -v c:\repos\satori\Neuron\config:/config  -p 51820:51820/udp --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net linuxserver/wireguard
+
 ```
 Be sure to replace /path/to/config with the path where you want to store WireGuard configuration files.
 
@@ -83,6 +76,10 @@ Each machine will need to generate a public-private key pair for encryption.
 Exec into the running WireGuard container to generate key pairs:
 
     `docker exec -it wireguard /bin/bash`
+
+Go into the config folder :
+
+    cd config
 
 On each machine, run the following commands to generate the keys:
 
