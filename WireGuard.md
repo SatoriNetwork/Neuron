@@ -168,7 +168,7 @@ Inside the container, start the WireGuard service:
 
 This starts the WireGuard service and connects the two machines.
 
-(Optional)You can also activate or deactivate wg0.conf within the wireguard app, But firt we need to add the config file there:
+(Optional)You can also activate or deactivate wg0.conf within the wireguard app, But first we need to add the config file there:
 
 ![alt text](<images/Screenshot (2).png>)
 
