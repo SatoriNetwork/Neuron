@@ -16,6 +16,7 @@ from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
+from satorineuron import VERSION
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.init.restart import restartLocalSatori
@@ -57,6 +58,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False
     ):
         super(StartupDag, self).__init__(*args)
+        self.version = [int(x) for x in VERSION.split('.')]
         self.env = env
         self.lastWalletCall = 0
         self.lastVaultCall = 0
