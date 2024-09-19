@@ -4,17 +4,73 @@
 
 # python:slim will eventually fail, if we need to revert try this:
 # FROM python:slim3.12.0b1-slim
-FROM python:3.9-slim
+FROM python:3.10-slim
 
+
+## System dependencies
 RUN apt-get update && \
 apt-get install -y build-essential && \
 apt-get install -y wget && \
 apt-get install -y curl && \
 apt-get install -y git && \
 apt-get install -y vim && \
-# for making python-evrmorelib
 apt-get install -y cmake && \
 apt-get clean
+# TODO: need zip? I think it was just used for IPFS install
+#apt-get install -y zip
+# cmake = for making python-evrmorelib
+# apt-get install -y dos2unix && \
+
+
+## File system setup
+ARG BRANCH_FLAG=dev
+RUN mkdir -p /Satori && \
+cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Synapse.git && \
+cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
+cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Wallet.git && \
+cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Engine.git && \
+cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
+cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
+# NOTE: dos2unix line is used to convert line endings from Windows to Unix format
+# TODO: test 777 permissions
+    #chmod -R 777 /Satori/Synapse && \
+    #chmod -R 777 /Satori/Lib && \
+    #chmod -R 777 /Satori/Wallet && \
+    #chmod -R 777 /Satori/Engine && \
+    #chmod -R 777 /Satori/Neuron && \
+# cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Neuron.git && \
+# mkdir -p /Satori/Neuron/models && \
+# mkdir -p /Satori/Neuron/models/huggingface && \
+# chmod +x /Satori/Neuron/satorineuron/web/start.sh && \
+# chmod +x /Satori/Neuron/satorineuron/web/start_from_image.sh && \
+# dos2unix /Satori/Neuron/satorineuron/web/start.sh && dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
+
+
+## Install everything
+ARG GPU_FLAG=off
+ENV GPU_FLAG=${GPU_FLAG}
+ENV HF_HOME=/Satori/Neuron/models/huggingface
+# for torch: cpu cu118 cu121 cu124 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --upgrade pip && \
+if [ "${GPU_FLAG}" = "on" ]; then \
+pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
+else \
+pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu; \
+fi && \
+pip install --no-cache-dir transformers==4.44.2 && \
+pip install --no-cache-dir /Satori/granite-tsfm && \
+pip install --no-cache-dir /Satori/chronos-forecasting && \
+cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+# cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+
+
+# satori ui
+EXPOSE 24601
+
+
 
 # ipfs - unused
 #RUN wget https://dist.ipfs.tech/kubo/v0.21.0/kubo_v0.21.0_linux-amd64.tar.gz
@@ -28,7 +84,7 @@ apt-get clean
 # RUN ipfs init # do not init. it will be initialized by the node, so that each container has a unique ID.
 
 # todo: maybe just move all this to the code part.
-RUN mkdir /Satori
+# RUN mkdir /Satori
 # RUN mkdir /Satori/Synapse
 # RUN mkdir /Satori/Lib
 # RUN mkdir /Satori/Wallet
@@ -64,23 +120,31 @@ RUN mkdir /Satori
 # RUN chmod -R 777 /Satori/Engine
 # RUN chmod -R 777 /Satori/Neuron
 
-RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git && \
-cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git && \
-cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git && \
-cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git && \
-cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
-cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
+# RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git && \
+# cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git && \
+# cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git && \
+# cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git && \
+# # cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Neuron.git && \
+# cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
+# cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
 
-RUN pip install --upgrade pip && \
-pip install --no-cache-dir torch==2.3.1 && \
-pip install --no-cache-dir transformers==4.41.2 && \
-pip install --no-cache-dir /Satori/granite-tsfm && \
-pip install --no-cache-dir /Satori/chronos-forecasting && \
-cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
-cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
-cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
-cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop
-# cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+# ARG GPU_FLAG=off
+# ENV GPU_FLAG=${GPU_FLAG}
+# # for torch: cpu cu118 cu121 cu124 --index-url https://download.pytorch.org/whl/cpu
+# RUN pip install --upgrade pip && \
+# if [ "$GPU_FLAG" = "on" ]; then \
+# pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
+# else \
+# pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu; \
+# fi && \
+# pip install --no-cache-dir transformers==4.44.2 && \
+# pip install --no-cache-dir /Satori/granite-tsfm && \
+# pip install --no-cache-dir /Satori/chronos-forecasting && \
+# cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+# cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+# cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+# cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+# # cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
 
 ## no need for ollama at this time.
 #RUN apt-get install -y curl
@@ -89,8 +153,8 @@ cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python se
 #RUN ollama serve
 #RUN ollama pull llama3
 
-# satori ui
-EXPOSE 24601
+# # satori ui
+# EXPOSE 24601
 
 # ipfs web ui
 #EXPOSE 5002
@@ -102,6 +166,7 @@ EXPOSE 24601
 
 #ENTRYPOINT [ "python" ]
 #CMD ["python", "./app.py" ]
+# CMD ["bash", "./start_from_image.sh"]
 
 # BUILD PROCESS:
 # copy to and run from ../ (cd ..)
