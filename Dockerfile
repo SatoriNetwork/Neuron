@@ -92,7 +92,8 @@ CMD ["bash", "./start_from_image.sh"]
 # \Satori> docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test     --push .
 # \Satori> docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=on  --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test-gpu --push .
 # \Satori> docker pull satorinet/satorineuron:test
-# \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod --env PREDICTOR=ttm satorinet/satorineuron:test bash
+# \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod                         satorinet/satorineuron:test bash
+# \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod --env PREDICTOR=xgboost satorinet/satorineuron:test bash
 # \Satori> docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # \Satori> docker push satorinet/satorineuron:latest
 
