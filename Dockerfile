@@ -72,42 +72,10 @@ RUN pip install --upgrade pip && \
 # satori ui
 EXPOSE 24601
 
-
-
-# BUILD PROCESS:
-    # \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:latest .
-    # \Satori> docker buildx build -f "Neuron/Dockerfile" --platform linux/amd64 -t satorinet/satorineuron:latest --load .
-    # \Satori> docker buildx build -f "Neuron/Dockerfile" --platform linux/arm64 -t satorinet/satorineuron:latest --load .
-    # \Satori> docker push satorinet/satorineuron:latest
-
-    # BUILD-PUSH PROCESS:
-        # copy to and run from ../ (cd ..)
-        # \Satori> docker build --no-cache -f "Neuron/Dockerfile base" -t satorinet/satorineuron:base .
-        # OR
-# \Satori> docker buildx create --use
-# \Satori> docker buildx build -f "Neuron/Dockerfile base" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:base --load .
-# delete the base one after you push it, we just need it local
-
-# RUN OPTIONS
-# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env ENV=local satorinet/satorineuron:base bash
-# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine -e IPFS_PATH=/Satori/Neuron/config/ipfs --env ENV=prod satorinet/satorineuron:base ./start.sh
-# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse  -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:base bash
-# docker run --rm -it --name satorineuron satorinet/satorineuron:base bash
-# docker exec -it satorineuron bash
-
 WORKDIR /Satori/Neuron/satorineuron/web
 CMD ["bash", "./start_from_image.sh"]
 
-# BUILD PROCESS:
-# copy to and run from ../ (cd ..)
-# \Satori> docker build --no-cache -f "Neuron/Dockerfile code" -t satorinet/satorineuron:latest .; docker push satorinet/satorineuron:latest
-# OR
-# \Satori> docker buildx create --use
-# \Satori> docker buildx build --no-cache  -f "Neuron/Dockerfile code" --platform linux/amd64,linux/arm64 -t satorinet/satorineuron:latest --push .
-
-# description: Miner environment and software for the Satori Network
-
-# RUN OPTIONS
+## RUN OPTIONS
 # python -m satorisynapse.run async
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env PREDICTOR=ttm --env ENV=prod satorinet/satorineuron:latest ./start.sh
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env PREDICTOR=ttm --env ENV=prod satorinet/satorineuron:latest bash
@@ -115,15 +83,14 @@ CMD ["bash", "./start_from_image.sh"]
 # docker run --rm -it --name satorineuron satorinet/satorineuron:latest bash
 # docker exec -it satorineuron bash
 
-
 ## BUILD PROCESS
 # \Satori> docker buildx prune --all
 # \Satori> docker builder prune --all
 # \Satori> docker buildx create --use
-# dev version:
-# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=dev  -t satorinet/satorineuron:test     --push .
-# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test     --push .
-# \Satori> docker buildx build --no-cache -f "Neuron/Dockerfile" --platform linux/amd64             --build-arg GPU_FLAG=on  --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test-gpu --push .
+## dev version:
+# \Satori> docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=dev  -t satorinet/satorineuron:test     --push .
+# \Satori> docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test     --push .
+# \Satori> docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=on  --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test-gpu --push .
 # \Satori> docker pull satorinet/satorineuron:test
 # \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod --env PREDICTOR=ttm satorinet/satorineuron:test bash
 # \Satori> docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
@@ -137,7 +104,7 @@ CMD ["bash", "./start_from_image.sh"]
 # docker run -t --name satorineuron -p 24601:24601                             --env ENV=prod --env PREDICTOR=ttm     satorinet/satorineuron:latest-wil     python ./app.py
 # docker run -t --name satorineuron -p 24601:24601 --runtime=nvidia --gpus all --env ENV=prod --env PREDICTOR=chronos satorinet/satorineuron:latest-wil-gpu python ./app.py
 
-# # start an existing container
+## start an existing container
 # docker start satorineuron && docker exec -it satorineuron bash
 # docker start satorineuron && docker exec -t satorineuron python ./app.py
 # # docker stop satorineuron
