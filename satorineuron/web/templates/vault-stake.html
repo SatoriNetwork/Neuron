@@ -142,6 +142,7 @@
     data.forEach(item => {
         // Determine the alias (use empty string if not provided)
         let alias = item.name ? item.name : item.address;
+        let aliasLable = item.name ? `wallet address: ${item.address}` : `wallet`;
         let pointed = item.pointed == 1 ? 'Yes' : 'No';
         let satori = item.child_satori ? parseFloat(item.child_satori) : 0;
         let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= 5 ? 0: 5); // Convert proxy to float
@@ -154,7 +155,8 @@
           <tr id="childRow${item.child}" class="yellow-hover">
             <td>
               <div class="py-1">
-                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="${item.address}">${alias}</h6>
+                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="${aliasLable}">${alias}</h6>
+                <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="vault address">${item.vaultaddress}</p>
               </div>
             </td>
         `;
