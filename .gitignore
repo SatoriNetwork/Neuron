@@ -31,7 +31,11 @@ models/.gitkeep
 wallet/*
 !wallet/.gitkeep
 wallet.yaml
+vault.yaml
+wallet.zip
 wallet*.yaml
+wallet*.zip
+satorineuron/web/static/download
 wheels/
 pip-wheel-metadata/
 share/python-wheels/
