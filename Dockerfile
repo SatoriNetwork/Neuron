@@ -4,7 +4,7 @@
 
 # python:slim will eventually fail, if we need to revert try this:
 # FROM python:slim3.12.0b1-slim
-FROM python:3.9-slim AS builder
+FROM python:3.10-slim AS builder
 
 ## System dependencies
 RUN apt-get update && \
@@ -43,12 +43,12 @@ RUN mkdir /Satori && \
     # NOTE: dos2unix line is used to convert line endings from Windows to Unix format
 
 ## Install everything
+ENV HF_HOME=/Satori/Neuron/models/huggingface
 ARG GPU_FLAG=off
 ENV GPU_FLAG=${GPU_FLAG}
-ENV HF_HOME=/Satori/Neuron/models/huggingface
 # for torch: cpu cu118 cu121 cu124 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --upgrade pip && \
-    if [ "$GPU_FLAG" = "on" ]; then \
+    if [ "${GPU_FLAG}" = "on" ]; then \
     pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
     else \
     pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu; \

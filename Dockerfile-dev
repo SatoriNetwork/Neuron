@@ -15,27 +15,22 @@ apt-get install -y curl && \
 apt-get install -y git && \
 apt-get install -y vim && \
 apt-get install -y cmake && \
-apt-get install -y dos2unix && \
 apt-get clean
 # TODO: need zip? I think it was just used for IPFS install
 #apt-get install -y zip
 # cmake = for making python-evrmorelib
+# apt-get install -y dos2unix && \
 
 
 ## File system setup
 ARG BRANCH_FLAG=dev
-RUN mkdir /Satori && \
+RUN mkdir -p /Satori && \
 cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Synapse.git && \
 cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
 cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Wallet.git && \
 cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Engine.git && \
 cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
-cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
-mkdir /Satori/Neuron/models && \
-mkdir /Satori/Neuron/models/huggingface && \
-chmod +x /Satori/Neuron/satorineuron/web/start.sh && \
-chmod +x /Satori/Neuron/satorineuron/web/start_from_image.sh && \
-dos2unix /Satori/Neuron/satorineuron/web/start.sh && dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
+cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git
 # NOTE: dos2unix line is used to convert line endings from Windows to Unix format
 # TODO: test 777 permissions
     #chmod -R 777 /Satori/Synapse && \
@@ -44,6 +39,11 @@ dos2unix /Satori/Neuron/satorineuron/web/start.sh && dos2unix /Satori/Neuron/sat
     #chmod -R 777 /Satori/Engine && \
     #chmod -R 777 /Satori/Neuron && \
 # cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Neuron.git && \
+# mkdir -p /Satori/Neuron/models && \
+# mkdir -p /Satori/Neuron/models/huggingface && \
+# chmod +x /Satori/Neuron/satorineuron/web/start.sh && \
+# chmod +x /Satori/Neuron/satorineuron/web/start_from_image.sh && \
+# dos2unix /Satori/Neuron/satorineuron/web/start.sh && dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
 
 
 ## Install everything
@@ -52,7 +52,7 @@ ENV GPU_FLAG=${GPU_FLAG}
 ENV HF_HOME=/Satori/Neuron/models/huggingface
 # for torch: cpu cu118 cu121 cu124 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --upgrade pip && \
-if [ "$GPU_FLAG" = "on" ]; then \
+if [ "${GPU_FLAG}" = "on" ]; then \
 pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
 else \
 pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu; \
