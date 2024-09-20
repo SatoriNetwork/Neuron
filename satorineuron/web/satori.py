@@ -15,7 +15,6 @@ import secrets
 import time
 import traceback
 import pandas as pd
-import logging as log
 from logging.handlers import RotatingFileHandler
 from queue import Queue
 # from waitress import serve  # necessary ?
@@ -69,8 +68,8 @@ if fail2ban_dir:
 
     fail2ban_handler = RotatingFileHandler(
         log_file, maxBytes=100000, backupCount=1)
-    fail2ban_handler.setLevel(log.INFO)
-    fail_log = log.getLogger("fail2ban")
+    fail2ban_handler.setLevel(logging.logging.INFO)
+    fail_log = logging.logging.getLogger("fail2ban")
     fail_log.addHandler(fail2ban_handler)
 else:
     fail_log = None
