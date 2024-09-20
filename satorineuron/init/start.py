@@ -643,15 +643,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         restartTime = time.time() + config.get().get(
             'restartTime',
             random.randint(60*60*21, 60*60*24))
-        latestTag = LatestTag()
+        # # removing tag check because I think github might block vps or
+        # # something when multiple neurons are hitting it at once. very
+        # # strange, but it was unreachable for someone and would just hang.
+        #latestTag = LatestTag()
         while True:
             if time.time() > restartTime:
                 self.triggerRestart()
-            # time.sleep(random.randint(60*60, 60*60*4))
-            time.sleep(random.randint(10, 20))
-            latestTag.get()
-            if latestTag.isNew:
-                self.triggerRestart()
+            time.sleep(random.randint(60*60, 60*60*4))
+            # time.sleep(random.randint(10, 20))
+            # latestTag.get()
+            # if latestTag.isNew:
+            #    self.triggerRestart()
 
     def publish(self, topic: str, data: str, observationTime: str, observationHash: str):
         ''' publishes to all the pubsub servers '''
