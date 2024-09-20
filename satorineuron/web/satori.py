@@ -82,6 +82,9 @@ while True:
     try:
         start = StartupDag(
             env=ENV,
+            walletOnlyMode=config.get().get(
+                'wallet only mode',
+                os.environ.get('WALLETONLYMODE', False)),
             urlServer={
                 # TODO: local endpoint should be in a config file.
                 'local': 'http://192.168.0.10:5002',
@@ -1331,7 +1334,10 @@ def wallet(network: str = 'main'):
         #    flash('unable to open vault')
 
     myWallet = start.openWallet(network=network)
-    alias = myWallet.alias or start.server.getWalletAlias()
+
+    alias = myWallet.alias or (
+        start.server.getWalletAlias()
+        if not start.walletOnlyMode else '')
     if config.get().get('wallet lock'):
         if request.method == 'POST':
             accept_submittion(forms.VaultPassword(formdata=request.form))

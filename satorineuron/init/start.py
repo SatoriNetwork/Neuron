@@ -51,6 +51,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self,
         *args,
         env: str = 'dev',
+        walletOnlyMode: bool = False,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -60,6 +61,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         super(StartupDag, self).__init__(*args)
         self.version = [int(x) for x in VERSION.split('.')]
         self.env = env
+        self.walletOnlyMode = walletOnlyMode
         self.lastWalletCall = 0
         self.lastVaultCall = 0
         self.electrumCooldown = 10
@@ -310,6 +312,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.ranOnce:
             time.sleep(60*60)
         self.ranOnce = True
+        if self.walletOnlyMode:
+            self.getWallet()
+            self.getVault()
+            self.createServerConn()
+            return
         self.setMiningMode()
         self.createRelayValidation()
         self.getWallet()
