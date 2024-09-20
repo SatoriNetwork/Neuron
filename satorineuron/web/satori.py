@@ -26,7 +26,7 @@ from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
 from satorilib.concepts.structs import StreamId, StreamOverviews
 from satorilib.api.wallet.wallet import TransactionFailure
-from satorilib.api.time import timeToSeconds
+from satorilib.api.time import timeToSeconds, nowStr
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
 from satorisynapse import Envelope, Signal
@@ -86,8 +86,8 @@ while True:
         start = StartupDag(
             env=ENV,
             urlServer={
-                'dev': 'https://stage.satorinet.io',
-                'prod': 'https://central.satorinet.io'}[ENV],
+                'dev': 'https://central.satorinet.io',
+                'prod': 'https://stage.satorinet.io'}[ENV],
 
             
             urlMundo={
@@ -1662,28 +1662,51 @@ def vote():
 
 
 
+import json
+
 @app.route('/proposals', methods=['GET'])
 def proposals():
     try:
         proposals_data = start.server.getProposals()
-        
+        user_wallet_address = start.wallet.address  # Accessing as a property, not a method
+
+        # Enhance proposal data with user-specific information
+        for proposal in proposals_data:
+            proposal_id = str(proposal['id'])
+            
+            # Get votes for this proposal
+            votes = start.server.getProposalVotes(proposal_id)
+            
+            # Check if the current user has voted
+            user_has_voted = any(vote['address'] == user_wallet_address for vote in votes)
+            
+            proposal['user_can_vote'] = str(proposal['wallet_id']) != user_wallet_address
+            proposal['user_has_voted'] = user_has_voted
+            proposal['voting_started'] = bool(votes)  # True if there are any votes
+            
+            # Determine if voting should be disabled
+            proposal['disable_voting'] = not proposal['user_can_vote'] or proposal['user_has_voted']
+
         # Check if the request wants a JSON response
         if request.headers.get('Accept') == 'application/json':
             return jsonify({
                 'status': 'success',
-                'proposals': proposals_data
+                'proposals': proposals_data,
+                'user_wallet_address': user_wallet_address
             })
         
         # Otherwise, render the HTML template
         context = {
             'title': 'Proposals',
-            'proposals': proposals_data
+            'proposals': proposals_data,
+            'user_wallet_address': user_wallet_address
         }
         return render_template('proposals.html', **getResp(context))
-    
+
     except Exception as e:
         error_message = f"Failed to fetch proposals: {str(e)}"
         print(error_message)  # Log the error
+        print(traceback.format_exc())  # Print the full traceback
         
         if request.headers.get('Accept') == 'application/json':
             return jsonify({
@@ -1691,12 +1714,12 @@ def proposals():
                 'message': error_message
             }), 500
         
-        # For HTML requests, you might want to render an error template
-        return render_template('error.html', message=error_message), 500
-import json
-
-import json
-from datetime import datetime, timezone
+        # For HTML requests, render an error in the template
+        context = {
+            'title': 'Error',
+            'error_message': error_message
+        }
+        return render_template('proposals.html', **getResp(context)), 500
 
 @app.route('/proposals/vote', methods=['POST'])
 def proposal_vote():
@@ -1730,36 +1753,23 @@ def proposal_vote():
         if vote not in options:
             return jsonify({'status': 'error', 'message': f'Invalid vote. Valid options are: {", ".join(options)}'}), 400
         
-        # Prepare the vote data according to VoteSchema
-        vote_data = {
-            'proposal_id': proposal_id,
-            'vote': vote,
-            'ts': datetime.now(timezone.utc).isoformat()
-            # Note: wallet_id and satori should be handled by server.py based on authentication
-            # deleted is not set as this is a new vote
-        }
-        
-        # Log the data being sent to server.py
-        app.logger.info(f"Sending to server: {vote_data}")
-        
         # Call server function with prepared data
-        success, result = start.server.submitProposalVote(vote_data['proposal_id'], vote_data['vote'])
+        success, result = start.server.submitProposalVote(proposal_id, vote)
         
         if success:
             return jsonify({'status': 'success', 'message': 'Vote submitted successfully'}), 200
         else:
-            # Log the error message
-            app.logger.error(f"Vote submission failed: {result}")
             return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
     except Exception as e:
-        # Log the exception
-        app.logger.exception("Exception in proposal_vote")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        error_message = f"Error in proposal_vote: {str(e)}"
+        print(error_message)
+        print(traceback.format_exc())
+        return jsonify({'status': 'error', 'message': error_message}), 500
 
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])
 def get_proposal_votes(id):
     try:
-        votes = start.server.getProposalVotes(str(id))  # Convert id to string as per the function signature
+        votes = start.server.getProposalVotes(str(id))
         if votes:
             return jsonify({
                 'status': 'success',
@@ -1771,17 +1781,18 @@ def get_proposal_votes(id):
                 'message': 'Failed to fetch vote counts'
             }), 404
     except Exception as e:
+        error_message = f"Error fetching votes: {str(e)}"
+        print(error_message)
+        print(traceback.format_exc())
         return jsonify({
             'status': 'error',
-            'message': str(e)
+            'message': error_message
         }), 500
 
 @app.route('/create-proposal', methods=['GET', 'POST'])
 def create_proposal():
     if request.method == 'GET':
-        # Render the create proposal template
         return render_template('create-proposal.html', title='Create New Proposal')
-    
     elif request.method == 'POST':
         try:
             data = request.json

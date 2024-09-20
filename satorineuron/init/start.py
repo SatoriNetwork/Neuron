@@ -307,12 +307,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # if self.ranOnce:
         #     time.sleep(60*60)
         # self.ranOnce = True
-        # self.setMiningMode()
-        # self.createRelayValidation()
+        self.setMiningMode()
+        self.createRelayValidation()
         self.getWallet()
-        # self.getVault()
+        self.getVault()
         self.create_server_conn()
-        # self.checkin()
+        self.checkin()
         # self.verifyCaches()
         # # self.startSynergyEngine()
         # self.subConnect()
