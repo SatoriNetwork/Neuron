@@ -323,6 +323,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.getVault()
         self.createServerConn()
         self.checkin()
+        self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()
@@ -428,6 +429,21 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             x = x * 1.5 if x < 60*60*6 else 60*60*6
             logging.warning(f'trying again in {x}')
             time.sleep(x)
+
+    def setRewardAddress(self) -> bool:
+        configRewardAddress: str = str(config.get().get('reward address', ''))
+        if (
+            self.env == 'prod' and
+            len(configRewardAddress) == 34 and
+            configRewardAddress.startswith('E') and
+            self.rewardAddress != configRewardAddress
+        ):
+            self.server.setRewardAddress(
+                signature=self.wallet.sign(configRewardAddress),
+                pubkey=self.wallet.publicKey,
+                address=configRewardAddress)
+            return True
+        return False
 
     def verifyCaches(self) -> bool:
         ''' rehashes my published hashes '''
@@ -646,7 +662,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # # removing tag check because I think github might block vps or
         # # something when multiple neurons are hitting it at once. very
         # # strange, but it was unreachable for someone and would just hang.
-        #latestTag = LatestTag()
+        # latestTag = LatestTag()
         while True:
             if time.time() > restartTime:
                 self.triggerRestart()

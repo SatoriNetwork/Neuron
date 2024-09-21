@@ -28,7 +28,7 @@
         <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
           <div class="col-xl-3 col-sm-3 mb-xl-0">
             <center>
-              <p class="mb-1 {% if darkmode %}dark-colors{% endif %}", style="padding-top: .25rem;">
+              <p id="addStakingAddressLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;" onClick="toggleRewardAddresses();">
                 Stake for Address:
               </p>
             <center>
@@ -42,12 +42,10 @@
                     name="addStakingAddress"
                     class="tight form-control {% if darkmode %}dark-colors{% endif %}"
                     style="text-align: center;"
-                    maxlength="34"
-                    min="34"
+                    maxLength="34"
                     required=""
-                    size="34"
                     type="text"
-                    onkeypress="checkEnterForStakingAddress(event)">
+                    onKeyPress="checkEnterForStakingAddress(event)">
                 </div>
               </div>
             </h6>
@@ -61,6 +59,18 @@
   </div>
 </div>
 <script>
+  function toggleRewardAddresses(){
+    var x = document.getElementById("addStakingAddress");
+    var y = document.getElementById("addStakingAddressLabel");
+    console.log(x.maxLength == 34);
+    if (x.maxLength == 34) {
+      x.maxLength = (35*100)-1;
+      y.innerHTML = 'Stake for Addresses:<br>(100 max, separated by spaces)';
+    } else {
+      x.maxLength = 34;
+      y.innerHTML = 'Stake for Address:';
+    }
+  }
   function checkEnterForStakingAddress(event){
     if (event.key === "Enter" || event.keyCode === 13) {
       console.log('enter detected');
@@ -98,7 +108,6 @@
         throw new Error('Network response was not ok.');
       }
     }).then(text => {
-      console.log(text);
       let parsedData = JSON.parse(text);
       if (parsedData.length > 0) {
         createTable(text);
@@ -142,7 +151,7 @@
     data.forEach(item => {
         // Determine the alias (use empty string if not provided)
         let alias = item.name ? item.name : item.address;
-        let aliasLable = item.name ? `wallet address: ${item.address}` : `wallet`;
+        let aliasLabel = item.name ? `wallet address: ${item.address}` : `wallet`;
         let pointed = item.pointed == 1 ? 'Yes' : 'No';
         let satori = item.child_satori ? parseFloat(item.child_satori) : 0;
         let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= 5 ? 0: 5); // Convert proxy to float
@@ -155,8 +164,8 @@
           <tr id="childRow${item.child}" class="yellow-hover">
             <td>
               <div class="py-1">
-                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="${aliasLable}">${alias}</h6>
-                <p class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="vault address">${item.vaultaddress}</p>
+                <code style="display: block; color: grey;" class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="${aliasLabel}">${alias}</code>
+                <code style="display: block; color: darkgrey;" class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="vault address">${item.vaultaddress ? item.vaultaddress : ''}</code>
               </div>
             </td>
         `;

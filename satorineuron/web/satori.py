@@ -90,7 +90,7 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -1335,9 +1335,7 @@ def wallet(network: str = 'main'):
 
     myWallet = start.openWallet(network=network)
 
-    alias = myWallet.alias or (
-        start.server.getWalletAlias()
-        if not start.walletOnlyMode else '')
+    alias = myWallet.alias or start.server.getWalletAlias()
     if config.get().get('wallet lock'):
         if request.method == 'POST':
             accept_submittion(forms.VaultPassword(formdata=request.form))
