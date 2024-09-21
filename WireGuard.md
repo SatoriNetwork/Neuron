@@ -100,7 +100,7 @@ Example:
 On each machine, create a configuration file for WireGuard, name it as wg0.conf. For example, on machine A:
 
 On Machine A, create the configuration file:
-``
+```
     [Interface]
     PrivateKey = <Machine A's private key>
     Address = 10.0.0.1/24  # Internal IP address for the VPN
@@ -146,9 +146,9 @@ The PersistentKeepalive value ensures that the connection stays alive even if th
 Inside the container, start the WireGuard service:
 ```
     wg-quick up wg0     # It will look in the location /etc/wireguard/wg0.conf , On each machine, so create a file at /etc/wireguard/wg0.conf.
-```
+
             or
-```
+
     wg-quick up /path/to/wg0.conf
 ```
 
