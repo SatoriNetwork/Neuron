@@ -157,14 +157,14 @@ This starts the WireGuard service and connects the two machines.
 (Optional)You can also activate or deactivate wg0.conf within the wireguard app, But first we need to add the config file there:
 
 ![alt text](<images/Screenshot (2).png>)
-
+```
    `wg-quick down wg0`
 
             or
 
     `wg-quick down /path/to/wg0.conf`
 
-
+```
 This ends the WireGuard service.
 
 ## 7. Verify the Connection is Active
