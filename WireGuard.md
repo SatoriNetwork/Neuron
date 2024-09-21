@@ -215,3 +215,27 @@ Example:
 Example:
 
 ![alt text](<images/Screenshot 2024-09-16 155920.png>)
+
+## 11. Adding/Removing Peers in Real-time:
+
+1.Generate new keys for the peer.
+
+2.Update the hub's configuration to include the new peer.
+
+3.Distribute the new peer's configuration.
+
+4.Restart the WireGuard service on affected nodes.
+
+WireGuard doesn't natively support adding or removing peers in real-time without restarting the service. However, you can use the wg command to make changes:
+
+To add a peer:
+
+        `wg set wg0 peer PEER_PUBLIC_KEY allowed-ips PEER_IP_ADDRESS`
+
+To remove a peer:
+
+         `wg set wg0 peer PEER_PUBLIC_KEY remove`
+
+After making changes, you should save the configuration:
+
+         `wg-quick save wg0`
