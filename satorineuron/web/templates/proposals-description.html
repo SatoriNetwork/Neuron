@@ -346,7 +346,7 @@ function updateVoteCounts(id, votesString) {
     const proposalDetail = document.getElementById(`proposal-${id}`);
     if (!proposalDetail) return;
 
-    const votes = JSON.parse(votesString);
+    const votes = votesString;
     
     // Initialize satori sums
     const satoriSums = {};
