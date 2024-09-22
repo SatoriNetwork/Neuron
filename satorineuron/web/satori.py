@@ -87,7 +87,7 @@ while True:
             env=ENV,
             urlServer={
                 'dev': 'https://central.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'https://central.satorinet.io'}[ENV],
 
             
             urlMundo={
@@ -1668,7 +1668,10 @@ import json
 def proposals():
     try:
         proposals_data = start.server.getProposals()
-        user_wallet_address = start.wallet.address  # Accessing as a property, not a method
+        user_wallet_address = start.wallet.address
+
+        # Log the proposals data
+        print("Fetched proposals data:", json.dumps(proposals_data, indent=2))
 
         # Enhance proposal data with user-specific information
         for proposal in proposals_data:
@@ -1682,7 +1685,7 @@ def proposals():
             
             proposal['user_can_vote'] = str(proposal['wallet_id']) != user_wallet_address
             proposal['user_has_voted'] = user_has_voted
-            proposal['voting_started'] = bool(votes)  # True if there are any votes
+            proposal['voting_started'] = bool(votes)
             
             # Determine if voting should be disabled
             proposal['disable_voting'] = not proposal['user_can_vote'] or proposal['user_has_voted']
@@ -1701,12 +1704,12 @@ def proposals():
             'proposals': proposals_data,
             'user_wallet_address': user_wallet_address
         }
-        return render_template('proposals.html', **getResp(context))
+        return render_template('proposals.html', **context)
 
     except Exception as e:
         error_message = f"Failed to fetch proposals: {str(e)}"
-        print(error_message)  # Log the error
-        print(traceback.format_exc())  # Print the full traceback
+        print(error_message)
+        print(traceback.format_exc())
         
         if request.headers.get('Accept') == 'application/json':
             return jsonify({
@@ -1719,8 +1722,7 @@ def proposals():
             'title': 'Error',
             'error_message': error_message
         }
-        return render_template('proposals.html', **getResp(context)), 500
-
+        return render_template('proposals.html', **context), 500
 @app.route('/proposals/vote', methods=['POST'])
 def proposal_vote():
     try:
@@ -1796,22 +1798,33 @@ def create_proposal():
     elif request.method == 'POST':
         try:
             data = request.json
-            print(f"Received proposal data: {json.dumps(data, indent=2)}")
+            print(f"Received proposal data in create_proposal: {json.dumps(data, indent=2)}")
             
             success, result = start.server.submitProposal(data)
             
+            print(f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
+            
             if success:
-                print(f"Proposal created successfully: {json.dumps(result, indent=2)}")
-                return jsonify({'status': 'success', 'message': 'Proposal created successfully', 'proposal': result}), 200
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Proposal created successfully',
+                    'proposal': result
+                }), 200
             else:
                 error_message = result.get('error', 'Failed to create proposal')
                 print(f"Failed to create proposal: {error_message}")
-                return jsonify({'status': 'error', 'message': error_message}), 400
+                return jsonify({
+                    'status': 'error',
+                    'message': error_message
+                }), 400
         except Exception as e:
             error_message = f"Error in create_proposal route: {str(e)}"
             print(error_message)
             print(traceback.format_exc())
-            return jsonify({'status': 'error', 'message': 'Server error occurred'}), 500
+            return jsonify({
+                'status': 'error',
+                'message': 'Server error occurred'
+            }), 500
 @app.route('/test', methods=['GET'])
 def test_connection():
     try:

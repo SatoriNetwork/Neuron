@@ -6,17 +6,135 @@
     <title>Proposals</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Add any additional CSS libraries here -->
+    <style>
+        .vote-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .vote-btn {
+            margin-right: 10px;
+        }
+        .vote-stats {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .proposal-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .proposal-card-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .proposal-card-header h4 {
+            margin: 0;
+            color: #333;
+        }
+        .proposal-card-body {
+            padding: 20px;
+        }
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .image-placeholder img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .proposal-info {
+            margin-bottom: 20px;
+        }
+        .proposal-info dt {
+            font-weight: bold;
+            color: #555;
+            margin-top: 10px;
+        }
+        .proposal-info dd {
+            margin-left: 0;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .vote-options {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .vote-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        .vote-btn {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 5px;
+        }
+        .vote-btn:hover {
+            background-color: #0056b3;
+        }
+        .vote-percentage {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .vote-results {
+            margin-bottom: 15px;
+        }
+        .vote-results p {
+            margin: 5px 0;
+        }
+        .proposal-voted-message {
+            display: block;
+            margin-top: 15px;
+            font-style: italic;
+            color: #666;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .welcome-card {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .welcome-card h2 {
+            color: black;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
         <div class="proposal-container">
             <div class="row mb-4">
-                <div class="col-12">
+                <!-- <div class="col-12">
                     <a href="{{ url_for('create_proposal') }}" class="btn btn-primary proposal-create-btn">Create New Proposal</a>
-                </div>
+                </div> -->
             </div>
-
             <div class="row">
                 <!-- Left column: List of proposal titles -->
                 <div class="col-md-3 proposal-list-container">
@@ -31,94 +149,91 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Right column: Detailed view of selected proposal -->
                 <div class="col-md-9 proposal-detail-container">
                     <div id="proposal-details">
-                        <!-- Proposal details will be dynamically inserted here -->
+                        <!-- Welcome card and proposal details will be dynamically inserted here -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</body>
+</html>
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
-            fetchProposals();
-        });
-        
-        function fetchProposals() {
-            console.log('Fetching proposals...');
-            fetch('/proposals', {
-                headers: {
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw err; });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Received proposals data:', data);
-                if (data.status === 'success' && Array.isArray(data.proposals)) {
-                    updateProposalsList(data.proposals);
-                    updateProposalDetails(data.proposals, data.user_wallet_address);
-                    // Show the first proposal by default
-                    if (data.proposals.length > 0) {
-                        showProposal(data.proposals[0].id);
-                    }
-                } else {
-                    throw new Error(data.message || 'Invalid data format received from server');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching proposals:', error.message);
-                displayErrorMessage('Failed to fetch proposals: ' + error.message);
-            });
+    fetchProposals();
+    showWelcomeCard();
+});
+
+function showWelcomeCard() {
+    const proposalDetails = document.getElementById('proposal-details');
+    proposalDetails.innerHTML = `
+        <div class="welcome-card">
+            <h2>Welcome to Proposals</h2>
+            <p>Select a proposal from the list on the left to view its details.</p>
+        </div>
+    `;
+}
+
+function fetchProposals() {
+    console.log('Fetching proposals...');
+    fetch('/proposals', {
+        headers: {
+            'Accept': 'application/json'
         }
-        
-        function updateProposalsList(proposals) {
-            const proposalList = document.getElementById('proposal-list');
-            proposalList.innerHTML = ''; // Clear existing list
-            proposals.forEach(proposal => {
-                const listItem = document.createElement('li');
-                listItem.className = 'proposal-list-item';
-                listItem.onclick = () => showProposal(proposal.id);
-                listItem.id = `proposal-item-${proposal.id}`;
-                listItem.textContent = proposal.title;
-                proposalList.appendChild(listItem);
-            });
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
         }
-        
-        function updateProposalDetails(proposals, userWalletAddress) {
+        return response.json();
+    })
+    .then(data => {
+        console.log('Received proposals data:', data);
+        if (data.status === 'success' && Array.isArray(data.proposals)) {
+            updateProposalsList(data.proposals);
+            updateProposalDetails(data.proposals, data.user_wallet_address);
+        } else {
+            throw new Error(data.message || 'Invalid data format received from server');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching proposals:', error.message);
+        displayErrorMessage('Failed to fetch proposals: ' + error.message);
+    });
+}
+
+function updateProposalsList(proposals) {
+    const proposalList = document.getElementById('proposal-list');
+    proposalList.innerHTML = ''; // Clear existing list
+    proposals.forEach(proposal => {
+        const listItem = document.createElement('li');
+        listItem.className = 'proposal-list-item';
+        listItem.onclick = () => showProposal(proposal.id);
+        listItem.id = `proposal-item-${proposal.id}`;
+        listItem.textContent = proposal.title;
+        proposalList.appendChild(listItem);
+    });
+}
+
+
+function updateProposalDetails(proposals, userWalletAddress) {
+            console.log("Received proposals:", proposals);
             const proposalDetails = document.getElementById('proposal-details');
-            proposalDetails.innerHTML = ''; // Clear existing details
             proposals.forEach(proposal => {
+                console.log("Processing proposal:", proposal);
+                if (!proposal || typeof proposal.id === 'undefined') {
+                    console.error('Invalid proposal data:', proposal);
+                    return; // Skip this iteration if proposal or proposal.id is undefined
+                }
                 const detailDiv = document.createElement('div');
                 detailDiv.id = `proposal-${proposal.id}`;
                 detailDiv.className = 'proposal-detail';
                 detailDiv.style.display = 'none';
                 
-                let optionsHtml = '';
-                let resultsHtml = '';
-                
-                // Parse the options string correctly
                 const options = JSON.parse(JSON.parse(proposal.options));
-                if (Array.isArray(options)) {
-                    options.forEach(option => {
-                        const isDisabled = proposal.disable_voting;
-                        optionsHtml += `
-                            <button class="btn btn-primary vote-btn" onclick="submitVote(${proposal.id}, '${option}')" ${isDisabled ? 'disabled' : ''}>
-                                Vote for ${option}
-                            </button>
-                        `;
-                        resultsHtml += `
-                            <p>${option} Votes: <span id="${option.toLowerCase()}-votes-${proposal.id}">0</span></p>
-                        `;
-                    });
-                }
-        
+                
                 let statusMessage = '';
                 if (!proposal.user_can_vote) {
                     statusMessage = 'This is your proposal.';
@@ -127,168 +242,190 @@
                 } else if (proposal.voting_started) {
                     statusMessage = 'Voting for this proposal has begun.';
                 }
-        
+
+                console.log("Image URL for proposal:", proposal.image_url);
+
+                // Use placeholder image if no image URL is provided
+                const imageHtml = proposal.image_url 
+                    ? `<img src="${proposal.image_url}" alt="${proposal.title}">`
+                    : `<img src="https://ateressi.sirv.com/iStock-173770914.jpg" alt="Placeholder Image">`;
+
                 detailDiv.innerHTML = `
                     <div class="proposal-card">
                         <div class="proposal-card-header">
-                            <div class="proposal-icon-shape bg-gradient-primary text-white">
-                                <i class="material-icons">thumbs_up_down</i>
-                            </div>
                             <h4 class="text-center">${proposal.title}</h4>
                         </div>
                         <div class="proposal-card-body" data-options='${JSON.stringify(options)}'>
-                            ${proposal.image_url ? `<img src="${proposal.image_url}" alt="${proposal.title}" class="proposal-detail-img"/>` : ''}
-                            <p><strong>Description:</strong> ${proposal.description}</p>
-                            <p><strong>Cost:</strong> ${proposal.cost}</p>
-                            <p><strong>Proposal Date:</strong> ${new Date(proposal.proposal_date).toLocaleString()}</p>
-                            <p><strong>Expires:</strong> ${new Date(proposal.expires).toLocaleString()}</p>
-                            ${proposal.complete_date ? `<p><strong>Completed:</strong> ${new Date(proposal.complete_date).toLocaleString()}</p>` : ''}
-                            <div id="vote-options-${proposal.id}">
-                                ${optionsHtml}
+                            <div class="image-placeholder">
+                                ${imageHtml}
                             </div>
-                            <div id="vote-results-${proposal.id}">
-                                ${resultsHtml}
+                            
+                            <dl class="proposal-info">
+                                <dt>Description</dt>
+                                <dd>${proposal.description}</dd>
+
+                                <dt>Cost</dt>
+                                <dd>${proposal.cost}</dd>
+
+                                <dt>Proposal Date</dt>
+                                <dd>${new Date(proposal.proposal_date).toLocaleString()}</dd>
+
+                                <dt>Expires</dt>
+                                <dd>${new Date(proposal.expires).toLocaleString()}</dd>
+
+                                ${proposal.complete_date ? `
+                                    <dt>Completed</dt>
+                                    <dd>${new Date(proposal.complete_date).toLocaleString()}</dd>
+                                ` : ''}
+                            </dl>
+
+                            <div id="vote-options-${proposal.id}" class="vote-options">
+                                ${options.map(option => `
+                                    <div class="vote-option">
+                                        <button class="btn btn-primary vote-btn" onclick="submitVote(${proposal.id}, '${option}')" ${proposal.disable_voting ? 'disabled' : ''}>
+                                            ${option}
+                                        </button>
+                                        <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">0%</div>
+                                    </div>
+                                `).join('')}
                             </div>
+
                             <span id="voted-message-${proposal.id}" class="proposal-voted-message" ${statusMessage ? '' : 'style="display: none;"'}>${statusMessage}</span>
                         </div>
                     </div>
                 `;
                 proposalDetails.appendChild(detailDiv);
-        
-                fetchProposalVotes(proposal.id);
             });
         }
-        
-        function showProposal(id) {
-            // Hide all proposal details
-            document.querySelectorAll('.proposal-detail').forEach(el => {
-                el.style.display = 'none';
-            });
-            // Show the selected proposal
-            const selectedProposal = document.getElementById('proposal-' + id);
-            if (selectedProposal) {
-                selectedProposal.style.display = 'block';
+
+function showProposal(id) {
+    // Hide all proposal details and the welcome card
+    document.querySelectorAll('.proposal-detail, .welcome-card').forEach(el => {
+        el.style.display = 'none';
+    });
+    // Show the selected proposal
+    const selectedProposal = document.getElementById('proposal-' + id);
+    if (selectedProposal) {
+        selectedProposal.style.display = 'block';
+        fetchProposalVotes(id);  // Fetch votes only when a proposal is shown
+    }
+    // Update active state in the list
+    document.querySelectorAll('.proposal-list-item').forEach(el => {
+        el.classList.remove('active');
+    });
+    const selectedItem = document.getElementById('proposal-item-' + id);
+    if (selectedItem) {
+        selectedItem.classList.add('active');
+    }
+}
+
+function fetchProposalVotes(id) {
+    fetch(`/proposal/votes/get/${id}`)
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Received vote data:', data);
+        if (data.status === 'success') {
+            updateVoteCounts(id, data.votes);
+        } else {
+            console.log('No votes found for this proposal.');
+            updateVoteCounts(id, []); // Update with empty votes
+        }
+    })
+    .catch(error => {
+        console.log('Unable to fetch vote counts. Assuming no votes.', error);
+        updateVoteCounts(id, []); // Update with empty votes
+    });
+}
+
+function updateVoteCounts(id, votesString) {
+    const proposalDetail = document.getElementById(`proposal-${id}`);
+    if (!proposalDetail) return;
+
+    const votes = JSON.parse(votesString);
+    
+    // Initialize satori sums
+    const satoriSums = {};
+    let totalSatori = 0;
+
+    // Sum satori values
+    votes.forEach(vote => {
+        if (vote.proposal_id == id) {
+            if (!satoriSums[vote.vote]) {
+                satoriSums[vote.vote] = 0;
             }
-            // Update active state in the list
-            document.querySelectorAll('.proposal-list-item').forEach(el => {
-                el.classList.remove('active');
-            });
-            const selectedItem = document.getElementById('proposal-item-' + id);
-            if (selectedItem) {
-                selectedItem.classList.add('active');
-            }
+            const satoriValue = parseFloat(vote.satori) || 0;
+            satoriSums[vote.vote] += satoriValue;
+            totalSatori += satoriValue;
         }
-        
-        function fetchProposalVotes(id) {
-            fetch(`/proposal/votes/get/${id}`)
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw err; });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Received vote data:', data);
-                if (data.status === 'success') {
-                    updateVoteCounts(id, data.votes);
-                } else {
-                    throw new Error(data.message || 'Failed to fetch vote counts');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching updated vote counts:', error);
-                displayErrorMessage('Failed to fetch vote counts: ' + error.message);
-            });
+    });
+
+    // Update the display
+    Object.keys(satoriSums).forEach(option => {
+        const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
+        if (percentageElement) {
+            const percentage = totalSatori > 0 ? (satoriSums[option] / totalSatori * 100).toFixed(2) : 0;
+            percentageElement.textContent = `${percentage}%`;
         }
-        
-        function updateVoteCounts(id, votes) {
-            const proposalDetail = document.getElementById(`proposal-${id}`);
-            if (!proposalDetail) return;
-        
-            const optionsString = proposalDetail.querySelector('.proposal-card-body').dataset.options;
-            const options = JSON.parse(optionsString);
-        
-            // Create a count for each option
-            const voteCounts = {};
-            options.forEach(option => {
-                voteCounts[option] = 0;
-            });
-        
-            // Count the votes
-            votes.forEach(vote => {
-                if (voteCounts.hasOwnProperty(vote.vote)) {
-                    voteCounts[vote.vote]++;
-                }
-            });
-        
-            // Update the display
-            options.forEach(option => {
-                const voteElement = document.getElementById(`${option.toLowerCase()}-votes-${id}`);
-                if (voteElement) {
-                    voteElement.textContent = voteCounts[option];
-                }
-            });
+    });
+
+    // Log the results for debugging
+    console.log(`Proposal ${id} - Total Satori: ${totalSatori}`);
+    console.log('Satori sums per option:', satoriSums);
+}
+function submitVote(id, vote) {
+    console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
+    
+    fetch('/proposals/vote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            proposal_id: String(id),
+            vote: vote
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
         }
-        
-        function submitVote(id, vote) {
-            console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
-            
-            fetch('/proposals/vote', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    proposal_id: String(id),
-                    vote: vote
-                }),
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw err; });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Server response:', data);
-                if (data.status === 'success') {
-                    console.log('Vote submitted successfully');
-                    fetchProposalVotes(id);
-                    disableVoteButtons(id);
-                    showVotedMessage(id, 'Your vote has been recorded.');
-                } else {
-                    throw new Error(data.message || 'Unknown error');
-                }
-            })
-            .catch((error) => {
-                console.error('Vote failed:', error.message);
-                displayErrorMessage('Failed to submit vote: ' + error.message);
-            });
+        return response.json();
+    })
+    .then(data => {
+        console.log('Server response:', data);
+        if (data.status === 'success') {
+            console.log('Vote submitted successfully');
+            fetchProposalVotes(id);
+            disableVoteButtons(id);
+            showVotedMessage(id, 'Your vote has been recorded.');
+        } else {
+            throw new Error(data.message || 'Unknown error');
         }
-        
-        function disableVoteButtons(id) {
-            const voteButtons = document.querySelectorAll(`#vote-options-${id} button`);
-            voteButtons.forEach(button => button.disabled = true);
-        }
-        
-        function showVotedMessage(id, message) {
-            const messageElement = document.getElementById(`voted-message-${id}`);
-            if (messageElement) {
-                messageElement.textContent = message;
-                messageElement.style.display = 'block';
-            }
-        }
-        
-        function displayErrorMessage(message) {
-            let errorElement = document.getElementById('error-message');
-            if (!errorElement) {
-                errorElement = document.createElement('div');
-                errorElement.id = 'error-message';
-                errorElement.style.color = 'red';
-                errorElement.style.marginBottom = '10px';
-                document.querySelector('.proposal-container').prepend(errorElement);
-            }
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';  // Ensure the error message is visible
-        }
+    })
+    .catch((error) => {
+        console.error('Vote failed:', error.message);
+        displayErrorMessage('Failed to submit vote: ' + error.message);
+    });
+}
+
+function disableVoteButtons(id) {
+    const voteButtons = document.querySelectorAll(`#vote-options-${id} button`);
+    voteButtons.forEach(button => button.disabled = true);
+}
+
+function showVotedMessage(id, message) {
+    const messageElement = document.getElementById(`voted-message-${id}`);
+    if (messageElement) {
+        messageElement.textContent = message;
+        messageElement.style.display = 'block';
+    }
+
+}
         </script>
+</body>
+</html>

@@ -13,6 +13,14 @@
               <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
           </div>
           <div class="form-group">
+              <label for="image_url">Image URL</label>
+              <input type="url" class="form-control" id="image_url" name="image_url" placeholder="https://example.com/image.jpg">
+          </div>
+          <div class="form-group">
+              <label for="cost">Proposal Cost</label>
+              <input type="number" class="form-control" id="cost" name="cost" placeholder="Enter cost" required>
+          </div>
+          <div class="form-group">
               <label>Options</label>
               <div id="options-container">
                   <div class="input-group mb-2">
@@ -34,18 +42,20 @@
 </div>
 
 <script>
-  function submitProposal(event) {
+function submitProposal(event) {
     event.preventDefault();
     
     const form = event.target;
     const proposalData = {
         title: form.title.value,
         description: form.description.value,
+        image_url: form.image_url.value,
+        cost: form.cost.value,
         options: Array.from(form.querySelectorAll('.option-input')).map(input => input.value),
-        expires: form.expires.value // This will be in YYYY-MM-DD format
+        expires: form.expires.value
     };
     
-    console.log('Submitting proposal:', proposalData);
+    console.log('Submitting proposal:', proposalData);  // Log the data being sent
 
     fetch('/create-proposal', {
         method: 'POST',
@@ -56,6 +66,7 @@
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Server response:', data);  // Log the server response
         if (data.status === 'success') {
             console.log('Proposal created successfully:', data);
             alert('Proposal created successfully!');
@@ -69,38 +80,38 @@
         console.error('Error:', error);
         alert('An error occurred while creating the proposal. Please check the console for more details.');
     });
-  }
-  
-  // Add event listener to the form
-  document.addEventListener('DOMContentLoaded', function() {
-      const form = document.getElementById('create-proposal-form');
-      form.addEventListener('submit', submitProposal);
-  });
-  
-  // Add option functionality
-  document.addEventListener('DOMContentLoaded', function() {
-      const addOptionBtn = document.getElementById('add-option');
-      const optionsContainer = document.getElementById('options-container');
-  
-      addOptionBtn.addEventListener('click', function() {
-          const newOption = document.createElement('div');
-          newOption.className = 'input-group mb-2';
-          newOption.innerHTML = `
-              <input type="text" class="form-control option-input" placeholder="Option" required>
-              <div class="input-group-append">
-                  <button type="button" class="btn btn-danger remove-option">Remove</button>
-              </div>
-          `;
-          optionsContainer.appendChild(newOption);
-      });
-  
-      optionsContainer.addEventListener('click', function(e) {
-          if (e.target.classList.contains('remove-option')) {
-              e.target.closest('.input-group').remove();
-          }
-      });
-  });
-  </script>
+}
+
+// Add event listener to the form
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('create-proposal-form');
+    form.addEventListener('submit', submitProposal);
+});
+
+// Add option functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const addOptionBtn = document.getElementById('add-option');
+    const optionsContainer = document.getElementById('options-container');
+
+    addOptionBtn.addEventListener('click', function() {
+        const newOption = document.createElement('div');
+        newOption.className = 'input-group mb-2';
+        newOption.innerHTML = `
+            <input type="text" class="form-control option-input" placeholder="Option" required>
+            <div class="input-group-append">
+                <button type="button" class="btn btn-danger remove-option">Remove</button>
+            </div>
+        `;
+        optionsContainer.appendChild(newOption);
+    });
+
+    optionsContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-option')) {
+            e.target.closest('.input-group').remove();
+        }
+    });
+});
+</script>
 
 {% include 'footer-on-front.html' %}
 {% endblock %}

@@ -843,3 +843,38 @@ input[readonly] {
   color: #000000;  /* Black text for the heading */
   margin-bottom: 20px;
 }
+
+
+.proposals-wrapper {
+  margin-top: -20px; /* Adjust this value to reduce space at the top */
+}
+
+.proposal-container {
+  margin-top: 10px; /* Adjust spacing between description and proposals */
+}
+
+/* Adjust the proposal list container if needed */
+.proposal-list-container {
+  margin-top: 10px;
+}
+
+/* You may need to adjust other elements as well, depending on your layout */
+.proposal-card {
+  margin-bottom: 15px;
+}
+
+/* Ensure the welcome card doesn't add extra space */
+.welcome-card {
+  margin-top: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .proposals-wrapper {
+      margin-top: -10px; /* Less negative margin on smaller screens */
+  }
+  
+  .proposal-container {
+      margin-top: 5px;
+  }
+}
