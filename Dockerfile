@@ -109,3 +109,6 @@ CMD ["bash", "./start_from_image.sh"]
 # docker start satorineuron && docker exec -it satorineuron bash
 # docker start satorineuron && docker exec -t satorineuron python ./app.py
 # # docker stop satorineuron
+
+# test web
+# docker run --rm -it --name satorineuron -p 5000:5000 -v c:\repos\Satori\satori:/Satori/satori --env ENV=prod --env WALLETONLYMODE=1 satorinet/satorineuron:latest python /Satori/satori/app.py
