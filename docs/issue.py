@@ -17,3 +17,23 @@ Empty DataFrame
 Columns: []
 Index: []
 # unable to delegate to it.
+
+d.write("update proxy set parent=401787 where child= 376489")
+
+
+remote: EHiB6LJvhkY8dbkXAJjMRG6jWdgnvqvZnS
+delegate: EJwQdjEXzc2tRQW6mLBgifjQLBqrMwF765
+
+the remote is v2.08 so it should work since it said saved on the remote side
+
+[6:19 PM]
+the remote side seems to be working now which is weird. just tried on another v2.06 and it says saved
+[6:23 PM]
+well, it seems isolated to just that delegate. got 2 others to work fine
+
+BoNoBo — Today at 6: 26 PM
+This remote wont save to the delegate
+EZfHAPz2ooXadW1932dwFoD9FDrWVpR1x6
+
+[6:26 PM]
+so its not the version
