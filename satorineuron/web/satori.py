@@ -1554,7 +1554,7 @@ def charityNotProxyChild(address: str, id: int):
     if success:
         return result, 200
     return f'Failed stakeProxyCharityNot: {result}', 400
-    
+
 
 @app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
 @authRequired
@@ -1663,29 +1663,12 @@ def vote():
         'streams': getStreams(myWallet),
         **getVotes(myWallet)}))
 
-@app.route('/system_metrics', methods=['GET'])
-def systemMetrics():
-    from satorilib.api import system
-    return jsonify({
-        'hostname': os.uname().nodename,
-        'cpu': system.getProcessor(),
-        'cpu_count': system.getProcessorCount(),
-        'cpu_usage_percent': system.getProcessorUsage(),
-        'memory': system.getRamDetails(),
-        'memory_total_gb': system.getRam(),
-        'memory_available_percent': system.getRamAvailablePercentage(),
-        'swap': system.getSwapDetails(),
-        'disk': system.getDiskDetails(),
-        'boot_time': system.getBootTime(),
-        'uptime': system.getUptime(),
-        'version': VERSION,
-        'timestamp': time.time(),
-    }), 200
 
 @app.route('/proposals', methods=['GET'])
 def proposals():
     # This route only renders the HTML template
     return render_template('proposals.html'), 500
+
 
 @app.route('/api/proposals', methods=['GET'])
 def get_proposals():
@@ -1862,38 +1845,24 @@ def voteSubmitManifestWallet():
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
-@app.route('/vote/submit/manifest/vault', methods=['POST'])
-@authRequired
-def voteSubmitManifestVault():
-    # logging.debug(request.json, color='yellow')
-    vaultPredictors = request.json.get('vaultPredictors')
-    vaultOracles = request.json.get('vaultOracles')
-    vaultInviters = request.json.get('vaultInviters')
-    vaultCreators = request.json.get('vaultCreators')
-    vaultManagers = request.json.get('vaultManagers')
-    vaultPredictors = 0 if vaultPredictors.strip() == '' else int(vaultPredictors)
-    vaultOracles = 0 if vaultOracles.strip() == '' else int(vaultOracles)
-    vaultInviters = 0 if vaultInviters.strip() == '' else int(vaultInviters)
-    vaultCreators = 0 if vaultCreators.strip() == '' else int(vaultCreators)
-    vaultManagers = 0 if vaultManagers.strip() == '' else int(vaultManagers)
-    if (
-        (
-            vaultPredictors > 0 or
-            vaultOracles > 0 or
-            vaultInviters > 0 or
-            vaultCreators > 0 or
-            vaultManagers > 0
-        ) and start.vault is not None and start.vault.isDecrypted
-    ):
-        start.server.submitMaifestVote(
-            start.vault,
-            votes={
-                'predictors': vaultPredictors,
-                'oracles': vaultOracles,
-                'inviters': vaultInviters,
-                'creators': vaultCreators,
-                'managers': vaultManagers})
-    return jsonify({'message': 'Manifest votes received successfully'}), 200
+@app.route('/system_metrics', methods=['GET'])
+def systemMetrics():
+    from satorilib.api import system
+    return jsonify({
+        'hostname': os.uname().nodename,
+        'cpu': system.getProcessor(),
+        'cpu_count': system.getProcessorCount(),
+        'cpu_usage_percent': system.getProcessorUsage(),
+        'memory': system.getRamDetails(),
+        'memory_total_gb': system.getRam(),
+        'memory_available_percent': system.getRamAvailablePercentage(),
+        'swap': system.getSwapDetails(),
+        'disk': system.getDiskDetails(),
+        'boot_time': system.getBootTime(),
+        'uptime': system.getUptime(),
+        'version': VERSION,
+        'timestamp': time.time(),
+    }), 200
 
 
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
@@ -2045,8 +2014,6 @@ def triggerRelay(topic: str = None):
         flash('failed to relay', 'error')
     return redirect(url_for('dashboard'))
 
-
-
 ###############################################################################
 ## Routes - subscription ######################################################
 ###############################################################################
@@ -2054,7 +2021,7 @@ def triggerRelay(topic: str = None):
 # unused - we're not using any other networks yet, but when we do we can pass
 # their values to this and have it diseminate
 # @app.route('/subscription/update/', methods=['POST'])
-# def update():             
+# def update():
 #    """
 #    returns nothing
 #    ---
