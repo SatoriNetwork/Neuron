@@ -215,14 +215,14 @@ function updateProposalsList(proposals) {
     proposals.forEach(proposal => {
         const listItem = document.createElement('li');
         listItem.className = 'proposal-list-item';
-        listItem.onclick = () => showProposal(proposal.id);
+        listItem.onclick = () => showProposal(proposal.id);  // This line is important
         listItem.id = `proposal-item-${proposal.id}`;
         listItem.textContent = proposal.title;
         proposalList.appendChild(listItem);
     });
 }
 
-function updateProposalDetails(proposals, userWalletAddress) {
+function updateProposalDetails(proposals) {
     console.log("Updating proposal details");
     const proposalDetails = document.getElementById('proposal-details');
     proposalDetails.innerHTML = ''; // Clear existing details
@@ -243,17 +243,6 @@ function updateProposalDetails(proposals, userWalletAddress) {
         if (options.length < 2) {
             options.push("For", "Against");
         }
-        
-        let statusMessage = '';
-        if (!proposal.user_can_vote) {
-            statusMessage = 'This is your proposal.';
-        } else if (proposal.user_has_voted) {
-            statusMessage = 'You have already voted for this proposal.';
-        } else if (proposal.voting_started) {
-            statusMessage = 'Voting for this proposal has begun.';
-        }
-
-        console.log("Image URL for proposal:", proposal.image_url);
 
         // Use placeholder image if no image URL is provided
         const imageHtml = proposal.image_url 
@@ -292,7 +281,7 @@ function updateProposalDetails(proposals, userWalletAddress) {
                     <div id="vote-options-${proposal.id}" class="vote-options">
                         ${options.map(option => `
                             <div class="vote-option">
-                                <button class="btn btn-primary vote-btn" onclick="submitVote(${proposal.id}, '${option}')" ${proposal.disable_voting ? 'disabled' : ''}>
+                                <button class="btn btn-primary vote-btn" onclick="submitVote(${proposal.id}, '${option}')">
                                     ${option}
                                 </button>
                                 <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">0%</div>
@@ -300,14 +289,13 @@ function updateProposalDetails(proposals, userWalletAddress) {
                         `).join('')}
                     </div>
 
-                    <span id="voted-message-${proposal.id}" class="proposal-voted-message" ${statusMessage ? '' : 'style="display: none;"'}>${statusMessage}</span>
+                    <span id="voted-message-${proposal.id}" class="proposal-voted-message" style="display: none;"></span>
                 </div>
             </div>
         `;
         proposalDetails.appendChild(detailDiv);
     });
 }
-
 function showProposal(id) {
     console.log(`Showing proposal ${id}`);
     
@@ -321,6 +309,7 @@ function showProposal(id) {
     if (selectedProposal) {
         selectedProposal.style.display = 'block';
         
+        console.log(`About to fetch votes for proposal ${id}`);
         // Fetch votes only when a proposal is clicked
         fetchProposalVotes(id);
     }
@@ -346,17 +335,44 @@ function fetchProposalVotes(id) {
     })
     .then(data => {
         console.log('Received vote data:', data);
-        if (data.status === 'success' && Array.isArray(data.votes)) {
+        if (data.status === 'success') {
             updateVoteCounts(id, data.votes);
+            updateVotingStatus(id, data);
         } else {
             console.log('No votes found or invalid data format for this proposal.');
-            updateVoteCounts(id, []); // Update with empty votes
+            updateVoteCounts(id, []);
         }
     })
     .catch(error => {
         console.error('Unable to fetch vote counts:', error);
-        updateVoteCounts(id, []); // Update with empty votes
+        updateVoteCounts(id, []);
     });
+}
+
+function updateVotingStatus(id, data) {
+    const proposalElement = document.getElementById(`proposal-${id}`);
+    if (proposalElement) {
+        const voteButtons = proposalElement.querySelectorAll('.vote-btn');
+        voteButtons.forEach(button => {
+            button.disabled = data.disable_voting;
+        });
+
+        const votedMessage = proposalElement.querySelector('.proposal-voted-message');
+        if (votedMessage) {
+            if (data.user_has_voted) {
+                votedMessage.textContent = 'You have already voted for this proposal.';
+                votedMessage.style.display = 'block';
+            } else if (!data.can_vote) {
+                votedMessage.textContent = 'This is your proposal.';
+                votedMessage.style.display = 'block';
+            } else if (data.voting_started) {
+                votedMessage.textContent = 'Voting for this proposal has begun.';
+                votedMessage.style.display = 'block';
+            } else {
+                votedMessage.style.display = 'none';
+            }
+        }
+    }
 }
 
 function updateVoteCounts(id, votes) {

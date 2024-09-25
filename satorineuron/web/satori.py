@@ -1665,69 +1665,33 @@ def vote():
 import json
 
 @app.route('/proposals', methods=['GET'])
-def get_proposals():
+def proposals():
     # This route only renders the HTML template
     return render_template('proposals.html'), 500
 
 @app.route('/api/proposals', methods=['GET'])
-def proposals():
+def get_proposals():
     try:
         proposals_data = start.server.getProposals()
-        user_wallet_address = start.wallet.address
 
         # Log the proposals data
         print("Fetched proposals data:", json.dumps(proposals_data, indent=2))
 
-        # Enhance proposal data with user-specific information
-        for proposal in proposals_data:
-            proposal_id = str(proposal['id'])
-            
-            # Get votes for this proposal
-            votes = start.server.getProposalVotes(proposal_id)
-            
-            # Check if the current user has voted
-            user_has_voted = any(vote['address'] == user_wallet_address for vote in votes)
-            
-            proposal['user_can_vote'] = str(proposal['wallet_id']) != user_wallet_address
-            proposal['user_has_voted'] = user_has_voted
-            proposal['voting_started'] = bool(votes)
-            
-            # Determine if voting should be disabled
-            proposal['disable_voting'] = not proposal['user_can_vote'] or proposal['user_has_voted']
+        # We're not doing any vote-related processing here anymore
 
         return jsonify({
             'status': 'success',
             'proposals': proposals_data,
-            'user_wallet_address': user_wallet_address
         })
 
     except Exception as e:
         error_message = f"Failed to fetch proposals: {str(e)}"
         print(error_message)
         print(traceback.format_exc())
-        
         return jsonify({
             'status': 'error',
             'message': error_message
         }), 500
-
-    except Exception as e:
-        error_message = f"Failed to fetch proposals: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
-        
-        if request.headers.get('Accept') == 'application/json':
-            return jsonify({
-                'status': 'error',
-                'message': error_message
-            }), 500
-        
-        # For HTML requests, render an error in the template
-        context = {
-            'title': 'Error',
-            'error_message': error_message
-        }
-        return render_template('proposals.html', **context), 500
 @app.route('/proposals/vote', methods=['POST'])
 def proposal_vote():
     try:
@@ -1777,15 +1741,27 @@ def proposal_vote():
 def get_proposal_votes(id):
     try:
         votes = start.server.getProposalVotes(str(id))
-        if votes:
+        proposal = next((p for p in start.server.getProposals() if p['id'] == id), None)
+        
+        if proposal and votes is not None:
+            user_wallet_address = start.wallet.address
+            user_has_voted = any(vote['address'] == user_wallet_address for vote in votes)
+            voting_started = bool(votes)
+            can_vote = str(proposal['wallet_id']) != user_wallet_address
+            disable_voting = not can_vote or user_has_voted
+
             return jsonify({
                 'status': 'success',
-                'votes': votes
+                'votes': votes,
+                'user_has_voted': user_has_voted,
+                'voting_started': voting_started,
+                'can_vote': can_vote,
+                'disable_voting': disable_voting
             }), 200
         else:
             return jsonify({
                 'status': 'error',
-                'message': 'Failed to fetch vote counts'
+                'message': 'Failed to fetch vote counts or proposal not found'
             }), 404
     except Exception as e:
         error_message = f"Error fetching votes: {str(e)}"
