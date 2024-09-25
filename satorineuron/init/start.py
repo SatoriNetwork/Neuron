@@ -302,25 +302,25 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return vault
 
     def start(self):
-        # ''' start the satori engine. '''
-        # # while True:
-        # if self.ranOnce:
-        #     time.sleep(60*60)
-        # self.ranOnce = True
+        ''' start the satori engine. '''
+        # while True:
+        if self.ranOnce:
+            time.sleep(60*60)
+        self.ranOnce = True
         self.setMiningMode()
         self.createRelayValidation()
         self.getWallet()
         self.getVault()
         self.create_server_conn()
         self.checkin()
-        # self.verifyCaches()
-        # # self.startSynergyEngine()
-        # self.subConnect()
-        # self.pubsConnect()
-        # if self.isDebug:
-        #     return
-        # self.startRelay()
-        # self.buildEngine()
+        self.verifyCaches()
+        # self.startSynergyEngine()
+        self.subConnect()
+        self.pubsConnect()
+        if self.isDebug:
+            return
+        self.startRelay()
+        self.buildEngine()
         time.sleep(60*60*24)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
