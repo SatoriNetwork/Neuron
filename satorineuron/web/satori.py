@@ -1704,9 +1704,9 @@ def vote():
 
 
 @app.route('/proposals', methods=['GET'])
+@authRequired
 def proposals():
-    # This route only renders the HTML template
-    return render_template('proposals.html'), 500
+    return render_template('proposals.html', **getResp({'title': 'Proposals'}))
 
 
 @app.route('/api/proposals', methods=['GET'])
@@ -1740,35 +1740,27 @@ def proposal_vote():
         data = request.json
         proposal_id = data.get('proposal_id')
         vote = data.get('vote')
-        
         if not proposal_id or vote is None:
             return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
-        
         # Ensure proposal_id is a string
         proposal_id = str(proposal_id)
-        
         # Fetch all proposals
         proposals = start.server.getProposals()
-        
         # Find the specific proposal
-        proposal = next((p for p in proposals if str(p['id']) == proposal_id), None)
-        
+        proposal = next(
+            (p for p in proposals if str(p['id']) == proposal_id), None)
         if not proposal:
             return jsonify({'status': 'error', 'message': 'Proposal not found'}), 404
-        
         # Parse the options
         try:
             options = json.loads(json.loads(proposal['options']))
         except json.JSONDecodeError:
             return jsonify({'status': 'error', 'message': 'Invalid options format in proposal'}), 500
-        
         # Validate the vote
         if vote not in options:
             return jsonify({'status': 'error', 'message': f'Invalid vote. Valid options are: {", ".join(options)}'}), 400
-        
         # Call server function with prepared data
         success, result = start.server.submitProposalVote(proposal_id, vote)
-        
         if success:
             return jsonify({'status': 'success', 'message': 'Vote submitted successfully'}), 200
         else:
@@ -1779,19 +1771,20 @@ def proposal_vote():
         print(traceback.format_exc())
         return jsonify({'status': 'error', 'message': error_message}), 500
 
+
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])
 def get_proposal_votes(id):
     try:
         votes = start.server.getProposalVotes(str(id))
-        proposal = next((p for p in start.server.getProposals() if p['id'] == id), None)
-        
+        proposal = next(
+            (p for p in start.server.getProposals() if p['id'] == id), None)
         if proposal and votes is not None:
             user_wallet_address = start.wallet.address
-            user_has_voted = any(vote['address'] == user_wallet_address for vote in votes)
+            user_has_voted = any(
+                vote['address'] == user_wallet_address for vote in votes)
             voting_started = bool(votes)
             can_vote = str(proposal['wallet_id']) != user_wallet_address
             disable_voting = not can_vote or user_has_voted
-
             return jsonify({
                 'status': 'success',
                 'votes': votes,
@@ -1814,6 +1807,7 @@ def get_proposal_votes(id):
             'message': error_message
         }), 500
 
+
 @app.route('/create-proposal', methods=['GET', 'POST'])
 def create_proposal():
     if request.method == 'GET':
@@ -1821,12 +1815,11 @@ def create_proposal():
     elif request.method == 'POST':
         try:
             data = request.json
-            print(f"Received proposal data in create_proposal: {json.dumps(data, indent=2)}")
-            
+            print(
+                f"Received proposal data in create_proposal: {json.dumps(data, indent=2)}")
             success, result = start.server.submitProposal(data)
-            
-            print(f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
-            
+            print(
+                f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
             if success:
                 return jsonify({
                     'status': 'success',
@@ -1834,7 +1827,8 @@ def create_proposal():
                     'proposal': result
                 }), 200
             else:
-                error_message = result.get('error', 'Failed to create proposal')
+                error_message = result.get(
+                    'error', 'Failed to create proposal')
                 print(f"Failed to create proposal: {error_message}")
                 return jsonify({
                     'status': 'error',
@@ -1958,48 +1952,6 @@ def voteRemoveAllSanction():
     if (start.vault is not None and start.vault.isDecrypted):
         start.server.removeSanctionVote(start.vault)
     return jsonify({'message': 'Stream votes received successfully'}), 200
-
-
-@app.route('/proposals', methods=['GET'])
-@authRequired
-def proposals():
-    # my_wallet = start.getWallet(network=start.network)
-    proposals_data = start.server.getProposals()
-    context = {
-        'title': 'Proposals',
-        # 'wallet': my_wallet,
-        'proposals': proposals_data
-    }
-    return render_template('proposals.html', **getResp(context))
-
-
-@app.route('/proposals/data', methods=['GET'])
-def get_proposals():
-    try:
-        proposals = start.server.getProposals()
-        return jsonify({'proposals': proposals})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-
-@app.route('/proposals/vote', methods=['POST'])
-def proposal_vote():
-    try:
-        data = request.json
-        proposal_id = data.get('proposal_id')
-        vote = data.get('vote')
-
-        if not proposal_id or vote is None:
-            return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
-
-        success, result = start.server.submitProposalVote(proposal_id, vote)
-
-        if success:
-            return jsonify({'status': 'success', 'proposal': result}), 200
-        else:
-            return jsonify({'status': 'error', 'message': result}), 400
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/relay_csv', methods=['GET'])

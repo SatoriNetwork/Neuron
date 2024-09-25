@@ -24,10 +24,10 @@
                 <mxCell id="4" value="Connection&lt;br&gt;do connect&lt;br&gt;do handshake" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
                     <mxGeometry x="365" y="220" width="120" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="ElectrumxAPI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="5" value="ElectrumXAPI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
                     <mxGeometry x="263" y="480" width="120" height="120" as="geometry"/>
                 </mxCell>
-                <mxCell id="7" value="ElectrumxAPI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="7" value="ElectrumXAPI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
                     <mxGeometry x="468" y="480" width="120" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="11" value="c" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
