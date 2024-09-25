@@ -91,28 +91,28 @@ while True:
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
             urlMundo={
-                'local': 'https://stage.satorinet.io',
-                'dev': 'https://stage.satorinet.io',
+                'local': 'http://192.168.0.10:5002',
+                'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://mundo.satorinet.io'
-            }[ENV],
+                'prod': 'https://mundo.satorinet.io'}[ENV],
             urlPubsubs={
                 'local': ['ws://192.168.0.10:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
-                'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']
-            }[ENV],
+                'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
+            # 'prod': ['ws://pubsub2.satorinet.foundation:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
-                'prod': 'https://synergy.satorinet.io:24602'
-            }[ENV],
-            isDebug=sys.argv[1] if len(sys.argv) > 1 else False
-        )
-        
-        logging.info(f'environment: {ENV}', extra={'print': True})
-        logging.info('Satori Neuron is starting...', extra={'color': 'green'})
+                'prod': 'https://synergy.satorinet.io:24602'}[ENV],
+            isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
+
+        # print('building engine')
+        # start.buildEngine()
+        # threading.Thread(target=start.start, daemon=True).start()
+        logging.info(f'environment: {ENV}', print=True)
+        logging.info('Satori Neuron is starting...', color='green')
         break
     except ConnectionError as e:
         traceback.print_exc()
