@@ -308,7 +308,10 @@ def favicon():
 @app.route('/static/<path:path>')
 @authRequired
 def sendStatic(path):
-    return send_from_directory('static', path)
+    if start.vault is not None and not start.vault.isEncrypted:
+        return send_from_directory('static', path)
+    flash('please unlock the vault first')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/upload_history_csv', methods=['POST'])
