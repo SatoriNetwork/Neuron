@@ -1665,6 +1665,11 @@ def vote():
 import json
 
 @app.route('/proposals', methods=['GET'])
+def get_proposals():
+    # This route only renders the HTML template
+    return render_template('proposals.html'), 500
+
+@app.route('/api/proposals', methods=['GET'])
 def proposals():
     try:
         proposals_data = start.server.getProposals()
@@ -1690,21 +1695,21 @@ def proposals():
             # Determine if voting should be disabled
             proposal['disable_voting'] = not proposal['user_can_vote'] or proposal['user_has_voted']
 
-        # Check if the request wants a JSON response
-        if request.headers.get('Accept') == 'application/json':
-            return jsonify({
-                'status': 'success',
-                'proposals': proposals_data,
-                'user_wallet_address': user_wallet_address
-            })
-        
-        # Otherwise, render the HTML template
-        context = {
-            'title': 'Proposals',
+        return jsonify({
+            'status': 'success',
             'proposals': proposals_data,
             'user_wallet_address': user_wallet_address
-        }
-        return render_template('proposals.html', **context)
+        })
+
+    except Exception as e:
+        error_message = f"Failed to fetch proposals: {str(e)}"
+        print(error_message)
+        print(traceback.format_exc())
+        
+        return jsonify({
+            'status': 'error',
+            'message': error_message
+        }), 500
 
     except Exception as e:
         error_message = f"Failed to fetch proposals: {str(e)}"

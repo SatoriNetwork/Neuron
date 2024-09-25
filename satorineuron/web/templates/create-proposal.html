@@ -24,7 +24,13 @@
               <label>Options</label>
               <div id="options-container">
                   <div class="input-group mb-2">
-                      <input type="text" class="form-control option-input" placeholder="Option" required>
+                      <input type="text" class="form-control option-input" placeholder="Option" value="For" required>
+                      <div class="input-group-append">
+                          <button type="button" class="btn btn-danger remove-option">Remove</button>
+                      </div>
+                  </div>
+                  <div class="input-group mb-2">
+                      <input type="text" class="form-control option-input" placeholder="Option" value="Against" required>
                       <div class="input-group-append">
                           <button type="button" class="btn btn-danger remove-option">Remove</button>
                       </div>
@@ -42,20 +48,44 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('create-proposal-form');
+    const addOptionBtn = document.getElementById('add-option');
+    const optionsContainer = document.getElementById('options-container');
+
+    form.addEventListener('submit', submitProposal);
+    addOptionBtn.addEventListener('click', addOption);
+    optionsContainer.addEventListener('click', removeOption);
+
+    // Set minimum date for expiration to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('expires').min = today;
+
+    // Initial update of remove buttons
+    updateRemoveButtons();
+});
+
 function submitProposal(event) {
     event.preventDefault();
     
     const form = event.target;
+    const options = Array.from(form.querySelectorAll('.option-input')).map(input => input.value);
+
+    if (options.length < 2) {
+        alert('Please provide at least two options for the proposal.');
+        return;
+    }
+
     const proposalData = {
         title: form.title.value,
         description: form.description.value,
         image_url: form.image_url.value,
         cost: form.cost.value,
-        options: Array.from(form.querySelectorAll('.option-input')).map(input => input.value),
+        options: options,
         expires: form.expires.value
     };
     
-    console.log('Submitting proposal:', proposalData);  // Log the data being sent
+    console.log('Submitting proposal:', proposalData);
 
     fetch('/create-proposal', {
         method: 'POST',
@@ -66,7 +96,7 @@ function submitProposal(event) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Server response:', data);  // Log the server response
+        console.log('Server response:', data);
         if (data.status === 'success') {
             console.log('Proposal created successfully:', data);
             alert('Proposal created successfully!');
@@ -82,35 +112,38 @@ function submitProposal(event) {
     });
 }
 
-// Add event listener to the form
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('create-proposal-form');
-    form.addEventListener('submit', submitProposal);
-});
+function addOption() {
+    const newOption = document.createElement('div');
+    newOption.className = 'input-group mb-2';
+    newOption.innerHTML = `
+        <input type="text" class="form-control option-input" placeholder="Option" required>
+        <div class="input-group-append">
+            <button type="button" class="btn btn-danger remove-option">Remove</button>
+        </div>
+    `;
+    document.getElementById('options-container').appendChild(newOption);
+    updateRemoveButtons();
+}
 
-// Add option functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const addOptionBtn = document.getElementById('add-option');
-    const optionsContainer = document.getElementById('options-container');
-
-    addOptionBtn.addEventListener('click', function() {
-        const newOption = document.createElement('div');
-        newOption.className = 'input-group mb-2';
-        newOption.innerHTML = `
-            <input type="text" class="form-control option-input" placeholder="Option" required>
-            <div class="input-group-append">
-                <button type="button" class="btn btn-danger remove-option">Remove</button>
-            </div>
-        `;
-        optionsContainer.appendChild(newOption);
-    });
-
-    optionsContainer.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-option')) {
-            e.target.closest('.input-group').remove();
+function removeOption(event) {
+    if (event.target.classList.contains('remove-option')) {
+        const optionsContainer = document.getElementById('options-container');
+        if (optionsContainer.children.length > 2) {
+            event.target.closest('.input-group').remove();
+            updateRemoveButtons();
+        } else {
+            alert('You must have at least two options.');
         }
+    }
+}
+
+function updateRemoveButtons() {
+    const removeButtons = document.querySelectorAll('.remove-option');
+    const optionInputs = document.querySelectorAll('.option-input');
+    removeButtons.forEach((button) => {
+        button.disabled = optionInputs.length <= 2;
     });
-});
+}
 </script>
 
 {% include 'footer-on-front.html' %}

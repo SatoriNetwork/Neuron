@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        .vote-option {
+          .vote-option {
             display: flex;
             align-items: center;
             margin-bottom: 10px;
@@ -124,7 +124,6 @@
         .welcome-card h2 {
             color: black;
             margin-bottom: 15px;
-        }
     </style>
 </head>
 <body>
@@ -158,10 +157,10 @@
             </div>
         </div>
     </div>
-</body>
-</html>
     <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
+        let isFetchingProposals = false;
+
+document.addEventListener('DOMContentLoaded', (event) => {
     fetchProposals();
     showWelcomeCard();
 });
@@ -177,8 +176,11 @@ function showWelcomeCard() {
 }
 
 function fetchProposals() {
+    if (isFetchingProposals) return;
+    isFetchingProposals = true;
+
     console.log('Fetching proposals...');
-    fetch('/proposals', {
+    fetch('/api/proposals', {
         headers: {
             'Accept': 'application/json'
         }
@@ -201,6 +203,9 @@ function fetchProposals() {
     .catch(error => {
         console.error('Error fetching proposals:', error.message);
         displayErrorMessage('Failed to fetch proposals: ' + error.message);
+    })
+    .finally(() => {
+        isFetchingProposals = false;
     });
 }
 
@@ -217,98 +222,109 @@ function updateProposalsList(proposals) {
     });
 }
 
-
 function updateProposalDetails(proposals, userWalletAddress) {
-            console.log("Received proposals:", proposals);
-            const proposalDetails = document.getElementById('proposal-details');
-            proposals.forEach(proposal => {
-                console.log("Processing proposal:", proposal);
-                if (!proposal || typeof proposal.id === 'undefined') {
-                    console.error('Invalid proposal data:', proposal);
-                    return; // Skip this iteration if proposal or proposal.id is undefined
-                }
-                const detailDiv = document.createElement('div');
-                detailDiv.id = `proposal-${proposal.id}`;
-                detailDiv.className = 'proposal-detail';
-                detailDiv.style.display = 'none';
-                
-                const options = JSON.parse(JSON.parse(proposal.options));
-                
-                let statusMessage = '';
-                if (!proposal.user_can_vote) {
-                    statusMessage = 'This is your proposal.';
-                } else if (proposal.user_has_voted) {
-                    statusMessage = 'You have already voted for this proposal.';
-                } else if (proposal.voting_started) {
-                    statusMessage = 'Voting for this proposal has begun.';
-                }
-
-                console.log("Image URL for proposal:", proposal.image_url);
-
-                // Use placeholder image if no image URL is provided
-                const imageHtml = proposal.image_url 
-                    ? `<img src="${proposal.image_url}" alt="${proposal.title}">`
-                    : `<img src="https://ateressi.sirv.com/iStock-173770914.jpg" alt="Placeholder Image">`;
-
-                detailDiv.innerHTML = `
-                    <div class="proposal-card">
-                        <div class="proposal-card-header">
-                            <h4 class="text-center">${proposal.title}</h4>
-                        </div>
-                        <div class="proposal-card-body" data-options='${JSON.stringify(options)}'>
-                            <div class="image-placeholder">
-                                ${imageHtml}
-                            </div>
-                            
-                            <dl class="proposal-info">
-                                <dt>Description</dt>
-                                <dd>${proposal.description}</dd>
-
-                                <dt>Cost</dt>
-                                <dd>${proposal.cost}</dd>
-
-                                <dt>Proposal Date</dt>
-                                <dd>${new Date(proposal.proposal_date).toLocaleString()}</dd>
-
-                                <dt>Expires</dt>
-                                <dd>${new Date(proposal.expires).toLocaleString()}</dd>
-
-                                ${proposal.complete_date ? `
-                                    <dt>Completed</dt>
-                                    <dd>${new Date(proposal.complete_date).toLocaleString()}</dd>
-                                ` : ''}
-                            </dl>
-
-                            <div id="vote-options-${proposal.id}" class="vote-options">
-                                ${options.map(option => `
-                                    <div class="vote-option">
-                                        <button class="btn btn-primary vote-btn" onclick="submitVote(${proposal.id}, '${option}')" ${proposal.disable_voting ? 'disabled' : ''}>
-                                            ${option}
-                                        </button>
-                                        <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">0%</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-
-                            <span id="voted-message-${proposal.id}" class="proposal-voted-message" ${statusMessage ? '' : 'style="display: none;"'}>${statusMessage}</span>
-                        </div>
-                    </div>
-                `;
-                proposalDetails.appendChild(detailDiv);
-            });
+    console.log("Updating proposal details");
+    const proposalDetails = document.getElementById('proposal-details');
+    proposalDetails.innerHTML = ''; // Clear existing details
+    proposals.forEach(proposal => {
+        console.log("Processing proposal:", proposal);
+        if (!proposal || typeof proposal.id === 'undefined') {
+            console.error('Invalid proposal data:', proposal);
+            return; // Skip this iteration if proposal or proposal.id is undefined
+        }
+        const detailDiv = document.createElement('div');
+        detailDiv.id = `proposal-${proposal.id}`;
+        detailDiv.className = 'proposal-detail';
+        detailDiv.style.display = 'none';
+        
+        const options = JSON.parse(JSON.parse(proposal.options));
+        
+        // Ensure there are at least two options
+        if (options.length < 2) {
+            options.push("For", "Against");
+        }
+        
+        let statusMessage = '';
+        if (!proposal.user_can_vote) {
+            statusMessage = 'This is your proposal.';
+        } else if (proposal.user_has_voted) {
+            statusMessage = 'You have already voted for this proposal.';
+        } else if (proposal.voting_started) {
+            statusMessage = 'Voting for this proposal has begun.';
         }
 
+        console.log("Image URL for proposal:", proposal.image_url);
+
+        // Use placeholder image if no image URL is provided
+        const imageHtml = proposal.image_url 
+            ? `<img src="${proposal.image_url}" alt="${proposal.title}">`
+            : `<img src="https://ateressi.sirv.com/iStock-173770914.jpg" alt="Placeholder Image">`;
+
+        detailDiv.innerHTML = `
+            <div class="proposal-card">
+                <div class="proposal-card-header">
+                    <h4 class="text-center">${proposal.title}</h4>
+                </div>
+                <div class="proposal-card-body" data-options='${JSON.stringify(options)}'>
+                    <div class="image-placeholder">
+                        ${imageHtml}
+                    </div>
+                    
+                    <dl class="proposal-info">
+                        <dt>Description</dt>
+                        <dd>${proposal.description}</dd>
+
+                        <dt>Cost</dt>
+                        <dd>${proposal.cost}</dd>
+
+                        <dt>Proposal Date</dt>
+                        <dd>${new Date(proposal.proposal_date).toLocaleString()}</dd>
+
+                        <dt>Expires</dt>
+                        <dd>${new Date(proposal.expires).toLocaleString()}</dd>
+
+                        ${proposal.complete_date ? `
+                            <dt>Completed</dt>
+                            <dd>${new Date(proposal.complete_date).toLocaleString()}</dd>
+                        ` : ''}
+                    </dl>
+
+                    <div id="vote-options-${proposal.id}" class="vote-options">
+                        ${options.map(option => `
+                            <div class="vote-option">
+                                <button class="btn btn-primary vote-btn" onclick="submitVote(${proposal.id}, '${option}')" ${proposal.disable_voting ? 'disabled' : ''}>
+                                    ${option}
+                                </button>
+                                <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">0%</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <span id="voted-message-${proposal.id}" class="proposal-voted-message" ${statusMessage ? '' : 'style="display: none;"'}>${statusMessage}</span>
+                </div>
+            </div>
+        `;
+        proposalDetails.appendChild(detailDiv);
+    });
+}
+
 function showProposal(id) {
+    console.log(`Showing proposal ${id}`);
+    
     // Hide all proposal details and the welcome card
     document.querySelectorAll('.proposal-detail, .welcome-card').forEach(el => {
         el.style.display = 'none';
     });
+    
     // Show the selected proposal
     const selectedProposal = document.getElementById('proposal-' + id);
     if (selectedProposal) {
         selectedProposal.style.display = 'block';
-        fetchProposalVotes(id);  // Fetch votes only when a proposal is shown
+        
+        // Fetch votes only when a proposal is clicked
+        fetchProposalVotes(id);
     }
+    
     // Update active state in the list
     document.querySelectorAll('.proposal-list-item').forEach(el => {
         el.classList.remove('active');
@@ -320,6 +336,7 @@ function showProposal(id) {
 }
 
 function fetchProposalVotes(id) {
+    console.log(`Fetching votes for proposal ${id}`);
     fetch(`/proposal/votes/get/${id}`)
     .then(response => {
         if (!response.ok) {
@@ -329,25 +346,29 @@ function fetchProposalVotes(id) {
     })
     .then(data => {
         console.log('Received vote data:', data);
-        if (data.status === 'success') {
+        if (data.status === 'success' && Array.isArray(data.votes)) {
             updateVoteCounts(id, data.votes);
         } else {
-            console.log('No votes found for this proposal.');
+            console.log('No votes found or invalid data format for this proposal.');
             updateVoteCounts(id, []); // Update with empty votes
         }
     })
     .catch(error => {
-        console.log('Unable to fetch vote counts. Assuming no votes.', error);
+        console.error('Unable to fetch vote counts:', error);
         updateVoteCounts(id, []); // Update with empty votes
     });
 }
 
-function updateVoteCounts(id, votesString) {
-    const proposalDetail = document.getElementById(`proposal-${id}`);
-    if (!proposalDetail) return;
+function updateVoteCounts(id, votes) {
+    console.log(`Updating vote counts for proposal ${id}`);
+    console.log('Received votes:', votes);
 
-    const votes = votesString;
-    
+    const proposalDetail = document.getElementById(`proposal-${id}`);
+    if (!proposalDetail) {
+        console.error(`Proposal detail element not found for id ${id}`);
+        return;
+    }
+
     // Initialize satori sums
     const satoriSums = {};
     let totalSatori = 0;
@@ -364,12 +385,18 @@ function updateVoteCounts(id, votesString) {
         }
     });
 
+    console.log('Satori sums:', satoriSums);
+    console.log('Total Satori:', totalSatori);
+
     // Update the display
     Object.keys(satoriSums).forEach(option => {
         const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
         if (percentageElement) {
-            const percentage = totalSatori > 0 ? (satoriSums[option] / totalSatori * 100).toFixed(2) : 0;
+            const percentage = totalSatori > 0 ? Math.round((satoriSums[option] / totalSatori * 100)) : 0;
             percentageElement.textContent = `${percentage}%`;
+            console.log(`Updated percentage for ${option}: ${percentage}%`);
+        } else {
+            console.error(`Percentage element not found for option ${option}`);
         }
     });
 
@@ -377,6 +404,7 @@ function updateVoteCounts(id, votesString) {
     console.log(`Proposal ${id} - Total Satori: ${totalSatori}`);
     console.log('Satori sums per option:', satoriSums);
 }
+
 function submitVote(id, vote) {
     console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
     
@@ -424,8 +452,12 @@ function showVotedMessage(id, message) {
         messageElement.textContent = message;
         messageElement.style.display = 'block';
     }
-
 }
-        </script>
+
+function displayErrorMessage(message) {
+    console.error(message);
+    alert(message);
+}
+    </script>
 </body>
 </html>
