@@ -86,6 +86,7 @@ while True:
         start = StartupDag(
             env=ENV,
             urlServer={
+                # TODO: local endpoint should be in a config file.
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
