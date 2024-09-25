@@ -609,7 +609,7 @@ def sendSatoriTransactionFromWallet(network: str = 'main'):
     # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
     result = sendSatoriTransactionUsing(
         start.getWallet(network=network), network, 'wallet')
-    if len(result) == 64:
+    if isinstance(result, str) and len(result) == 64:
         flash(str(result))
     return redirect(f'/wallet/{network}')
 
