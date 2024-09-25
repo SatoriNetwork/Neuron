@@ -1,0 +1,59 @@
+<mxfile host="65bd71144e">
+    <diagram id="GtlifIrdgLYzoriZAj9k" name="Page-1">
+        <mxGraphModel dx="298" dy="340" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="6" style="edgeStyle=none;html=1;" edge="1" parent="1" source="2" target="5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" style="edgeStyle=none;html=1;" edge="1" parent="1" source="2" target="17">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="174.53846153846166" y="510" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="2" value="Wallet&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="263" y="380" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" style="edgeStyle=none;html=1;" edge="1" parent="1" source="3" target="7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="Vault" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="468" y="380" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="Connection&lt;br&gt;do connect&lt;br&gt;do handshake" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="365" y="220" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="ElectrumxAPI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="263" y="480" width="120" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="ElectrumxAPI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="468" y="480" width="120" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="c" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="308" y="500" width="30" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="c" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="513" y="500" width="30" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" style="edgeStyle=none;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="4" target="12">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" style="edgeStyle=none;html=1;" edge="1" parent="1" source="4" target="11">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" style="edgeStyle=none;html=1;" edge="1" parent="1" source="17" target="11">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="213.2679738562092" y="530.1960784313726" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="17" value="subscription" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                    <mxGeometry x="100" y="480" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="&lt;h1&gt;TODO&lt;/h1&gt;&lt;p&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;1. never recreate wallet or vault objects (persistant)&lt;/span&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;2. integrate other wallet code - loading process&lt;/p&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="73" y="100" width="537" height="120" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

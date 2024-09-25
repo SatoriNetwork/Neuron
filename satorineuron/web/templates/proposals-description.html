@@ -423,7 +423,6 @@ function updateVoteCounts(id, votes) {
 
 function submitVote(id, vote) {
     console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
-    
     fetch('/proposals/vote', {
         method: 'POST',
         headers: {
@@ -477,3 +476,4 @@ function displayErrorMessage(message) {
     </script>
 </body>
 </html>
+

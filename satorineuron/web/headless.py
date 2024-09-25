@@ -35,7 +35,7 @@ from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 
-logging.info(f'verison: {VERSION}', print=True)
+logging.info(f'version: {VERSION}', print=True)
 
 ###############################################################################
 ## Globals ####################################################################
@@ -54,10 +54,10 @@ ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 # DELEGATE = config.get().get('delegate', None)
 CORS(app, origins=[{
-   'local': 'http://192.168.0.10:5002',
-   'dev': 'http://localhost:5002',
-   'test': 'https://test.satorinet.io',
-   'prod': 'https://satorinet.io'}[ENV]])
+    'local': 'http://192.168.0.10:5002',
+    'dev': 'http://localhost:5002',
+    'test': 'https://test.satorinet.io',
+    'prod': 'https://satorinet.io'}[ENV]])
 
 
 ###############################################################################
@@ -91,7 +91,7 @@ while True:
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
         # if DELEGATE is not None:
-        #     wallet = start.details.wallet 
+        #     wallet = start.details.wallet
         #     if isinstance(wallet.rewardaddress, str) and wallet.rewardaddress not in [wallet.address, wallet.vaultaddress, DELEGATE]:
         #         start.server.stakeProxyRequest(DELEGATE)
         logging.info('Satori Neuron is starting...', color='green')
@@ -114,15 +114,105 @@ while True:
 ################################################################################
 #
 #
+
+
 @app.errorhandler(404)
 def not_found(e):
-   return render_template('404.html'), 404
+    return render_template('404.html'), 404
 
 
 @app.route('/ping', methods=['GET'])
 def ping():
    from datetime import datetime
    return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+
+
+@app.route('/mining/to/address', methods=['GET'])
+def mineToAddressStatus():
+    return str(start.server.mineToAddressStatus()), 200
+
+
+@app.route('/mine/to/address/<address>', methods=['GET'])
+def mineToAddress(address: str):
+    if start.vault is None:
+        return '', 200
+    # the network portion should be whatever network I'm on.
+    network = 'main'
+    start.details.wallet['rewardaddress'] = address
+    vault = start.getVault(network=network)
+    success, result = start.server.mineToAddress(
+        vaultSignature=vault.sign(address),
+        vaultPubkey=vault.publicKey,
+        address=address)
+    if success:
+        return 'OK', 200
+    return f'Failed to report vault: {result}', 400
+
+
+@app.route('/stake/for/address/<address>', methods=['GET'])
+def stakeForAddress(address: str):
+    if start.vault is None:
+        return '', 200
+    # the network portion should be whatever network I'm on.
+    network = 'main'
+    vault = start.getVault(network=network)
+    success, result = start.server.stakeForAddress(
+        vaultSignature=vault.sign(address),
+        vaultPubkey=vault.publicKey,
+        address=address)
+    if success:
+        return 'OK', 200
+    return f'Failed to report vault: {result}', 400
+
+
+@app.route('/proxy/parent/status', methods=['GET'])
+def proxyParentStatus():
+    success, result = start.server.stakeProxyChildren()
+    if success:
+        return result, 200
+    return f'Failed stakeProxyChildren: {result}', 400
+
+
+@app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
+def charityProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyCharity(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyCharity: {result}', 400
+
+
+@app.route('/proxy/child/no_charity/<address>/<id>', methods=['GET'])
+def charityNotProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyCharityNot(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyCharityNot: {result}', 400
+
+
+@app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
+def approveProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyApprove(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyApprove: {result}', 400
+
+
+@app.route('/proxy/child/deny/<address>/<id>', methods=['GET'])
+def denyProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyDeny(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyDeny: {result}', 400
+
+
+@app.route('/proxy/child/remove/<address>/<id>', methods=['GET'])
+def removeProxyChild(address: str, id: int):
+    success, result = start.server.stakeProxyRemove(address, childId=id)
+    if success:
+        return result, 200
+    return f'Failed stakeProxyRemove: {result}', 400
+
+
 #
 #
 ################################################################################
@@ -131,10 +221,9 @@ def ping():
 #
 #
 if __name__ == '__main__':
-   app.run(
-       host='127.0.0.1',
-       port=config.flaskPort(),
-       threaded=True,
-       debug=debug,
-       use_reloader=False)
-
+    app.run(
+        host='127.0.0.1',
+        port=config.flaskPort(),
+        threaded=True,
+        debug=debug,
+        use_reloader=False)

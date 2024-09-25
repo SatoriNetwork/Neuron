@@ -16,12 +16,15 @@ class StartupDagStruct(object):
     def __init__(
         self,
         env: str = None,
+        walletOnlyMode: bool = False,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
         urlSynergy: str = None,
         *args
     ):
+        self.env = env
+        self.walletOnlyMode = walletOnlyMode
         self.workingUpdates: Queue = None
         self.chatUpdates: Queue = None
         self.connectionsStatusQueue: Queue = None

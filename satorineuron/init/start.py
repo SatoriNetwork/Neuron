@@ -16,6 +16,7 @@ from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
+from satorineuron import VERSION
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.init.restart import restartLocalSatori
@@ -50,6 +51,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self,
         *args,
         env: str = 'dev',
+        walletOnlyMode: bool = False,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -57,7 +59,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False
     ):
         super(StartupDag, self).__init__(*args)
+        self.version = [int(x) for x in VERSION.split('.')]
         self.env = env
+        self.walletOnlyMode = walletOnlyMode
         self.lastWalletCall = 0
         self.lastVaultCall = 0
         self.electrumCooldown = 10
@@ -101,9 +105,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
-        self.restartThread = threading.Thread(
-            target=self.restartEverythingPeriodic, daemon=True)
-        self.restartThread.start()
+        if not config.get().get('disable_restart', False):
+            self.restartThread = threading.Thread(
+                target=self.restartEverythingPeriodic, daemon=True)
+            self.restartThread.start()
         self.checkinCheckThread = threading.Thread(
             target=self.checkinCheck, daemon=True)
         self.checkinCheckThread.start()
@@ -307,12 +312,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.ranOnce:
             time.sleep(60*60)
         self.ranOnce = True
+        if self.walletOnlyMode:
+            self.getWallet()
+            self.getVault()
+            self.createServerConn()
+            return
         self.setMiningMode()
         self.createRelayValidation()
         self.getWallet()
         self.getVault()
         self.createServerConn()
         self.checkin()
+        self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()
@@ -333,7 +344,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
         logging.info('started relay validation engine', color='green')
-        
+
     def createServerConn(self):
         logging.debug(self.urlServer, color='teal')
         self.server = SatoriServerClient(
@@ -365,7 +376,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.subscriptions = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.subscriptions)]
-                if attempt < 5 and len(self.subscriptions) == 0:
+                if attempt < 5 and (self.details is None or len(self.subscriptions) == 0):
                     time.sleep(30)
                     continue
                 logging.info('subscriptions:', len(
@@ -418,6 +429,21 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             x = x * 1.5 if x < 60*60*6 else 60*60*6
             logging.warning(f'trying again in {x}')
             time.sleep(x)
+
+    def setRewardAddress(self) -> bool:
+        configRewardAddress: str = str(config.get().get('reward address', ''))
+        if (
+            self.env == 'prod' and
+            len(configRewardAddress) == 34 and
+            configRewardAddress.startswith('E') and
+            self.rewardAddress != configRewardAddress
+        ):
+            self.server.setRewardAddress(
+                signature=self.wallet.sign(configRewardAddress),
+                pubkey=self.wallet.publicKey,
+                address=configRewardAddress)
+            return True
+        return False
 
     def verifyCaches(self) -> bool:
         ''' rehashes my published hashes '''
@@ -633,15 +659,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         restartTime = time.time() + config.get().get(
             'restartTime',
             random.randint(60*60*21, 60*60*24))
-        latestTag = LatestTag()
+        # # removing tag check because I think github might block vps or
+        # # something when multiple neurons are hitting it at once. very
+        # # strange, but it was unreachable for someone and would just hang.
+        # latestTag = LatestTag()
         while True:
             if time.time() > restartTime:
                 self.triggerRestart()
-            # time.sleep(random.randint(60*60, 60*60*4))
-            time.sleep(random.randint(10, 20))
-            latestTag.get()
-            if latestTag.isNew:
-                self.triggerRestart()
+            time.sleep(random.randint(60*60, 60*60*4))
+            # time.sleep(random.randint(10, 20))
+            # latestTag.get()
+            # if latestTag.isNew:
+            #    self.triggerRestart()
 
     def publish(self, topic: str, data: str, observationTime: str, observationHash: str):
         ''' publishes to all the pubsub servers '''
