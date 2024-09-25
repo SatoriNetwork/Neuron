@@ -388,19 +388,22 @@ def unpause():
 @app.route('/backup/<target>', methods=['GET'])
 @authRequired
 def backup(target: str = 'satori'):
-    outputPath = '/Satori/Neuron/satorineuron/web/static/download'
-    if target == 'satori':
-        from satorilib.api.disk.zip.zip import zipSelected
-        zipSelected(
-            folderPath=f'/Satori/Neuron/{target}',
-            outputPath=f'{outputPath}/{target}.zip',
-            selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
-    else:
-        from satorilib.api.disk.zip.zip import zipFolder
-        zipFolder(
-            folderPath=f'/Satori/Neuron/{target}',
-            outputPath=f'{outputPath}/{target}')
-    return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
+    if start.vault is not None and not start.vault.isEncrypted:
+        outputPath = '/Satori/Neuron/satorineuron/web/static/download'
+        if target == 'satori':
+            from satorilib.api.disk.zip.zip import zipSelected
+            zipSelected(
+                folderPath=f'/Satori/Neuron/{target}',
+                outputPath=f'{outputPath}/{target}.zip',
+                selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
+        else:
+            from satorilib.api.disk.zip.zip import zipFolder
+            zipFolder(
+                folderPath=f'/Satori/Neuron/{target}',
+                outputPath=f'{outputPath}/{target}')
+        return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
+    flash('please unlock the vault first')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/restart', methods=['GET'])
