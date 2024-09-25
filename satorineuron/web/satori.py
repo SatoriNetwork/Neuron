@@ -86,10 +86,10 @@ while True:
         start = StartupDag(
             env=ENV,
             urlServer={
-                'dev': 'https://central.satorinet.io',
-                'prod': 'https://central.satorinet.io'}[ENV],
-
-            
+                'local': 'http://192.168.0.10:5002',
+                'dev': 'http://localhost:5002',
+                'test': 'https://test.satorinet.io',
+                'prod': 'https://stage.satorinet.io'}[ENV],
             urlMundo={
                 'local': 'https://stage.satorinet.io',
                 'dev': 'https://stage.satorinet.io',
