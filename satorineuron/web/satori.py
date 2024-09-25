@@ -115,12 +115,15 @@ while True:
         logging.info('Satori Neuron is starting...', color='green')
         break
     except ConnectionError as e:
+        # try again...
         traceback.print_exc()
-        logging.error(f'ConnectionError in app startup: {e}', extra={'color': 'red'})
+        logging.error(f'ConnectionError in app startup: {e}', color='red')
         time.sleep(30)
+    # except RemoteDisconnected as e:
     except Exception as e:
+        # try again...
         traceback.print_exc()
-        logging.error(f'Exception in app startup: {e}', extra={'color': 'red'})
+        logging.error(f'Exception in app startup: {e}', color='red')
         time.sleep(30)
 
 ###############################################################################
