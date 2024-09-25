@@ -647,3 +647,234 @@ input[readonly] {
   cursor: not-allowed;      /* Not-allowed cursor to indicate non-editable field */
   border: 1px solid #0e040a; /* Optional: style the border to match your form #ced4da*/
 }
+
+
+/* Proposal container */
+.proposal-container {
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+/* Proposal card */
+.proposal-card {
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.proposal-card:hover {
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.proposal-card-header {
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  padding: 15px;
+}
+
+.proposal-card-body {
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  padding: 20px;
+}
+
+/* Proposal list */
+.proposal-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.proposal-list-item {
+  border-radius: 10px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  padding: 10px 15px;
+}
+
+.proposal-list-item:hover {
+  background-color: #f0f0f0;
+}
+
+.proposal-list-item.active {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Proposal detail */
+.proposal-detail-img {
+  border-radius: 10px;
+  margin-bottom: 15px;
+  max-width: 100%;
+  height: auto;
+}
+
+.proposal-vote-btn {
+  border-radius: 20px;
+  padding: 5px 15px;
+  margin-right: 10px;
+  transition: all 0.3s ease;
+}
+
+.proposal-vote-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Proposal icon */
+.proposal-icon-shape {
+  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Create Proposal button */
+.proposal-create-btn {
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.proposal-create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Voted message */
+.proposal-voted-message {
+  color: #28a745;
+  font-style: italic;
+  margin-top: 10px;
+  display: none;
+}
+
+/* Custom scrollbar for proposal list */
+.proposal-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.proposal-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.proposal-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.proposal-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Dark mode styles */
+.dark-mode .proposal-container {
+  background-color: #343a40;
+  color: #f8f9fa;
+}
+
+.dark-mode .proposal-card {
+  background-color: #454d55;
+}
+
+.dark-mode .proposal-list-item {
+  background-color: #454d55;
+  color: #f8f9fa;
+  border-color: #6c757d;
+}
+
+.dark-mode .proposal-list-item:hover {
+  background-color: #5a6268;
+}
+
+.dark-mode .proposal-list-item.active {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .proposal-list-container, .proposal-detail-container {
+      margin-bottom: 20px;
+  }
+}
+
+
+
+/* Custom CSS for proposal form */
+.proposal-form .form-control {
+  border: 1px solid #000000;  /* Black border */
+  background-color: #ffffff;  /* White background for input fields */
+  color: #000000;  /* Black text color */
+}
+
+.proposal-form .form-control:focus {
+  border-color: #0056b3;  /* Change border color on focus for better visibility */
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);  /* Add a subtle glow on focus */
+}
+
+.proposal-form label {
+  color: #000000;  /* Black text for labels */
+  font-weight: bold;
+}
+
+.proposal-form .btn {
+  border: 1px;  /* Black border for buttons */
+}
+
+/* Ensure good contrast for placeholder text */
+.proposal-form .form-control::placeholder {
+  color: black;  /* Darker grey for placeholder text */
+}
+
+/* Additional styles for better readability */
+.proposal-form {
+  background-color: #f8f9fa;  /* Light gray background for the form */
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.proposal-form h2 {
+  color: #000000;  /* Black text for the heading */
+  margin-bottom: 20px;
+}
+
+
+.proposals-wrapper {
+  margin-top: -20px; /* Adjust this value to reduce space at the top */
+}
+
+.proposal-container {
+  margin-top: 10px; /* Adjust spacing between description and proposals */
+}
+
+/* Adjust the proposal list container if needed */
+.proposal-list-container {
+  margin-top: 10px;
+}
+
+/* You may need to adjust other elements as well, depending on your layout */
+.proposal-card {
+  margin-bottom: 15px;
+}
+
+/* Ensure the welcome card doesn't add extra space */
+.welcome-card {
+  margin-top: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .proposals-wrapper {
+      margin-top: -10px; /* Less negative margin on smaller screens */
+  }
+  
+  .proposal-container {
+      margin-top: 5px;
+  }
+}

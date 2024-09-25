@@ -7,6 +7,7 @@
 from flask_cors import CORS
 from typing import Union
 from functools import wraps, partial
+import requests
 import shutil
 import os
 import sys
@@ -23,7 +24,7 @@ from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
 from satorilib.concepts.structs import StreamId, StreamOverviews
 from satorilib.api.wallet.wallet import TransactionFailure
-from satorilib.api.time import timeToSeconds
+from satorilib.api.time import timeToSeconds, nowStr
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
 from satorisynapse import Envelope, Signal
@@ -672,7 +673,7 @@ def sendSatoriTransactionFromWallet(network: str = 'main'):
 @authRequired
 def sendSatoriTransactionFromVault(network: str = 'main'):
     result = sendSatoriTransactionUsing(start.vault, network, 'vault')
-    if len(result) == 64:
+    if isinstance(result, str) and len(result) == 64:
         flash(str(result))
     return redirect(f'/vault/{network}')
 
@@ -1702,6 +1703,165 @@ def vote():
         **getVotes(myWallet)}))
 
 
+@app.route('/proposals', methods=['GET'])
+def proposals():
+    # This route only renders the HTML template
+    return render_template('proposals.html'), 500
+
+
+@app.route('/api/proposals', methods=['GET'])
+def get_proposals():
+    try:
+        proposals_data = start.server.getProposals()
+
+        # Log the proposals data
+        print("Fetched proposals data:", json.dumps(proposals_data, indent=2))
+
+        # We're not doing any vote-related processing here anymore
+
+        return jsonify({
+            'status': 'success',
+            'proposals': proposals_data,
+        })
+
+    except Exception as e:
+        error_message = f"Failed to fetch proposals: {str(e)}"
+        print(error_message)
+        print(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'message': error_message
+        }), 500
+
+
+@app.route('/proposals/vote', methods=['POST'])
+def proposal_vote():
+    try:
+        data = request.json
+        proposal_id = data.get('proposal_id')
+        vote = data.get('vote')
+        
+        if not proposal_id or vote is None:
+            return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
+        
+        # Ensure proposal_id is a string
+        proposal_id = str(proposal_id)
+        
+        # Fetch all proposals
+        proposals = start.server.getProposals()
+        
+        # Find the specific proposal
+        proposal = next((p for p in proposals if str(p['id']) == proposal_id), None)
+        
+        if not proposal:
+            return jsonify({'status': 'error', 'message': 'Proposal not found'}), 404
+        
+        # Parse the options
+        try:
+            options = json.loads(json.loads(proposal['options']))
+        except json.JSONDecodeError:
+            return jsonify({'status': 'error', 'message': 'Invalid options format in proposal'}), 500
+        
+        # Validate the vote
+        if vote not in options:
+            return jsonify({'status': 'error', 'message': f'Invalid vote. Valid options are: {", ".join(options)}'}), 400
+        
+        # Call server function with prepared data
+        success, result = start.server.submitProposalVote(proposal_id, vote)
+        
+        if success:
+            return jsonify({'status': 'success', 'message': 'Vote submitted successfully'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
+    except Exception as e:
+        error_message = f"Error in proposal_vote: {str(e)}"
+        print(error_message)
+        print(traceback.format_exc())
+        return jsonify({'status': 'error', 'message': error_message}), 500
+
+@app.route('/proposal/votes/get/<int:id>', methods=['GET'])
+def get_proposal_votes(id):
+    try:
+        votes = start.server.getProposalVotes(str(id))
+        proposal = next((p for p in start.server.getProposals() if p['id'] == id), None)
+        
+        if proposal and votes is not None:
+            user_wallet_address = start.wallet.address
+            user_has_voted = any(vote['address'] == user_wallet_address for vote in votes)
+            voting_started = bool(votes)
+            can_vote = str(proposal['wallet_id']) != user_wallet_address
+            disable_voting = not can_vote or user_has_voted
+
+            return jsonify({
+                'status': 'success',
+                'votes': votes,
+                'user_has_voted': user_has_voted,
+                'voting_started': voting_started,
+                'can_vote': can_vote,
+                'disable_voting': disable_voting
+            }), 200
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to fetch vote counts or proposal not found'
+            }), 404
+    except Exception as e:
+        error_message = f"Error fetching votes: {str(e)}"
+        print(error_message)
+        print(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'message': error_message
+        }), 500
+
+@app.route('/create-proposal', methods=['GET', 'POST'])
+def create_proposal():
+    if request.method == 'GET':
+        return render_template('create-proposal.html', title='Create New Proposal')
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            print(f"Received proposal data in create_proposal: {json.dumps(data, indent=2)}")
+            
+            success, result = start.server.submitProposal(data)
+            
+            print(f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
+            
+            if success:
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Proposal created successfully',
+                    'proposal': result
+                }), 200
+            else:
+                error_message = result.get('error', 'Failed to create proposal')
+                print(f"Failed to create proposal: {error_message}")
+                return jsonify({
+                    'status': 'error',
+                    'message': error_message
+                }), 400
+        except Exception as e:
+            error_message = f"Error in create_proposal route: {str(e)}"
+            print(error_message)
+            print(traceback.format_exc())
+            return jsonify({
+                'status': 'error',
+                'message': 'Server error occurred'
+            }), 500
+
+
+@app.route('/test', methods=['GET'])
+def test_connection():
+    try:
+        success, result = start.server.testConnection()
+        if success:
+            return jsonify({'status': 'success', 'message': 'API is working correctly', 'details': result}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'API test failed', 'details': result}), 500
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
 @authRequired
 def voteSubmitManifestWallet():
@@ -1742,42 +1902,6 @@ def systemMetrics():
         'version': VERSION,
         'timestamp': time.time(),
     }), 200
-
-
-# @app.route('/vote/submit/manifest/vault', methods=['POST'])
-# @authRequired
-# def voteSubmitManifestVault():
-#     # logging.debug(request.json, color='yellow')
-#     vaultPredictors = request.json.get('vaultPredictors')
-#     vaultOracles = request.json.get('vaultOracles')
-#     vaultInviters = request.json.get('vaultInviters')
-#     vaultCreators = request.json.get('vaultCreators')
-#     vaultManagers = request.json.get('vaultManagers')
-#     vaultPredictors = 0 if vaultPredictors.strip() == '' else int(vaultPredictors)
-#     vaultOracles = 0 if vaultOracles.strip() == '' else int(vaultOracles)
-#     vaultInviters = 0 if vaultInviters.strip() == '' else int(vaultInviters)
-#     vaultCreators = 0 if vaultCreators.strip() == '' else int(vaultCreators)
-#     vaultManagers = 0 if vaultManagers.strip() == '' else int(vaultManagers)
-#     if (
-#         (
-#             vaultPredictors > 0 or
-#             vaultOracles > 0 or
-#             vaultInviters > 0 or
-#             vaultCreators > 0 or
-#             vaultManagers > 0
-#         ) and start.vault is not None and start.vault.isDecrypted
-#     ):
-#         start.server.submitMaifestVote(
-#             start.getWallet(network=start.network),
-#             votes={
-#                 # TODO: authenticate the vault.
-#                 # 'vault': start.vault.address,
-#                 'predictors': vaultPredictors,
-#                 'oracles': vaultOracles,
-#                 'inviters': vaultInviters,
-#                 'creators': vaultCreators,
-#                 'managers': vaultManagers})
-#     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
