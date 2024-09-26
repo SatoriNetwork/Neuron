@@ -968,9 +968,7 @@ def dashboard():
     streamOverviews = (
         [model.miniOverview() for model in start.engine.models]
         if start.engine is not None else [])  # StreamOverviews.demo()
-    start.openWallet()
-    if start.vault is not None:
-        start.openVault()
+    start.electrumxCheck()
     holdingBalance = round(
         start.wallet.balanceAmount + (
             start.vault.balanceAmount if start.vault is not None else 0), 8)
@@ -1048,14 +1046,6 @@ def dashboard():
 
 """,
     }))
-
-
-# @app.route('/fetch/balance', methods=['POST'])
-# @authRequired
-# def fetchBalance():
-#    start.openWallet()
-#    if start.vault is not None:
-#    return 'OK', 200
 
 
 @app.route('/fetch/wallet/stats/daily', methods=['GET'])
@@ -1290,8 +1280,7 @@ def chatUpdatesEnd():
 @app.route('/remove_wallet_alias/<network>')
 @authRequired
 def removeWalletAlias(network: str = 'main', alias: str = ''):
-    myWallet = start.openWallet(network=network)
-    myWallet.setAlias(None)
+    start.wallet.setAlias(None)
     start.server.removeWalletAlias()
     return wallet(network=network)
     # return render_template('wallet-page.html', **getResp({
@@ -1308,8 +1297,7 @@ def removeWalletAlias(network: str = 'main', alias: str = ''):
 @app.route('/update_wallet_alias/<network>/<alias>')
 @authRequired
 def updateWalletAlias(network: str = 'main', alias: str = ''):
-    myWallet = start.openWallet(network=network)
-    myWallet.setAlias(alias)
+    start.wallet.setAlias(alias)
     start.server.updateWalletAlias(alias)
     return wallet(network=network)
     # ('wallet-page.html', **getResp({
@@ -1327,6 +1315,7 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 @closeVault
 @authRequired
 def wallet(network: str = 'main'):
+
     def accept_submittion(passwordForm):
         _vault = start.openVault(
             password=passwordForm.password.data,
@@ -1334,9 +1323,7 @@ def wallet(network: str = 'main'):
         # if rvn is None or not rvn.isEncrypted:
         #    flash('unable to open vault')
 
-    myWallet = start.openWallet(network=network)
-
-    alias = myWallet.alias or start.server.getWalletAlias()
+    alias = start.wallet.alias or start.server.getWalletAlias()
     if config.get().get('wallet lock'):
         if request.method == 'POST':
             accept_submittion(forms.VaultPassword(formdata=request.form))
@@ -1349,8 +1336,8 @@ def wallet(network: str = 'main'):
                 'unlocked': True,
                 'walletlockEnabled': True,
                 'network': network,
-                'image': getQRCode(myWallet.address),
-                'wallet': myWallet,
+                'image': getQRCode(start.wallet.address),
+                'wallet': start.wallet,
                 'exampleAlias': getRandomName(),
                 'alias': alias,
                 'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
@@ -1372,8 +1359,8 @@ def wallet(network: str = 'main'):
         'unlocked': True,
         'walletlockEnabled': False,
         'network': network,
-        'image': getQRCode(myWallet.address),
-        'wallet': myWallet,
+        'image': getQRCode(start.wallet.address),
+        'wallet': start.wallet,
         'exampleAlias': getRandomName(),
         'alias': alias,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
