@@ -1,0 +1,68 @@
+FROM python:3.10-slim
+
+RUN apt-get update && \
+apt-get install -y build-essential && \
+apt-get install -y wget && \
+apt-get install -y curl && \
+apt-get install -y git && \
+apt-get install -y vim && \
+apt-get install -y cmake && \
+apt-get install -y dos2unix && \
+apt-get clean
+
+ARG BRANCH_FLAG=main
+RUN mkdir /Satori && \
+cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Synapse.git && \
+cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
+cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Wallet.git && \
+cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Engine.git && \
+cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Neuron.git && \
+cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
+cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
+mkdir /Satori/Neuron/models && \
+mkdir /Satori/Neuron/models/huggingface && \
+chmod +x /Satori/Neuron/satorineuron/web/start.sh && \
+chmod +x /Satori/Neuron/satorineuron/web/start_from_image.sh && \
+dos2unix /Satori/Neuron/satorineuron/web/start.sh && dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
+
+ARG GPU_FLAG=off
+ENV GPU_FLAG=${GPU_FLAG}
+ENV HF_HOME=/Satori/Neuron/models/huggingface
+# for torch: cpu cu118 cu121 cu124 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --upgrade pip && \
+if [ "$GPU_FLAG" = "on" ]; then \
+pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
+else \
+pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu; \
+fi && \
+pip install --no-cache-dir transformers==4.44.2 && \
+pip install --no-cache-dir /Satori/granite-tsfm && \
+pip install --no-cache-dir /Satori/chronos-forecasting && \
+cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+
+# satori ui
+EXPOSE 24601
+
+WORKDIR /Satori/Neuron/satorineuron/web
+CMD ["bash", "./start_from_image.sh"]
+
+
+# # local docker building
+# docker builder prune --all
+# docker buildx build --no-cache -f "C:/Users/Wil/GitHub/Neuron/Dockerfile-build-wil" --platform linux/amd64 --build-arg BRANCH_FLAG=dev --build-arg GPU_FLAG=off -t satorinet/satorineuron:latest-wil .
+# docker buildx build --no-cache -f "C:/Users/Wil/GitHub/Neuron/Dockerfile-build-wil" --platform linux/amd64 --build-arg BRANCH_FLAG=dev --build-arg GPU_FLAG=on -t satorinet/satorineuron:latest-wil-gpu .
+
+# -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine
+# docker run --rm -it --name satorineuron -p 24601:24601 satorinet/satorineuron:latest-wil bash # create temporarily (removes container after 'exit' command)
+# # create a new container instance and start it (-t includes logging, otherwise not)
+# docker run -t --name satorineuron -p 24601:24601 --env ENV=prod --env PREDICTOR=ttm satorinet/satorineuron:latest-wil python ./app.py
+# docker run -t --name satorineuron -p 24601:24601 --runtime=nvidia --gpus all --env ENV=prod --env PREDICTOR=chronos satorinet/satorineuron:latest-wil-gpu python ./app.py
+
+# # start an existing container
+# docker start satorineuron && docker exec -it satorineuron bash
+# docker start satorineuron && docker exec -t satorineuron python ./app.py
+# # docker stop satorineuron

@@ -1,0 +1,150 @@
+{% extends "basic.html" %}
+{% block content %}
+<div class="container mt-5">
+  <div class="proposal-form">
+      <h2>Create New Proposal</h2>
+      <form id="create-proposal-form">
+          <div class="form-group">
+              <label for="title">Title</label>
+              <input type="text" class="form-control" id="title" name="title" required>
+          </div>
+          <div class="form-group">
+              <label for="description">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+              <label for="image_url">Image URL</label>
+              <input type="url" class="form-control" id="image_url" name="image_url" placeholder="https://example.com/image.jpg">
+          </div>
+          <div class="form-group">
+              <label for="cost">Proposal Cost</label>
+              <input type="number" class="form-control" id="cost" name="cost" placeholder="Enter cost" required>
+          </div>
+          <div class="form-group">
+              <label>Options</label>
+              <div id="options-container">
+                  <div class="input-group mb-2">
+                      <input type="text" class="form-control option-input" placeholder="Option" value="For" required>
+                      <div class="input-group-append">
+                          <button type="button" class="btn btn-danger remove-option">Remove</button>
+                      </div>
+                  </div>
+                  <div class="input-group mb-2">
+                      <input type="text" class="form-control option-input" placeholder="Option" value="Against" required>
+                      <div class="input-group-append">
+                          <button type="button" class="btn btn-danger remove-option">Remove</button>
+                      </div>
+                  </div>
+              </div>
+              <button type="button" id="add-option" class="btn btn-secondary mt-2">Add Option</button>
+          </div>
+          <div class="form-group">
+              <label for="expires">Expiration Date</label>
+              <input type="date" class="form-control" id="expires" name="expires" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit Proposal</button>
+      </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('create-proposal-form');
+    const addOptionBtn = document.getElementById('add-option');
+    const optionsContainer = document.getElementById('options-container');
+
+    form.addEventListener('submit', submitProposal);
+    addOptionBtn.addEventListener('click', addOption);
+    optionsContainer.addEventListener('click', removeOption);
+
+    // Set minimum date for expiration to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('expires').min = today;
+
+    // Initial update of remove buttons
+    updateRemoveButtons();
+});
+
+function submitProposal(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const options = Array.from(form.querySelectorAll('.option-input')).map(input => input.value);
+
+    if (options.length < 2) {
+        alert('Please provide at least two options for the proposal.');
+        return;
+    }
+
+    const proposalData = {
+        title: form.title.value,
+        description: form.description.value,
+        image_url: form.image_url.value,
+        cost: form.cost.value,
+        options: options,
+        expires: form.expires.value
+    };
+    
+    console.log('Submitting proposal:', proposalData);
+
+    fetch('/create-proposal', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(proposalData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Server response:', data);
+        if (data.status === 'success') {
+            console.log('Proposal created successfully:', data);
+            alert('Proposal created successfully!');
+            window.location.href = '/proposals';  // Redirect to proposals list
+        } else {
+            console.error('Error creating proposal:', data);
+            alert('Failed to create proposal: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('An error occurred while creating the proposal. Please check the console for more details.');
+    });
+}
+
+function addOption() {
+    const newOption = document.createElement('div');
+    newOption.className = 'input-group mb-2';
+    newOption.innerHTML = `
+        <input type="text" class="form-control option-input" placeholder="Option" required>
+        <div class="input-group-append">
+            <button type="button" class="btn btn-danger remove-option">Remove</button>
+        </div>
+    `;
+    document.getElementById('options-container').appendChild(newOption);
+    updateRemoveButtons();
+}
+
+function removeOption(event) {
+    if (event.target.classList.contains('remove-option')) {
+        const optionsContainer = document.getElementById('options-container');
+        if (optionsContainer.children.length > 2) {
+            event.target.closest('.input-group').remove();
+            updateRemoveButtons();
+        } else {
+            alert('You must have at least two options.');
+        }
+    }
+}
+
+function updateRemoveButtons() {
+    const removeButtons = document.querySelectorAll('.remove-option');
+    const optionInputs = document.querySelectorAll('.option-input');
+    removeButtons.forEach((button) => {
+        button.disabled = optionInputs.length <= 2;
+    });
+}
+</script>
+
+{% include 'footer-on-front.html' %}
+{% endblock %}
