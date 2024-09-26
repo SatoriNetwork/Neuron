@@ -90,7 +90,11 @@
   }
   function getMineToAddressStatus() {
     console.log('getMineToAddressStatus');
+<<<<<<< HEAD
     fetch('/mining/to/address', { method: 'GET' })
+=======
+    return fetch('/mining/to/address', { method: 'GET' })
+>>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
       .then(response => {
         if (response.ok) {
           return response.text();
@@ -101,6 +105,10 @@
         console.log('getMineToAddressStatus...');
         console.log(text);
         document.getElementById("minigReward").value = text;
+<<<<<<< HEAD
+=======
+        return text;
+>>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
       }).catch(error => console.error('Error:', error));
     }
     function getMyDelegate() {
@@ -116,6 +124,10 @@
         if (text == '') {
           document.getElementById("myDelegate").innerHTML = '';
         } else {
+<<<<<<< HEAD
+=======
+          let addresses = JSON.parse(text)[0];
+>>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
           document.getElementById('myDelegate').innerHTML = `
           <div class="row" style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
             <div class="col-xl-3 col-sm-3 mb-xl-0">
@@ -125,11 +137,19 @@
                 </p>
               <center>
             </div>
+<<<<<<< HEAD
             <div class="col-xl-6 col-sm-6 mb-xl-0">
               <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
                 <div class="d-flex px-3 py-1" style="padding-right: 1rem; margin-left:auto; margin-right: auto;">
                   <p class="mb-1 {% if darkmode %}dark-colors{% endif %}", style="padding-top: .25rem;">
                     ${text}
+=======
+            <div class="col-xl-6 col-sm-6 mb-xl-0 text-center">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">
+                <div class="d-flex justify-content-center px-3 py-1" style="padding-right: 1rem; margin: 0 auto;">
+                  <p class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;color: grey;">
+                    wallet: ${addresses.wallet}<br>vault: ${addresses.vault}
+>>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
                   </p>
                 </div>
               </h6>
@@ -137,7 +157,11 @@
             <div class="col-xl-3 col-sm-3 mb-xl-0">
               <h6 class="mb-0 text-lg" title="remove" style="margin-left: 1rem; margin-right:1rem;">
                 <a href="#" onclick="removeDelegate()">
+<<<<<<< HEAD
                   <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
+=======
+                  <button class="btn btn-link text-dark fixed-plugin-close-button">
+>>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
                     <i class="material-icons" style="font-size: 24px;">clear</i>
                   </button>
                 </a>
@@ -150,8 +174,20 @@
     }
     document.addEventListener('DOMContentLoaded', (event) => {
       reportVault();
+<<<<<<< HEAD
       getMineToAddressStatus();
       getMyDelegate();
+=======
+      getMineToAddressStatus().then(text => {
+        //if (document.getElementById("minigReward").value == '')
+        if (text == '') {
+          document.getElementById("minigReward").value = '{{ wallet.address }}';
+          setRewardAddress();
+        }
+      });
+      getMyDelegate();
+
+>>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
     });
     function setRewardAddress() {
       address = document.getElementById("minigReward").value;
