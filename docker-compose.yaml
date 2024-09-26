@@ -22,3 +22,15 @@ services:
 networks:
   wireguard-net:
     external: true
+# docker run -d --name=wireguard \
+#   --cap-add=NET_ADMIN --cap-add=SYS_MODULE \
+#   -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC \
+#   -v ./config:/config \
+#   -v /lib/modules:/lib/modules \
+#   -p 51820:51820/udp \
+#   --sysctl="net.ipv4.conf.all.src_valid_mark=1" \
+#   --network=wireguard-net \
+#   linuxserver/wireguard
+
+# docker run -d --name=wireguard --cap-add=NET_ADMIN --cap-add=SYS_MODULE -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC -v ./config:/config -v /lib/modules:/lib/modules -p 51820:51820/udp --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net linuxserver/wireguard
+# docker run -d --name=peer1 --cap-add=NET_ADMIN --cap-add=SYS_MODULE -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC  -v /config:/config -p 51820:51820/udp --sysctl="net.ipv4.conf.all.src_valid_mark=1"  --network=wireguard-net  linuxserver/wireguard

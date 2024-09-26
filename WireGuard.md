@@ -34,6 +34,14 @@ If you want to run the container directly without Docker Compose, use:
 ```
     docker run -d --name=wireguard --cap-add=NET_ADMIN --cap-add=SYS_MODULE -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC -v c:\repos\satori\Neuron\config:/config  -p 51820:51820/udp --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net linuxserver/wireguard
 
+    docker run -d --name=wireguard --cap-add=NET_ADMIN --cap-add=SYS_MODULE \
+    -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC \
+    -v c:\repos\satori\Neuron\config:/config \
+    -p 51820:51820/udp --sysctl="net.ipv4.conf.all.src_valid_mark=1" \
+    --network=wireguard-net \
+    linuxserver/wireguard \
+    /bin/sh -c "apk update && apk add --no-cache python3 py3-pip && tail -f /dev/null"
+
 ```
 Be sure to replace /path/to/config with the path where you want to store WireGuard configuration files.
 

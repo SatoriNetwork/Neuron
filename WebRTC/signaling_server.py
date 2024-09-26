@@ -16,7 +16,8 @@ async def signaling(websocket, path):
     finally:
         connected.remove(websocket)
 
-start_server = websockets.serve(signaling, "0.0.0.0", 8765)
+start_server = websockets.serve(signaling, "0.0.0.0", 51820)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
+
