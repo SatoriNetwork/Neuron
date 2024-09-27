@@ -187,8 +187,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.networkIsTest(network):
             self._initialize_wallet('ravencoin')
             self._initialize_vault("ravencoin", None, False)
-        self._initialize_wallet('evrmore', self.electrumx)
-        self._initialize_vault("evrmore", None, False, self.electrumx)
+        walletInstance = self._initialize_wallet('evrmore', self.electrumx)
+        vaultInstance = self._initialize_vault("evrmore", None, False, self.electrumx)
+        walletInstance.setupSubscriptions()
+        vaultInstance.setupSubscriptions()
 
     # new method
     def _initialize_wallet(self, network: str, connection: Electrumx = None) -> Union[EvrmoreWallet, RavencoinWallet, None]:
@@ -202,9 +204,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 walletPath=config.walletPath('wallet.yaml'),
                 reserve=0.25,
                 isTestnet=self.networkIsTest(network),
-                connection=connection)
-            wallet()
+                connection=connection,
+                type="wallet")
             setattr(self, wallet_attr, wallet)
+            wallet()
             logging.info(f'initialized {network} wallet', color='green')
             return wallet
         except Exception as e:
@@ -234,9 +237,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 reserve=0.25,
                 isTestnet=self.networkIsTest(network),
                 password=password,
-                connection=connection)
-            vault()
+                connection=connection,
+                type="vault")
             setattr(self, vault_attr, vault)
+            vault()
+            logging.info(f'initialized {network} Vault', color='green')
             return vault
         except Exception as e:
             logging.error(
