@@ -33,10 +33,10 @@
       <hr class="dark horizontal my-3">
       <center>
         <p id="showKey" class="cursor-pointer danger text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('sensitiveKey').style.display='block';document.getElementById('showKey').style.display='none';">
-          Show private key and seed words
+          Show private key
         </p>
         <div id="sensitiveKey" style="display: none; margin-left:2rem; margin-right:2rem;">
-          <p class="cursor-pointer text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom:1rem;" onclick="document.getElementById('showKey').style.display='block';document.getElementById('sensitiveKey').style.display='none';">Hide private key and seed words</p>
+          <p class="cursor-pointer text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom:1rem;" onclick="document.getElementById('showKey').style.display='block';document.getElementById('sensitiveKey').style.display='none';">Hide private key</p>
           PRIVATE KEY:<br>{{ wallet.privateKey }}
           <br>
           <br>

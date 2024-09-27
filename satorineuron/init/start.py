@@ -188,7 +188,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self._initialize_wallet('ravencoin')
             self._initialize_vault("ravencoin", None, False)
         walletInstance = self._initialize_wallet('evrmore', self.electrumx)
-        vaultInstance = self._initialize_vault("evrmore", None, False, self.electrumx)
+        vaultInstance = self._initialize_vault(
+            "evrmore", None, False, self.electrumx)
         walletInstance.setupSubscriptions()
         vaultInstance.setupSubscriptions()
 
@@ -196,24 +197,24 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def _initialize_wallet(self, network: str, connection: Electrumx = None) -> Union[EvrmoreWallet, RavencoinWallet, None]:
         wallet_class = EvrmoreWallet if network == 'evrmore' else RavencoinWallet
         wallet_attr = '_evrmoreWallet' if network == 'evrmore' else '_ravencoinWallet'
-        try:
-            existing_wallet = getattr(self, wallet_attr)
-            if existing_wallet is not None:
-                return existing_wallet
-            wallet = wallet_class(
-                walletPath=config.walletPath('wallet.yaml'),
-                reserve=0.25,
-                isTestnet=self.networkIsTest(network),
-                connection=connection,
-                type="wallet")
-            setattr(self, wallet_attr, wallet)
-            wallet()
-            logging.info(f'initialized {network} wallet', color='green')
-            return wallet
-        except Exception as e:
-            logging.error(
-                f'failed to initialize {network} wallet: {str(e)}', color='red')
-            return None
+        # try:
+        existing_wallet = getattr(self, wallet_attr)
+        if existing_wallet is not None:
+            return existing_wallet
+        wallet = wallet_class(
+            walletPath=config.walletPath('wallet.yaml'),
+            reserve=0.25,
+            isTestnet=self.networkIsTest(network),
+            connection=connection,
+            type="wallet")
+        setattr(self, wallet_attr, wallet)
+        wallet()
+        logging.info(f'initialized {network} wallet', color='green')
+        return wallet
+        # except Exception as e:
+        #    logging.error(
+        #        f'failed to initialize {network} wallet: {str(e)}', color='red')
+        #    return None
 
     # new method
     def _initialize_vault(self, network: str, password: Union[str, None] = None, create: bool = False, connection: Electrumx = None,) -> Union[EvrmoreWallet, RavencoinWallet, None]:
@@ -382,15 +383,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def createElectrumxConnection(self):
         servers: list[str] = [
-            '146.190.149.237:50002',
-            '146.190.38.120:50002',
-            'electrum1-mainnet.evrmorecoin.org:50002',
-            'electrum2-mainnet.evrmorecoin.org:50002']
+            '146.190.149.237:50001',
+            '146.190.38.120:50001',
+            'electrum1-mainnet.evrmorecoin.org:50001',
+            'electrum2-mainnet.evrmorecoin.org:50001']
         hostPort = random.choice(servers)
         self.electrumx = Electrumx(
             host=hostPort.split(':')[0],
-            port=int(hostPort.split(':')[1]),
-            ssl=True)
+            port=int(hostPort.split(':')[1]))
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
