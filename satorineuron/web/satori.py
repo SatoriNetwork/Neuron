@@ -1713,12 +1713,6 @@ def proposals():
 def getProposals():
     try:
         proposals_data = start.server.getProposals()
-
-        # Log the proposals data
-        print("Fetched proposals data:", json.dumps(proposals_data, indent=2))
-
-        # We're not doing any vote-related processing here anymore
-
         return jsonify({
             'status': 'success',
             'proposals': proposals_data,
@@ -1726,8 +1720,8 @@ def getProposals():
 
     except Exception as e:
         error_message = f"Failed to fetch proposals: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.error(error_message)
+        logging.error(traceback.format_exc())
         return jsonify({
             'status': 'error',
             'message': error_message
@@ -1782,6 +1776,10 @@ def getProposalVotes(id):
             user_wallet_address = start.wallet.address
             user_has_voted = any(
                 vote['address'] == user_wallet_address for vote in votes)
+            user_voted = None
+            if user_has_voted:
+                user_voted = next(
+                    vote['vote'] for vote in votes if vote['address'] == user_wallet_address)
             voting_started = bool(votes)
             can_vote = str(proposal['wallet_id']) != user_wallet_address
             disable_voting = not can_vote or user_has_voted
@@ -1789,6 +1787,7 @@ def getProposalVotes(id):
                 'status': 'success',
                 'votes': votes,
                 'user_has_voted': user_has_voted,
+                'user_voted': user_voted,
                 'voting_started': voting_started,
                 'can_vote': can_vote,
                 'disable_voting': disable_voting

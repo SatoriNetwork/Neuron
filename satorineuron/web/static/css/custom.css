@@ -747,7 +747,6 @@ input[readonly] {
 
 /* Voted message */
 .proposal-voted-message {
-  color: #28a745;
   font-style: italic;
   margin-top: 10px;
   display: none;
@@ -855,7 +854,6 @@ input[readonly] {
 
 /* Adjust the proposal list container if needed */
 .proposal-list-container {
-  margin-top: 10px;
 }
 
 /* You may need to adjust other elements as well, depending on your layout */

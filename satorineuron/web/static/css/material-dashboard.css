@@ -3428,9 +3428,9 @@ textarea.form-control-lg {
   --bs-btn-active-bg: #F6B042;
   --bs-btn-active-border-color: #F6B042;
   --bs-btn-active-shadow: none;
-  --bs-btn-disabled-color: #000;
-  --bs-btn-disabled-bg: #F6B042;
-  --bs-btn-disabled-border-color: #F6B042;
+  --bs-btn-disabled-color: #707070;
+  --bs-btn-disabled-bg: #e0e0e0;
+  --bs-btn-disabled-border-color: #e0e0e0;
 }
 
 .btn-secondary {
@@ -18976,8 +18976,8 @@ body.dark-version {
 }
 .input-group.input-group-outline .form-label {
   display: flex;
-  /*line-height: 3.925 !important;*/ 
-  line-height: 0 !important; /* work around to forms already being filled and label showing up over content. requires br */ 
+  /*line-height: 3.925 !important;*/
+  line-height: 0 !important; /* work around to forms already being filled and label showing up over content. requires br */
   top: -0.375rem;
   margin-bottom: 0;
 }
