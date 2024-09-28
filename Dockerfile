@@ -84,18 +84,18 @@ CMD ["bash", "./start_from_image.sh"]
 # docker exec -it satorineuron bash
 
 ## BUILD PROCESS
-# \Satori> docker buildx prune --all
-# \Satori> docker builder prune --all
-# \Satori> docker buildx create --use
+# \Neuron> docker buildx prune --all
+# \Neuron> docker builder prune --all
+# \Neuron> docker buildx create --use
 ## dev version:
-# \Satori> docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=dev  -t satorinet/satorineuron:test     --push .
-# \Satori> docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test     --push .
-# \Satori> docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=on  --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test-gpu --push .
-# \Satori> docker pull satorinet/satorineuron:test
-# \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod                         satorinet/satorineuron:test bash
-# \Satori> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod --env PREDICTOR=xgboost satorinet/satorineuron:test bash
-# \Satori> docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
-# \Satori> docker push satorinet/satorineuron:latest
+# \Neuron> docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=dev  -t satorinet/satorineuron:test     --push .
+# \Neuron> docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test     --push .
+# \Neuron> docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=on  --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test-gpu --push .
+# \Neuron> docker pull satorinet/satorineuron:test
+# \Neuron> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod                         satorinet/satorineuron:test bash
+# \Neuron> docker run --rm -it --name satorineuron -p 24601:24601 --env ENV=prod --env PREDICTOR=xgboost satorinet/satorineuron:test bash
+# \Neuron> docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
+# \Neuron> docker push satorinet/satorineuron:latest
 
 
 ## RUN CPU AND GPU EXAMPLES:
