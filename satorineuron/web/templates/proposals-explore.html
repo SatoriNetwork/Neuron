@@ -6,7 +6,6 @@
       margin-bottom: 10px;
   }
   .vote-btn {
-      margin-right: 10px;
   }
   .vote-stats {
       font-size: 0.9em;
@@ -72,7 +71,7 @@
       align-items: center;
       flex: 1;
   }
-  .vote-btn {
+  .vote-btn-old {
       width: 100%;
       padding: 10px;
       font-size: 16px;
@@ -156,9 +155,9 @@
         </div>
         <div>
           <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-            Proposals allow the community to vote on the direction of the project.
+            Proposals allow the community to direct the project.
             <br><br>
-            Select a proposal from the list on the left to view its details.
+            Select a proposal from the list to vote.
             <br><br>
             <br><br>
           </p>
@@ -296,22 +295,24 @@
             ${imageHtml}
           </div>
           <div class="row proposal-info mb-2">
-            <div class="col-xl-4 col-sm-4 mb-xl-0">
-              <dt>Cost</dt>
+            <div class="col-xl-3 col-sm-3 mb-xl-0">
+              <dt>Expires</dt>
+              <dd>${new Date(proposal.expires).toLocaleDateString()}</dd>
+            </div>
+            <div class="col-xl-3 col-sm-3 mb-xl-0">
+              <dt>Estimated Cost</dt>
               <dd>${proposal.cost}</dd>
             </div>
-            <div class="col-xl-4 col-sm-4 mb-xl-0">
-              <dt>Proposal Date</dt>
-              <dd>${new Date(proposal.proposal_date).toLocaleString()}</dd>
-            </div>
-            <div class="col-xl-4 col-sm-4 mb-xl-0">
-              <dt>Expires</dt>
-              <dd>${new Date(proposal.expires).toLocaleString()}</dd>
-              ${proposal.complete_date ? `<!--
-                <dt>Completed</dt>
-                <dd>${new Date(proposal.complete_date).toLocaleString()}</dd>
-                -->` : ''}
-            </div>
+            <!--<div class="col-xl-3 col-sm-3 mb-xl-0">
+              <dt>Proposed on</dt>
+              <dd>${new Date(proposal.proposal_date).toLocaleDateString()}</dd>
+            </div>-->
+            <!--<div class="col-xl-3 col-sm-3 mb-xl-0">
+              ${proposal.complete_date ? `
+              <dt>Completed</dt>
+              <dd>${new Date(proposal.complete_date).toLocaleDateString()}</dd>
+              ` : ''}
+            </div>-->
           </div>
           <div class="row proposal-info mb-5">
             <div class="col-xl-12 col-sm-12 mb-xl-0">
@@ -322,9 +323,12 @@
           <div id="vote-options-${proposal.id}" class="vote-options">
             ${options.map(option => `
               <div class="vote-option">
-                <button class="btn btn-primary vote-btn" onclick="submitVote(${proposal.id}, '${option}')">
+                <div class="input-group input-group-outline is-filled" onclick="">
+                  <input class="tight form-control vote-btn" id="submit" name="submit" size="32" type="submit" value="${option}" onfocus="focused(this)" onfocusout="defocused(this)" onclick="submitVote(${proposal.id}, '${option}')">
+                </div>
+                <!--<button class="btn btn-primary vote-btn-old" onclick="submitVote(${proposal.id}, '${option}')">
                   ${option}
-                </button>
+                </button>-->
                 <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">0%</div>
               </div>
             `).join('')}
@@ -366,7 +370,11 @@
     if (proposalElement) {
       const voteButtons = proposalElement.querySelectorAll('.vote-btn');
       voteButtons.forEach(button => {
-        if (data.user_has_voted && button.innerText.toLowerCase() == data.user_voted.toLowerCase()) {
+        if (
+          data.user_has_voted &&
+          //button.innerText.toLowerCase() == data.user_voted.toLowerCase()
+          button.value.toLowerCase() == data.user_voted.toLowerCase()
+        ) {
           button.disabled = data.disable_voting;
           button.style.backgroundColor = '#F6B04266';
         } else {

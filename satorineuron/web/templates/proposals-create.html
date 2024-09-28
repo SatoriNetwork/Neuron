@@ -1,5 +1,5 @@
 {% block content %}
-<div class="row">
+<div class="row mb-0">
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
@@ -17,7 +17,7 @@
       </div>
       <div id="createProposalBody" class="collapse hide">
         <p id='explainRewardAddress' class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-          Proposals allow the community to vote on the direction of the project.
+          Proposals allow the community to direct the project.
           <br><br>
         </p>
         <div style="padding: 1.25rem;">
@@ -56,6 +56,14 @@
             </div>
             <div class="form-group mb-4">
               <div class="tight text-format-table-header">
+                <label for="expires">Expiration Date</label>
+              </div>
+              <div class="input-group input-group-outline">
+                <input type="date" class="tight form-control {% if darkmode %}dark-colors{% endif %}" id="expires" name="expires" required>
+              </div>
+            </div>
+            <div class="form-group mb-4">
+              <div class="tight text-format-table-header">
                 <label for="options">Options</label>
               </div>
               <div id="options-container" class="row">
@@ -64,9 +72,7 @@
                     <input type="text" class="tight form-control {% if darkmode %}dark-colors{% endif %} option-input" placeholder="Option" value="For" required>
                   </div>
                   <div class="input-group-append">
-                    <div style="padding-left: 1.25rem;">
-                      <button type="button" class="btn btn-secondary" onClick="removeOption('option-0');">Remove</button>
-                    </div>
+                    <button type="button" class="btn btn-secondary" onClick="removeOption('option-0');">Remove</button>
                   </div>
                 </div>
                 <div id="option-1" class="col-xl-2 col-sm-6">
@@ -74,9 +80,7 @@
                     <input type="text" class="tight form-control {% if darkmode %}dark-colors{% endif %} option-input" placeholder="Option" value="Against" required>
                   </div>
                   <div class="input-group-append">
-                    <div style="padding-left: 1.25rem;">
-                      <button type="button" class="btn btn-secondary" onClick="removeOption('option-1');">Remove</button>
-                    </div>
+                    <button type="button" class="btn btn-secondary" onClick="removeOption('option-1');">Remove</button>
                   </div>
                 </div>
               </div>
@@ -84,16 +88,11 @@
                 <button type="button" id="add-option" class="btn btn-secondary mt-2" onClick="addOption();">Add Option</button>
               </div>
             </div>
-            <div class="form-group mb-4">
-              <div class="tight text-format-table-header">
-                <label for="expires">Expiration Date</label>
-              </div>
-              <div class="input-group input-group-outline">
-                <input type="date" class="tight form-control {% if darkmode %}dark-colors{% endif %}" id="expires" name="expires" required>
-              </div>
-            </div>
             <div class="input-group input-group-outline">
-              <button type="submit" class="btn btn-primary" style='box-shadow:unset;'>Submit Proposal</button>
+              <!--<button type="submit" class="btn btn-primary" style='box-shadow:unset;'>Submit Proposal</button>-->
+              <div class="input-group input-group-outline is-filled" onclick="">
+                <input class="tight form-control" id="submit" name="submit" size="32" type="submit" value="Submit Proposal" onfocus="focused(this)" onfocusout="defocused(this)">
+              </div>
             </div>
           </form>
         </div>
@@ -172,9 +171,7 @@
             <input type="text" class="tight form-control {% if darkmode %}dark-colors{% endif %} option-input" placeholder="Option" value="Other" required>
           </div>
           <div class="input-group-append">
-            <div style="padding-left: 1.25rem;">
-              <button type="button" class="btn btn-secondary" onClick="removeOption('${newOption.id}');">Remove</button>
-            </div>
+            <button type="button" class="btn btn-secondary" onClick="removeOption('${newOption.id}');">Remove</button>
           </div>
     `;
     document.getElementById('options-container').appendChild(newOption);
