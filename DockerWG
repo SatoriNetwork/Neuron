@@ -1,0 +1,32 @@
+# Use the official linuxserver/wireguard base image
+FROM linuxserver/wireguard
+
+# Set environment variables
+ENV PUID=1000 \
+    PGID=1000 \
+    TZ=Etc/UTC
+
+# Update packages and install Python3 and pip
+RUN apk update && \
+    apk add --no-cache python3 py3-pip
+
+# Ensure the configuration directory exists
+VOLUME ["/config"]
+
+# Expose the WireGuard port
+EXPOSE 51820/udp
+
+# # Set sysctl settings
+# CMD sysctl -w net.ipv4.conf.all.src_valid_mark=1 && \
+#     tail -f /dev/null
+
+
+# Build the Docker image
+# docker build --no-cache -f "Neuron/DockerWG" -t satorinet/satorineuron:WG .
+# docker build -t linuxserver/wireguard .
+
+
+# Run the container
+
+# docker run -d --name=wireguard --cap-add=NET_ADMIN --cap-add=SYS_MODULE -v c:\repos\satori\Neuron\config:/config -p 51820:51820/udp --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net satorinet/satorineuron:WG
+# docker exec -it wireguard /bin/bash

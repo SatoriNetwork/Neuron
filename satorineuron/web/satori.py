@@ -405,54 +405,6 @@ def backup(target: str = 'satori'):
         return redirect(url_for('sendStatic', path=f'download/{target}.zip'))
     flash('please unlock the vault first')
     return redirect(url_for('dashboard'))
-<<<<<<< HEAD
-=======
-
-
-@app.route('/import_wallet', methods=['POST'])
-@authRequired
-def import_wallet():
-    if start.vault is None or start.vault.isEncrypted:
-        return jsonify({'success': False, 'message': 'Please unlock the vault first'})
-
-    if 'files' not in request.files:
-        return jsonify({'success': False, 'message': 'No files part in the request'})
-
-    files = request.files.getlist('files')
-
-    wallet_path = '/Satori/Neuron/wallet'
-    temp_path = '/Satori/Neuron/temp_wallet'
-
-    # Create a temporary directory
-    os.makedirs(temp_path, exist_ok=True)
-
-    try:
-        for file in files:
-            if file.filename.startswith('wallet/'):
-                file_path = os.path.join(temp_path, file.filename[7:])
-                os.makedirs(os.path.dirname(file_path), exist_ok=True)
-                file.save(file_path)
-
-        # Backup current wallet
-        if os.path.exists(wallet_path):
-            shutil.move(wallet_path, wallet_path + '_backup')
-
-        # Move new wallet into place
-        shutil.move(temp_path, wallet_path)
-
-        return jsonify({'success': True})
-    except Exception as e:
-        # If any error occurs, restore the old wallet
-        if os.path.exists(wallet_path + '_backup'):
-            shutil.rmtree(wallet_path, ignore_errors=True)
-            shutil.move(wallet_path + '_backup', wallet_path)
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        # Clean up
-        shutil.rmtree(temp_path, ignore_errors=True)
-        if os.path.exists(wallet_path + '_backup'):
-            shutil.rmtree(wallet_path + '_backup', ignore_errors=True)
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
 
 
 @app.route('/restart', methods=['GET'])
@@ -1599,7 +1551,6 @@ def proxyParentStatus():
 
 
 @app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
-<<<<<<< HEAD
 @authRequired
 def charityProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyCharity(address, childId=id)
@@ -1618,8 +1569,6 @@ def charityNotProxyChild(address: str, id: int):
 
 
 @app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
-=======
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
 @authRequired
 def charityProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyCharity(address, childId=id)
@@ -1920,7 +1869,6 @@ def systemMetrics():
         'version': VERSION,
         'timestamp': time.time(),
     }), 200
-<<<<<<< HEAD
 
 
 # @app.route('/vote/submit/manifest/vault', methods=['POST'])
@@ -1957,8 +1905,6 @@ def systemMetrics():
 #                 'creators': vaultCreators,
 #                 'managers': vaultManagers})
 #     return jsonify({'message': 'Manifest votes received successfully'}), 200
-=======
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
 
 
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
