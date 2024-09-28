@@ -79,7 +79,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 }
 
 .sidenav-header {
-  height: inherit; 
+  height: inherit;
 }
 
 .bg-gradient-dark {
@@ -405,8 +405,8 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 
 
 .overlayWhite {
-  position: absolute; 
-  bottom: 0; 
+  position: absolute;
+  bottom: 0;
   background: rgba(255, 255, 255, 0.8); /* White see-through */
   width: 100%;
   transition: .5s ease;
@@ -420,8 +420,8 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 
 
 .overlayBlack {
-	position: absolute; 
-	bottom: 0; 
+	position: absolute;
+	bottom: 0;
 	background: rgba(0, 0, 0, 0.8); /* Black see-through */
 	width: 100%;
 	transition: .5s ease;
@@ -432,7 +432,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 	height: 100%;
 	z-index: 10000;
   }
-  
+
 .overlayForLoading {
 	width: 100%;
 	height: 100%;
@@ -466,7 +466,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
   outline-width: 2px;
 }
 .yellow-dark-selected {
-  /*outline-color:  #F9ED4E; 
+  /*outline-color:  #F9ED4E;
   outline-style: solid;
   outline-offset: -6px;
   border-radius: 1rem;
@@ -873,7 +873,7 @@ input[readonly] {
   .proposals-wrapper {
       margin-top: -10px; /* Less negative margin on smaller screens */
   }
-  
+
   .proposal-container {
       margin-top: 5px;
   }

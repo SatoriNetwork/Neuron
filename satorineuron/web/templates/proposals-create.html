@@ -1,54 +1,73 @@
-{% extends "basic.html" %}
 {% block content %}
-<div class="container mt-5">
-  <div class="proposal-form">
-      <h2>Create New Proposal</h2>
-      <form id="create-proposal-form">
+<div class="row">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-12 col-sm-12 mb-xl-0">
+          <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
+                  style="padding-top:1.5rem; text-transform: none;"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#createProposalBody"
+                  aria-expanded="false"
+                  aria-controls="createProposalBody">
+                  <h4 class="{% if darkmode %}dark-colors{% endif %}">Create New Proposal</h4>
+          </button>
+        </div>
+      </div>
+      <div id="createProposalBody" class="collapse show">
+        <p id='explainRewardAddress' class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          Mine directly to your vault or any other address by pasting it here.
+          <br><br>
+        </p>
+        <form id="create-proposal-form" action="#" method="POST">
           <div class="form-group">
-              <label for="title">Title</label>
-              <input type="text" class="form-control" id="title" name="title" required>
+            <label for="title">Title</label>
+            <input type="text" class="tight form-control {% if darkmode %}dark-colors{% endif %}" id="title" name="title" required>
           </div>
           <div class="form-group">
-              <label for="description">Description</label>
-              <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            <label for="description">Description</label>
+            <textarea class="tight form-control {% if darkmode %}dark-colors{% endif %}" id="description" name="description" rows="3" required></textarea>
           </div>
           <div class="form-group">
-              <label for="image_url">Image URL</label>
-              <input type="url" class="form-control" id="image_url" name="image_url" placeholder="https://example.com/image.jpg">
+            <label for="image_url">Image URL</label>
+            <input type="url" class="tight form-control {% if darkmode %}dark-colors{% endif %}" id="image_url" name="image_url" placeholder="https://example.com/image.jpg">
           </div>
           <div class="form-group">
-              <label for="cost">Proposal Cost</label>
-              <input type="number" class="form-control" id="cost" name="cost" placeholder="Enter cost" required>
+            <label for="cost">Proposal Cost</label>
+            <input type="number" class="tight form-control {% if darkmode %}dark-colors{% endif %}" id="cost" name="cost" placeholder="Enter cost" required>
           </div>
           <div class="form-group">
-              <label>Options</label>
-              <div id="options-container">
-                  <div class="input-group mb-2">
-                      <input type="text" class="form-control option-input" placeholder="Option" value="For" required>
-                      <div class="input-group-append">
-                          <button type="button" class="btn btn-danger remove-option">Remove</button>
-                      </div>
-                  </div>
-                  <div class="input-group mb-2">
-                      <input type="text" class="form-control option-input" placeholder="Option" value="Against" required>
-                      <div class="input-group-append">
-                          <button type="button" class="btn btn-danger remove-option">Remove</button>
-                      </div>
-                  </div>
+            <label>Options</label>
+            <div id="options-container">
+              <div class="input-group mb-2">
+                <input type="text" class="form-control option-input" placeholder="Option" value="For" required>
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-danger remove-option">Remove</button>
+                </div>
               </div>
-              <button type="button" id="add-option" class="btn btn-secondary mt-2">Add Option</button>
+              <div class="input-group mb-2">
+                <input type="text" class="form-control option-input" placeholder="Option" value="Against" required>
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-danger remove-option">Remove</button>
+                </div>
+              </div>
+            </div>
+            <button type="button" id="add-option" class="btn btn-secondary mt-2">Add Option</button>
           </div>
           <div class="form-group">
-              <label for="expires">Expiration Date</label>
-              <input type="date" class="form-control" id="expires" name="expires" required>
+            <label for="expires">Expiration Date</label>
+            <input type="date" class="tight form-control {% if darkmode %}dark-colors{% endif %}" id="expires" name="expires" required>
           </div>
           <button type="submit" class="btn btn-primary">Submit Proposal</button>
-      </form>
+        </form>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('create-proposal-form');
     const addOptionBtn = document.getElementById('add-option');
     const optionsContainer = document.getElementById('options-container');
@@ -63,11 +82,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial update of remove buttons
     updateRemoveButtons();
-});
+  });
 
-function submitProposal(event) {
+  function submitProposal(event) {
     event.preventDefault();
-    
+
     const form = event.target;
     const options = Array.from(form.querySelectorAll('.option-input')).map(input => input.value);
 
@@ -84,7 +103,7 @@ function submitProposal(event) {
         options: options,
         expires: form.expires.value
     };
-    
+
     console.log('Submitting proposal:', proposalData);
 
     fetch('/create-proposal', {
@@ -112,7 +131,7 @@ function submitProposal(event) {
     });
 }
 
-function addOption() {
+  function addOption() {
     const newOption = document.createElement('div');
     newOption.className = 'input-group mb-2';
     newOption.innerHTML = `
@@ -123,9 +142,9 @@ function addOption() {
     `;
     document.getElementById('options-container').appendChild(newOption);
     updateRemoveButtons();
-}
+  }
 
-function removeOption(event) {
+  function removeOption(event) {
     if (event.target.classList.contains('remove-option')) {
         const optionsContainer = document.getElementById('options-container');
         if (optionsContainer.children.length > 2) {
@@ -135,16 +154,15 @@ function removeOption(event) {
             alert('You must have at least two options.');
         }
     }
-}
+  }
 
-function updateRemoveButtons() {
+  function updateRemoveButtons() {
     const removeButtons = document.querySelectorAll('.remove-option');
     const optionInputs = document.querySelectorAll('.option-input');
     removeButtons.forEach((button) => {
         button.disabled = optionInputs.length <= 2;
     });
-}
+  }
 </script>
 
-{% include 'footer-on-front.html' %}
 {% endblock %}
