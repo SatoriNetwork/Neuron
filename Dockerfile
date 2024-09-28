@@ -9,8 +9,18 @@ FROM python:3.10-slim AS builder
 
 # System dependencies
 RUN apt-get update && \
-    apt-get install -y build-essential wget curl git vim cmake dos2unix \
-    wireguard iptables iproute2 netcat-openbsd iputils-ping && \
+    apt-get install -y build-essential && \
+    apt-get install -y wget && \
+    apt-get install -y curl && \
+    apt-get install -y git && \
+    apt-get install -y vim && \
+    apt-get install -y cmake && \
+    apt-get install -y dos2unix &&\
+    apt-get install -y wireguard && \
+    apt-get install -y iptables && \
+    apt-get install -y iproute2 && \
+    apt-get install -y netcat-openbsd && \
+    apt-get install -y iputils-ping && \
     apt-get clean
 
 # File system setup
@@ -104,6 +114,6 @@ CMD ["bash", "./start_from_image.sh"]
 
 # wireguard
 # docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --env ENV=prod satorinet/satorineuron:latest bash
-# docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --env ENV=prod satorinet/satorineuron:latest bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net --env ENV=prod satorinet/satorineuron:latest bash
 # docker build --no-cache -f "Neuron/Dockerfile" -t satorinet/satorineuron:latest .
 # docker build --no-cache -f Dockerfile -t satorinet/satorineuron:latest .
