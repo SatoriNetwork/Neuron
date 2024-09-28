@@ -9,18 +9,8 @@ FROM python:3.10-slim AS builder
 
 # System dependencies
 RUN apt-get update && \
-    apt-get install -y build-essential && \
-    apt-get install -y wget && \
-    apt-get install -y curl && \
-    apt-get install -y git && \
-    apt-get install -y vim && \
-    apt-get install -y cmake && \
-    apt-get install -y dos2unix &&\
-    apt-get install -y wireguard && \
-    apt-get install -y iptables && \
-    apt-get install -y iproute2 && \
-    apt-get install -y netcat-openbsd && \
-    apt-get install -y iputils-ping && \
+    apt-get install -y build-essential wget curl git vim cmake dos2unix \
+    wireguard iptables iproute2 netcat-openbsd iputils-ping && \
     apt-get clean
 
 # File system setup
