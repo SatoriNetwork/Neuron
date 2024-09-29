@@ -1477,9 +1477,13 @@ def vault():
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
+        myWallet = start.openWallet(network='main')
+        alias = myWallet.alias or start.server.getWalletAlias()
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
+            'alias': alias,
+            'exampleAlias': getRandomName(),
             'image': getQRCode(start.vault.address),
             'network': start.network,  # change to main when ready
             'minedtovault': start.mineToVault,  # start.server.minedToVault(),
