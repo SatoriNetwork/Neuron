@@ -103,6 +103,8 @@
       console.error('Error:', error);
     });
   }
+
+  var tableData;
   function getProxyParentStatus() {
     fetch('/proxy/parent/status', { method: 'GET' })
     .then(response => {
@@ -112,6 +114,7 @@
         throw new Error('Network response was not ok.');
       }
     }).then(text => {
+      tableData = JSON.parse(text);
       let parsedData = JSON.parse(text);
       if (parsedData.length > 0) {
         createTable(text);
@@ -416,7 +419,7 @@
 
     const csvRows = [];
     csvRows.push(headers.join(','));
-    
+
     jsonArray.forEach(obj => {
         const values = headers.map(header => {
             const escaped = ('' + obj[header]).replace(/"/g, '""');
@@ -441,18 +444,25 @@
   }
 
   function getCsv(){
-    fetch('/proxy/parent/status', { method: 'GET' })
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw new Error('Network response was not ok.');
-      }
-    }).then(json => {
-        const excludedColumns = ["parent", "child", "charity"];
-        const csvOutput = jsonToCsv(json, excludedColumns);
-        downloadCsv(csvOutput, "delegate.csv")
-    }).catch(error => console.error('Error:', error));
+    if (!tableData) {
+      fetch('/proxy/parent/status', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(json => {
+          tableData = json;
+          const excludedColumns = ["parent", "child", "charity"];
+          const csvOutput = jsonToCsv(json, excludedColumns);
+          downloadCsv(csvOutput, "delegate.csv")
+      }).catch(error => console.error('Error:', error));
+    } else {
+      const excludedColumns = ["parent", "child", "charity"];
+      const csvOutput = jsonToCsv(tableData, excludedColumns);
+      downloadCsv(csvOutput, "delegate.csv")
+    }
   }
 </script>
 {% endblock %}
