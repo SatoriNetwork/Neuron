@@ -192,6 +192,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             "evrmore", None, False, self.electrumx)
         walletInstance.setupSubscriptions()
         vaultInstance.setupSubscriptions()
+        # listen to all subscriptions
+        # Start a thread to listen for updates
+        # self.subscriptions['scripthash'] = Thread(
+        #    target=self._processNotifications)
+        # self.subscriptions['scripthash'].start()
 
     # new method
     def _initialize_wallet(self, network: str, connection: Electrumx = None) -> Union[EvrmoreWallet, RavencoinWallet, None]:
