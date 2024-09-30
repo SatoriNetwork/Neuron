@@ -1566,6 +1566,38 @@ def stakeForAddress(address: str):
     return f'Failed to report vault: {result}', 400
 
 
+@app.route('/lend/to/address/<address>', methods=['GET'])
+@authRequired
+def lendToAddress(address: str):
+    if start.vault is None:
+        return '', 200
+    # the network portion should be whatever network I'm on.
+    network = 'main'
+    vault = start.getVault(network=network)
+    success, result = start.server.lendToAddress(
+        vaultSignature=vault.sign(address),
+        vaultPubkey=vault.publicKey,
+        address=address)
+    if success:
+        return 'OK', 200
+    return f'Failed lend to address: {result}', 400
+
+
+@app.route('/lend/remove', methods=['GET'])
+@authRequired
+def lendRemove():
+    success, result = start.server.lendRemove()
+    if success:
+        return result, 200
+    return f'Failed lendRemove: {result}', 400
+
+
+@app.route('/lend/address', methods=['GET'])
+@authRequired
+def lendAddress():
+    return str(start.server.lendAddress()), 200
+
+
 @app.route('/mine_to_vault/enable/<network>', methods=['GET'])
 @authRequired
 def enableMineToVault(network: str = 'main'):
