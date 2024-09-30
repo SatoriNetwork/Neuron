@@ -54,6 +54,9 @@
             <p id='addStakingAddressConfirmation'></p>
           </div>
         </div>
+        <div class="row" style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
+          <button class="download-delegate" onclick="getCsv()">Download delegate list</button>
+        </div>
       </div>
     </div>
   </div>
@@ -401,6 +404,55 @@
       document.getElementById('childRow'+child).style.display = 'none';
     })
     .catch(error => console.error('Error:', error));
+  }
+
+  function jsonToCsv(jsonArray, columnsToExclude = []) {
+    if (!jsonArray || jsonArray.length === 0) {
+        return '';
+    }
+
+    let headers = Object.keys(jsonArray[0]);
+    headers = headers.filter(header => !columnsToExclude.includes(header));
+
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+    
+    jsonArray.forEach(obj => {
+        const values = headers.map(header => {
+            const escaped = ('' + obj[header]).replace(/"/g, '""');
+            return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+    });
+
+    return csvRows.join('\n');
+  }
+
+  function downloadCsv(csvContent, filename) {
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  }
+
+  function getCsv(){
+    fetch('/proxy/parent/status', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(json => {
+        const excludedColumns = ["parent", "child", "charity"];
+        const csvOutput = jsonToCsv(json, excludedColumns);
+        downloadCsv(csvOutput, "delegate.csv")
+    }).catch(error => console.error('Error:', error));
   }
 </script>
 {% endblock %}
