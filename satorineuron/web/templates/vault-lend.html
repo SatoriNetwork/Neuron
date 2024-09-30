@@ -1,0 +1,127 @@
+{% block content %}
+<div class="row mb-0">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-12 col-sm-12 mb-xl-0">
+          <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
+                  style="padding-top:1.5rem; text-transform: none;"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#lendingCardContent"
+                  aria-expanded="false"
+                  aria-controls="lendingCardContent">
+                  <h4 class="{% if darkmode %}dark-colors{% endif %}">Pool Participation</h4>
+          </button>
+        </div>
+      </div>
+      <div id="lendingCardContent" class="collapse show">
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          Neurons that don't hold enough SATORI to stake can participate in a pool.
+          <br><br>
+          Neurons participating in pools do not typically need to stay running all the time, they can be turned off.
+          <br><br>
+          To participate in a pool add the pool address here.
+          <br><br>
+        </p>
+        <div class="row" style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <center>
+              <p id="addLendingAddressLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;">
+                Pool Address:
+              </p>
+            <center>
+          </div>
+          <div class="col-xl-6 col-sm-6 mb-xl-0">
+            <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+              <div class="d-flex px-3 py-1" style="padding-right: 1rem; margin-left:auto; margin-right: auto;">
+                <div class="input-group input-group-outline">
+                  <input
+                    id="addLendingAddress"
+                    name="addLendingAddress"
+                    class="tight form-control {% if darkmode %}dark-colors{% endif %}"
+                    style="text-align: center;"
+                    maxLength="34"
+                    required=""
+                    type="text"
+                    onKeyPress="checkEnterForLendingAddress(event)">
+                </div>
+              </div>
+            </h6>
+          </div>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <p id='addLendingAddressConfirmation'></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function checkEnterForLendingAddress(event){
+    if (event.key === "Enter" || event.keyCode === 13) {
+      console.log('enter detected');
+      if (document.getElementById("addLendingAddress").value.length == 0) {
+        removeLending();
+      } else if (document.getElementById("addLendingAddress").value.length == 34) {
+        setLendingAddress();
+      } else {
+        document.getElementById("addLendingAddressConfirmation").innerHTML = 'Invalid address.';
+      }
+      setLendingAddress();
+    }
+  }
+  function setLendingAddress() {
+    address = document.getElementById("addLendingAddress").value;
+    fetch('/lend/to/address' + address, { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+    })
+    .then(text => {
+      if (text == 'OK') {
+        document.getElementById("addLendingAddressConfirmation").innerHTML = 'Saved!';
+        getProxyParentStatus();
+      } else {
+        console.log(text);
+        document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save.';
+      }
+    }).catch(error => {
+      document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save.';
+      console.error('Error:', error);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', (event) => {
+    getLendingAddress();
+  });
+  function getLendingAddress() {
+    return fetch('/lend/address', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(text => {
+        document.getElementById("addLendingAddress").value = text;
+        return text;
+      }).catch(error => console.error('Error:', error));
+  }
+  function removeLending() {
+    fetch('/lend/remove', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      console.log(text);
+    })
+    .catch(error => console.error('Error:', error));
+  }
+</script>
+{% endblock %}

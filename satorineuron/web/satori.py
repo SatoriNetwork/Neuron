@@ -1464,9 +1464,13 @@ def vault():
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
+        myWallet = start.openWallet(network='main')
+        alias = myWallet.alias or start.server.getWalletAlias()
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
+            'alias': alias,
+            'exampleAlias': getRandomName(),
             'image': getQRCode(start.vault.address),
             'network': start.network,  # change to main when ready
             'minedtovault': start.mineToVault,  # start.server.minedToVault(),
@@ -1547,6 +1551,38 @@ def stakeForAddress(address: str):
     if success:
         return 'OK', 200
     return f'Failed to report vault: {result}', 400
+
+
+@app.route('/lend/to/address/<address>', methods=['GET'])
+@authRequired
+def lendToAddress(address: str):
+    if start.vault is None:
+        return '', 200
+    # the network portion should be whatever network I'm on.
+    network = 'main'
+    vault = start.getVault(network=network)
+    success, result = start.server.lendToAddress(
+        vaultSignature=vault.sign(address),
+        vaultPubkey=vault.publicKey,
+        address=address)
+    if success:
+        return 'OK', 200
+    return f'Failed lend to address: {result}', 400
+
+
+@app.route('/lend/remove', methods=['GET'])
+@authRequired
+def lendRemove():
+    success, result = start.server.lendRemove()
+    if success:
+        return result, 200
+    return f'Failed lendRemove: {result}', 400
+
+
+@app.route('/lend/address', methods=['GET'])
+@authRequired
+def lendAddress():
+    return str(start.server.lendAddress()), 200
 
 
 @app.route('/mine_to_vault/enable/<network>', methods=['GET'])
@@ -1697,15 +1733,9 @@ def proposals():
 
 
 @app.route('/api/proposals', methods=['GET'])
-def get_proposals():
+def getProposals():
     try:
         proposals_data = start.server.getProposals()
-
-        # Log the proposals data
-        print("Fetched proposals data:", json.dumps(proposals_data, indent=2))
-
-        # We're not doing any vote-related processing here anymore
-
         return jsonify({
             'status': 'success',
             'proposals': proposals_data,
@@ -1713,8 +1743,8 @@ def get_proposals():
 
     except Exception as e:
         error_message = f"Failed to fetch proposals: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.error(error_message)
+        logging.error(traceback.format_exc())
         return jsonify({
             'status': 'error',
             'message': error_message
@@ -1722,7 +1752,7 @@ def get_proposals():
 
 
 @app.route('/proposals/vote', methods=['POST'])
-def proposal_vote():
+def proposalVote():
     try:
         data = request.json
         proposal_id = data.get('proposal_id')
@@ -1753,14 +1783,14 @@ def proposal_vote():
         else:
             return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
     except Exception as e:
-        error_message = f"Error in proposal_vote: {str(e)}"
+        error_message = f"Error in proposalVote: {str(e)}"
         print(error_message)
         print(traceback.format_exc())
         return jsonify({'status': 'error', 'message': error_message}), 500
 
 
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])
-def get_proposal_votes(id):
+def getProposalVotes(id):
     try:
         votes = start.server.getProposalVotes(str(id))
         proposal = next(
@@ -1769,6 +1799,10 @@ def get_proposal_votes(id):
             user_wallet_address = start.wallet.address
             user_has_voted = any(
                 vote['address'] == user_wallet_address for vote in votes)
+            user_voted = None
+            if user_has_voted:
+                user_voted = next(
+                    vote['vote'] for vote in votes if vote['address'] == user_wallet_address)
             voting_started = bool(votes)
             can_vote = str(proposal['wallet_id']) != user_wallet_address
             disable_voting = not can_vote or user_has_voted
@@ -1776,6 +1810,7 @@ def get_proposal_votes(id):
                 'status': 'success',
                 'votes': votes,
                 'user_has_voted': user_has_voted,
+                'user_voted': user_voted,
                 'voting_started': voting_started,
                 'can_vote': can_vote,
                 'disable_voting': disable_voting
@@ -1795,15 +1830,17 @@ def get_proposal_votes(id):
         }), 500
 
 
-@app.route('/create-proposal', methods=['GET', 'POST'])
-def create_proposal():
+@app.route('/proposal/create', methods=['GET', 'POST'])
+def proposalCreate():
     if request.method == 'GET':
-        return render_template('create-proposal.html', title='Create New Proposal')
+        return render_template(
+            'proposals-create.html',
+            **getResp({'title': 'Create New Proposal'}))
     elif request.method == 'POST':
         try:
             data = request.json
             print(
-                f"Received proposal data in create_proposal: {json.dumps(data, indent=2)}")
+                f"Received proposal data in proposalCreate: {json.dumps(data, indent=2)}")
             success, result = start.server.submitProposal(data)
             print(
                 f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
@@ -1822,7 +1859,7 @@ def create_proposal():
                     'message': error_message
                 }), 400
         except Exception as e:
-            error_message = f"Error in create_proposal route: {str(e)}"
+            error_message = f"Error in proposalCreate route: {str(e)}"
             print(error_message)
             print(traceback.format_exc())
             return jsonify({
@@ -1832,7 +1869,7 @@ def create_proposal():
 
 
 @app.route('/test', methods=['GET'])
-def test_connection():
+def testConnection():
     try:
         success, result = start.server.testConnection()
         if success:

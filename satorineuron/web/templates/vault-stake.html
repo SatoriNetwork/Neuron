@@ -92,6 +92,7 @@
         document.getElementById("addStakingAddressConfirmation").innerHTML = 'Saved!';
         getProxyParentStatus();
       } else {
+        console.log(text);
         document.getElementById("addStakingAddressConfirmation").innerHTML = 'Unable to save.';
       }
     }).catch(error => {

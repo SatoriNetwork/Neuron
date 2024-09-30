@@ -1,13 +1,10 @@
 {% extends "basic.html" %}
 {% block content %}
 
-<div class="proposals-wrapper">
-    <br id="proposalsbr">
-    {% include 'proposals-description.html' %}
-</div>
-{% include 'footer-on-front.html' %}
-{% endblock %}
+<br id="proposalsCreatebr">
+{% include 'proposals-create.html' %}
+<br id="proposalsExplorebr">
+{% include 'proposals-explore.html' %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+{% include 'footer-on-front.html' %}
 {% endblock %}

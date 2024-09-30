@@ -8,7 +8,7 @@
         <div class="col-xl-6 col-sm-6 mb-xl-0">
           <center>
             <p id='explainVault' class="mb-1 {% if darkmode %}dark-colors{% endif %}", style="padding-top: .25rem;">
-              Wallet Alias:
+              Alias:
             </p>
           <center>
         </div>
@@ -52,7 +52,7 @@
               console.log("wallet alias removed!");
           }
       })
-      .catch(error => console.error('Error:', error));  
+      .catch(error => console.error('Error:', error));
     } else {
       fetch(
         '/update_wallet_alias/' + network + '/' + document.getElementById('walletAlias').value,
@@ -67,7 +67,3 @@
   }
 </script>
 {% endblock %}
-
-
-
-
