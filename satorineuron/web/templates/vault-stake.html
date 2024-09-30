@@ -53,7 +53,7 @@
           <div class="col-xl-3 col-sm-3 mb-xl-0">
             <p id='addStakingAddressConfirmation'></p>
           </div>
-          </div>
+        </div>
         <div class="row" style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
           <button class="download-delegate" onclick="getCsv()">Download delegate list</button>
         </div>
@@ -405,12 +405,14 @@
     .catch(error => console.error('Error:', error));
   }
 
-  function jsonToCsv(jsonArray) {
+  function jsonToCsv(jsonArray, columnsToExclude = []) {
     if (!jsonArray || jsonArray.length === 0) {
         return '';
     }
 
-    const headers = Object.keys(jsonArray[0]);
+    let headers = Object.keys(jsonArray[0]);
+    headers = headers.filter(header => !columnsToExclude.includes(header));
+
     const csvRows = [];
     csvRows.push(headers.join(','));
     
@@ -446,7 +448,8 @@
         throw new Error('Network response was not ok.');
       }
     }).then(json => {
-        const csvOutput = jsonToCsv(json);
+        const excludedColumns = ["parent", "child", "charity"];
+        const csvOutput = jsonToCsv(json, excludedColumns);
         downloadCsv(csvOutput, "delegate.csv")
     }).catch(error => console.error('Error:', error));
   }
