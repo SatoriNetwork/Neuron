@@ -23677,3 +23677,18 @@ pre[class*=language-] {
   }
 }
 /* //sourceMappingURL=material-dashboard.css.map */
+
+.download-delegate{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 2rem;
+  color: #344767;
+  text-align: center;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 1px solid #d2d6da;
+  border-radius: 0.375rem;
+}
