@@ -120,8 +120,7 @@
       }
     }).then(text => {
       tableData = JSON.parse(text);
-      let parsedData = JSON.parse(text);
-      if (parsedData.length > 0) {
+      if (tableData.length > 0) {
         createTable(text);
       }
     }).catch(error => console.error('Error:', error));
@@ -166,7 +165,8 @@
         let aliasLabel = item.name ? `wallet address: ${item.address}` : `wallet`;
         let pointed = item.pointed == 1 ? 'Yes' : 'No';
         let satori = item.child_satori ? parseFloat(item.child_satori) : 0;
-        let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= 5 ? 0: 5); // Convert proxy to float
+        console.log(item.child_proxy);
+        let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= 6 ? 0: 6); // Convert proxy to float
         let reward = parseFloat(item.reward); // Convert reward to float
         totalCount += 1;
         totalReward += isNaN(reward) ? 0 : reward; // Add reward, ensure NaN doesn't get added
