@@ -419,7 +419,7 @@
               if (!satoriSums[vote.vote]) {
                   satoriSums[vote.vote] = 0;
               }
-              const satoriValue = parseFloat(vote.satori) || 0;
+              const satoriValue = parseFloat(vote.currency) || 0;
               satoriSums[vote.vote] += satoriValue;
               totalSatori += satoriValue;
           }
