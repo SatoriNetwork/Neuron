@@ -117,3 +117,14 @@ CMD ["bash", "./start_from_image.sh"]
 
 # test web
 # docker run --rm -it --name satorineuron -p 5000:5000 -v c:\repos\Satori\satori:/Satori/satori --env ENV=prod --env WALLETONLYMODE=1 satorinet/satorineuron:latest python /Satori/satori/app.py
+
+# automatic fast slow build:
+# docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
+# docker pull satorinet/satorineuron:test
+# docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
+# docker push satorinet/satorineuron:latest
+# docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
+# docker pull satorinet/satorineuron:test
+# docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
+# docker push satorinet/satorineuron:latest
+# docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:rpi_satori   --push .
