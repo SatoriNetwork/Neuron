@@ -127,10 +127,6 @@ Example:
 
         `nc -l -v -p 51820` # Use it in Machine A or Machine B to listen to the given port.
 
-Example:
-
-![alt text](<images/Screenshot 2024-09-16 155930.png>)
-
 ## 10. Send Message
 
 
@@ -140,7 +136,4 @@ Example:
 
         `nc 10.0.0.2 51820`     # If MAchine B is listening, run it on MAchine A
                        
-Example:
-
-![alt text](<images/Screenshot 2024-09-16 155920.png>)
 
