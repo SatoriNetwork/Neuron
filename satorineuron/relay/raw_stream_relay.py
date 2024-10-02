@@ -225,7 +225,6 @@ class RawStreamRelayEngine(Cached):
         # simpler to reason about, I'm not sure how I would reduce the number
         # of api calls as we are doing here (see uri logic) for streams that all
         # call the same api. so we're leaving it as is.
-
         while self.active == active:
             now = int(time.time())
             streams: list[Stream] = []
