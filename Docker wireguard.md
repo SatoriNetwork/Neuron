@@ -15,7 +15,7 @@ docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\
 ```
 ## 4. Generate Key Pairs
 
-If previously generated befor running the container no need of this step .
+If previously generated before running the container no need of this step .
 
 On each machine, run the following commands to generate the keys:
 
@@ -29,7 +29,7 @@ publickey: The public key to share with the other machine.
 
 ## 5. Create WireGuard Configuration File:
 
-If previously generated befor running the container no need of this step .just skip it. The existing wg0.conf will be copied to etc/wireguard/ . 
+If previously generated befor running the container no need of this step, just skip it. The existing wg0.conf will be copied to etc/wireguard/ . 
 
 On each machine, create a configuration file for WireGuard, name it as wg0.conf. For example, on machine A:
 
