@@ -248,6 +248,8 @@
       });
   }
 
+  var chosenProposal = null;
+
   function updateProposalsList(proposals) {
       const proposalList = document.getElementById('proposal-list');
       proposalList.innerHTML = ''; // Clear existing list
@@ -255,8 +257,9 @@
           const listItem = document.createElement('li');
           listItem.className = 'proposal-list-item';
           listItem.onclick = () => {
+            chosenProposal = proposal;
             updateProposalDetails(proposal);
-            fetchProposalVotes(proposal.id);
+            fetchProposalVotes(proposal);
           };
           listItem.id = `proposal-item-${proposal.id}`;
           listItem.textContent = proposal.title;
@@ -340,9 +343,9 @@
     proposalDetails.appendChild(detailDiv);
   }
 
-  function fetchProposalVotes(id) {
-    console.log(`Fetching votes for proposal ${id}`);
-    fetch(`/proposal/votes/get/${id}`)
+  function fetchProposalVotes(proposal) {
+    console.log(`Fetching votes for proposal ${proposal.id}`);
+    fetch(`/proposal/votes/get/${proposal.id}`)
     .then(response => {
       if (!response.ok) {
         return response.json().then(err => { throw err; });
@@ -352,21 +355,21 @@
     .then(data => {
       console.log('Received vote data:', data);
         if (data.status === 'success') {
-          updateVoteCounts(id, data.votes);
-          updateVotingStatus(id, data);
+          updateVoteCounts(proposal.id, data.votes);
+          updateVotingStatus(proposal, data);
         } else {
           console.log('No votes found or invalid data format for this proposal.');
-          updateVoteCounts(id, []);
+          updateVoteCounts(proposal.id, []);
         }
     })
     .catch(error => {
       console.error('Unable to fetch vote counts:', error);
-      updateVoteCounts(id, []);
+      updateVoteCounts(proposal.id, []);
     });
   }
 
-  function updateVotingStatus(id, data) {
-    const proposalElement = document.getElementById(`proposal-${id}`);
+  function updateVotingStatus(proposal, data) {
+    const proposalElement = document.getElementById(`proposal-${proposal.id}`);
     if (proposalElement) {
       const voteButtons = proposalElement.querySelectorAll('.vote-btn');
       voteButtons.forEach(button => {
@@ -375,9 +378,9 @@
           //button.innerText.toLowerCase() == data.user_voted.toLowerCase()
           button.value.toLowerCase() == data.user_voted.toLowerCase()
         ) {
-          button.disabled = data.disable_voting;
           button.style.backgroundColor = '#F6B04266';
-        } else {
+        }
+        if (new Date(proposal.expires).getTime() < new Date().getTime()) {
           button.disabled = data.disable_voting;
         }
       });
@@ -467,8 +470,9 @@
           console.log('Server response:', data);
           if (data.status === 'success') {
               console.log('Vote submitted successfully');
-              fetchProposalVotes(id);
-              disableVoteButtons(id);
+              fetchProposalVotes(chosenProposal);
+              //disableVoteButtons(id);
+              updateProposalDetails(chosenProposal)
               showVotedMessage(id, 'Your vote has been recorded.');
           } else {
               throw new Error(data.message || 'Unknown error');
