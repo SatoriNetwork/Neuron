@@ -5,13 +5,19 @@
 # python:slim will eventually fail, if we need to revert try this:
 # FROM python:slim3.12.0b1-slim
 # Use the official Python image as the base image
-FROM python:3.11-slim AS builder
+FROM python:3.10-slim AS builder
 
 # System dependencies
-RUN apt-get update --fix-missing && \
-    apt-get install -y build-essential wget curl git vim cmake dos2unix \
-    wireguard iptables iproute2 netcat-openbsd iputils-ping && \
-    apt-get clean
+# RUN apt-get update && \
+#     apt-get install -y build-essential wget curl git vim cmake dos2unix \
+#     wireguard iptables iproute2 netcat-openbsd iputils-ping && \
+#     apt-get clean
+RUN apt-get update --fix-missing
+RUN apt-get install -y build-essential
+RUN apt-get install -y wget curl git vim cmake dos2unix
+RUN apt-get install -y wireguard iptables iproute2 netcat-openbsd iputils-ping
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 # File system setup
 ARG BRANCH_FLAG=main
@@ -107,3 +113,5 @@ CMD ["bash", "./start_from_image.sh"]
 # docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net --env ENV=prod satorinet/satorineuron:latest bash
 # docker build --no-cache -f "Neuron/Dockerfile" -t satorinet/satorineuron:latest .
 # docker build --no-cache -f Dockerfile -t satorinet/satorineuron:latest .
+# docker exec -it satorineuron bash
+#  docker build --progress=plain -t satorinet/satorineuron:latest .

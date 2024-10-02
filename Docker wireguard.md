@@ -1,87 +1,21 @@
-# WireGuard P2P Setup
+## 1. Build a docker image 
+```
+\Satori> docker build --no-cache -f "Neuron/Dockerfile" -t satorinet/satorineuron:latest .
 
-WireGuard creates a secure tunnel between the two machines. Once connected through the VPN, they can communicate directly over any port without worrying.
-
-about firewalls, NAT, or port forwarding. All traffic between the two machines is encrypted and encapsulated inside the VPN tunnel.
-
-Steps to Set Up WireGuard:
-
-## 1. Install WireGuard
-
-You need to install WireGuard on both machines. On most Linux distributions, WireGuard is available in the default package manager:
-
-Ubuntu/Debian:
-
-    `sudo apt install wireguard`
-
-CentOS/Fedora:
-
-    `sudo dnf install wireguard-tools`
-
-Windows/Mac: You can download WireGuard clients from the official WireGuard website.
-
+```
 ## 2. Create a Docker Network
 
 First, create a Docker network for your WireGuard containers to use. This network isolates the VPN traffic:
 
     `docker network create wireguard-net`
 
-## 3. Create and Run the Docker Container
-
-choose a configuration path (make a folder such as /path/to/config), copy the path.
-
-If you want to run the container directly without Docker Compose, use:
+## 3. Run the container
 ```
-    <!-- docker run -d --name=wireguard --cap-add=NET_ADMIN --cap-add=SYS_MODULE -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC -v c:\repos\satori\Neuron\config:/config  -p 51820:51820/udp --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net linuxserver/wireguard -->
-
-    docker run -d --name=wireguard --cap-add=NET_ADMIN --cap-add=SYS_MODULE -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC -v c:\repos\satori\Neuron\config:/config -p 51820:51820/udp --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net linuxserver/wireguard /bin/sh -c "apk update && apk add --no-cache python3 py3-pip && tail -f /dev/null"
-
+docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net --env ENV=prod satorinet/satorineuron:latest bash
 ```
-Be sure to replace /path/to/config with the path where you want to store WireGuard configuration files.
-
-If you prefer to manage your WireGuard containers using Docker Compose, create a docker-compose.yml file:
-```
-    version: '3'
-    services:
-    wireguard:
-        image: linuxserver/wireguard
-        container_name: wireguard
-        cap_add:
-        - NET_ADMIN
-        - SYS_MODULE
-        environment:
-        - PUID=1000
-        - PGID=1000
-        - TZ=Etc/UTC
-        volumes:
-        - ./path/to/config:/config
-        - /lib/modules:/lib/modules
-        ports:
-        - 51820:51820/udp
-        sysctls:
-        - net.ipv4.conf.all.src_valid_mark=1
-        networks:
-        - wireguard-net
-    networks:
-    wireguard-net:
-        external: true
-```
-
-Start the WireGuard container:
-
-    `docker-compose up -d`
-
 ## 4. Generate Key Pairs
 
-Each machine will need to generate a public-private key pair for encryption.
-
-Exec into the running WireGuard container to generate key pairs:
-
-    `docker exec -it wireguard /bin/bash`
-
-Go into the config folder :
-
-    cd config
+If previously generated befor running the container no need of this step .
 
 On each machine, run the following commands to generate the keys:
 
@@ -93,11 +27,9 @@ privatekey: The private key for the machine.
 
 publickey: The public key to share with the other machine.
 
-Example:
-
-![alt text](<images/Screenshot 2024-09-16 165011.png>)
-
 ## 5. Create WireGuard Configuration File:
+
+If previously generated befor running the container no need of this step .just skip it. The existing wg0.conf will be copied to etc/wireguard/ . 
 
 On each machine, create a configuration file for WireGuard, name it as wg0.conf. For example, on machine A:
 
@@ -114,7 +46,6 @@ On Machine A, create the configuration file:
     Endpoint = <Machine B's public IP>:51820  # Machine B's public IP and WireGuard port
     PersistentKeepalive = 25  # Keeps the connection alive
 ```
-
 On Machine B, create a similar configuration:
 ```
     [Interface]
@@ -207,37 +138,13 @@ Example:
 ## 10. Send Message
 
 
-        `echo "Hello from Machine B" | nc 10.0.0.1 51820`     # If MAchine A is listening, run it on Machine B
+        `nc 10.0.0.1 51820`     # If MAchine A is listening, run it on Machine B
 
-                        nc 10.0.0.1 51820
                                 or
 
-        `echo "Hello from Machine A" | nc 10.0.0.2 51820`     # If MAchine B is listening, run it on MAchine A
-                        nc 10.0.0.2 51820
+        `nc 10.0.0.2 51820`     # If MAchine B is listening, run it on MAchine A
+                       
 Example:
 
 ![alt text](<images/Screenshot 2024-09-16 155920.png>)
 
-## 11. Adding/Removing Peers in Real-time:
-
-1.Generate new keys for the peer.
-
-2.Update the hub's configuration to include the new peer.
-
-3.Distribute the new peer's configuration.
-
-4.Restart the WireGuard service on affected nodes.
-
-WireGuard doesn't natively support adding or removing peers in real-time without restarting the service. However, you can use the wg command to make changes:
-
-To add a peer:
-
-        `wg set wg0 peer PEER_PUBLIC_KEY allowed-ips PEER_IP_ADDRESS`
-
-To remove a peer:
-
-         `wg set wg0 peer PEER_PUBLIC_KEY remove`
-
-After making changes, you should save the configuration:
-
-         `wg-quick save wg0`
