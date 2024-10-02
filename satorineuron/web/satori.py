@@ -203,6 +203,15 @@ def closeVault(f):
     return decorated_function
 
 
+def vaultRequired(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if start.vault is None:
+            return redirect('/vault')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def authRequired(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -907,6 +916,7 @@ def removeStreamByPost():
 @app.route('/home', methods=['GET'])
 @app.route('/index', methods=['GET'])
 @app.route('/dashboard', methods=['GET'])
+@vaultRequired
 @closeVault
 @authRequired
 def dashboard():
@@ -1324,6 +1334,7 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 
 
 @app.route('/wallet/<network>', methods=['GET', 'POST'])
+@vaultRequired
 @closeVault
 @authRequired
 def wallet(network: str = 'main'):
@@ -1468,6 +1479,11 @@ def vault():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
+        global firstRun
+        theFirstRun = firstRun
+        firstRun = False
+        if theFirstRun:
+            return redirect('/dashboard')
         # start.workingUpdates.put('downloading balance...')
         from satorilib.api.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
@@ -1659,6 +1675,7 @@ def removeProxyChild(address: str, id: int):
 
 
 @app.route('/vote', methods=['GET', 'POST'])
+@vaultRequired
 @authRequired
 def vote():
 
@@ -1740,6 +1757,7 @@ def vote():
 
 
 @app.route('/proposals', methods=['GET'])
+@vaultRequired
 @authRequired
 def proposals():
     return render_template('proposals.html', **getResp({'title': 'Proposals'}))
