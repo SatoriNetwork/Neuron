@@ -1,4 +1,5 @@
 from typing import Union
+from threading import Thread, Event
 import os
 import time
 import json
@@ -107,6 +108,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
+        self.stop_all_subscriptions = Event()
+        self.lastBlockTime = time.time()
         if not config.get().get('disable_restart', False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True)
@@ -192,11 +195,54 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             "evrmore", None, False, self.electrumx)
         walletInstance.setupSubscriptions()
         vaultInstance.setupSubscriptions()
-        # listen to all subscriptions
         # Start a thread to listen for updates
-        # self.subscriptions['scripthash'] = Thread(
-        #    target=self._processNotifications)
-        # self.subscriptions['scripthash'].start()
+        self.processThread = Thread(
+           target=self._processNotifications)
+        self.processThread.start()
+        
+        # _processNotifications method to listening for updates
+    def _processNotifications(self):
+        """
+        Processes incoming notifications for the subscribed scripthash and headers.
+        """
+        print("_processNotifications started")
+
+        try:
+            for notification in self.electrumx.receive_notifications():
+                print(f"Received notification {notification}")
+                if self.stop_all_subscriptions.is_set():
+                    print("Stop event set, breaking loop")
+                    break
+
+                if 'method' in notification:
+                    if notification['method'] == 'blockchain.scripthash.subscribe':
+                        if 'params' in notification and len(notification['params']) == 2:
+                            scripthash, status = notification['params']
+                            if self._evrmoreWallet.scripthash == scripthash:
+                                print(
+                                    f"Received update for wallet scripthash {scripthash}: {status}")
+                                if callable(self._evrmoreWallet.get):
+                                    self._evrmoreWallet.get()
+                            if self._evrmoreVault.scripthash == scripthash:
+                                print(
+                                    f"Received update for vault scripthash {scripthash}: {status}")
+                                if callable(self._evrmoreVault.get):
+                                    self._evrmoreVault.get()
+                    elif notification['method'] == 'blockchain.headers.subscribe':
+                        if 'params' in notification and len(notification['params']) > 0:
+                            header = notification['params'][0]
+                            print(
+                                f"Received new block header: height {header.get('height')}, hash {header.get('hex')[:64]}")
+                            self.lastBlockTime = time.time()
+                            # if callable(self.onBlockNotification):
+                            #     self.onBlockNotification(notification)
+                    else:
+                        print(
+                            f"Received unknown method: {notification['method']}")
+        except Exception as e:
+            print(f"Error in _processNotifications: {str(e)}")
+
+        print("_processNotifications ended")
 
     # new method
     def _initialize_wallet(self, network: str, connection: Electrumx = None) -> Union[EvrmoreWallet, RavencoinWallet, None]:
@@ -366,6 +412,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60*60)
         self.ranOnce = True
         self.createElectrumxConnection()
+        self.monitorLastBlockTimeThread = threading.Thread(
+            target=self.monitorLastBlockTime, daemon=True)
+        self.monitorLastBlockTimeThread.start()
         if self.walletOnlyMode:
             self.initializeWalletAndVault()
             self.createServerConn()
@@ -385,13 +434,32 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.startRelay()
         self.buildEngine()
         time.sleep(60*60*24)
+        
+    def monitorLastBlockTime(self):
+        logging.info("monitorLastBlockTime called", color="yellow")
+        while True:
+            time.sleep(60)  # Check every minute
+            logging.info(f"Last block Time {time.time()} and {self.lastBlockTime} and {time.time() - self.lastBlockTime}", color="green")
+            if time.time() - self.lastBlockTime > 300:  # 10 minutes in seconds
+                logging.info("lastBlockTime not updated in 10 minutes, reconnecting to server.", color="yellow")
+                try:
+                    # end the last process thread 
+                    logging.info("Connection started", color="green")
+                    self.electrumx.reconnect()  # Reconnect to the server
+                    logging.info("Connection done, starting processing again", color="green")
+                    self.lastBlockTime = time.time()
+                    # self.processThread = Thread(
+                    #     target=self._processNotifications)
+                    # self.processThread.start()
+                except Exception as e: 
+                    logging.error(f"Error while reconnecting {e}")
 
     def createElectrumxConnection(self):
         servers: list[str] = [
-            '146.190.149.237:50001',
-            '146.190.38.120:50001',
-            'electrum1-mainnet.evrmorecoin.org:50001',
-            'electrum2-mainnet.evrmorecoin.org:50001']
+            '146.190.149.237:50002',
+            '146.190.38.120:50002',
+            'electrum1-mainnet.evrmorecoin.org:50002',
+            'electrum2-mainnet.evrmorecoin.org:50002']
         hostPort = random.choice(servers)
         self.electrumx = Electrumx(
             host=hostPort.split(':')[0],
