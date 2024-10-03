@@ -603,30 +603,6 @@ def relay():
         "data": 420,
     }
     '''
-
-    # def accept_submittion(data: dict):
-    #    if not start.relayValidation.validRelay(data):
-    #        return 'Invalid payload. here is an example: {"source": "satori", "name": "nameOfSomeAPI", "target": "optional", "data": 420}', 400
-    #    if not start.relayValidation.streamClaimed(
-    #        name=data.get('name'),
-    #        target=data.get('target')
-    #    ):
-    #        save = start.relayValidation.registerStream(
-    #            data=data)
-    #        if save == False:
-    #            return 'Unable to register stream with server', 500
-    #        # get pubkey, recreate connection...
-    #        start.checkin()
-    #        start.pubsConnect()
-    #    # ...pass data onto pubsub
-    #    start.publish(
-    #        topic=StreamId(
-    #            source=data.get('source', 'satori'),
-    #            author=start.wallet.publicKey,
-    #            stream=data.get('name'),
-    #            target=data.get('target')).topic(),
-    #        data=data.get('data'))
-    #    return 'Success: ', 200
     return acceptRelaySubmission(start, json.loads(request.get_json()))
 
 
@@ -981,9 +957,7 @@ def dashboard():
     start.openWallet()
     if start.vault is not None:
         start.openVault()
-    holdingBalance = round(
-        start.wallet.balanceAmount + (
-            start.vault.balanceAmount if start.vault is not None else 0), 8)
+    holdingBalance = start.holdingBalance()
     stakeStatus = holdingBalance >= 5 or start.details.wallet.get('rewardaddress', None) not in [
         None,
         start.details.wallet.get('address'),

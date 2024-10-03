@@ -9,6 +9,7 @@ from queue import Queue
 import satorineuron
 import satoriengine
 from satorilib.concepts.structs import StreamId, Stream
+from satorilib.concepts import constants
 from satorilib.api import disk
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 # from satorilib.api.ipfs import Ipfs
@@ -160,6 +161,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     @property
     def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
         return self._evrmoreWallet if self.env == 'prod' else self._ravencoinWallet
+
+    @property
+    def holdingBalance(self) -> float:
+        self._holdingBalance = round(
+            self.wallet.balanceAmount + (
+                self.vault.balanceAmount if self.vault is not None else 0), 8)
+        return self._holdingBalance
 
     @property
     def ravencoinWallet(self) -> RavencoinWallet:
@@ -672,14 +680,33 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             # if latestTag.isNew:
             #    self.triggerRestart()
 
-    def publish(self, topic: str, data: str, observationTime: str, observationHash: str):
+    def publish(
+        self,
+        topic: str,
+        data: str,
+        observationTime: str,
+        observationHash: str,
+        toCentral: bool = True,
+        isPrediction: bool = False,
+    ) -> True:
         ''' publishes to all the pubsub servers '''
-        for pub in self.pubs:
-            pub.publish(
+        if self.holdingBalance < constants.stakeRequired:
+            return False
+        if not isPrediction:
+            for pub in self.pubs:
+                pub.publish(
+                    topic=topic,
+                    data=data,
+                    observationTime=observationTime,
+                    observationHash=observationHash)
+        if toCentral:
+            self.server.publish(
                 topic=topic,
                 data=data,
                 observationTime=observationTime,
-                observationHash=observationHash)
+                observationHash=observationHash,
+                isPrediction=isPrediction,
+                useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
 
     def performStakeCheck(self):
         self.stakeStatus = self.server.stakeCheck()
