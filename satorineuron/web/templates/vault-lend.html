@@ -1,6 +1,5 @@
 {% block content %}
-<div class="row mb-0">
-  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+  <div class="col-xl-6 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
         <div class="col-xl-12 col-sm-12 mb-xl-0">
@@ -17,10 +16,6 @@
       </div>
       <div id="lendingCardContent" class="collapse show">
         <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-          Neurons that don't hold enough SATORI to stake can participate in a pool.
-          <br><br>
-          Neurons participating in pools do not typically need to stay running all the time, they can be turned off.
-          <br><br>
           To participate in a pool add the pool address here.
           <br><br>
         </p>
@@ -56,7 +51,6 @@
       </div>
     </div>
   </div>
-</div>
 <script>
   function checkEnterForLendingAddress(event){
     if (event.key === "Enter" || event.keyCode === 13) {

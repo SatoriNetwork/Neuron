@@ -470,10 +470,15 @@
           console.log('Server response:', data);
           if (data.status === 'success') {
               console.log('Vote submitted successfully');
-              fetchProposalVotes(chosenProposal);
-              //disableVoteButtons(id);
-              updateProposalDetails(chosenProposal)
+              disableVoteButtons(id);
               showVotedMessage(id, 'Your vote has been recorded.');
+              sleep(2000).then(() => {
+                //location.reload();
+                fetchProposalVotes(chosenProposal);
+                //disableVoteButtons(id);
+                updateProposalDetails(chosenProposal);
+                enableVoteButtons(id);
+              });
           } else {
               throw new Error(data.message || 'Unknown error');
           }
@@ -484,10 +489,26 @@
       });
   }
 
-  function disableVoteButtons(id) {
-      const voteButtons = document.querySelectorAll(`#vote-options-${id} button`);
-      voteButtons.forEach(button => button.disabled = true);
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
+
+  function disableVoteButtons(id) {
+    //const voteButtons = document.querySelectorAll(`#vote-options-${id} button`);
+    //voteButtons.forEach(button => button.disabled = true);
+    document.getElementById(`proposal-${id}`).querySelectorAll('.vote-btn').forEach(button => {
+      button.disabled = true;
+    });
+  }
+
+  function enableVoteButtons(id) {
+    //const voteButtons = document.querySelectorAll(`#vote-options-${id} button`);
+    //voteButtons.forEach(button => button.disabled = false);
+    document.getElementById(`proposal-${id}`).querySelectorAll('.vote-btn').forEach(button => {
+      button.disabled = false;
+    });
+  }
+
 
   function showVotedMessage(id, message) {
       const messageElement = document.getElementById(`voted-message-${id}`);

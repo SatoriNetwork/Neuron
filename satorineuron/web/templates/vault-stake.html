@@ -1,17 +1,10 @@
 {% block content %}
-<div class="row mb-0" style='padding-bottom:1rem;'>
+<div class="row mb-0" style='padding-bottom:1rem;display:none;' id='delegateDisplay'><br id="stakebr">
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
-      <div class="row-container" style="padding-top: 1rem;padding-right: 1rem;">
-        <div class="col-xl-11 col-sm-11 mb-xl-0"></div>
-        <div class="col-xl-1 col-sm-1 mb-xl-0">
-          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" onclick="getCsv()">
-            <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>
-          </button>
-        </div>
-      </div>
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
-        <div class="col-xl-12 col-sm-12 mb-xl-0">
+        <div class="col-xl-1 col-sm-1 mb-xl-0"></div>
+        <div class="col-xl-10 col-sm-10 mb-xl-0">
           <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
                   style="padding-top:1.5rem; text-transform: none;"
                   type="button"
@@ -20,6 +13,11 @@
                   aria-expanded="false"
                   aria-controls="delegateCardContent">
                   <h4 class="{% if darkmode %}dark-colors{% endif %}">Delegate Staking</h4>
+          </button>
+        </div>
+        <div class="col-xl-1 col-sm-1 mb-xl-0">
+          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-top:2rem;" onclick="getCsv()">
+            <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>
           </button>
         </div>
       </div>
@@ -67,6 +65,32 @@
   </div>
 </div>
 <script>
+  document.addEventListener('DOMContentLoaded', (event) => {
+    getProxyParentStatus();
+  });
+
+  var tableData;
+
+  function getProxyParentStatus() {
+    fetch('/proxy/parent/status', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      if (!text || text == '') {
+        return;
+      }
+      tableData = JSON.parse(text);
+      handleDisplay(tableData);
+      if (tableData.length > 0) {
+        createTable(text);
+      }
+    }).catch(error => console.error('Error:', error));
+  }
+
   function toggleRewardAddresses(){
     var x = document.getElementById("addStakingAddress");
     var y = document.getElementById("addStakingAddressLabel");
@@ -79,12 +103,14 @@
       y.innerHTML = 'Stake for Address:';
     }
   }
+
   function checkEnterForStakingAddress(event){
     if (event.key === "Enter" || event.keyCode === 13) {
       console.log('enter detected');
       setStakingAddress();
     }
   }
+
   function setStakingAddress() {
     address = document.getElementById("addStakingAddress").value;
     fetch('/stake/for/address/' + address, { method: 'GET' })
@@ -109,25 +135,14 @@
     });
   }
 
-  var tableData;
-  function getProxyParentStatus() {
-    fetch('/proxy/parent/status', { method: 'GET' })
-    .then(response => {
-      if (response.ok) {
-        return response.text();
-      } else {
-        throw new Error('Network response was not ok.');
-      }
-    }).then(text => {
-      tableData = JSON.parse(text);
-      if (tableData.length > 0) {
-        createTable(text);
-      }
-    }).catch(error => console.error('Error:', error));
+  function handleDisplay(text) {
+    if (text && text.length > 0) {
+      document.getElementById("delegateDisplay").style.display = "block";
+    } else {
+      document.getElementById("delegateDisplay").style.display = "none";
+    }
   }
-  document.addEventListener('DOMContentLoaded', (event) => {
-    getProxyParentStatus();
-  });
+
   function createTable(text) {
     // example text '[{
     //   "parent": 1234,
@@ -139,7 +154,6 @@
     //   "ts": "2024-08-16 02:25:00.575062+00:00",
     //   "deleted": "2024-08-16 02:25:00.575062+00:00"}]'
     let data = JSON.parse(text);
-    // Initialize the table HTML
     let tableHTML = `
       <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
         <table id="delegateChildren" class="table align-items-center mb-0">
