@@ -957,7 +957,7 @@ def dashboard():
     start.openWallet()
     if start.vault is not None:
         start.openVault()
-    holdingBalance = start.holdingBalance()
+    holdingBalance = start.holdingBalance
     stakeStatus = holdingBalance >= 5 or start.details.wallet.get('rewardaddress', None) not in [
         None,
         start.details.wallet.get('address'),
