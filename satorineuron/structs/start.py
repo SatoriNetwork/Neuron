@@ -16,6 +16,7 @@ class StartupDagStruct(object):
     def __init__(
         self,
         env: str = None,
+        dev: bool = False,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -27,6 +28,7 @@ class StartupDagStruct(object):
         self.connectionsStatusQueue: Queue = None
         self.latestConnectionStatus: dict = None
         self.env: str = None
+        self.dev = dev
         self.urlServer: str = None
         self.urlMundo: str = None
         self.urlPubsubs: [str] = None

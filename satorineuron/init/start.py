@@ -1,3 +1,12 @@
+'''
+current:
+  ENV = 'prod' (evrmore) | 'test' (use ravencoin)
+ 
+need:
+  ENV = 'prod' (evrmore) | 'test' (use ravencoin)
+  DEVMODE = False (connect to satori servers) | True (connect to local servers)
+'''
+
 from typing import Union
 import os
 import time
@@ -50,6 +59,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self,
         *args,
         env: str = 'dev',
+        dev: bool = False,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -58,6 +68,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ):
         super(StartupDag, self).__init__(*args)
         self.env = env
+        self.dev = dev
         self.lastWalletCall = 0
         self.lastVaultCall = 0
         self.electrumCooldown = 10
