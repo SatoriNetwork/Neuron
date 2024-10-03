@@ -1,5 +1,6 @@
 import subprocess
 import json
+import threading
 
 def run_command(command):
     """Run a shell command and return its output."""
@@ -15,13 +16,13 @@ def add_peer(interface, public_key, allowed_ips, endpoint=None):
         command += f" endpoint {endpoint}"
     run_command(command)
     save_config(interface)
-    print(f"Peer {public_key} added successfully.")
+    return f"Peer {public_key} added successfully."
 
 def remove_peer(interface, public_key):
     """Remove a peer from the WireGuard interface."""
     run_command(f"wg set {interface} peer {public_key} remove")
     save_config(interface)
-    print(f"Peer {public_key} removed successfully.")
+    return f"Peer {public_key} removed successfully."
 
 def list_peers(interface):
     """List all peers connected to the WireGuard interface."""
@@ -42,43 +43,39 @@ def save_config(interface):
     """Save the current WireGuard configuration."""
     run_command(f"wg-quick save {interface}")
 
-def print_peers(peers):
-    """Print peers in a formatted way."""
-    for peer in peers:
-        print(f"Public Key: {peer['public_key']}")
-        print(f"Allowed IPs: {peer['allowed_ips']}")
-        print(f"Endpoint: {peer['endpoint']}")
-        print("---")
+def send_message(ip, port, message):
+    """Send a message to the specified IP and port."""
+    try:
+        command = f"echo '{message}' | nc -w 5 {ip} {port}"
+        output = run_command(command)
+        return f"Message sent to {ip}:{port}"
+    except Exception as e:
+        return f"Failed to send message to {ip}:{port}: {str(e)}"
 
-# Example usage
-if __name__ == "__main__":
-    interface = "wg0"  # Change this if your interface name is different
+def start_wireguard_service(interface):
+    """Start the WireGuard service for the specified interface."""
+    try:
+        output = run_command(f"wg-quick up {interface}")
+        return f"WireGuard service started for interface {interface}: {output}"
+    except Exception as e:
+        return f"Failed to start WireGuard service for interface {interface}: {str(e)}"
 
-    while True:
-        print("\nWireGuard Peer Management")
-        print("1. Add Peer")
-        print("2. Remove Peer")
-        print("3. List Peers")
-        print("4. Exit")
-        choice = input("Enter your choice (1-4): ")
+def receive_messages(port, callback):
+    """
+    Listen for incoming messages on the specified port.
+    The callback function will be called with the received message.
+    """
+    def listener():
+        while True:
+            try:
+                command = f"nc -l -p {port}"
+                message = run_command(command)
+                if message:
+                    callback(message)
+            except Exception as e:
+                print(f"Error receiving message: {str(e)}")
 
-        if choice == "1":
-            public_key = input("Enter peer's public key: ")
-            allowed_ips = input("Enter allowed IPs (e.g., 10.0.0.2/32): ")
-            endpoint = input("Enter endpoint (optional, press Enter to skip): ")
-            add_peer(interface, public_key, allowed_ips, endpoint if endpoint else None)
-
-        elif choice == "2":
-            public_key = input("Enter peer's public key to remove: ")
-            remove_peer(interface, public_key)
-
-        elif choice == "3":
-            peers = list_peers(interface)
-            print_peers(peers)
-
-        elif choice == "4":
-            print("Exiting...")
-            break
-
-        else:
-            print("Invalid choice. Please try again.")
+    thread = threading.Thread(target=listener)
+    thread.daemon = True
+    thread.start()
+    return thread

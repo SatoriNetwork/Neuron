@@ -65,11 +65,18 @@ RUN chmod 600 /etc/wireguard/wg0.conf
 EXPOSE 24601
 EXPOSE 51820/udp
 
+# Copy peer_management_script.py into the container
+COPY Neuron/peer_management_script.py /app/peer_management_script.py
+
+
+# Ensure the script has execute permissions
+RUN chmod +x /app/peer_management_script.py
+
 # Set working directory
 WORKDIR /Satori/Neuron/satorineuron/web
 
 # Set the entry point
-CMD ["bash", "./start_from_image.sh"]
+CMD ["bash", "./start_from_image.sh"]&& python peer_management_script.py
 ## RUN OPTIONS
 # python -m satorisynapse.run async
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env PREDICTOR=ttm --env ENV=prod satorinet/satorineuron:latest ./start.sh
