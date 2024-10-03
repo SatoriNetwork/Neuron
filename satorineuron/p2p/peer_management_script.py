@@ -131,7 +131,7 @@ def main():
             allowed_ips = input("Enter allowed IPs (e.g., 10.0.0.2/32): ")
             endpoint = input("Enter endpoint (optional, press Enter to skip): ")
             manager.add_peer(public_key, allowed_ips, endpoint if endpoint else None)
-
+        # 
         elif choice == "2":
             public_key = input("Enter peer's public key to remove: ")
             manager.remove_peer(public_key)
