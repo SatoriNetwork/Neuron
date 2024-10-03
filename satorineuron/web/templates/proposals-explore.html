@@ -288,6 +288,9 @@
     const imageHtml = proposal.image_url
       ? `<img src="${proposal.image_url}" alt="${proposal.title}">`
       : `<img src="https://ateressi.sirv.com/iStock-173770914.jpg" alt="Placeholder Image">`;
+    let expirationDate = new Date(proposal.expires);
+    expirationDate.setDate(expirationDate.getDate() - 1);
+    dayBeforeExpiration = expirationDate.toLocaleDateString();
     detailDiv.innerHTML = `
       <div class="proposal-card">
         <div class="proposal-card-header">
@@ -300,7 +303,7 @@
           <div class="row proposal-info mb-2">
             <div class="col-xl-3 col-sm-3 mb-xl-0">
               <dt>Expires</dt>
-              <dd>${new Date(proposal.expires).toLocaleDateString()}</dd>
+              <dd>${dayBeforeExpiration}</dd>
             </div>
             <div class="col-xl-3 col-sm-3 mb-xl-0">
               <dt>Estimated Cost</dt>
