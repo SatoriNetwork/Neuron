@@ -1638,6 +1638,15 @@ def disableMineToVault(network: str = 'main'):
     return f'Failed to disable minetovault: {result}', 400
 
 
+@app.route('/pool/addresses', methods=['GET'])
+@authRequired
+def poolAddresses():
+    success, result = start.server.poolAddresses()
+    if success:
+        return result, 200
+    return f'Failed poolAddresses: {result}', 400
+
+
 @app.route('/proxy/parent/status', methods=['GET'])
 @authRequired
 def proxyParentStatus():
