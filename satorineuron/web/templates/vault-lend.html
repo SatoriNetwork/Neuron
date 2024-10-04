@@ -62,12 +62,11 @@
       } else {
         document.getElementById("addLendingAddressConfirmation").innerHTML = 'Invalid address.';
       }
-      setLendingAddress();
     }
   }
   function setLendingAddress() {
     address = document.getElementById("addLendingAddress").value;
-    fetch('/lend/to/address' + address, { method: 'GET' })
+    fetch('/lend/to/address/' + address, { method: 'GET' })
     .then(response => {
         if (response.ok) {
           return response.text();
