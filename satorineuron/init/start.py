@@ -440,7 +440,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         while True:
             time.sleep(60)  # Check every minute
             logging.info(f"Last block Time {time.time()} and {self.lastBlockTime} and {time.time() - self.lastBlockTime}", color="green")
-            if time.time() - self.lastBlockTime > 600:  # 10 minutes in seconds
+            if time.time() - self.lastBlockTime > 300:  # 10 minutes in seconds
                 logging.info("lastBlockTime not updated in 10 minutes, reconnecting to server.", color="yellow")
                 try:
                     # end the last process thread 
@@ -448,9 +448,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     self.electrumx.reconnect()  # Reconnect to the server
                     logging.info("Connection done, starting processing again", color="green")
                     self.lastBlockTime = time.time()
-                    # self.processThread = Thread(
-                    #     target=self._processNotifications)
-                    # self.processThread.start()
+                    self._evrmoreWallet.setupSubscriptions()
+                    self._evrmoreVault.setupSubscriptions()
+                    self.processThread = Thread(
+                        target=self._processNotifications)
+                    self.processThread.start()
                 except Exception as e: 
                     logging.error(f"Error while reconnecting {e}")
 
