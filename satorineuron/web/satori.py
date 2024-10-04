@@ -1504,10 +1504,12 @@ def vault():
 @app.route('/vault/report', methods=['GET'])
 @authRequired
 def reportVault(network: str = 'main'):
-    if start.vault is None:
-        return redirect('/dashboard')
+    if start.vault is None
+    return redirect('/dashboard')
     # the network portion should be whatever network I'm on.
     vault = start.getVault(network=network)
+    if vault.isEncrypted:
+        return redirect('/vault')
     vaultAddress = vault.address
     print(vault.publicKey)
     success, result = start.server.reportVault(
@@ -1535,6 +1537,8 @@ def mineToAddress(address: str):
     network = 'main'
     start.details.wallet['rewardaddress'] = address
     vault = start.getVault(network=network)
+    if vault.isEncrypted:
+        return redirect('/vault')
     success, result = start.server.mineToAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
@@ -1552,6 +1556,8 @@ def stakeForAddress(address: str):
     # the network portion should be whatever network I'm on.
     network = 'main'
     vault = start.getVault(network=network)
+    if vault.isEncrypted:
+        return redirect('/vault')
     success, result = start.server.stakeForAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
@@ -1569,6 +1575,8 @@ def lendToAddress(address: str):
     # the network portion should be whatever network I'm on.
     network = 'main'
     vault = start.getVault(network=network)
+    if vault.isEncrypted:
+        return redirect('/vault')
     success, result = start.server.lendToAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
