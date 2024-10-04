@@ -52,6 +52,27 @@
     </div>
   </div>
 <script>
+  document.addEventListener('DOMContentLoaded', (event) => {
+    getLendingAddress();
+  });
+  function getLendingAddress() {
+    return fetch('/lend/address', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          return response.text().then(errorMessage => {
+            throw new Error(errorMessage || 'Network response was not ok.');
+          });
+        }
+      }).then(text => {
+        document.getElementById("addLendingAddress").value = text;
+        return text;
+      }).catch(error => {
+        console.error('Error:', error)
+        document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save. ' + error;
+      });
+  }
   function checkEnterForLendingAddress(event){
     if (event.key === "Enter" || event.keyCode === 13) {
       console.log('enter detected');
@@ -71,7 +92,9 @@
         if (response.ok) {
           return response.text();
         } else {
-          throw new Error('Network response was not ok.');
+          return response.text().then(errorMessage => {
+            throw new Error(errorMessage || 'Network response was not ok.');
+          });
         }
     })
     .then(text => {
@@ -83,25 +106,9 @@
         document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save.';
       }
     }).catch(error => {
-      document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save.';
+      document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save. ' + error;
       console.error('Error:', error);
     });
-  }
-  document.addEventListener('DOMContentLoaded', (event) => {
-    getLendingAddress();
-  });
-  function getLendingAddress() {
-    return fetch('/lend/address', { method: 'GET' })
-      .then(response => {
-        if (response.ok) {
-          return response.text();
-        } else {
-          throw new Error('Network response was not ok.');
-        }
-      }).then(text => {
-        document.getElementById("addLendingAddress").value = text;
-        return text;
-      }).catch(error => console.error('Error:', error));
   }
   function removeLending() {
     fetch('/lend/remove', { method: 'GET' })
@@ -109,12 +116,17 @@
       if (response.ok) {
         return response.text();
       } else {
-        throw new Error('Network response was not ok.');
+        return response.text().then(errorMessage => {
+          throw new Error(errorMessage || 'Network response was not ok.');
+        });
       }
     }).then(text => {
+      document.getElementById("addLendingAddressConfirmation").innerHTML = 'Saved!';
       console.log(text);
-    })
-    .catch(error => console.error('Error:', error));
+    }).catch(error => {
+      console.error('Error:', error)
+      document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save. ' + error;
+    });
   }
 </script>
 {% endblock %}

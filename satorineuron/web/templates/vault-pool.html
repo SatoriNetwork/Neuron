@@ -1,5 +1,5 @@
 {% block content %}
-<div class="row mb-0" style='padding-bottom:1rem;display:block;' id='poolDisplay'><br id="poolbr">
+<div class="row mb-0" style='padding-bottom:1rem;display:none;' id='poolDisplay'><br id="poolbr">
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
@@ -50,11 +50,6 @@
         throw new Error('Network response was not ok.');
       }
     }).then(text => {
-      console.log('TEXT...');
-      console.log(text);
-      console.log(text.length);
-      console.log(text=='');
-      console.log(!text);
       if (!text || text == '') {
         handlePoolDisplay(text);
         return;
@@ -62,17 +57,12 @@
       poolTableData = JSON.parse(text);
       handlePoolDisplay(poolTableData)
       if (poolTableData.length > 0) {
-        createTable(text);
+        createPoolTable(text);
       }
     }).catch(error => console.error('Error:', error));
   }
 
   function handlePoolDisplay(text) {
-    console.log('handlePoolDisplay...');
-    console.log(text);
-    console.log(text.length);
-    console.log(text=='');
-    console.log(!text);
     if (text && text.length > 0) {
       document.getElementById("poolDisplay").style.display = "block";
     } else {
@@ -80,7 +70,7 @@
     }
   }
 
-  function createTable(text) {
+  function createPoolTable(text) {
     // example text '[{
     //   "parent": 1234,
     //   "child": 5678,
@@ -105,10 +95,11 @@
     `;
     let totalCount = 0;
     let totalStakingPower = 0;
+    console.log(data);
     data.forEach(item => {
-        let alias = item.name ? item.name : item.address;
-        let aliasLabel = item.name ? `wallet address: ${item.address}` : `wallet`;
-        let stakingPower = parseFloat(item.lend_out);
+        let alias = item.alias ? item.alias : item.address;
+        let aliasLabel = item.alias ? `wallet address: ${item.address}` : `wallet`;
+        let stakingPower = parseFloat(item.lent_out);
         totalCount += 1;
         totalStakingPower+= isNaN(stakingPower) ? 0 : stakingPower;
         tableHTML += `
@@ -124,14 +115,6 @@
             <td>
               <div class="py-1" style="display: inline-flex;">
                 <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${stakingPower}</h6>
-              </div>
-            </td>
-        `;
-        tableHTML += `
-            <td>
-              <div class="py-1" style="display: inline-flex;">
-        `;
-        tableHTML += `
               </div>
             </td>
         `;
@@ -215,12 +198,12 @@
         }
       }).then(json => {
           poolTableData = json;
-          const includedColumns = ["child", "lend_out"];
+          const includedColumns = ["child", "lent_out"];
           const csvOutput = jsonToCsv(json, includedColumns);
           downloadCsv(csvOutput, "pooled.csv")
       }).catch(error => console.error('Error:', error));
     } else {
-      const includedColumns = ["child", "lend_out"];
+      const includedColumns = ["child", "lent_out"];
       const csvOutput = jsonToCsv(poolTableData, includedColumns);
       downloadCsv(csvOutput, "pooled.csv")
     }
