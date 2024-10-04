@@ -23,6 +23,7 @@ from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
 from satorilib.concepts.structs import StreamId, StreamOverviews
+from satorilib.concepts import constants
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timeToSeconds, nowStr
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
@@ -971,6 +972,7 @@ def dashboard():
         'miningMode': start.miningMode and stakeStatus,
         'miningDisplay': 'none',
         'proxyDisplay': 'none',
+        'stakeRequired': constants.stakeRequired,
         'holdingBalance': holdingBalance,
         'streamOverviews': streamOverviews,
         'configOverrides': config.get(),
