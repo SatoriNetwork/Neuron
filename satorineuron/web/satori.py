@@ -7,11 +7,11 @@
 from flask_cors import CORS
 from typing import Union
 from functools import wraps, partial
-import requests
 import shutil
 import os
 import sys
 import json
+import random
 import secrets
 import time
 import traceback
@@ -22,7 +22,7 @@ from queue import Queue
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
-from satorilib.concepts.structs import StreamId, StreamOverviews
+from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
 from satorilib.concepts import constants
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timeToSeconds, nowStr
@@ -775,6 +775,9 @@ def registerStream():
             **({'hook': newRelayStream.hook.data} if newRelayStream.hook.data not in ['', None] else {}),
             **({'history': newRelayStream.history.data} if newRelayStream.history.data not in ['', None] else {}),
         }
+        # randomize the offset in order to lessen spiking issues
+        data['cadence'] = data.get('cadence', Stream.minimumCadence)
+        data['offset'] = data.get('offset', random.uniform(0, data['cadence']))
         if data.get('hook') in ['', None, {}]:
             hook, status = generateHookFromTarget(data.get('target', ''))
             if status == 200:
