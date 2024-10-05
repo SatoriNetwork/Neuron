@@ -1,5 +1,5 @@
 {% block content %}
-<div class="row mb-0" style='padding-bottom:1rem;display:none;' id='delegateDisplay'><br id="stakebr">
+<div class="row mb-0" style='padding-bottom:1rem;'>
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
@@ -84,7 +84,6 @@
         return;
       }
       tableData = JSON.parse(text);
-      handleDisplay(tableData);
       if (tableData.length > 0) {
         createTable(text);
       }
@@ -133,14 +132,6 @@
       document.getElementById("addStakingAddressConfirmation").innerHTML = 'Unable to save.';
       console.error('Error:', error);
     });
-  }
-
-  function handleDisplay(text) {
-    if (text && text.length > 0) {
-      document.getElementById("delegateDisplay").style.display = "block";
-    } else {
-      document.getElementById("delegateDisplay").style.display = "none";
-    }
   }
 
   function createTable(text) {

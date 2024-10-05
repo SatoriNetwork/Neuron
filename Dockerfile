@@ -128,3 +128,4 @@ CMD ["bash", "./start_from_image.sh"]
 # docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # docker push satorinet/satorineuron:latest
 # docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:rpi_satori   --push .
+# echo "Done!"
