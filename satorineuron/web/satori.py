@@ -1504,8 +1504,8 @@ def vault():
 @app.route('/vault/report', methods=['GET'])
 @authRequired
 def reportVault(network: str = 'main'):
-    if start.vault is None
-    return redirect('/dashboard')
+    if start.vault is None:
+        return redirect('/dashboard')
     # the network portion should be whatever network I'm on.
     vault = start.getVault(network=network)
     if vault.isEncrypted:
