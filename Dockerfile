@@ -12,12 +12,13 @@ FROM python:3.10-slim AS builder
 #     apt-get install -y build-essential wget curl git vim cmake dos2unix \
 #     wireguard iptables iproute2 netcat-openbsd iputils-ping && \
 #     apt-get clean
-RUN apt-get update --fix-missing
+RUN apt-get update 
 RUN apt-get install -y build-essential
 RUN apt-get install -y wget curl git vim cmake dos2unix
 RUN apt-get install -y wireguard iptables iproute2 netcat-openbsd iputils-ping
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
+RUN apt-get clean 
+# --fix-missing
+# && rm -rf /var/lib/apt/lists/*
 
 # File system setup
 ARG BRANCH_FLAG=main
@@ -66,17 +67,17 @@ EXPOSE 24601
 EXPOSE 51820/udp
 
 # Copy peer_management_script.py into the container
-COPY Neuron/peer_management_script.py /app/peer_management_script.py
+# COPY Neuron/peer_management_script.py /app/peer_management_script.py
 
 
 # Ensure the script has execute permissions
-RUN chmod +x /app/peer_management_script.py
+# RUN chmod +x /app/peer_management_script.py
 
 # Set working directory
 WORKDIR /Satori/Neuron/satorineuron/web
 
 # Set the entry point
-CMD ["bash", "./start_from_image.sh"]&& python peer_management_script.py
+CMD ["bash", "./start_from_image.sh"]
 ## RUN OPTIONS
 # python -m satorisynapse.run async
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env PREDICTOR=ttm --env ENV=prod satorinet/satorineuron:latest ./start.sh

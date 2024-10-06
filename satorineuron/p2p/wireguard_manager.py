@@ -1,6 +1,11 @@
 import subprocess
-import json
-import threading
+import signal
+import os
+import sys
+
+# Global variables to store process IDs
+nc_process = None
+nc_connect_process = None
 
 def run_command(command):
     """Run a shell command and return its output."""
@@ -43,15 +48,6 @@ def save_config(interface):
     """Save the current WireGuard configuration."""
     run_command(f"wg-quick save {interface}")
 
-def send_message(ip, port, message):
-    """Send a message to the specified IP and port."""
-    try:
-        command = f"echo '{message}' | nc -w 5 {ip} {port}"
-        output = run_command(command)
-        return f"Message sent to {ip}:{port}"
-    except Exception as e:
-        return f"Failed to send message to {ip}:{port}: {str(e)}"
-
 def start_wireguard_service(interface):
     """Start the WireGuard service for the specified interface."""
     try:
@@ -60,22 +56,107 @@ def start_wireguard_service(interface):
     except Exception as e:
         return f"Failed to start WireGuard service for interface {interface}: {str(e)}"
 
-def receive_messages(port, callback):
-    """
-    Listen for incoming messages on the specified port.
-    The callback function will be called with the received message.
-    """
-    def listener():
+def start_port_listening(port):
+    """Start listening on the specified port using netcat."""
+    global nc_process
+    try:
+        # Clear the screen for better visibility
+        os.system('clear' if os.name == 'posix' else 'cls')
+        
+        print(f"Listening on port {port}...")
+        print("Press Ctrl+C to stop listening and return to menu")
+        print("-" * 50)
+        
+        # Start netcat in verbose mode with line buffering
+        nc_process = subprocess.Popen(
+            ['nc', '-l', '-v', '-p', str(port)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=1,
+            universal_newlines=True
+        )
+        
+        # Monitor the output in real-time
         while True:
-            try:
-                command = f"nc -l -p {port}"
-                message = run_command(command)
-                if message:
-                    callback(message)
-            except Exception as e:
-                print(f"Error receiving message: {str(e)}")
+            if nc_process.poll() is not None:
+                break
+                
+            output = nc_process.stdout.readline()
+            if output:
+                print(output.strip())
+            
+            error = nc_process.stderr.readline()
+            if error:
+                print(f"Error: {error.strip()}")
+                
+    except KeyboardInterrupt:
+        raise
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+    finally:
+        stop_port_listening()
 
-    thread = threading.Thread(target=listener)
-    thread.daemon = True
-    thread.start()
-    return thread
+def stop_port_listening():
+    """Stop the netcat listening process if it's running."""
+    global nc_process
+    if nc_process:
+        try:
+            nc_process.terminate()
+            nc_process.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            nc_process.kill()
+        finally:
+            nc_process = None
+
+def start_port_connection(target_ip, port):
+    """Start connection to target IP and port using netcat."""
+    global nc_connect_process
+    try:
+        # Clear the screen for better visibility
+        os.system('clear' if os.name == 'posix' else 'cls')
+        
+        print(f"Connecting to {target_ip}:{port}...")
+        print("Press Ctrl+C to stop connection and return to menu")
+        print("-" * 50)
+        
+        # Start netcat connection in verbose mode with line buffering
+        nc_connect_process = subprocess.Popen(
+            ['nc', '-v', target_ip, str(port)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=1,
+            universal_newlines=True
+        )
+        
+        # Monitor the output in real-time
+        while True:
+            if nc_connect_process.poll() is not None:
+                break
+                
+            output = nc_connect_process.stdout.readline()
+            if output:
+                print(output.strip())
+            
+            error = nc_connect_process.stderr.readline()
+            if error:
+                print(f"Error: {error.strip()}")
+                
+    except KeyboardInterrupt:
+        raise
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+    finally:
+        stop_port_connection()
+
+def stop_port_connection():
+    """Stop the netcat connection process if it's running."""
+    global nc_connect_process
+    if nc_connect_process:
+        try:
+            nc_connect_process.terminate()
+            nc_connect_process.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            nc_connect_process.kill()
+        finally:
+            nc_connect_process = None
