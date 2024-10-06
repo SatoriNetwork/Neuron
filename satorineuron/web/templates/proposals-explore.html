@@ -179,7 +179,9 @@
       proposalDetails.innerHTML = `
          <div class="card {% if darkmode %}dark-colors{% endif %}">
           <div class="row" style='padding-left:2rem;padding-right:2rem;'>
-            <div class="col-xl-12 col-sm-12 mb-xl-0">
+            <div class="col-xl-1 col-sm-1 mb-xl-0">
+            </div>
+            <div class="col-xl-11 col-sm-11 mb-xl-0">
               <center>
                 <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
                   style="padding-top:1.5rem; text-transform: none;"
@@ -191,6 +193,11 @@
                   <h4 class="{% if darkmode %}dark-colors{% endif %}">Welcome to Proposals</h4>
                 </button>
               </center>
+            </div>
+            <div class="col-xl-1 col-sm-1 mb-xl-0">
+              <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-top:2rem;" onclick="getCsvVotes()">
+                <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;" title="download voters report">file_download</i>
+              </button>
             </div>
           </div>
           <div>
@@ -249,6 +256,7 @@
   }
 
   var chosenProposal = null;
+  var chosenProposalVotes = null;
 
   function updateProposalsList(proposals) {
       const proposalList = document.getElementById('proposal-list');
@@ -406,90 +414,91 @@
   }
 
   function updateVoteCounts(id, votes) {
-      console.log(`Updating vote counts for proposal ${id}`);
-      console.log('Received votes:', votes);
+    chosenProposalVotes = votes;
+    console.log(`Updating vote counts for proposal ${id}`);
+    console.log('Received votes:', votes);
 
-      const proposalDetail = document.getElementById(`proposal-${id}`);
-      if (!proposalDetail) {
-          console.error(`Proposal detail element not found for id ${id}`);
-          return;
-      }
+    const proposalDetail = document.getElementById(`proposal-${id}`);
+    if (!proposalDetail) {
+        console.error(`Proposal detail element not found for id ${id}`);
+        return;
+    }
 
-      // Initialize satori sums
-      const satoriSums = {};
-      let totalSatori = 0;
+    // Initialize satori sums
+    const satoriSums = {};
+    let totalSatori = 0;
 
-      // Sum satori values
-      votes.forEach(vote => {
-          if (vote.proposal_id == id) {
-              if (!satoriSums[vote.vote]) {
-                  satoriSums[vote.vote] = 0;
-              }
-              const satoriValue = parseFloat(vote.currency) || 0;
-              satoriSums[vote.vote] += satoriValue;
-              totalSatori += satoriValue;
-          }
-      });
+    // Sum satori values
+    votes.forEach(vote => {
+        if (vote.proposal_id == id) {
+            if (!satoriSums[vote.vote]) {
+                satoriSums[vote.vote] = 0;
+            }
+            const satoriValue = parseFloat(vote.currency) || 0;
+            satoriSums[vote.vote] += satoriValue;
+            totalSatori += satoriValue;
+        }
+    });
 
-      console.log('Satori sums:', satoriSums);
-      console.log('Total Satori:', totalSatori);
+    console.log('Satori sums:', satoriSums);
+    console.log('Total Satori:', totalSatori);
 
-      // Update the display
-      Object.keys(satoriSums).forEach(option => {
-          const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
-          if (percentageElement) {
-              const percentage = totalSatori > 0 ? Math.round((satoriSums[option] / totalSatori * 100)) : 0;
-              percentageElement.textContent = `${percentage}%`;
-              console.log(`Updated percentage for ${option}: ${percentage}%`);
-          } else {
-              console.error(`Percentage element not found for option ${option}`);
-          }
-      });
+    // Update the display
+    Object.keys(satoriSums).forEach(option => {
+        const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
+        if (percentageElement) {
+            const percentage = totalSatori > 0 ? Math.round((satoriSums[option] / totalSatori * 100)) : 0;
+            percentageElement.textContent = `${percentage}%`;
+            console.log(`Updated percentage for ${option}: ${percentage}%`);
+        } else {
+            console.error(`Percentage element not found for option ${option}`);
+        }
+    });
 
-      // Log the results for debugging
-      console.log(`Proposal ${id} - Total Satori: ${totalSatori}`);
-      console.log('Satori sums per option:', satoriSums);
+    // Log the results for debugging
+    console.log(`Proposal ${id} - Total Satori: ${totalSatori}`);
+    console.log('Satori sums per option:', satoriSums);
   }
 
   function submitVote(id, vote) {
-      console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
-      fetch('/proposals/vote', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-              proposal_id: String(id),
-              vote: vote
-          }),
-      })
-      .then(response => {
-          if (!response.ok) {
-              return response.json().then(err => { throw err; });
-          }
-          return response.json();
-      })
-      .then(data => {
-          console.log('Server response:', data);
-          if (data.status === 'success') {
-              console.log('Vote submitted successfully');
-              disableVoteButtons(id);
-              showVotedMessage(id, 'Your vote has been recorded.');
-              sleep(2000).then(() => {
-                //location.reload();
-                fetchProposalVotes(chosenProposal);
-                //disableVoteButtons(id);
-                updateProposalDetails(chosenProposal);
-                enableVoteButtons(id);
-              });
-          } else {
-              throw new Error(data.message || 'Unknown error');
-          }
-      })
-      .catch((error) => {
-          console.error('Vote failed:', error.message);
-          displayErrorMessage('Failed to submit vote: ' + error.message);
-      });
+    console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
+    fetch('/proposals/vote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            proposal_id: String(id),
+            vote: vote
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Server response:', data);
+        if (data.status === 'success') {
+            console.log('Vote submitted successfully');
+            disableVoteButtons(id);
+            showVotedMessage(id, 'Your vote has been recorded.');
+            sleep(2000).then(() => {
+              //location.reload();
+              fetchProposalVotes(chosenProposal);
+              //disableVoteButtons(id);
+              updateProposalDetails(chosenProposal);
+              enableVoteButtons(id);
+            });
+        } else {
+            throw new Error(data.message || 'Unknown error');
+        }
+    })
+    .catch((error) => {
+        console.error('Vote failed:', error.message);
+        displayErrorMessage('Failed to submit vote: ' + error.message);
+    });
   }
 
   function sleep(ms) {
@@ -525,5 +534,60 @@
       console.error(message);
       alert(message);
   }
+
+  function jsonToCsvVotes(jsonArray, columnsToExclude = []) {
+    if (!jsonArray || jsonArray.length === 0) {
+        return '';
+    }
+    let headers = Object.keys(jsonArray[0]);
+    headers = headers.filter(header => !columnsToExclude.includes(header));
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+    jsonArray.forEach(obj => {
+        const values = headers.map(header => {
+            const escaped = ('' + obj[header]).replace(/"/g, '""');
+            return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+    });
+    return csvRows.join('\n');
+  }
+
+  function downloadCsvVotes(csvContent, filename) {
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  }
+
+  function getCsvVotes(){
+    /// TODO: this code to parse the data to generate a report was taken from
+    /// a different file. It needs to be conformed to parse this data structure:
+    /// chosenProposalVotes correctly.
+    if (!chosenProposalVotes) {
+      fetch('/proxy/parent/status', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(json => {
+          chosenProposalVotes = json;
+          const excludedColumns = ["parent", "child", "charity"];
+          const csvOutput = jsonToCsvVotes(json, excludedColumns);
+          downloadCsvVotes(csvOutput, "delegate.csv")
+      }).catch(error => console.error('Error:', error));
+    } else {
+      const excludedColumns = ["parent", "child", "charity"];
+      const csvOutput = jsonToCsvVotes(chosenProposalVotes, excludedColumns);
+      downloadCsvVotes(csvOutput, "delegate.csv")
+    }
+  }
+
+
 </script>
 {% endblock %}
