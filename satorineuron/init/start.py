@@ -17,6 +17,7 @@ from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
+from satorilib.api.time import timestampToSeconds
 from satorineuron import VERSION
 from satorineuron import logging
 from satorineuron import config
@@ -62,7 +63,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         super(StartupDag, self).__init__(*args)
         self.version = [int(x) for x in VERSION.split('.')]
         self.env = env
-        self.walletOnlyMode = walletOnlyMode
+        if isinstance(walletOnlyMode, bool):
+            self.walletOnlyMode = walletOnlyMode
+        elif isinstance(walletOnlyMode, str) and walletOnlyMode == 'False':
+            self.walletOnlyMode = False
+        else:
+            self.walletOnlyMode = bool(walletOnlyMode)
         self.lastWalletCall = 0
         self.lastVaultCall = 0
         self.electrumCooldown = 10
@@ -133,6 +139,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def checkinCheck(self):
         while True:
             time.sleep(60*60*6)
+            # loop through streams, if I haven't had an observation on a stream
+            # in more than 24 hours, delete it. and restart
+            # for stream in self.subscriptions:
+            #    ts = timestampToSeconds(
+            #        self.cacheOf(stream.streamId).getLatestObservationTime()
+            #    )
+            #    if ts > 0 and ts + 60*60*24 < time.time():
+            #        self.server.removeStream(stream.streamId.topic())
+            #        self.triggerRestart()
             if self.server.checkinCheck():
                 self.triggerRestart()  # should just be start()
 
