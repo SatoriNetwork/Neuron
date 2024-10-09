@@ -445,11 +445,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 try:
                     # end the last process thread 
                     logging.info("Connection started", color="green")
-                    self.electrumx.reconnect()  # Reconnect to the server
+                    # Reconnect to the server
+                    self.createElectrumxConnection()
+                    self._evrmoreWallet.connection = self.electrumx;
+                    self._evrmoreWallet.electrumx.conn = self.electrumx;
+                    self._evrmoreWallet.electrumx.last_handshake = time.time();
+                    self._evrmoreVault.connection = self.electrumx;
+                    self._evrmoreVault.electrumx.conn = self.electrumx;
+                    self._evrmoreVault.electrumx.last_handshake = time.time();
                     logging.info("Connection done, starting processing again", color="green")
                     self.lastBlockTime = time.time()
                     self._evrmoreWallet.setupSubscriptions()
                     self._evrmoreVault.setupSubscriptions()
+                    logging.info("Starting the thread for the process notification")
                     self.processThread = Thread(
                         target=self._processNotifications)
                     self.processThread.start()
@@ -458,10 +466,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def createElectrumxConnection(self):
         servers: list[str] = [
-            '146.190.149.237:50002',
-            '146.190.38.120:50002',
-            'electrum1-mainnet.evrmorecoin.org:50002',
-            'electrum2-mainnet.evrmorecoin.org:50002']
+            '146.190.149.237:50001',
+            '146.190.38.120:50001',
+            'electrum1-mainnet.evrmorecoin.org:50001',
+            'electrum2-mainnet.evrmorecoin.org:50001']
         hostPort = random.choice(servers)
         self.electrumx = Electrumx(
             host=hostPort.split(':')[0],
