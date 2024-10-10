@@ -1,4 +1,5 @@
 from typing import Union
+from threading import Thread, Event
 import os
 import time
 import json
@@ -195,29 +196,23 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             "evrmore", None, False, self.electrumx)
         walletInstance.setupSubscriptions()
         vaultInstance.setupSubscriptions()
-        # listen to all subscriptions
         # Start a thread to listen for updates
-        # self.subscriptions['scripthash'] = Thread(
-        #    target=self._processNotifications)
-        # self.subscriptions['scripthash'].start()
-        self.processThread = threading.Thread(
-            target=self._processNotifications)
+        self.processThread = Thread(
+           target=self._processNotifications)
         self.processThread.start()
-
+        
     # _processNotifications method to listening for updates
     def _processNotifications(self):
         """
         Processes incoming notifications for the subscribed scripthash and headers.
         """
         print("_processNotifications started")
-
         try:
             for notification in self.electrumx.receive_notifications():
                 print(f"Received notification {notification}")
                 if self.stopAllSubscriptions.is_set():
                     print("Stop event set, breaking loop")
                     break
-
                 if 'method' in notification:
                     if notification['method'] == 'blockchain.scripthash.subscribe':
                         if 'params' in notification and len(notification['params']) == 2:
@@ -438,6 +433,35 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.startRelay()
         self.buildEngine()
         time.sleep(60*60*24)
+        
+    def monitorLastBlockTime(self):
+        logging.info("monitorLastBlockTime called", color="yellow")
+        while True:
+            time.sleep(60)  # Check every minute
+            logging.info(f"Last block Time {time.time()} and {self.lastBlockTime} and {time.time() - self.lastBlockTime}", color="green")
+            if time.time() - self.lastBlockTime > 300:  # 10 minutes in seconds
+                logging.info("lastBlockTime not updated in 10 minutes, reconnecting to server.", color="yellow")
+                try:
+                    # end the last process thread 
+                    logging.info("Connection started", color="green")
+                    # Reconnect to the server
+                    self.createElectrumxConnection()
+                    self._evrmoreWallet.connection = self.electrumx;
+                    self._evrmoreWallet.electrumx.conn = self.electrumx;
+                    self._evrmoreWallet.electrumx.last_handshake = time.time();
+                    self._evrmoreVault.connection = self.electrumx;
+                    self._evrmoreVault.electrumx.conn = self.electrumx;
+                    self._evrmoreVault.electrumx.last_handshake = time.time();
+                    logging.info("Connection done, starting processing again", color="green")
+                    self.lastBlockTime = time.time()
+                    self._evrmoreWallet.setupSubscriptions()
+                    self._evrmoreVault.setupSubscriptions()
+                    logging.info("Starting the thread for the process notification")
+                    self.processThread = Thread(
+                        target=self._processNotifications)
+                    self.processThread.start()
+                except Exception as e: 
+                    logging.error(f"Error while reconnecting {e}")
 
     def monitorLastBlockTime(self):
         logging.info("monitorLastBlockTime called", color="yellow")
