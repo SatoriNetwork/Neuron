@@ -5,6 +5,7 @@ import time
 import json
 import random
 import threading
+
 from reactivex.subject import BehaviorSubject
 from queue import Queue
 import satorineuron
@@ -108,7 +109,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
-        self.stop_all_subscriptions = Event()
+        self.stopAllSubscriptions = threading.Event()
         self.lastBlockTime = time.time()
         if not config.get().get('disable_restart', False):
             self.restartThread = threading.Thread(
@@ -200,20 +201,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
            target=self._processNotifications)
         self.processThread.start()
         
-        # _processNotifications method to listening for updates
+    # _processNotifications method to listening for updates
     def _processNotifications(self):
         """
         Processes incoming notifications for the subscribed scripthash and headers.
         """
         print("_processNotifications started")
-
         try:
             for notification in self.electrumx.receive_notifications():
                 print(f"Received notification {notification}")
-                if self.stop_all_subscriptions.is_set():
+                if self.stopAllSubscriptions.is_set():
                     print("Stop event set, breaking loop")
                     break
-
                 if 'method' in notification:
                     if notification['method'] == 'blockchain.scripthash.subscribe':
                         if 'params' in notification and len(notification['params']) == 2:
@@ -462,6 +461,28 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         target=self._processNotifications)
                     self.processThread.start()
                 except Exception as e: 
+                    logging.error(f"Error while reconnecting {e}")
+
+    def monitorLastBlockTime(self):
+        logging.info("monitorLastBlockTime called", color="yellow")
+        while True:
+            time.sleep(60)  # Check every minute
+            logging.info(
+                f"Last block Time {time.time()} and {self.lastBlockTime} and {time.time() - self.lastBlockTime}", color="green")
+            if time.time() - self.lastBlockTime > 600:  # 10 minutes in seconds
+                logging.info(
+                    "lastBlockTime not updated in 10 minutes, reconnecting to server.", color="yellow")
+                try:
+                    # end the last process thread
+                    logging.info("Connection started", color="green")
+                    self.electrumx.reconnect()  # Reconnect to the server
+                    logging.info(
+                        "Connection done, starting processing again", color="green")
+                    self.lastBlockTime = time.time()
+                    # self.processThread = Thread(
+                    #     target=self._processNotifications)
+                    # self.processThread.start()
+                except Exception as e:
                     logging.error(f"Error while reconnecting {e}")
 
     def createElectrumxConnection(self):
