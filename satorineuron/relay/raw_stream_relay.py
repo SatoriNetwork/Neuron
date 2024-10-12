@@ -135,7 +135,9 @@ class RawStreamRelayEngine(Cached):
             'outgoing message:',
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
             data, timestamp, print=True)
+        print('Abc1')
         start = getStart()
+        print('Abc2')
         start.publish(
             topic=stream.streamId.topic(),
             data=data,

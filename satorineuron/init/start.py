@@ -705,8 +705,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isPrediction: bool = False,
     ) -> True:
         ''' publishes to all the pubsub servers '''
-        if self.holdingBalance < constants.stakeRequired:
-            return False
+        # does this take proxy into account? I don't think so.
+        #if self.holdingBalance < constants.stakeRequired:
+        #    return False
         if not isPrediction:
             for pub in self.pubs:
                 pub.publish(

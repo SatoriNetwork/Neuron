@@ -94,13 +94,14 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                # 'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'http://24.199.113.168'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
-                #'prod': 'https://64.23.142.242'}[ENV],
+            # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
                 'local': ['ws://192.168.0.10:24603'],
                 'dev': ['ws://localhost:24603'],
@@ -965,10 +966,12 @@ def dashboard():
     if start.vault is not None:
         start.openVault()
     holdingBalance = start.holdingBalance
-    stakeStatus = holdingBalance >= 5 or start.details.wallet.get('rewardaddress', None) not in [
-        None,
-        start.details.wallet.get('address'),
-        start.details.wallet.get('vaultaddress')]
+    stakeStatus = holdingBalance >= 5 or (
+        start.details.wallet.get('rewardaddress', None) not in [
+            None,
+            start.details.wallet.get('address'),
+            start.details.wallet.get('vaultaddress')]
+        if start.details is not None else 0)
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
