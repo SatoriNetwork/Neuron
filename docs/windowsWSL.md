@@ -18,7 +18,7 @@ wsl.exe --list --verbose
 diskpart
 
 # and inside diskpart type:
-DISKPART> select vdisk file="<path to vhdx file>"
+DISKPART> select vdisk file="C:\Users\<USERNAME>\AppData\Local\Docker\wsl\data\ext4.vhdx"
 
 # Then to shrink
 DISKPART> compact vdisk
