@@ -22,4 +22,10 @@ VERSION = '0.2.01'
 VERSION = '0.2.08'
 # >>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
 # >>>>>>> main
+VERSION = '0.2.01'
+
+VERSION = '0.2.08'
+
+VERSION = '0.2.20'
+
 MOTTO = 'Let your workings remain a mystery, just show people the results.'

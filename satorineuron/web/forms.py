@@ -111,3 +111,8 @@ class ChatPrompt(FlaskForm):
         'prompt',
         validators=[InputRequired(), Length(min=8)])
     submit = SubmitField('Ask')
+
+
+#class CreateProposal(FlaskForm):
+    # str
+    #...

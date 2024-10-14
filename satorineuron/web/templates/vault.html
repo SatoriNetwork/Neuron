@@ -4,13 +4,23 @@
     <div id="vaultwarningbr">
       {% include 'vault-warning.html' %}
     </div>
-    <br id="rewardbr">
-    {% include 'vault-reward.html' %}
+    <br>
+    <div id="rewardbr"> </div>
+    <div id="lendbr"> </div>
+    <div class="row">
+      {% include 'vault-reward.html' %}
+      <!-- include 'vault-lend.html'-->
+      {% include 'vault-lend.html' %}
+      <!-- include 'vault-pool.html'-->
+    </div>
+    {% include 'vault-pool.html' %}
     <br id="stakebr">
     {% include 'vault-stake.html' %}
     <br id='balancebr'>
     {% include 'wallet-functions.html' %}
     <!-- put voting template here -->
+    <br id="aliasbr">
+    {% include 'wallet-alias.html' %}
     <br id="historybr">
     {% include 'wallet-history.html' %}
     <br id="metadatabr">

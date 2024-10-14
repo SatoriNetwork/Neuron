@@ -1,0 +1,593 @@
+{% block content %}
+<style>
+  .vote-option {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+  }
+  .vote-btn {
+  }
+  .vote-stats {
+      font-size: 0.9em;
+      color: #666;
+  }
+  .proposal-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+  }
+  .proposal-card-header {
+    background-color: #ffffff;
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .proposal-card-header h4 {
+    margin: 0;
+    color: #333;
+  }
+  .proposal-card-body {
+    background-color: #ffffff;
+    padding: 20px;
+  }
+  .image-placeholder {
+      width: 100%;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      overflow: hidden;
+  }
+  .image-placeholder img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+  }
+  .proposal-info {
+      margin-bottom: 20px;
+  }
+  .proposal-info dt {
+      font-weight: bold;
+      color: #555;
+      margin-top: 10px;
+  }
+  .proposal-info dd {
+      margin-left: 0;
+      margin-bottom: 5px;
+      color: #333;
+  }
+  .vote-options {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      gap: 10px;
+      margin-bottom: 20px;
+  }
+  .vote-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+  }
+  .vote-btn-old {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #007bff;
+      box-shadow:unset;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 5px;
+  }
+  .vote-btn:hover {
+      background-color: #0056b3;
+      box-shadow:unset;
+  }
+  .vote-percentage {
+      font-size: 0.9em;
+      color: #666;
+  }
+  .vote-results {
+      margin-bottom: 15px;
+  }
+  .vote-results p {
+      margin: 5px 0;
+  }
+  .proposal-voted-message {
+      display: block;
+      margin-top: 15px;
+      font-style: italic;
+      color: #666;
+      padding: 10px;
+      border-radius: 4px;
+  }
+  .welcome-card {
+      text-align: center;
+      padding: 20px;
+      background-color: #fff9fa;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .welcome-card h2 {
+      color: black;
+      margin-bottom: 15px;
+  }
+</style>
+
+<div class="row">
+  <!-- Left column: List of proposal titles -->
+  <div class="col-md-3">
+    <div class="proposal-card">
+      <div class="proposal-card-header">
+        <h4>Proposals</h4>
+      </div>
+      <div class="proposal-card-body">
+        <ul class="list-group proposal-list" id="proposal-list">
+          <!-- Proposal list items will be dynamically inserted here -->
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- Right column: Detailed view of selected proposal -->
+  <div class="col-md-9 proposal-detail-container">
+    <div id="proposal-details">
+      <!-- Welcome card and proposal details will be dynamically inserted here -->
+      <div class="card {% if darkmode %}dark-colors{% endif %}">
+        <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+          <div class="col-xl-12 col-sm-12 mb-xl-0">
+            <center>
+              <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
+                style="padding-top:1.5rem; text-transform: none;"
+                type="button"
+                data-toggle="collapse"
+                data-target="#createProposalBody"
+                aria-expanded="false"
+                aria-controls="createProposalBody">
+                <h4 class="{% if darkmode %}dark-colors{% endif %}">Welcome to Proposals</h4>
+              </button>
+            </center>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+            Proposals allow the community to direct the project.
+            <br><br>
+            Select a proposal from the list to vote.
+            <br><br>
+            <br><br>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  let isFetchingProposals = false;
+
+  document.addEventListener('DOMContentLoaded', (event) => {
+      fetchProposals();
+      //showWelcomeCard();
+  });
+
+  function showWelcomeCard() {
+      const proposalDetails = document.getElementById('proposal-details');
+      proposalDetails.innerHTML = `
+         <div class="card {% if darkmode %}dark-colors{% endif %}">
+          <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+            <div class="col-xl-1 col-sm-1 mb-xl-0">
+            </div>
+            <div class="col-xl-11 col-sm-11 mb-xl-0">
+              <center>
+                <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
+                  style="padding-top:1.5rem; text-transform: none;"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#createProposalBody"
+                  aria-expanded="false"
+                  aria-controls="createProposalBody">
+                  <h4 class="{% if darkmode %}dark-colors{% endif %}">Welcome to Proposals</h4>
+                </button>
+              </center>
+            </div>
+            <div class="col-xl-1 col-sm-1 mb-xl-0">
+              <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-top:2rem;" onclick="getCsvVotes()">
+                <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;" title="download voters report">file_download</i>
+              </button>
+            </div>
+          </div>
+          <div>
+            <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+              Proposals allow the community to vote on the direction of the project.
+              <br><br>
+              Select a proposal from the list on the left to view its details.
+              <br><br>
+              <br><br>
+            </p>
+          </div>
+        </div>
+      `;
+  }
+
+  function fetchProposals() {
+      if (isFetchingProposals) return;
+      isFetchingProposals = true;
+
+      console.log('Fetching proposals...');
+      fetch('/api/proposals', {
+          headers: {
+              'Accept': 'application/json'
+          }
+      })
+      .then(response => {
+          if (!response.ok) {
+              return response.json().then(err => { throw err; });
+          }
+          return response.json();
+      })
+      .then(data => {
+          console.log('Received proposals data:', data);
+          if (data.status === 'success' && Array.isArray(data.proposals)) {
+            console.log(data.proposals);
+            console.log(data.proposals.length);
+            if (data.proposals.length > 0) {
+              updateProposalsList(data.proposals);
+              // don't automatically remove the welcome card
+              //updateProposalDetails(data.proposals, data.user_wallet_address);
+            } else {
+              document.getElementById('proposal-list').innerHTML = '<li>No active proposals</li>';
+              showWelcomeCard();
+            }
+          } else {
+              throw new Error(data.message || 'Invalid data format received from server');
+          }
+      })
+      .catch(error => {
+          console.error('Error fetching proposals:', error.message);
+          displayErrorMessage('Failed to fetch proposals: ' + error.message);
+      })
+      .finally(() => {
+          isFetchingProposals = false;
+      });
+  }
+
+  var chosenProposal = null;
+  var chosenProposalVotes = null;
+
+  function updateProposalsList(proposals) {
+      const proposalList = document.getElementById('proposal-list');
+      proposalList.innerHTML = ''; // Clear existing list
+      proposals.forEach(proposal => {
+          const listItem = document.createElement('li');
+          listItem.className = 'proposal-list-item';
+          listItem.onclick = () => {
+            chosenProposal = proposal;
+            updateProposalDetails(proposal);
+            fetchProposalVotes(proposal);
+          };
+          listItem.id = `proposal-item-${proposal.id}`;
+          listItem.textContent = proposal.title;
+          proposalList.appendChild(listItem);
+      });
+  }
+
+  function updateProposalDetails(proposal) {
+    const proposalDetails = document.getElementById('proposal-details');
+    proposalDetails.innerHTML = ''; // Clear existing details
+    console.log("Processing proposal:", proposal);
+    if (!proposal || typeof proposal.id === 'undefined') {
+      console.error('Invalid proposal data:', proposal);
+      return; // Skip this iteration if proposal or proposal.id is undefined
+    }
+    const detailDiv = document.createElement('div');
+    detailDiv.id = `proposal-${proposal.id}`;
+    detailDiv.className = 'proposal-detail';
+    detailDiv.style.display = 'block';
+    const options = JSON.parse(JSON.parse(proposal.options));
+    // Ensure there are at least two options
+    if (options.length < 2) {
+      options.push("For", "Against");
+    }
+    // Use placeholder image if no image URL is provided
+    const imageHtml = proposal.image_url
+      ? `<img src="${proposal.image_url}" alt="${proposal.title}">`
+      : `<img src="https://ateressi.sirv.com/iStock-173770914.jpg" alt="Placeholder Image">`;
+    let expirationDate = new Date(proposal.expires);
+    expirationDate.setDate(expirationDate.getDate() - 1);
+    dayBeforeExpiration = expirationDate.toLocaleDateString();
+    detailDiv.innerHTML = `
+      <div class="proposal-card">
+        <div class="proposal-card-header">
+          <h4 class="text-center">${proposal.title}</h4>
+        </div>
+        <div class="proposal-card-body" data-options='${JSON.stringify(options)}'>
+          <div class="image-placeholder">
+            ${imageHtml}
+          </div>
+          <div class="row proposal-info mb-2">
+            <div class="col-xl-3 col-sm-3 mb-xl-0">
+              <dt>Expires</dt>
+              <dd>${dayBeforeExpiration}</dd>
+            </div>
+            <div class="col-xl-3 col-sm-3 mb-xl-0">
+              <dt>Estimated Cost</dt>
+              <dd>${proposal.cost}</dd>
+            </div>
+            <!--<div class="col-xl-3 col-sm-3 mb-xl-0">
+              <dt>Proposed on</dt>
+              <dd>${new Date(proposal.proposal_date).toLocaleDateString()}</dd>
+            </div>-->
+            <!--<div class="col-xl-3 col-sm-3 mb-xl-0">
+              ${proposal.complete_date ? `
+              <dt>Completed</dt>
+              <dd>${new Date(proposal.complete_date).toLocaleDateString()}</dd>
+              ` : ''}
+            </div>-->
+          </div>
+          <div class="row proposal-info mb-5">
+            <div class="col-xl-12 col-sm-12 mb-xl-0">
+              <dt>Description</dt>
+              <dd>${proposal.description}</dd>
+            </div>
+          </div>
+          <div id="vote-options-${proposal.id}" class="vote-options">
+            ${options.map(option => `
+              <div class="vote-option">
+                <div class="input-group input-group-outline is-filled" onclick="">
+                  <input class="tight form-control vote-btn" id="submit" name="submit" size="32" type="submit" value="${option}" onfocus="focused(this)" onfocusout="defocused(this)" onclick="submitVote(${proposal.id}, '${option}')">
+                </div>
+                <!--<button class="btn btn-primary vote-btn-old" onclick="submitVote(${proposal.id}, '${option}')">
+                  ${option}
+                </button>-->
+                <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">0%</div>
+              </div>
+            `).join('')}
+          </div>
+          <span id="voted-message-${proposal.id}" class="proposal-voted-message" style="display: none;"></span>
+        </div>
+      </div>
+    `;
+    proposalDetails.appendChild(detailDiv);
+  }
+
+  function fetchProposalVotes(proposal) {
+    console.log(`Fetching votes for proposal ${proposal.id}`);
+    fetch(`/proposal/votes/get/${proposal.id}`)
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => { throw err; });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Received vote data:', data);
+        if (data.status === 'success') {
+          updateVoteCounts(proposal.id, data.votes);
+          updateVotingStatus(proposal, data);
+        } else {
+          console.log('No votes found or invalid data format for this proposal.');
+          updateVoteCounts(proposal.id, []);
+        }
+    })
+    .catch(error => {
+      console.error('Unable to fetch vote counts:', error);
+      updateVoteCounts(proposal.id, []);
+    });
+  }
+
+  function updateVotingStatus(proposal, data) {
+    const proposalElement = document.getElementById(`proposal-${proposal.id}`);
+    if (proposalElement) {
+      const voteButtons = proposalElement.querySelectorAll('.vote-btn');
+      voteButtons.forEach(button => {
+        if (
+          data.user_has_voted &&
+          //button.innerText.toLowerCase() == data.user_voted.toLowerCase()
+          button.value.toLowerCase() == data.user_voted.toLowerCase()
+        ) {
+          button.style.backgroundColor = '#F6B04266';
+        }
+        if (new Date(proposal.expires).getTime() < new Date().getTime()) {
+          button.disabled = data.disable_voting;
+        }
+      });
+      const votedMessage = proposalElement.querySelector('.proposal-voted-message');
+      if (votedMessage) {
+        if (data.user_has_voted) {
+          votedMessage.textContent = 'You have already voted for this proposal.';
+          votedMessage.style.display = 'block';
+        } else if (!data.can_vote) {
+          votedMessage.textContent = 'This is your proposal.';
+          votedMessage.style.display = 'block';
+        } else if (data.voting_started) {
+          votedMessage.textContent = 'Voting for this proposal has begun.';
+          votedMessage.style.display = 'block';
+        } else {
+          votedMessage.style.display = 'none';
+        }
+      }
+    }
+  }
+
+  function updateVoteCounts(id, votes) {
+    chosenProposalVotes = votes;
+    console.log(`Updating vote counts for proposal ${id}`);
+    console.log('Received votes:', votes);
+
+    const proposalDetail = document.getElementById(`proposal-${id}`);
+    if (!proposalDetail) {
+        console.error(`Proposal detail element not found for id ${id}`);
+        return;
+    }
+
+    // Initialize satori sums
+    const satoriSums = {};
+    let totalSatori = 0;
+
+    // Sum satori values
+    votes.forEach(vote => {
+        if (vote.proposal_id == id) {
+            if (!satoriSums[vote.vote]) {
+                satoriSums[vote.vote] = 0;
+            }
+            const satoriValue = parseFloat(vote.currency) || 0;
+            satoriSums[vote.vote] += satoriValue;
+            totalSatori += satoriValue;
+        }
+    });
+
+    console.log('Satori sums:', satoriSums);
+    console.log('Total Satori:', totalSatori);
+
+    // Update the display
+    Object.keys(satoriSums).forEach(option => {
+        const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
+        if (percentageElement) {
+            const percentage = totalSatori > 0 ? Math.round((satoriSums[option] / totalSatori * 100)) : 0;
+            percentageElement.textContent = `${percentage}%`;
+            console.log(`Updated percentage for ${option}: ${percentage}%`);
+        } else {
+            console.error(`Percentage element not found for option ${option}`);
+        }
+    });
+
+    // Log the results for debugging
+    console.log(`Proposal ${id} - Total Satori: ${totalSatori}`);
+    console.log('Satori sums per option:', satoriSums);
+  }
+
+  function submitVote(id, vote) {
+    console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
+    fetch('/proposals/vote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            proposal_id: String(id),
+            vote: vote
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Server response:', data);
+        if (data.status === 'success') {
+            console.log('Vote submitted successfully');
+            disableVoteButtons(id);
+            showVotedMessage(id, 'Your vote has been recorded.');
+            sleep(2000).then(() => {
+              //location.reload();
+              fetchProposalVotes(chosenProposal);
+              //disableVoteButtons(id);
+              updateProposalDetails(chosenProposal);
+              enableVoteButtons(id);
+            });
+        } else {
+            throw new Error(data.message || 'Unknown error');
+        }
+    })
+    .catch((error) => {
+        console.error('Vote failed:', error.message);
+        displayErrorMessage('Failed to submit vote: ' + error.message);
+    });
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function disableVoteButtons(id) {
+    //const voteButtons = document.querySelectorAll(`#vote-options-${id} button`);
+    //voteButtons.forEach(button => button.disabled = true);
+    document.getElementById(`proposal-${id}`).querySelectorAll('.vote-btn').forEach(button => {
+      button.disabled = true;
+    });
+  }
+
+  function enableVoteButtons(id) {
+    //const voteButtons = document.querySelectorAll(`#vote-options-${id} button`);
+    //voteButtons.forEach(button => button.disabled = false);
+    document.getElementById(`proposal-${id}`).querySelectorAll('.vote-btn').forEach(button => {
+      button.disabled = false;
+    });
+  }
+
+
+  function showVotedMessage(id, message) {
+      const messageElement = document.getElementById(`voted-message-${id}`);
+      if (messageElement) {
+          messageElement.textContent = message;
+          messageElement.style.display = 'block';
+      }
+  }
+
+  function displayErrorMessage(message) {
+      console.error(message);
+      alert(message);
+  }
+
+  function jsonToCsvVotes(jsonArray, columnsToExclude = []) {
+    if (!jsonArray || jsonArray.length === 0) {
+        return '';
+    }
+    let headers = Object.keys(jsonArray[0]);
+    headers = headers.filter(header => !columnsToExclude.includes(header));
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+    jsonArray.forEach(obj => {
+        const values = headers.map(header => {
+            const escaped = ('' + obj[header]).replace(/"/g, '""');
+            return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+    });
+    return csvRows.join('\n');
+  }
+
+  function downloadCsvVotes(csvContent, filename) {
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  }
+
+  function getCsvVotes(){
+    /// TODO: this code to parse the data to generate a report was taken from
+    /// a different file. It needs to be conformed to parse this data structure:
+    /// chosenProposalVotes correctly.
+    if (!chosenProposalVotes) {
+      fetch('/proxy/parent/status', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(json => {
+          chosenProposalVotes = json;
+          const excludedColumns = ["parent", "child", "charity"];
+          const csvOutput = jsonToCsvVotes(json, excludedColumns);
+          downloadCsvVotes(csvOutput, "delegate.csv")
+      }).catch(error => console.error('Error:', error));
+    } else {
+      const excludedColumns = ["parent", "child", "charity"];
+      const csvOutput = jsonToCsvVotes(chosenProposalVotes, excludedColumns);
+      downloadCsvVotes(csvOutput, "delegate.csv")
+    }
+  }
+
+
+</script>
+{% endblock %}

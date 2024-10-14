@@ -3,7 +3,8 @@
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
-        <div class="col-xl-12 col-sm-12 mb-xl-0">
+        <div class="col-xl-1 col-sm-1 mb-xl-0"></div>
+        <div class="col-xl-10 col-sm-10 mb-xl-0">
           <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
                   style="padding-top:1.5rem; text-transform: none;"
                   type="button"
@@ -12,6 +13,11 @@
                   aria-expanded="false"
                   aria-controls="delegateCardContent">
                   <h4 class="{% if darkmode %}dark-colors{% endif %}">Delegate Staking</h4>
+          </button>
+        </div>
+        <div class="col-xl-1 col-sm-1 mb-xl-0">
+          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-top:2rem;" onclick="getCsv()">
+            <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>
           </button>
         </div>
       </div>
@@ -28,11 +34,7 @@
         <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
           <div class="col-xl-3 col-sm-3 mb-xl-0">
             <center>
-<<<<<<< HEAD
-              <p class="mb-1 {% if darkmode %}dark-colors{% endif %}", style="padding-top: .25rem;">
-=======
               <p id="addStakingAddressLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;" onClick="toggleRewardAddresses();">
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
                 Stake for Address:
               </p>
             <center>
@@ -46,19 +48,10 @@
                     name="addStakingAddress"
                     class="tight form-control {% if darkmode %}dark-colors{% endif %}"
                     style="text-align: center;"
-<<<<<<< HEAD
-                    maxlength="34"
-                    min="34"
-                    required=""
-                    size="34"
-                    type="text"
-                    onkeypress="checkEnterForStakingAddress(event)">
-=======
                     maxLength="34"
                     required=""
                     type="text"
                     onKeyPress="checkEnterForStakingAddress(event)">
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
                 </div>
               </div>
             </h6>
@@ -73,7 +66,35 @@
 </div>
 <script>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+  document.addEventListener('DOMContentLoaded', (event) => {
+    getProxyParentStatus();
+  });
+
+  var tableData;
+
+  function getProxyParentStatus() {
+    fetch('/proxy/parent/status', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      if (!text || text == '') {
+        return;
+      }
+      tableData = JSON.parse(text);
+      if (tableData.length > 0) {
+        createTable(text);
+      }
+    }).catch(error => console.error('Error:', error));
+  }
+
+>>>>>>> 145f9f716dd4e96662cd7b10903c744b2c12f118
   function toggleRewardAddresses(){
     var x = document.getElementById("addStakingAddress");
     var y = document.getElementById("addStakingAddressLabel");
@@ -86,13 +107,19 @@
       y.innerHTML = 'Stake for Address:';
     }
   }
+<<<<<<< HEAD
 >>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
+=======
+
+>>>>>>> 145f9f716dd4e96662cd7b10903c744b2c12f118
   function checkEnterForStakingAddress(event){
+    document.getElementById("addStakingAddressConfirmation").innerHTML = '';
     if (event.key === "Enter" || event.keyCode === 13) {
       console.log('enter detected');
       setStakingAddress();
     }
   }
+
   function setStakingAddress() {
     address = document.getElementById("addStakingAddress").value;
     fetch('/stake/for/address/' + address, { method: 'GET' })
@@ -108,6 +135,7 @@
         document.getElementById("addStakingAddressConfirmation").innerHTML = 'Saved!';
         getProxyParentStatus();
       } else {
+        console.log(text);
         document.getElementById("addStakingAddressConfirmation").innerHTML = 'Unable to save.';
       }
     }).catch(error => {
@@ -115,6 +143,7 @@
       console.error('Error:', error);
     });
   }
+<<<<<<< HEAD
   function getProxyParentStatus() {
     fetch('/proxy/parent/status', { method: 'GET' })
     .then(response => {
@@ -137,6 +166,9 @@
   document.addEventListener('DOMContentLoaded', (event) => {
     getProxyParentStatus();
   });
+=======
+
+>>>>>>> 145f9f716dd4e96662cd7b10903c744b2c12f118
   function createTable(text) {
     // example text '[{
     //   "parent": 1234,
@@ -148,7 +180,6 @@
     //   "ts": "2024-08-16 02:25:00.575062+00:00",
     //   "deleted": "2024-08-16 02:25:00.575062+00:00"}]'
     let data = JSON.parse(text);
-    // Initialize the table HTML
     let tableHTML = `
       <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
         <table id="delegateChildren" class="table align-items-center mb-0">
@@ -193,7 +224,8 @@
         let aliasLabel = item.name ? `wallet address: ${item.address}` : `wallet`;
         let pointed = item.pointed == 1 ? 'Yes' : 'No';
         let satori = item.child_satori ? parseFloat(item.child_satori) : 0;
-        let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= 5 ? 0: 5); // Convert proxy to float
+        console.log(item.child_proxy);
+        let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= 6 ? 0: 6); // Convert proxy to float
         let reward = parseFloat(item.reward); // Convert reward to float
         totalCount += 1;
         totalReward += isNaN(reward) ? 0 : reward; // Add reward, ensure NaN doesn't get added
@@ -492,6 +524,56 @@
       document.getElementById('childRow'+child).style.display = 'none';
     })
     .catch(error => console.error('Error:', error));
+  }
+
+  function jsonToCsv(jsonArray, columnsToExclude = []) {
+    if (!jsonArray || jsonArray.length === 0) {
+        return '';
+    }
+    let headers = Object.keys(jsonArray[0]);
+    headers = headers.filter(header => !columnsToExclude.includes(header));
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+    jsonArray.forEach(obj => {
+        const values = headers.map(header => {
+            const escaped = ('' + obj[header]).replace(/"/g, '""');
+            return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+    });
+    return csvRows.join('\n');
+  }
+
+  function downloadCsv(csvContent, filename) {
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  }
+
+  function getCsv(){
+    if (!tableData) {
+      fetch('/proxy/parent/status', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(json => {
+          tableData = json;
+          const excludedColumns = ["parent", "child", "charity"];
+          const csvOutput = jsonToCsv(json, excludedColumns);
+          downloadCsv(csvOutput, "delegate.csv")
+      }).catch(error => console.error('Error:', error));
+    } else {
+      const excludedColumns = ["parent", "child", "charity"];
+      const csvOutput = jsonToCsv(tableData, excludedColumns);
+      downloadCsv(csvOutput, "delegate.csv")
+    }
   }
 </script>
 {% endblock %}
