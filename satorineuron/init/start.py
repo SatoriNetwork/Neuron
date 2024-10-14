@@ -26,7 +26,7 @@ from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import StartupDagStruct
 from satorineuron.structs.pubsub import SignedStreamId
 from satorineuron.synergy.engine import SynergyManager
-
+from satorineuron.peer_engine import get_peer_engine
 
 def getStart():
     ''' returns StartupDag singleton '''
@@ -59,6 +59,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False
     ):
         super(StartupDag, self).__init__(*args)
+        self.peer_engine = get_peer_engine()
         self.version = [int(x) for x in VERSION.split('.')]
         self.env = env
         self.walletOnlyMode = walletOnlyMode
@@ -317,6 +318,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.getVault()
             self.createServerConn()
             return
+        self.peer_engine.start()
         self.setMiningMode()
         self.createRelayValidation()
         self.getWallet()
@@ -333,6 +335,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.startRelay()
         self.buildEngine()
         time.sleep(60*60*24)
+    
+    def stop_peer_engine(self):
+        self.peer_engine.stop()
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
