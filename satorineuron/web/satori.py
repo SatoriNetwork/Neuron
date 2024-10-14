@@ -1738,8 +1738,8 @@ def approve_proposal(proposal_id: int):
 
 def check_approval_rights():
     # MOCK: Uncomment the line below and remove the next one when ready to use actual wallet address
-    user_wallet_address = start.wallet.address if start.wallet else None
-    # user_wallet_address = 'EQGB7cBW3HvafARDoYsgceJS2W7ZhKe3b6'  # MOCK: Remove this line when using actual wallet
+    # user_wallet_address = start.wallet.address if start.wallet else None
+    user_wallet_address = 'EQGB7cBW3HvafARDoYsgceJS2W7ZhKe3b6'  # MOCK: Remove this line when using actual wallet
     
     authorized_addresses = ['EQGB7cBW3HvafARDoYsgceJS2W7ZhKe3b6', 'EV6VsM8QkrDGf1HaUrQ5ZQzhUHk48iHkMG']
     can_approve = user_wallet_address in authorized_addresses
