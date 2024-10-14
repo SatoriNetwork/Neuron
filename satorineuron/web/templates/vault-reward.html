@@ -89,11 +89,7 @@
   }
   function getMineToAddressStatus() {
     console.log('getMineToAddressStatus');
-<<<<<<< HEAD
-    fetch('/mining/to/address', { method: 'GET' })
-=======
     return fetch('/mining/to/address', { method: 'GET' })
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
       .then(response => {
         if (response.ok) {
           return response.text();
@@ -104,10 +100,7 @@
         console.log('getMineToAddressStatus...');
         console.log(text);
         document.getElementById("minigReward").value = text;
-<<<<<<< HEAD
-=======
         return text;
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
       }).catch(error => console.error('Error:', error));
 <<<<<<< HEAD
     }
