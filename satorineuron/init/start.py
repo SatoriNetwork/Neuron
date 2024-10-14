@@ -203,7 +203,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.processThread.start()
         # Get Transaction history in separate threads
         walletInstance.callTransactionHistory()
-        # vaultInstance.callTransactionHistory()
+        vaultInstance.callTransactionHistory()
         
     # _processNotifications method to listening for updates
     def _processNotifications(self):
