@@ -194,12 +194,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         walletInstance = self._initialize_wallet('evrmore', self.electrumx)
         vaultInstance = self._initialize_vault(
             "evrmore", None, False, self.electrumx)
+        # Setup subscriptions fpr header and scripthash
         walletInstance.setupSubscriptions()
         vaultInstance.setupSubscriptions()
         # Start a thread to listen for updates
         self.processThread = Thread(
            target=self._processNotifications)
         self.processThread.start()
+        # Get Transaction history in separate threads
+        walletInstance.callTransactionHistory()
+        vaultInstance.callTransactionHistory()
         
     # _processNotifications method to listening for updates
     def _processNotifications(self):
@@ -222,11 +226,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                                     f"Received update for wallet scripthash {scripthash}: {status}")
                                 if callable(self._evrmoreWallet.get):
                                     self._evrmoreWallet.get()
+                                if callable(self._evrmoreWallet.callTransactionHistory):
+                                    self._evrmoreWallet.callTransactionHistory()
                             if self._evrmoreVault.scripthash == scripthash:
                                 print(
                                     f"Received update for vault scripthash {scripthash}: {status}")
                                 if callable(self._evrmoreVault.get):
                                     self._evrmoreVault.get()
+                                if callable(self._evrmoreVault.callTransactionHistory):
+                                    self._evrmoreVault.callTransactionHistory()
                     elif notification['method'] == 'blockchain.headers.subscribe':
                         if 'params' in notification and len(notification['params']) > 0:
                             header = notification['params'][0]
@@ -434,6 +442,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.buildEngine()
         time.sleep(60*60*24)
         
+    # updated one
     def monitorLastBlockTime(self):
         logging.info("monitorLastBlockTime called", color="yellow")
         while True:
@@ -461,28 +470,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         target=self._processNotifications)
                     self.processThread.start()
                 except Exception as e: 
-                    logging.error(f"Error while reconnecting {e}")
-
-    def monitorLastBlockTime(self):
-        logging.info("monitorLastBlockTime called", color="yellow")
-        while True:
-            time.sleep(60)  # Check every minute
-            logging.info(
-                f"Last block Time {time.time()} and {self.lastBlockTime} and {time.time() - self.lastBlockTime}", color="green")
-            if time.time() - self.lastBlockTime > 600:  # 10 minutes in seconds
-                logging.info(
-                    "lastBlockTime not updated in 10 minutes, reconnecting to server.", color="yellow")
-                try:
-                    # end the last process thread
-                    logging.info("Connection started", color="green")
-                    self.electrumx.reconnect()  # Reconnect to the server
-                    logging.info(
-                        "Connection done, starting processing again", color="green")
-                    self.lastBlockTime = time.time()
-                    # self.processThread = Thread(
-                    #     target=self._processNotifications)
-                    # self.processThread.start()
-                except Exception as e:
                     logging.error(f"Error while reconnecting {e}")
 
     def createElectrumxConnection(self):
