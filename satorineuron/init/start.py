@@ -226,11 +226,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                                     f"Received update for wallet scripthash {scripthash}: {status}")
                                 if callable(self._evrmoreWallet.get):
                                     self._evrmoreWallet.get()
+                                if callable(self._evrmoreWallet.callTransactionHistory):
+                                    self._evrmoreWallet.callTransactionHistory()
                             if self._evrmoreVault.scripthash == scripthash:
                                 print(
                                     f"Received update for vault scripthash {scripthash}: {status}")
                                 if callable(self._evrmoreVault.get):
                                     self._evrmoreVault.get()
+                                if callable(self._evrmoreVault.callTransactionHistory):
+                                    self._evrmoreVault.callTransactionHistory()
                     elif notification['method'] == 'blockchain.headers.subscribe':
                         if 'params' in notification and len(notification['params']) > 0:
                             header = notification['params'][0]
