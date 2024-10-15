@@ -4,6 +4,8 @@
 
 # run with:
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
+import datetime as dt
+from satorilib.api.time import timestampToSeconds, secondsToTimestamp
 from flask_cors import CORS
 from typing import Union
 from functools import wraps, partial
@@ -93,17 +95,19 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
+            # 'prod': 'http://24.199.113.168'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
+            # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
                 'local': ['ws://192.168.0.10:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
-            # 'prod': ['ws://pubsub2.satorinet.foundation:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
+            # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
@@ -962,10 +966,12 @@ def dashboard():
     if start.vault is not None:
         start.openVault()
     holdingBalance = start.holdingBalance
-    stakeStatus = holdingBalance >= 5 or start.details.wallet.get('rewardaddress', None) not in [
-        None,
-        start.details.wallet.get('address'),
-        start.details.wallet.get('vaultaddress')]
+    stakeStatus = holdingBalance >= 5 or (
+        start.details.wallet.get('rewardaddress', None) not in [
+            None,
+            start.details.wallet.get('address'),
+            start.details.wallet.get('vaultaddress')]
+        if start.details is not None else 0)
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
