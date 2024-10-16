@@ -54,23 +54,10 @@ ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 # DELEGATE = config.get().get('delegate', None)
 CORS(app, origins=[{
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-   'local': 'http://192.168.0.10:5002',
-   'dev': 'http://localhost:5002',
-   'test': 'https://test.satorinet.io',
-   'prod': 'https://satorinet.io'}[ENV]])
-=======
->>>>>>> main
     'local': 'http://192.168.0.10:5002',
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])
-<<<<<<< HEAD
-=======
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
->>>>>>> main
 
 
 ###############################################################################
@@ -104,15 +91,7 @@ while True:
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
         # if DELEGATE is not None:
-<<<<<<< HEAD
         #     wallet = start.details.wallet
-=======
-<<<<<<< HEAD
-        #     wallet = start.details.wallet 
-=======
-        #     wallet = start.details.wallet
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
->>>>>>> main
         #     if isinstance(wallet.rewardaddress, str) and wallet.rewardaddress not in [wallet.address, wallet.vaultaddress, DELEGATE]:
         #         start.server.stakeProxyRequest(DELEGATE)
         logging.info('Satori Neuron is starting...', color='green')
@@ -135,37 +114,17 @@ while True:
 ################################################################################
 #
 #
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-@app.errorhandler(404)
-def not_found(e):
-   return render_template('404.html'), 404
-=======
->>>>>>> main
 
 
 @app.errorhandler(404)
 def not_found(e):
     return render_template('404.html'), 404
-<<<<<<< HEAD
-=======
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
->>>>>>> main
 
 
 @app.route('/ping', methods=['GET'])
 def ping():
-<<<<<<< HEAD
-    from datetime import datetime
-    return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-
-
-=======
    from datetime import datetime
    return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-<<<<<<< HEAD
-=======
 
 
 @app.route('/mining/to/address', methods=['GET'])
@@ -254,8 +213,6 @@ def removeProxyChild(address: str, id: int):
     return f'Failed stakeProxyRemove: {result}', 400
 
 
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
->>>>>>> main
 #
 #
 ################################################################################
@@ -264,25 +221,9 @@ def removeProxyChild(address: str, id: int):
 #
 #
 if __name__ == '__main__':
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-   app.run(
-       host='127.0.0.1',
-       port=config.flaskPort(),
-       threaded=True,
-       debug=debug,
-       use_reloader=False)
-
-=======
->>>>>>> main
     app.run(
         host='127.0.0.1',
         port=config.flaskPort(),
         threaded=True,
         debug=debug,
         use_reloader=False)
-<<<<<<< HEAD
-=======
->>>>>>> 29a58337fa3a775d5c9c7308436877f637beb078
->>>>>>> main

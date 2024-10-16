@@ -1,0 +1,5 @@
+headless: true
+neuron lock enabled: false
+neuron lock hash: fs1f3se5ffsef1sf
+streamr light client port: 24686
+user interface port: 24601

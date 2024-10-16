@@ -12,13 +12,29 @@ FROM python:3.10-slim AS builder
 #     apt-get install -y build-essential wget curl git vim cmake dos2unix \
 #     wireguard iptables iproute2 netcat-openbsd iputils-ping && \
 #     apt-get clean
-RUN apt-get update 
-RUN apt-get install -y build-essential
-RUN apt-get install -y wget curl git vim cmake dos2unix
-RUN apt-get install -y wireguard iptables iproute2 netcat-openbsd iputils-ping
-RUN apt-get clean 
-# --fix-missing
-# && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update 
+# RUN apt-get install -y build-essential
+# RUN apt-get install -y wget curl git vim cmake dos2unix
+RUN apt-get update && \
+    apt-get install -y build-essential && \
+    apt-get install -y wget && \
+    apt-get install -y curl && \
+    apt-get install -y git && \
+    apt-get install -y vim && \
+    apt-get install -y cmake && \
+    apt-get install -y dos2unix && \
+    apt-get install -y wireguard iptables iproute2 netcat-openbsd iputils-ping && \
+    apt-get clean 
+    # TODO: need zip? I think it was just used for IPFS install
+    #apt-get install -y zip
+
+# TODO: test 777 permissions
+    #chmod -R 777 /Satori/Synapse && \
+    #chmod -R 777 /Satori/Lib && \
+    #chmod -R 777 /Satori/Wallet && \
+    #chmod -R 777 /Satori/Engine && \
+    #chmod -R 777 /Satori/Neuron && \
+## File system setup
 
 # File system setup
 ARG BRANCH_FLAG=main
@@ -68,6 +84,7 @@ RUN chmod 600 /etc/wireguard/wg0.conf
 #RUN ollama serve
 #RUN ollama pull llama3
 
+# satori ui
 # Expose ports
 EXPOSE 24601
 EXPOSE 51820/udp
