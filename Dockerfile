@@ -4,10 +4,7 @@
 
 # python:slim will eventually fail, if we need to revert try this:
 # FROM python:slim3.12.0b1-slim
-<<<<<<< HEAD
 # Use the official Python image as the base image
-=======
->>>>>>> main
 FROM python:3.10-slim AS builder
 
 # System dependencies
@@ -133,7 +130,6 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # test web
 # docker run --rm -it --name satorineuron -p 5000:5000 -v c:\repos\Satori\satori:/Satori/satori --env ENV=prod --env WALLETONLYMODE=1 satorinet/satorineuron:latest python /Satori/satori/app.py
 
-<<<<<<< HEAD
 # wireguard
 # docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --env ENV=prod satorinet/satorineuron:latest bash
 # docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net --env ENV=prod satorinet/satorineuron:latest bash
@@ -141,7 +137,6 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # docker build --no-cache -f Dockerfile -t satorinet/satorineuron:latest .
 # docker exec -it satorineuron bash
 #  docker build --progress=plain -t satorinet/satorineuron:latest .
-=======
 # automatic fast slow build:
 # docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
 # docker pull satorinet/satorineuron:test
@@ -153,4 +148,3 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # docker push satorinet/satorineuron:latest
 # docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:rpi_satori   --push .
 # echo "Done!"
->>>>>>> main

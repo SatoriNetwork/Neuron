@@ -28,7 +28,8 @@ from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import StartupDagStruct
 from satorineuron.structs.pubsub import SignedStreamId
 from satorineuron.synergy.engine import SynergyManager
-from satorineuron.peer_engine import get_peer_engine
+from satorineuron.p2p.peer_engine import get_peer_engine, PeerEngine
+from typing import List, Dict
 
 def getStart():
     ''' returns StartupDag singleton '''
@@ -359,8 +360,34 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.buildEngine()
         time.sleep(60*60*24)
     
-    def stop_peer_engine(self):
-        self.peer_engine.stop()
+    def stop(self):
+        ''' stop the satori engine. '''
+        if self.peer_engine:
+            self.peer_engine.stop()
+
+    def add_peer(self, public_key: str, allowed_ips: str, endpoint: str = None):
+        self.peer_engine.add_peer(public_key, allowed_ips, endpoint)
+
+    def remove_peer(self, public_key: str):
+        self.peer_engine.remove_peer(public_key)
+
+    def list_peers(self) -> List[Dict[str, str]]:
+        return self.peer_engine.list_peers()
+
+    def start_listening(self):
+        self.peer_engine.start_listening()
+
+    def stop_listening(self):
+        self.peer_engine.stop_listening()
+
+    def start_connection(self, target_ip: str):
+        self.peer_engine.start_connection(target_ip)
+
+    def stop_connection(self):
+        self.peer_engine.stop_connection()
+
+    def get_peer_connection_status(self) -> Dict[str, bool]:
+        return self.peer_engine.get_connection_status()
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')

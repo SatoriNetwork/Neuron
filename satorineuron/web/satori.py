@@ -95,10 +95,7 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
-<<<<<<< HEAD
-=======
             # 'prod': 'http://24.199.113.168'}[ENV],
->>>>>>> main
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -1670,24 +1667,6 @@ def charityNotProxyChild(address: str, id: int):
     return f'Failed stakeProxyCharityNot: {result}', 400
 
 
-@app.route('/proxy/child/approve/<address>/<id>', methods=['GET'])
-@authRequired
-def charityProxyChild(address: str, id: int):
-    success, result = start.server.stakeProxyCharity(address, childId=id)
-    if success:
-        return result, 200
-    return f'Failed stakeProxyCharity: {result}', 400
-
-
-@app.route('/proxy/child/no_charity/<address>/<id>', methods=['GET'])
-@authRequired
-def charityNotProxyChild(address: str, id: int):
-    success, result = start.server.stakeProxyCharityNot(address, childId=id)
-    if success:
-        return result, 200
-    return f'Failed stakeProxyCharityNot: {result}', 400
-
-
 @app.route('/proxy/child/remove/<address>/<id>', methods=['GET'])
 @authRequired
 def removeProxyChild(address: str, id: int):
@@ -1974,42 +1953,6 @@ def systemMetrics():
         'version': VERSION,
         'timestamp': time.time(),
     }), 200
-
-
-# @app.route('/vote/submit/manifest/vault', methods=['POST'])
-# @authRequired
-# def voteSubmitManifestVault():
-#     # logging.debug(request.json, color='yellow')
-#     vaultPredictors = request.json.get('vaultPredictors')
-#     vaultOracles = request.json.get('vaultOracles')
-#     vaultInviters = request.json.get('vaultInviters')
-#     vaultCreators = request.json.get('vaultCreators')
-#     vaultManagers = request.json.get('vaultManagers')
-#     vaultPredictors = 0 if vaultPredictors.strip() == '' else int(vaultPredictors)
-#     vaultOracles = 0 if vaultOracles.strip() == '' else int(vaultOracles)
-#     vaultInviters = 0 if vaultInviters.strip() == '' else int(vaultInviters)
-#     vaultCreators = 0 if vaultCreators.strip() == '' else int(vaultCreators)
-#     vaultManagers = 0 if vaultManagers.strip() == '' else int(vaultManagers)
-#     if (
-#         (
-#             vaultPredictors > 0 or
-#             vaultOracles > 0 or
-#             vaultInviters > 0 or
-#             vaultCreators > 0 or
-#             vaultManagers > 0
-#         ) and start.vault is not None and start.vault.isDecrypted
-#     ):
-#         start.server.submitMaifestVote(
-#             start.getWallet(network=start.network),
-#             votes={
-#                 # TODO: authenticate the vault.
-#                 # 'vault': start.vault.address,
-#                 'predictors': vaultPredictors,
-#                 'oracles': vaultOracles,
-#                 'inviters': vaultInviters,
-#                 'creators': vaultCreators,
-#                 'managers': vaultManagers})
-#     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
 
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
