@@ -4,14 +4,9 @@
 
 # python:slim will eventually fail, if we need to revert try this:
 # FROM python:slim3.12.0b1-slim
-# Use the official Python image as the base image
 FROM python:3.10-slim AS builder
 
 # System dependencies
-# RUN apt-get update && \
-#     apt-get install -y build-essential wget curl git vim cmake dos2unix \
-#     wireguard iptables iproute2 netcat-openbsd iputils-ping && \
-#     apt-get clean
 # RUN apt-get update 
 # RUN apt-get install -y build-essential
 # RUN apt-get install -y wget curl git vim cmake dos2unix
@@ -51,11 +46,13 @@ RUN mkdir /Satori && \
     chmod +x /Satori/Neuron/satorineuron/web/start.sh && \
     chmod +x /Satori/Neuron/satorineuron/web/start_from_image.sh && \
     dos2unix /Satori/Neuron/satorineuron/web/start.sh && dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
+    # NOTE: dos2unix line is used to convert line endings from Windows to Unix format
 
-# Install Python packages
+## Install everything
 ENV HF_HOME=/Satori/Neuron/models/huggingface
 ARG GPU_FLAG=off
 ENV GPU_FLAG=${GPU_FLAG}
+# for torch: cpu cu118 cu121 cu124 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --upgrade pip && \
     if [ "${GPU_FLAG}" = "on" ]; then \
     pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
@@ -72,11 +69,11 @@ RUN pip install --upgrade pip && \
     cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
 
 # WireGuard setup
-# WireGuard setup
 RUN mkdir -p /etc/wireguard
 # Note: You need to provide a wg0.conf file in your build context
 COPY Neuron/config/wg0.conf /etc/wireguard/wg0.conf
 RUN chmod 600 /etc/wireguard/wg0.conf
+
 ## no need for ollama at this time.
 #RUN apt-get install -y curl
 #RUN mkdir /Satori/Neuron/chat
@@ -89,20 +86,10 @@ RUN chmod 600 /etc/wireguard/wg0.conf
 EXPOSE 24601
 EXPOSE 51820/udp
 
-# Copy peer_management_script.py into the container
-# COPY Neuron/peer_management_script.py /app/peer_management_script.py
-
-
-# Ensure the script has execute permissions
-# RUN chmod +x /app/peer_management_script.py
 
 # Set working directory
 WORKDIR /Satori/Neuron/satorineuron/web
-
-# Set the entry point
 CMD ["bash", "./start_from_image.sh"]
-WORKDIR /Satori/Neuron/satorineuron/web
-# CMD ["bash", "./start_from_image.sh"]
 
 ## RUN OPTIONS
 # python -m satorisynapse.run async
@@ -154,6 +141,7 @@ WORKDIR /Satori/Neuron/satorineuron/web
 # docker build --no-cache -f Dockerfile -t satorinet/satorineuron:latest .
 # docker exec -it satorineuron bash
 #  docker build --progress=plain -t satorinet/satorineuron:latest .
+
 # automatic fast slow build:
 # docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
 # docker pull satorinet/satorineuron:test
