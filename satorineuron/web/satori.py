@@ -94,8 +94,9 @@ while True:
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
-            # 'prod': 'http://24.199.113.168'}[ENV],
+                # 'prod': 'https://central.satorinet.io'}[ENV],
+                # 'prod': 'http://24.199.113.168'}[ENV],
+                'prod': 'http://137.184.38.160'}[ENV],
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -1331,8 +1332,10 @@ def wallet(network: str = 'main'):
         #    flash('unable to open vault')
 
     myWallet = start.openWallet(network=network)
-
-    alias = myWallet.alias or start.server.getWalletAlias()
+    try:
+        alias = myWallet.alias or start.server.getWalletAlias()
+    except Exception as e:
+        alias = None
     if config.get().get('wallet lock'):
         if request.method == 'POST':
             accept_submittion(forms.VaultPassword(formdata=request.form))
@@ -1479,7 +1482,10 @@ def vault():
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
         myWallet = start.openWallet(network='main')
-        alias = myWallet.alias or start.server.getWalletAlias()
+        try:
+            alias = myWallet.alias or start.server.getWalletAlias()
+        except Exception as e:
+            alias = None
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',

@@ -22,25 +22,21 @@
         </div>
       </div>
       <div id="poolCardContent" class="collapse show">
-        <div class="row" style='padding-left:2rem;padding-right:2rem;'>
-          <div class="col-xl-9 col-sm-9 mb-xl-0 mb-4 mb-1 {% if darkmode %}dark-colors{% endif %} text-center">
-              <p style='padding-top:2rem;'>
-                Check the box to Open the pool, uncheck the box to close it and stop accepting new stake contributions.
-              </br>
-              </br>
-              </p>
-          </div>
-          <div class="col-xl-3 col-sm-3 mb-xl-0">
-            <center>
-              <style>
-                input::placeholder {
-                  color: #ADB5BD;
-                }
-              </style>
-              <input id="poolCheckbox" type="checkbox" class="tight {% if darkmode %}dark-colors{% endif %}" style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;" onclick="poolDescription();enableDisablePool();"{% if poolEnabled %}checked{% endif %}>
-              <p id='poolToggle' class="mb-1 text-center {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>{% if poolEnabled %}ENABLED{% else %}NOT ENABLED{% endif %}</p>
-            </center>
-          </div>
+        <div class="{% if darkmode %}dark-colors{% endif %} text-center">
+          <p style='padding-top:2rem;'>
+            Check the box to Open the pool, uncheck the box to close it and stop accepting new stake contributions.
+          </p>
+        </div>
+        <div class="{% if darkmode %}dark-colors{% endif %} text-center" style="margin-bottom:2rem;">
+          <center>
+            <style>
+              input::placeholder {
+                color: #ADB5BD;
+              }
+            </style>
+            <input id="poolCheckbox" type="checkbox" class="tight {% if darkmode %}dark-colors{% endif %}" style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;" onclick="poolDescription();enableDisablePool();"{% if poolOpen %}checked{% endif %}>
+            <p id='poolToggle' class="mb-1 text-center {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>{% if poolOpen %}Pool Open{% else %}Pool Closed{% endif %}</p>
+          </center>
         </div>
         <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
           The following Neurons have provided their stake to the pool.
@@ -230,13 +226,7 @@
   }
 
   // openclose pool display
-  function setPoolToggle() {
-    if ("{{ poolOpen }}" == "True") {
-      document.getElementById("poolCheckbox").checked = true;
-    } else {
-      document.getElementById("poolCheckbox").checked = false;
-    }
-  }
+
   setPoolToggle();
   function enableDisablePool() {
     if (document.getElementById("poolCheckbox").checked){
@@ -269,9 +259,9 @@
   }
   function poolDescription() {
     if (document.getElementById("poolCheckbox").checked){
-      document.getElementById("poolToggle").innerHTML = "Open";
+      document.getElementById("poolToggle").innerHTML = "Pool Open";
     } else {
-      document.getElementById("poolToggle").innerHTML = "Closed";
+      document.getElementById("poolToggle").innerHTML = "Pool Closed";
     }
   }
 </script>

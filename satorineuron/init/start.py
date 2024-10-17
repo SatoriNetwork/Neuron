@@ -393,7 +393,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
-                self.poolIsAccepting = bool(self.details.wallet.get('accepting', False))
+                self.poolIsAccepting = bool(
+                    self.details.wallet.get('accepting', False))
                 self.oracleKey = self.details.oracleKey
                 self.idKey = self.details.idKey
                 self.subscriptionKeys = self.details.subscriptionKeys
