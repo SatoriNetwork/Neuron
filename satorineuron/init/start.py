@@ -367,6 +367,33 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.startRelay()
         self.buildEngine()
         time.sleep(60 * 60 * 24)
+    
+    def engine_necessary(self):
+        ''' Below are what is necessary for the Engine to start building'''
+        if self.ranOnce:
+            time.sleep(60 * 60)
+        self.ranOnce = True
+        if self.walletOnlyMode:
+            self.getWallet()
+            self.getVault()
+            self.createServerConn()
+            return
+        # self.setMiningMode()
+        # self.createRelayValidation()
+        self.getWallet()
+        # self.getVault()
+        self.createServerConn()
+        self.checkin()
+        # self.setRewardAddress()
+        # self.verifyCaches()
+        # self.startSynergyEngine()
+        self.subConnect()
+        # self.pubsConnect()
+        if self.isDebug:
+            return
+        # self.startRelay()
+        self.buildEngine()
+        time.sleep(60 * 60 * 24)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
@@ -537,7 +564,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 streams=self.subscriptions
             )
         )
-        print("engine started")
+        import time
+
+        print("engine Initialized")
+        time.sleep(300)
+        self.engine.run()
 
         # listener behaviour subject, this listens to the new predictions
         self.engine.prediction_produced.subscribe(
@@ -545,6 +576,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             # on_error=lambda e, s=stream: self.handle_error(s, e),
             # on_completed=lambda s=stream: self.handle_completion(s),
         )
+        
 
     def subConnect(self):
         """establish a random pubsub connection used only for subscribing"""
