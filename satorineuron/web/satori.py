@@ -1491,6 +1491,7 @@ def vault():
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
+            'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
@@ -1504,6 +1505,7 @@ def vault():
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
+        'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
@@ -1626,6 +1628,30 @@ def disableMineToVault(network: str = 'main'):
         flash('Must unlock your vault to disable minetovault.')
         return redirect('/dashboard')
     success, result = start.disableMineToVault()
+    if success:
+        return 'OK', 200
+    return f'Failed to disable minetovault: {result}', 400
+
+
+@app.route('/pool/lend/enable', methods=['GET'])
+@authRequired
+def poolEnable():
+    if start.vault is None:
+        flash('Must unlock your vault to enable minetovault.')
+        return redirect('/dashboard')
+    success, result = start.poolAccepting(True)
+    if success:
+        return 'OK', 200
+    return f'Failed to enable minetovault: {result}', 400
+
+
+@app.route('/pool/lend/disable', methods=['GET'])
+@authRequired
+def poolDisable():
+    if start.vault is None:
+        flash('Must unlock your vault to disable minetovault.')
+        return redirect('/dashboard')
+    success, result = start.poolAccepting(False)
     if success:
         return 'OK', 200
     return f'Failed to disable minetovault: {result}', 400
