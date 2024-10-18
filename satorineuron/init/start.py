@@ -367,9 +367,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.startRelay()
         self.buildEngine()
         time.sleep(60 * 60 * 24)
-    
+
     def engine_necessary(self):
-        ''' Below are what is necessary for the Engine to start building'''
+        """Below are what is necessary for the Engine to start building"""
         if self.ranOnce:
             time.sleep(60 * 60)
         self.ranOnce = True
@@ -549,34 +549,30 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             #    isPrediction=True,
             #    useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
 
-        # self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
-        #    subscriptions=self.subscriptions,
-        #    publications=StartupDag.predictionStreams(self.publications),
-        # )
-        # self.engine.run()
+        self.dataEngine: satoriengine.Engine = satorineuron.engine.getEngine(
+            subscriptions=self.subscriptions,
+            publications=StartupDag.predictionStreams(self.publications),
+        )
+        self.dataEngine.run()
+
         # replace above with starting the "framework" engine
-        self.engine: satoriengine.framework.engine.Engine = (
-            satoriengine.framework.engine.Engine(
-                # this engine takes in "streams" which is subscriptions...
-                # meaning it doesn't know what publications streams it's predictions
-                # should be published on. So we have to handle that transalation
-                # up in this later instead before we publish.
-                streams=self.subscriptions
-            )
-        )
-        import time
-
-        print("engine Initialized")
-        time.sleep(300)
-        self.engine.run()
-
-        # listener behaviour subject, this listens to the new predictions
-        self.engine.prediction_produced.subscribe(
-            on_next=lambda x: handleNewPrediction(x),
-            # on_error=lambda e, s=stream: self.handle_error(s, e),
-            # on_completed=lambda s=stream: self.handle_completion(s),
-        )
-        
+        # self.engine: satoriengine.framework.engine.Engine = (
+        #     satoriengine.framework.engine.Engine(
+        #         # this engine takes in "streams" which is subscriptions...
+        #         # meaning it doesn't know what publications streams it's predictions
+        #         # should be published on. So we have to handle that transalation
+        #         # up in this later instead before we publish.
+        #         streams=self.subscriptions
+        #     )
+        # )
+        # # import time
+        # # print("engine Initialized")
+        # # time.sleep(300)
+        # self.engine.run()
+        # # listener behaviour subject, this listens to the new predictions
+        # self.engine.prediction_produced.subscribe(
+        #     on_next=lambda x: handleNewPrediction(x)
+        # )
 
     def subConnect(self):
         """establish a random pubsub connection used only for subscribing"""
