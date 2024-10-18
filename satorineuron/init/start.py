@@ -199,12 +199,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         vaultInstance.setupSubscriptions()
         # Start a thread to listen for updates
         self.processThread = Thread(
-           target=self._processNotifications)
+            target=self._processNotifications)
         self.processThread.start()
         # Get Transaction history in separate threads
         walletInstance.callTransactionHistory()
         vaultInstance.callTransactionHistory()
-        
+
     # _processNotifications method to listening for updates
     def _processNotifications(self):
         """
@@ -441,35 +441,39 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.startRelay()
         self.buildEngine()
         time.sleep(60*60*24)
-        
+
     # updated one
     def monitorLastBlockTime(self):
         logging.info("monitorLastBlockTime called", color="yellow")
         while True:
             time.sleep(60)  # Check every minute
-            logging.info(f"Last block Time {time.time()} and {self.lastBlockTime} and {time.time() - self.lastBlockTime}", color="green")
+            logging.info(
+                f"Last block Time {time.time()} and {self.lastBlockTime} and {time.time() - self.lastBlockTime}", color="green")
             if time.time() - self.lastBlockTime > 300:  # 10 minutes in seconds
-                logging.info("lastBlockTime not updated in 10 minutes, reconnecting to server.", color="yellow")
+                logging.info(
+                    "lastBlockTime not updated in 10 minutes, reconnecting to server.", color="yellow")
                 try:
-                    # end the last process thread 
+                    # end the last process thread
                     logging.info("Connection started", color="green")
                     # Reconnect to the server
                     self.createElectrumxConnection()
-                    self._evrmoreWallet.connection = self.electrumx;
-                    self._evrmoreWallet.electrumx.conn = self.electrumx;
-                    self._evrmoreWallet.electrumx.last_handshake = time.time();
-                    self._evrmoreVault.connection = self.electrumx;
-                    self._evrmoreVault.electrumx.conn = self.electrumx;
-                    self._evrmoreVault.electrumx.last_handshake = time.time();
-                    logging.info("Connection done, starting processing again", color="green")
+                    self._evrmoreWallet.connection = self.electrumx
+                    self._evrmoreWallet.electrumx.conn = self.electrumx
+                    self._evrmoreWallet.electrumx.lastHandshake = time.time()
+                    self._evrmoreVault.connection = self.electrumx
+                    self._evrmoreVault.electrumx.conn = self.electrumx
+                    self._evrmoreVault.electrumx.lastHandshake = time.time()
+                    logging.info(
+                        "Connection done, starting processing again", color="green")
                     self.lastBlockTime = time.time()
                     self._evrmoreWallet.setupSubscriptions()
                     self._evrmoreVault.setupSubscriptions()
-                    logging.info("Starting the thread for the process notification")
+                    logging.info(
+                        "Starting the thread for the process notification")
                     self.processThread = Thread(
                         target=self._processNotifications)
                     self.processThread.start()
-                except Exception as e: 
+                except Exception as e:
                     logging.error(f"Error while reconnecting {e}")
 
     def createElectrumxConnection(self):
