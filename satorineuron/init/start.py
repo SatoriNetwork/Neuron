@@ -553,18 +553,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             subscriptions=self.subscriptions,
             publications=StartupDag.predictionStreams(self.publications),
         )
-        self.dataEngine.run()
+        # self.dataEngine.run()
 
         # replace above with starting the "framework" engine
-        # self.engine: satoriengine.framework.engine.Engine = (
-        #     satoriengine.framework.engine.Engine(
-        #         # this engine takes in "streams" which is subscriptions...
-        #         # meaning it doesn't know what publications streams it's predictions
-        #         # should be published on. So we have to handle that transalation
-        #         # up in this later instead before we publish.
-        #         streams=self.subscriptions
-        #     )
-        # )
+        self.engine: satoriengine.framework.engine.Engine = (
+            satoriengine.framework.engine.Engine(
+                # this engine takes in "streams" which is subscriptions...
+                # meaning it doesn't know what publications streams it's predictions
+                # should be published on. So we have to handle that transalation
+                # up in this later instead before we publish.
+                streams=self.subscriptions
+            )
+        )
         # # import time
         # # print("engine Initialized")
         # # time.sleep(300)
