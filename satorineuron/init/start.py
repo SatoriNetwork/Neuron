@@ -534,8 +534,24 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def buildEngine(self):
         ''' start the engine, it will run w/ what it has til ipfs is synced '''
-        # if self.miningMode:
-        # logging.warning('Running in Minng Mode.', color='green')
+
+        def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
+            # testing
+            # TODO: find the prediction stream we can publish to from this raw data stream
+            print("topic=", streamForecast.streamId.topic())
+            print("data=", streamForecast.forecast["pred"].iloc[0])
+            print("observationTime=", streamForecast.observationTime)
+            print("observationHash=", streamForecast.observationHash)
+            print("isPrediction=", True)
+            print("useAuthorizedCall=", self.version[1] >= 2 and self.version[2] >= 6)
+            # self.server.publish(
+            #    topic=streamForecast.streamId.topic(), # this is the raw data stream, should be the correlate prediction stream instead
+            #    data=streamForecast.forecast['pred'].iloc[0],
+            #    observationTime=streamForecast.observationTime,
+            #    observationHash=streamForecast.observationHash,
+            #    isPrediction=True,
+            #    useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
+
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
             publications=StartupDag.predictionStreams(self.publications))
@@ -543,7 +559,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # else:
         #    logging.warning('Running in Local Mode.', color='green')
 
-        self.enngine: satoriengine.framework.engine.Engine = (
+        self.aiengine: satoriengine.framework.engine.Engine = (
             satoriengine.framework.engine.Engine(
                 # this engine takes in "streams" which is subscriptions...
                 # meaning it doesn't know what publications streams it's predictions
@@ -553,9 +569,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             )
         )
 
-        self.enngine.run()
+        self.aiengine.run()
         # # listener behaviour subject, this listens to the new predictions
-        self.enngine.prediction_produced.subscribe(
+        self.aiengine.prediction_produced.subscribe(
             on_next=lambda x: handleNewPrediction(x)
         )
 
