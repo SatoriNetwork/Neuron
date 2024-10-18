@@ -114,7 +114,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
-        if not config.get().get("disable_restart", False):
+        self.poolIsAccepting: bool = False
+        if not config.get().get('disable_restart', False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True
             )
@@ -429,6 +430,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.updateConnectionStatus(connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
+                self.poolIsAccepting = bool(
+                    self.details.wallet.get('accepting', False))
                 self.oracleKey = self.details.oracleKey
                 self.idKey = self.details.idKey
                 self.subscriptionKeys = self.details.subscriptionKeys
@@ -530,33 +533,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return [s for s in streams if s.predicting is None]
 
     def buildEngine(self):
-        """start the engine, it will run w/ what it has til ipfs is synced"""
-
-        def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
-            # testing
-            # TODO: find the prediction stream we can publish to from this raw data stream
-            print("topic=", streamForecast.streamId.topic())
-            print("data=", streamForecast.forecast["pred"].iloc[0])
-            print("observationTime=", streamForecast.observationTime)
-            print("observationHash=", streamForecast.observationHash)
-            print("isPrediction=", True)
-            print("useAuthorizedCall=", self.version[1] >= 2 and self.version[2] >= 6)
-            # self.server.publish(
-            #    topic=streamForecast.streamId.topic(), # this is the raw data stream, should be the correlate prediction stream instead
-            #    data=streamForecast.forecast['pred'].iloc[0],
-            #    observationTime=streamForecast.observationTime,
-            #    observationHash=streamForecast.observationHash,
-            #    isPrediction=True,
-            #    useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
-
-        self.dataEngine: satoriengine.Engine = satorineuron.engine.getEngine(
+        ''' start the engine, it will run w/ what it has til ipfs is synced '''
+        # if self.miningMode:
+        # logging.warning('Running in Minng Mode.', color='green')
+        self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
-            publications=StartupDag.predictionStreams(self.publications),
-        )
-        # self.dataEngine.run()
+            publications=StartupDag.predictionStreams(self.publications))
+        self.engine.run()
+        # else:
+        #    logging.warning('Running in Local Mode.', color='green')
 
-        # replace above with starting the "framework" engine
-        self.engine: satoriengine.framework.engine.Engine = (
+        self.enngine: satoriengine.framework.engine.Engine = (
             satoriengine.framework.engine.Engine(
                 # this engine takes in "streams" which is subscriptions...
                 # meaning it doesn't know what publications streams it's predictions
@@ -565,14 +552,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 streams=self.subscriptions
             )
         )
-        # # import time
-        # # print("engine Initialized")
-        # # time.sleep(300)
-        # self.engine.run()
+
+        self.enngine.run()
         # # listener behaviour subject, this listens to the new predictions
-        # self.engine.prediction_produced.subscribe(
-        #     on_next=lambda x: handleNewPrediction(x)
-        # )
+        self.enngine.prediction_produced.subscribe(
+            on_next=lambda x: handleNewPrediction(x)
+        )
 
     def subConnect(self):
         """establish a random pubsub connection used only for subscribing"""
@@ -772,7 +757,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         toCentral: bool = True,
         isPrediction: bool = False,
     ) -> True:
-        """publishes to all the pubsub servers"""
+        ''' publishes to all the pubsub servers '''
         if self.holdingBalance < constants.stakeRequired:
             return False
         if not isPrediction:
@@ -833,4 +818,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         )
         if success:
             self.mineToVault = False
+        return success, result
+
+    def poolAccepting(self, status: bool):
+        success, result = self.server.poolAccepting(status)
+        if success:
+            self.poolIsAccepting = status
         return success, result

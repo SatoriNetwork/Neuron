@@ -209,7 +209,10 @@ def getEngine(
 
     ModelManager.setConfig(config)
     # DataManager.setConfig(config)
-    modelManager = generateModelManager()
+    # modelManager = generateModelManager()
     dataMananger = DataManager(getStart=getStart)
-    # return Engine(getStart=getStart, data=dataMananger, models=set())
-    return Engine(getStart=getStart, data=dataMananger, models=modelManager)
+    return Engine(
+        getStart=getStart,
+        data=dataMananger,
+        # models=modelManager)
+        models=set())
