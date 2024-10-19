@@ -271,19 +271,19 @@
 <script>
   function importWallet(files) {
     const walletFolder = Array.from(files).find(file => file.webkitRelativePath.split('/')[0] === 'wallet');
-    
+
     if (!walletFolder) {
       alert('Please select a folder named "wallet".');
       return;
     }
-  
+
     const formData = new FormData();
     Array.from(files).forEach(file => {
       if (file.webkitRelativePath.startsWith('wallet/')) {
         formData.append('files', file, file.webkitRelativePath);
       }
     });
-  
+
     fetch('/import_wallet', {
       method: 'POST',
       body: formData
@@ -375,4 +375,3 @@
 </script>
 
     <!-- End Navbar -->
-     

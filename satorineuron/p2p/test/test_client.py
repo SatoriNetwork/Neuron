@@ -2,6 +2,7 @@ import unittest
 import time
 from client import MessageClient, RateLimitConfig, MessageStats
 
+
 class TestMessageClient(unittest.TestCase):
 
     def setUp(self):
@@ -11,7 +12,8 @@ class TestMessageClient(unittest.TestCase):
 
     def test_update_message_stats(self):
         peer_id = "test-peer"
-        self.client.rate_limit_config = RateLimitConfig(window_size=10, message_limit=5)
+        self.client.rate_limit_config = RateLimitConfig(
+            window_size=10, message_limit=5)
 
         # Test within limit
         for i in range(5):
@@ -44,14 +46,16 @@ class TestMessageClient(unittest.TestCase):
         peer_id = "test-peer"
         self.client.peer_stats[peer_id] = MessageStats()
         self.client.peer_stats[peer_id].total_messages = 10
-        self.client.peer_stats[peer_id].messages = [time.time() for _ in range(5)]
+        self.client.peer_stats[peer_id].messages = [
+            time.time() for _ in range(5)]
 
         stats = self.client.get_peer_stats(peer_id)
 
         self.assertEqual(stats["peer_id"], peer_id)
         self.assertEqual(stats["total_messages"], 10)
         self.assertEqual(stats["messages_in_window"], 5)
-        self.assertEqual(stats["rate_limit"], self.client.rate_limit_config.message_limit)
+        self.assertEqual(stats["rate_limit"],
+                         self.client.rate_limit_config.message_limit)
 
     def test_checkin(self):
         result = self.client.checkin()
@@ -85,7 +89,8 @@ class TestMessageClient(unittest.TestCase):
     def test_multiple_connections(self):
         # Create multiple clients
         other_clients = [
-            MessageClient(self.server_url, f"other-client-{i}-{int(time.time())}")
+            MessageClient(self.server_url,
+                          f"other-client-{i}-{int(time.time())}")
             for i in range(3)
         ]
         for client in other_clients:
@@ -109,13 +114,12 @@ class TestMessageClient(unittest.TestCase):
         # Verify all disconnected
         self.assertEqual(len(self.client.connected_peers), 0)
 
-
     def test_rate_limit_warning(self):
         peer_id = "test-peer"
         self.client.rate_limit_config = RateLimitConfig(
-            window_size=10, 
-            message_limit=10, 
-            warning_threshold=0.7, 
+            window_size=10,
+            message_limit=10,
+            warning_threshold=0.7,
             warning_cooldown=5
         )
 
@@ -126,7 +130,8 @@ class TestMessageClient(unittest.TestCase):
         # This should trigger a warning
         result = self.client.update_message_stats(peer_id, time.time())
         self.assertFalse(result)  # Not exceeding limit yet
-        self.assertGreater(self.client.peer_stats[peer_id].last_warning_time, 0)
+        self.assertGreater(
+            self.client.peer_stats[peer_id].last_warning_time, 0)
 
         # Wait for cooldown
         time.sleep(5)
@@ -138,9 +143,11 @@ class TestMessageClient(unittest.TestCase):
 
     def test_show_message_history(self):
         # Add some messages to history
-        self.client.add_to_message_history({"from": "peer1", "message": "Hello"})
+        self.client.add_to_message_history(
+            {"from": "peer1", "message": "Hello"})
         self.client.add_to_message_history({"from": "peer2", "message": "Hi"})
-        self.client.add_to_message_history({"from": "peer1", "message": "How are you?"})
+        self.client.add_to_message_history(
+            {"from": "peer1", "message": "How are you?"})
 
         # Capture print output
         import io
@@ -168,6 +175,7 @@ class TestMessageClient(unittest.TestCase):
 
         # Restore stdout
         sys.stdout = sys.__stdout__
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -3,15 +3,16 @@ import subprocess
 import threading
 import time
 from satorineuron.p2p.wireguard_manager import (
-    add_peer, 
-    remove_peer, 
-    list_peers, 
+    add_peer,
+    remove_peer,
+    list_peers,
     start_wireguard_service,
     start_port_listening,
     stop_port_listening,
     start_port_connection,
     stop_port_connection
 )
+
 
 class PeerManager:
     def __init__(self, interface="wg0", config_file="peers.json", port=51820):
@@ -21,7 +22,7 @@ class PeerManager:
         self.peers = self.load_peers()
         self.listening = False
         self.connecting = False
-        
+
         # Start the WireGuard service
         print(start_wireguard_service(self.interface))
 
@@ -47,7 +48,8 @@ class PeerManager:
         self.save_peers()
 
     def remove_peer(self, public_key):
-        self.peers = [peer for peer in self.peers if peer['public_key'] != public_key]
+        self.peers = [
+            peer for peer in self.peers if peer['public_key'] != public_key]
         print(remove_peer(self.interface, public_key))
         self.save_peers()
 
@@ -61,7 +63,7 @@ class PeerManager:
             print(f"\nStarting port listening on {self.port}")
             print("Press Ctrl+C to stop listening and return to menu...")
             print("-" * 50)
-            
+
             try:
                 start_port_listening(self.port)
             except KeyboardInterrupt:
@@ -84,7 +86,7 @@ class PeerManager:
             print(f"\nConnecting to {target_ip}:{self.port}")
             print("Press Ctrl+C to stop connection and return to menu...")
             print("-" * 50)
-            
+
             try:
                 start_port_connection(target_ip, self.port)
             except KeyboardInterrupt:
@@ -100,6 +102,7 @@ class PeerManager:
             self.connecting = False
             stop_port_connection()
 
+
 def main():
     manager = PeerManager()
 
@@ -111,15 +114,17 @@ def main():
         print("4. Start Port Listening")
         print("5. Connect to Peer")
         print("6. Exit")
-        
+
         try:
             choice = input("Enter your choice (1-6): ")
 
             if choice == "1":
                 public_key = input("Enter peer's public key: ")
                 allowed_ips = input("Enter allowed IPs (e.g., 10.0.0.2/32): ")
-                endpoint = input("Enter endpoint (optional, press Enter to skip): ")
-                manager.add_peer(public_key, allowed_ips, endpoint if endpoint else None)
+                endpoint = input(
+                    "Enter endpoint (optional, press Enter to skip): ")
+                manager.add_peer(public_key, allowed_ips,
+                                 endpoint if endpoint else None)
 
             elif choice == "2":
                 public_key = input("Enter peer's public key to remove: ")
@@ -150,6 +155,7 @@ def main():
         except KeyboardInterrupt:
             print("\nOperation cancelled. Returning to menu...")
             continue
+
 
 if __name__ == "__main__":
     main()

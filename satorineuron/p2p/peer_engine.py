@@ -5,9 +5,9 @@ from typing import List, Dict
 from satorineuron import logging
 # from satorilib.api.interfaces.p2p import P2PInterface
 from satorineuron.p2p.wireguard_manager import (
-    add_peer, 
-    remove_peer, 
-    list_peers, 
+    add_peer,
+    remove_peer,
+    list_peers,
     start_wireguard_service,
     start_port_listening,
     stop_port_listening,
@@ -15,12 +15,16 @@ from satorineuron.p2p.wireguard_manager import (
     stop_port_connection
 )
 
+
 class SingletonMeta(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super(
+                SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
 
 class PeerEngine(metaclass=SingletonMeta):
     def __init__(self, interface="wg0", config_file="peers.json", port=51820):
@@ -38,8 +42,10 @@ class PeerEngine(metaclass=SingletonMeta):
     def start(self):
         if not self.is_running:
             self.is_running = True
-            logging.info(start_wireguard_service(self.interface), color='green')
-            self.connection_thread = threading.Thread(target=self._maintain_connections)
+            logging.info(start_wireguard_service(
+                self.interface), color='green')
+            self.connection_thread = threading.Thread(
+                target=self._maintain_connections)
             self.connection_thread.daemon = True
             self.connection_thread.start()
             logging.info('PeerEngine started', color='green')
@@ -69,13 +75,15 @@ class PeerEngine(metaclass=SingletonMeta):
             "endpoint": endpoint
         }
         self.peers.append(new_peer)
-        logging.info(add_peer(self.interface, public_key, allowed_ips, endpoint), color='cyan')
+        logging.info(add_peer(self.interface, public_key,
+                     allowed_ips, endpoint), color='cyan')
         self.save_peers()
         with self.connection_lock:
             self.active_connections[public_key] = False
 
     def remove_peer(self, public_key: str):
-        self.peers = [peer for peer in self.peers if peer['public_key'] != public_key]
+        self.peers = [
+            peer for peer in self.peers if peer['public_key'] != public_key]
         logging.info(remove_peer(self.interface, public_key), color='cyan')
         self.save_peers()
         with self.connection_lock:
@@ -100,14 +108,17 @@ class PeerEngine(metaclass=SingletonMeta):
         for peer in self.peers:
             try:
                 remove_peer(self.interface, peer['public_key'])
-                logging.info(f"Disconnected from peer: {peer['public_key']}", color='yellow')
+                logging.info(
+                    f"Disconnected from peer: {peer['public_key']}", color='yellow')
             except Exception as e:
-                logging.warning(f"Error disconnecting from peer {peer['public_key']}: {str(e)}", color='red')
+                logging.warning(
+                    f"Error disconnecting from peer {peer['public_key']}: {str(e)}", color='red')
 
     def start_listening(self):
         if not self.listening:
             self.listening = True
-            logging.info(f"Starting port listening on {self.port}", color='green')
+            logging.info(
+                f"Starting port listening on {self.port}", color='green')
             try:
                 start_port_listening(self.port)
             except KeyboardInterrupt:
@@ -124,7 +135,8 @@ class PeerEngine(metaclass=SingletonMeta):
     def start_connection(self, target_ip: str):
         if not self.connecting:
             self.connecting = True
-            logging.info(f"Connecting to {target_ip}:{self.port}", color='green')
+            logging.info(
+                f"Connecting to {target_ip}:{self.port}", color='green')
             try:
                 start_port_connection(target_ip, self.port)
             except KeyboardInterrupt:
@@ -140,6 +152,7 @@ class PeerEngine(metaclass=SingletonMeta):
 
     def get_connection_status(self) -> Dict[str, bool]:
         return dict(self.active_connections)
+
 
 def get_peer_engine() -> PeerEngine:
     return PeerEngine()
