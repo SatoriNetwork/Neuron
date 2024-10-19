@@ -109,7 +109,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.miningMode: bool = False
         self.mineToVault: bool = False
         self.stopAllSubscriptions = threading.Event()
-        self.walletTimeoutSeconds = 60*1
+        self.walletTimeoutSeconds = 60*20
         self.walletTimeoutThread = threading.Thread(
             target=self.walletTimeoutWatcher, daemon=True)
         self.walletTimeoutThread.start()
@@ -239,26 +239,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """
         Processes incoming notifications for the subscribed scripthash and headers.
         """
-        print("_processNotifications started")
+        logging.debug("_processNotifications started")
         try:
             for notification in self.electrumx.receive_notifications():
-                print(f"Received notification {notification}")
+                logging.debug(f"Received notification {notification}")
                 if self.stopAllSubscriptions.is_set():
-                    print("Stop event set, breaking loop")
+                    logging.debug("Stop event set, breaking loop")
                     break
                 if 'method' in notification:
                     if notification['method'] == 'blockchain.scripthash.subscribe':
                         if 'params' in notification and len(notification['params']) == 2:
                             scripthash, status = notification['params']
                             if self._evrmoreWallet.scripthash == scripthash:
-                                print(
+                                logging.debug(
                                     f"Received update for wallet scripthash {scripthash}: {status}")
                                 if callable(self._evrmoreWallet.get):
                                     self._evrmoreWallet.get()
                                 if callable(self._evrmoreWallet.callTransactionHistory):
                                     self._evrmoreWallet.callTransactionHistory()
                             if self._evrmoreVault.scripthash == scripthash:
-                                print(
+                                logging.debug(
                                     f"Received update for vault scripthash {scripthash}: {status}")
                                 if callable(self._evrmoreVault.get):
                                     self._evrmoreVault.get()
@@ -267,18 +267,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     elif notification['method'] == 'blockchain.headers.subscribe':
                         if 'params' in notification and len(notification['params']) > 0:
                             header = notification['params'][0]
-                            print(
+                            logging.debug(
                                 f"Received new block header: height {header.get('height')}, hash {header.get('hex')[:64]}")
                             self.lastBlockTime = time.time()
                             # if callable(self.onBlockNotification):
                             #     self.onBlockNotification(notification)
                     else:
-                        print(
+                        logging.error(
                             f"Received unknown method: {notification['method']}")
         except Exception as e:
-            print(f"Error in _processNotifications: {str(e)}")
-
-        print("_processNotifications ended")
+            logging.error(f"Error in _processNotifications: {str(e)}")
+        logging.debug("_processNotifications ended")
 
     # new method
     def _initialize_wallet(self, network: str, connection: Electrumx = None, force: bool = False) -> Union[EvrmoreWallet, RavencoinWallet, None]:
@@ -297,7 +296,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             type="wallet")
         setattr(self, wallet_attr, wallet)
         wallet()
-        logging.info(f'initialized {network} wallet', color='green')
+        logging.info(f'initialized {network.title()} wallet', color='green')
         return wallet
         # except Exception as e:
         #    logging.error(
@@ -331,7 +330,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 type="vault")
             setattr(self, vault_attr, vault)
             vault()
-            logging.info(f'initialized {network} Vault', color='green')
+            logging.info(f'initialized {network.title()} vault', color='green')
             return vault
         except Exception as e:
             logging.error(
