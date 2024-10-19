@@ -65,8 +65,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.version = [int(x) for x in VERSION.split('.')]
         self.env = env
         self.walletOnlyMode = walletOnlyMode
-        self.lastWalletCall = 0
-        self.lastVaultCall = 0
+        self.userInteraction = time.time()
         self.electrumCooldown = 10
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
@@ -110,6 +109,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.miningMode: bool = False
         self.mineToVault: bool = False
         self.stopAllSubscriptions = threading.Event()
+        self.walletTimeoutSeconds = 60*1
+        self.walletTimeoutThread = threading.Thread(
+            target=self.walletTimeoutWatcher, daemon=True)
+        self.walletTimeoutThread.start()
         self.lastBlockTime = time.time()
         if not config.get().get('disable_restart', False):
             self.restartThread = threading.Thread(
@@ -130,6 +133,31 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     interval=60*60*24 if alreadySetup else 60*60*12)
                 break
             time.sleep(60*15)
+
+    def disconnectWallets(self):
+        if self.electrumx is not None:
+            self.stopAllSubscriptions.set()
+            self.electrumx = None
+            self.wallet.electrumx = None
+            self.vault.electrumx = None
+            self.walletTimeoutSeconds = 60*60
+
+    def reconnectWallets(self):
+        self.stopAllSubscriptions.clear()
+        self.setupElectrumxConnection()
+        self.initializeWalletAndVault(force=True)
+
+    def walletTimeoutWatcher(self):
+        while True:
+            time.sleep(self.walletTimeoutSeconds)
+            if self.userInteraction < time.time() - self.walletTimeoutSeconds:
+                self.disconnectWallets()
+
+    def userInteracted(self):
+        self.userInteraction = time.time()
+        if not self.electrumxCheck():
+            self.reconnectWallets()
+            self.walletTimeoutSeconds = 60*1
 
     def delayedEngine(self):
         time.sleep(60*60*6)
@@ -185,15 +213,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     #             isTestnet=self.networkIsTest('evrmore'))
     #     return self._evrmoreWallet
 
-    def initializeWalletAndVault(self, network: str = None):
+    def initializeWalletAndVault(self, network: str = None, force: bool = False):
         # Initialize wallets
         network = network or self.network
         if self.networkIsTest(network):
-            self._initialize_wallet('ravencoin')
-            self._initialize_vault("ravencoin", None, False)
-        walletInstance = self._initialize_wallet('evrmore', self.electrumx)
+            self._initialize_wallet('ravencoin', force=force)
+            self._initialize_vault("ravencoin", None, False, force=force)
+        walletInstance = self._initialize_wallet(
+            'evrmore', self.electrumx, force=force)
         vaultInstance = self._initialize_vault(
-            "evrmore", None, False, self.electrumx)
+            "evrmore", None, False, self.electrumx, force=force)
         # Setup subscriptions fpr header and scripthash
         walletInstance.setupSubscriptions()
         vaultInstance.setupSubscriptions()
@@ -252,13 +281,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         print("_processNotifications ended")
 
     # new method
-    def _initialize_wallet(self, network: str, connection: Electrumx = None) -> Union[EvrmoreWallet, RavencoinWallet, None]:
+    def _initialize_wallet(self, network: str, connection: Electrumx = None, force: bool = False) -> Union[EvrmoreWallet, RavencoinWallet, None]:
         wallet_class = EvrmoreWallet if network == 'evrmore' else RavencoinWallet
         wallet_attr = '_evrmoreWallet' if network == 'evrmore' else '_ravencoinWallet'
         # try:
-        existing_wallet = getattr(self, wallet_attr)
-        if existing_wallet is not None:
-            return existing_wallet
+        if not force:
+            existing_wallet = getattr(self, wallet_attr)
+            if existing_wallet is not None:
+                return existing_wallet
         wallet = wallet_class(
             walletPath=config.walletPath('wallet.yaml'),
             reserve=0.25,
@@ -275,22 +305,23 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #    return None
 
     # new method
-    def _initialize_vault(self, network: str, password: Union[str, None] = None, create: bool = False, connection: Electrumx = None,) -> Union[EvrmoreWallet, RavencoinWallet, None]:
+    def _initialize_vault(self, network: str, password: Union[str, None] = None, create: bool = False, connection: Electrumx = None, force: bool = False) -> Union[EvrmoreWallet, RavencoinWallet, None]:
         vault_path = config.walletPath('vault.yaml')
         wallet_class = EvrmoreWallet if network == 'evrmore' else RavencoinWallet
         vault_attr = '_evrmoreVault' if network == 'evrmore' else '_ravencoinVault'
         if not os.path.exists(vault_path) and not create:
             return None
         try:
-            existing_vault = getattr(self, vault_attr)
-            if existing_vault is not None:
-                if existing_vault.password is None and password is not None:
-                    existing_vault.open(password)
-                    logging.info(
-                        f'opened existing {network} vault with password', color='green')
-                    return existing_vault
-                elif password is None or existing_vault.password == password:
-                    return existing_vault
+            if not force:
+                existing_vault = getattr(self, vault_attr)
+                if existing_vault is not None:
+                    if existing_vault.password is None and password is not None:
+                        existing_vault.open(password)
+                        logging.info(
+                            f'opened existing {network} vault with password', color='green')
+                        return existing_vault
+                    elif password is None or existing_vault.password == password:
+                        return existing_vault
             vault = wallet_class(
                 walletPath=vault_path,
                 reserve=0.25,
@@ -377,15 +408,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return self._initialize_vault("ravencoin", password, create)
         return self._initialize_vault("evrmore", password, create)
 
-    def electrumxCheck(self):
-        if self.electrumx.connected():
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.electrumx,
-                status=True)
-        else:
+    def electrumxCheck(self) -> bool:
+        ''' returns connection status to electrumx '''
+        if self.electrumx is None or not self.electrumx.connected():
             self.updateConnectionStatus(
                 connTo=ConnectionTo.electrumx,
                 status=False)
+            return False
+        else:
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.electrumx,
+                status=True)
+            return True
 
     def closeVault(self) -> Union[RavencoinWallet, EvrmoreWallet, None]:
         ''' close the vault, reopen it without decrypting it. '''
@@ -418,17 +452,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.ranOnce:
             time.sleep(60*60)
         self.ranOnce = True
-        self.createElectrumxConnection()
-        self.monitorLastBlockTimeThread = threading.Thread(
-            target=self.monitorLastBlockTime, daemon=True)
-        self.monitorLastBlockTimeThread.start()
+        self.setupElectrumxConnection()
         if self.walletOnlyMode:
             self.initializeWalletAndVault()
             self.createServerConn()
             return
+        self.initializeWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
-        self.initializeWalletAndVault()
         self.createServerConn()
         self.checkin()
         self.setRewardAddress()
@@ -441,6 +472,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.startRelay()
         self.buildEngine()
         time.sleep(60*60*24)
+
+    def setupElectrumxConnection(self):
+        self.createElectrumxConnection()
+        # if you want it to continue to connect all the time, enable this
+        # self.monitorLastBlockTimeThread = threading.Thread(
+        #    target=self.monitorLastBlockTime, daemon=True)
+        # self.monitorLastBlockTimeThread.start()
 
     # updated one
     def monitorLastBlockTime(self):
@@ -478,14 +516,22 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def createElectrumxConnection(self):
         servers: list[str] = [
+            '146.190.149.237:50002',
+            '146.190.38.120:50002',
+            'electrum1-mainnet.evrmorecoin.org:50002',
+            'electrum2-mainnet.evrmorecoin.org:50002']
+        serversSubscription: list[str] = [
             '146.190.149.237:50001',
             '146.190.38.120:50001',
             'electrum1-mainnet.evrmorecoin.org:50001',
             'electrum2-mainnet.evrmorecoin.org:50001']
         hostPort = random.choice(servers)
+        hostPortSubscription = random.choice(serversSubscription)
         self.electrumx = Electrumx(
             host=hostPort.split(':')[0],
-            port=int(hostPort.split(':')[1]))
+            port=int(hostPort.split(':')[1]),
+            hostSubscription=hostPortSubscription.split(':')[0],
+            portSubscription=int(hostPortSubscription.split(':')[1]))
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
