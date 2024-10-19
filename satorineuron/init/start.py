@@ -157,7 +157,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.userInteraction = time.time()
         if not self.electrumxCheck():
             self.reconnectWallets()
-            self.walletTimeoutSeconds = 60*1
+            self.walletTimeoutSeconds = 60*20
 
     def delayedEngine(self):
         time.sleep(60*60*6)
