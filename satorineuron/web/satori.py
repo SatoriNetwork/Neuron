@@ -359,12 +359,10 @@ def uploadDatastreamCsv():
 
 
 # @app.route('/test')
-@userInteracted
 # def test():
 #    logging.info(request.MOBILE)
 #    return render_template('test.html')
 # @app.route('/kwargs')
-@userInteracted
 # def kwargs():
 #    ''' ...com/kwargs?0-name=widget_name0&0-value=widget_value0&0-type=widget_type0&1-name=widget_name1&1-value=widget_value1&1-#type=widget_type1 '''
 #    kwargs = {}
@@ -886,7 +884,6 @@ def editStream(topic=None):
 
 
 # @app.route('/remove_stream/<source>/<stream>/<target>/', methods=['GET'])
-@userInteracted
 # def removeStream(source=None, stream=None, target=None):
 @app.route('/remove_stream/<topic>', methods=['GET'])
 @userInteracted
