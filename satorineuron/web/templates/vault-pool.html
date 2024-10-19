@@ -22,6 +22,22 @@
         </div>
       </div>
       <div id="poolCardContent" class="collapse show">
+        <div class="{% if darkmode %}dark-colors{% endif %} text-center">
+          <p style='padding-top:2rem;'>
+            Check the box to Open the pool, uncheck the box to close it and stop accepting new stake contributions.
+          </p>
+        </div>
+        <div class="{% if darkmode %}dark-colors{% endif %} text-center" style="margin-bottom:2rem;">
+          <center>
+            <style>
+              input::placeholder {
+                color: #ADB5BD;
+              }
+            </style>
+            <input id="poolCheckbox" type="checkbox" class="tight {% if darkmode %}dark-colors{% endif %}" style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;" onclick="poolDescription();enableDisablePool();"{% if poolOpen %}checked{% endif %}>
+            <p id='poolToggle' class="mb-1 text-center {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>{% if poolOpen %}Pool Open{% else %}Pool Closed{% endif %}</p>
+          </center>
+        </div>
         <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
           The following Neurons have provided their stake to the pool.
           <br><br>
@@ -206,6 +222,46 @@
       const includedColumns = ["child", "lent_out"];
       const csvOutput = jsonToCsv(poolTableData, includedColumns);
       downloadCsv(csvOutput, "pooled.csv")
+    }
+  }
+
+  // openclose pool display
+
+  setPoolToggle();
+  function enableDisablePool() {
+    if (document.getElementById("poolCheckbox").checked){
+      enablePool();
+    } else {
+      disablePool();
+    }
+  }
+  function enablePool() {
+    fetch('/pool/lend/enable', { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+            console.log("Pool enabled");
+            document.getElementById("poolCheckbox").checked = true;
+            poolDescription();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function disablePool() {
+    fetch('/pool/lend/disable', { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+            console.log("Pool disabled");
+            document.getElementById("poolCheckbox").checked = false;
+            poolDescription();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function poolDescription() {
+    if (document.getElementById("poolCheckbox").checked){
+      document.getElementById("poolToggle").innerHTML = "Pool Open";
+    } else {
+      document.getElementById("poolToggle").innerHTML = "Pool Closed";
     }
   }
 </script>

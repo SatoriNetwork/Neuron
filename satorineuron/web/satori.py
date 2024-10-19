@@ -95,7 +95,9 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
-            # 'prod': 'http://24.199.113.168'}[ENV],
+                # 'prod': 'https://central.satorinet.io'}[ENV],
+                # 'prod': 'http://24.199.113.168'}[ENV], # c
+                # 'prod': 'http://137.184.38.160'}[ENV], # n
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -1331,8 +1333,10 @@ def wallet(network: str = 'main'):
         #    flash('unable to open vault')
 
     myWallet = start.openWallet(network=network)
-
-    alias = myWallet.alias or start.server.getWalletAlias()
+    try:
+        alias = myWallet.alias or start.server.getWalletAlias()
+    except Exception as e:
+        alias = None
     if config.get().get('wallet lock'):
         if request.method == 'POST':
             accept_submittion(forms.VaultPassword(formdata=request.form))
@@ -1479,7 +1483,10 @@ def vault():
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
         myWallet = start.openWallet(network='main')
-        alias = myWallet.alias or start.server.getWalletAlias()
+        try:
+            alias = myWallet.alias or start.server.getWalletAlias()
+        except Exception as e:
+            alias = None
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
@@ -1491,6 +1498,7 @@ def vault():
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
+            'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
@@ -1504,6 +1512,7 @@ def vault():
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
+        'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
@@ -1626,6 +1635,30 @@ def disableMineToVault(network: str = 'main'):
         flash('Must unlock your vault to disable minetovault.')
         return redirect('/dashboard')
     success, result = start.disableMineToVault()
+    if success:
+        return 'OK', 200
+    return f'Failed to disable minetovault: {result}', 400
+
+
+@app.route('/pool/lend/enable', methods=['GET'])
+@authRequired
+def poolEnable():
+    if start.vault is None:
+        flash('Must unlock your vault to enable minetovault.')
+        return redirect('/dashboard')
+    success, result = start.poolAccepting(True)
+    if success:
+        return 'OK', 200
+    return f'Failed to enable minetovault: {result}', 400
+
+
+@app.route('/pool/lend/disable', methods=['GET'])
+@authRequired
+def poolDisable():
+    if start.vault is None:
+        flash('Must unlock your vault to disable minetovault.')
+        return redirect('/dashboard')
+    success, result = start.poolAccepting(False)
     if success:
         return 'OK', 200
     return f'Failed to disable minetovault: {result}', 400

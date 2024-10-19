@@ -112,6 +112,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
+        self.poolIsAccepting: bool = False
         if not config.get().get('disable_restart', False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True)
@@ -392,6 +393,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
+                self.poolIsAccepting = bool(
+                    self.details.wallet.get('accepting', False))
                 self.oracleKey = self.details.oracleKey
                 self.idKey = self.details.idKey
                 self.subscriptionKeys = self.details.subscriptionKeys
@@ -706,7 +709,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ) -> True:
         ''' publishes to all the pubsub servers '''
         # does this take proxy into account? I don't think so.
-        #if self.holdingBalance < constants.stakeRequired:
+        # if self.holdingBalance < constants.stakeRequired:
         #    return False
         if not isPrediction:
             for pub in self.pubs:
@@ -760,4 +763,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             address=mineToAddress)
         if success:
             self.mineToVault = False
+        return success, result
+
+    def poolAccepting(self, status: bool):
+        success, result = self.server.poolAccepting(status)
+        if success:
+            self.poolIsAccepting = status
         return success, result
