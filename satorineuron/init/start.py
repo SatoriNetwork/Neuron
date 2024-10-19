@@ -486,7 +486,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60)  # Check every minute
             logging.info(
                 f"Last block Time {time.time()} and {self.lastBlockTime} and {time.time() - self.lastBlockTime}", color="green")
-            if time.time() - self.lastBlockTime > 300:  # 10 minutes in seconds
+            if time.time() - self.lastBlockTime > 60*10:
                 logging.info(
                     "lastBlockTime not updated in 10 minutes, reconnecting to server.", color="yellow")
                 try:
