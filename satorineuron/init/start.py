@@ -237,19 +237,27 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self._initialize_wallet('ravencoin', force=force)
             self._initialize_vault("ravencoin", None, False, force=force)
         walletInstance = self._initialize_wallet(
-            'evrmore', self.electrumx, force=force)
+            network='evrmore',
+            connection=self.electrumx,
+            force=force)
         vaultInstance = self._initialize_vault(
-            "evrmore", None, False, self.electrumx, force=force)
+            network='evrmore',
+            password=None,
+            create=False,
+            connection=self.electrumx,
+            force=force)
         # Setup subscriptions fpr header and scripthash
         walletInstance.setupSubscriptions()
-        vaultInstance.setupSubscriptions()
+        if vaultInstance is not None:
+            vaultInstance.setupSubscriptions()
         # Start a thread to listen for updates
         self.processThread = Thread(
             target=self._processNotifications)
         self.processThread.start()
         # Get Transaction history in separate threads
         walletInstance.callTransactionHistory()
-        vaultInstance.callTransactionHistory()
+        if vaultInstance is not None:
+            vaultInstance.callTransactionHistory()
 
     # _processNotifications method to listening for updates
     def _processNotifications(self):
@@ -274,7 +282,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                                     self._evrmoreWallet.get()
                                 if callable(self._evrmoreWallet.callTransactionHistory):
                                     self._evrmoreWallet.callTransactionHistory()
-                            if self._evrmoreVault.scripthash == scripthash:
+                            if self._evrmoreVault is not None and self._evrmoreVault.scripthash == scripthash:
                                 logging.debug(
                                     f"Received update for vault scripthash {scripthash}: {status}")
                                 if callable(self._evrmoreVault.get):
@@ -297,7 +305,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.debug("_processNotifications ended")
 
     # new method
-    def _initialize_wallet(self, network: str, connection: Electrumx = None, force: bool = False) -> Union[EvrmoreWallet, RavencoinWallet, None]:
+    def _initialize_wallet(
+        self,
+        network: str,
+        connection: Electrumx = None,
+        force: bool = False
+    ) -> Union[EvrmoreWallet, RavencoinWallet, None]:
         wallet_class = EvrmoreWallet if network == 'evrmore' else RavencoinWallet
         wallet_attr = '_evrmoreWallet' if network == 'evrmore' else '_ravencoinWallet'
         # try:
@@ -321,7 +334,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #    return None
 
     # new method
-    def _initialize_vault(self, network: str, password: Union[str, None] = None, create: bool = False, connection: Electrumx = None, force: bool = False) -> Union[EvrmoreWallet, RavencoinWallet, None]:
+    def _initialize_vault(
+        self,
+        network: str,
+        password: Union[str, None] = None,
+        create: bool = False,
+        connection: Electrumx = None,
+        force: bool = False
+    ) -> Union[EvrmoreWallet, RavencoinWallet, None]:
         vault_path = config.walletPath('vault.yaml')
         wallet_class = EvrmoreWallet if network == 'evrmore' else RavencoinWallet
         vault_attr = '_evrmoreVault' if network == 'evrmore' else '_ravencoinVault'
@@ -428,8 +448,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ) -> Union[EvrmoreWallet, RavencoinWallet]:
         network = network or self.network
         if self.networkIsTest(network):
-            return self._initialize_vault("ravencoin", password, create)
-        return self._initialize_vault("evrmore", password, create)
+            return self._initialize_vault('ravencoin', password, create)
+        return self._initialize_vault(
+            network='evrmore',
+            password=password,
+            create=create,
+            connection=self.electrumx)
 
     def electrumxCheck(self) -> bool:
         ''' returns connection status to electrumx '''
