@@ -2217,7 +2217,9 @@ def triggerRelay(topic: str = None):
 #    x = Observation.parse(request.json)
 #    start.engine.data.newData.on_next(x)
 #
-    return request.json
+#    return request.json
+
+
 ###############################################################################
 ## Routes - history ###########################################################
 # we may be able to make these requests
