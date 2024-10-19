@@ -212,7 +212,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
         return self._evrmoreWallet if self.env == 'prod' else self._ravencoinWallet
 
-
     # @property
     # def ravencoinWallet(self) -> RavencoinWallet:
     #     if self._ravencoinWallet is None:
@@ -341,41 +340,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         return existing_vault
             vault = wallet_class(
                 walletPath=vault_path,
+                reserve=0.25,
+                isTestnet=self.networkIsTest(network),
+                password=password,
+                connection=connection,
+                type="vault")
+            setattr(self, vault_attr, vault)
+            vault()
+            logging.info(f'initialized {network.title()} vault', color='green')
+            return vault
+        except Exception as e:
+            logging.error(
+                f'failed to open {network} vault: {str(e)}', color='red')
+            raise e
 
-    #@property
-    #def holdingBalance(self) -> float:
-    #    self._holdingBalance = round(
-    #        self.wallet.balanceAmount + (
-    #            self.vault.balanceAmount if self.vault is not None else 0), 8)
-    #    return self._holdingBalance
-
-    #@property
-    #def ravencoinWallet(self) -> RavencoinWallet:
-    #    if self._ravencoinWallet is None:
-    #        self._ravencoinWallet = RavencoinWallet(
-    #            config.walletPath('wallet.yaml'),
-    #            reserve=0.25,
-    #            isTestnet=self.networkIsTest('ravencoin'))
-    #    return self._ravencoinWallet
-
-    #@property
-    #def evrmoreWallet(self) -> EvrmoreWallet:
-    #    if self._evrmoreWallet is None:
-    #        self._evrmoreWallet = EvrmoreWallet(
-    #            config.walletPath('wallet.yaml'),
-    #            reserve=0.25,
-    #            isTestnet=self.networkIsTest(network),
-    #            password=password,
-    #            connection=connection,
-    #            type="vault")
-    #        setattr(self, vault_attr, vault)
-    #        vault()
-    #        logging.info(f'initialized {network.title()} vault', color='green')
-    #        return vault
-    #    except Exception as e:
-    #        logging.error(
-    #            f'failed to open {network} vault: {str(e)}', color='red')
-    #        raise e
+    @property
+    def holdingBalance(self) -> float:
+        self._holdingBalance = round(
+            self.wallet.balanceAmount + (
+                self.vault.balanceAmount if self.vault is not None else 0), 8)
+        return self._holdingBalance
 
     def ravencoinVault(
         self,

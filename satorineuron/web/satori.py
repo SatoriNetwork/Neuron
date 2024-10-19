@@ -1023,17 +1023,6 @@ def dashboard():
         [model.miniOverview() for model in start.engine.models]
         if start.engine is not None else [])  # StreamOverviews.demo()
     start.electrumxCheck()
-    #holdingBalance = round(
-    #    start.wallet.balanceAmount + (
-    #        start.vault.balanceAmount if start.vault is not None else 0), 8)
-    #stakeStatus = holdingBalance >= 5 or start.details.wallet.get('rewardaddress', None) not in [
-    #    None,
-    #    start.details.wallet.get('address'),
-    #    start.details.wallet.get('vaultaddress')]
-    #=======
-    #start.openWallet()
-    #if start.vault is not None:
-    #    start.openVault()
     holdingBalance = start.holdingBalance
     stakeStatus = holdingBalance >= 5 or (
         start.details.wallet.get('rewardaddress', None) not in [
@@ -1552,7 +1541,7 @@ def vault():
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
         myWallet = start.getWallet(network='main')
-        
+
         try:
             alias = myWallet.alias or start.server.getWalletAlias()
         except Exception as e:
