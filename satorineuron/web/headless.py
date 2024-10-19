@@ -123,8 +123,8 @@ def not_found(e):
 
 @app.route('/ping', methods=['GET'])
 def ping():
-   from datetime import datetime
-   return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    from datetime import datetime
+    return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
 
 @app.route('/mining/to/address', methods=['GET'])
