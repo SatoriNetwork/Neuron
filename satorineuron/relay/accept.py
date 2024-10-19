@@ -70,7 +70,9 @@ def acceptRelaySubmission(start: 'StartupDag', data: dict):
             author=start.wallet.publicKey,
             stream=data.get('name'),
             target=data.get('target')).topic(),
-        data=data.get('data'))
+        data=data.get('data'),
+        toCentral=False)
+    # todo: why not to central?
     # todo: why am I not passing these here?
     # observationTime=timestamp,
     # observationHash=observationHash
@@ -182,15 +184,15 @@ def generateHookFromTarget(target: str = ''):
             '.get("' + part + '", {})' for part in parts]), ', {})', ', None)')
 
     target = target if target != '' else 'Close'
-    return f"""def postRequestHook(response: 'requests.Response'): 
+    return f"""def postRequestHook(response: 'requests.Response'):
     '''
     called and given the response each time
     the endpoint for this data stream is hit.
-    returns the value of the observation 
+    returns the value of the observation
     as a string, integer or double.
     if empty string is returned the observation
     is not relayed to the network.
-    '''                    
+    '''
     if response.text != '':
         return float(response.json(){generateDrill()})
     return None

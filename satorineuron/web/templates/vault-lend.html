@@ -1,6 +1,5 @@
 {% block content %}
-<div class="row mb-0">
-  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+  <div class="col-xl-6 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
         <div class="col-xl-12 col-sm-12 mb-xl-0">
@@ -17,10 +16,6 @@
       </div>
       <div id="lendingCardContent" class="collapse show">
         <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-          Neurons that don't hold enough SATORI to stake can participate in a pool.
-          <br><br>
-          Neurons participating in pools do not typically need to stay running all the time, they can be turned off.
-          <br><br>
           To participate in a pool add the pool address here.
           <br><br>
         </p>
@@ -56,9 +51,30 @@
       </div>
     </div>
   </div>
-</div>
 <script>
+  document.addEventListener('DOMContentLoaded', (event) => {
+    getLendingAddress();
+  });
+  function getLendingAddress() {
+    return fetch('/lend/address', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          return response.text().then(errorMessage => {
+            throw new Error(errorMessage || 'Network response was not ok.');
+          });
+        }
+      }).then(text => {
+        document.getElementById("addLendingAddress").value = text;
+        return text;
+      }).catch(error => {
+        console.error('Error:', error)
+        document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save. ' + error;
+      });
+  }
   function checkEnterForLendingAddress(event){
+    document.getElementById("addStakingAddressConfirmation").innerHTML = '';
     if (event.key === "Enter" || event.keyCode === 13) {
       console.log('enter detected');
       if (document.getElementById("addLendingAddress").value.length == 0) {
@@ -68,17 +84,18 @@
       } else {
         document.getElementById("addLendingAddressConfirmation").innerHTML = 'Invalid address.';
       }
-      setLendingAddress();
     }
   }
   function setLendingAddress() {
     address = document.getElementById("addLendingAddress").value;
-    fetch('/lend/to/address' + address, { method: 'GET' })
+    fetch('/lend/to/address/' + address, { method: 'GET' })
     .then(response => {
         if (response.ok) {
           return response.text();
         } else {
-          throw new Error('Network response was not ok.');
+          return response.text().then(errorMessage => {
+            throw new Error(errorMessage || 'Network response was not ok.');
+          });
         }
     })
     .then(text => {
@@ -90,25 +107,9 @@
         document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save.';
       }
     }).catch(error => {
-      document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save.';
+      document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save. ' + error;
       console.error('Error:', error);
     });
-  }
-  document.addEventListener('DOMContentLoaded', (event) => {
-    getLendingAddress();
-  });
-  function getLendingAddress() {
-    return fetch('/lend/address', { method: 'GET' })
-      .then(response => {
-        if (response.ok) {
-          return response.text();
-        } else {
-          throw new Error('Network response was not ok.');
-        }
-      }).then(text => {
-        document.getElementById("addLendingAddress").value = text;
-        return text;
-      }).catch(error => console.error('Error:', error));
   }
   function removeLending() {
     fetch('/lend/remove', { method: 'GET' })
@@ -116,12 +117,17 @@
       if (response.ok) {
         return response.text();
       } else {
-        throw new Error('Network response was not ok.');
+        return response.text().then(errorMessage => {
+          throw new Error(errorMessage || 'Network response was not ok.');
+        });
       }
     }).then(text => {
+      document.getElementById("addLendingAddressConfirmation").innerHTML = 'Saved!';
       console.log(text);
-    })
-    .catch(error => console.error('Error:', error));
+    }).catch(error => {
+      console.error('Error:', error)
+      document.getElementById("addLendingAddressConfirmation").innerHTML = 'Unable to save. ' + error;
+    });
   }
 </script>
 {% endblock %}

@@ -129,7 +129,7 @@ def getEngine(
                     minimum=100,
                     maximum=400),
             ],
-            'xgbParams': ['n_estimators','learning_rate','max_depth','early_stopping_rounds'],
+            'xgbParams': ['n_estimators', 'learning_rate', 'max_depth', 'early_stopping_rounds'],
             'metrics':  {
                 # raw data features
                 'Raw': metrics.rawDataMetric,

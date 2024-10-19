@@ -1,0 +1,268 @@
+{% block content %}
+<div class="row mb-0" style='padding-bottom:1rem;display:none;' id='poolDisplay'><br id="poolbr">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-1 col-sm-1 mb-xl-0"></div>
+        <div class="col-xl-10 col-sm-10 mb-xl-0">
+          <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
+                  style="padding-top:1.5rem; text-transform: none;"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#poolCardContent"
+                  aria-expanded="false"
+                  aria-controls="poolCardContent">
+                  <h4 class="{% if darkmode %}dark-colors{% endif %}">Pooling</h4>
+          </button>
+        </div>
+        <div class="col-xl-1 col-sm-1 mb-xl-0">
+          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-top:2rem;" onclick="getCsv()">
+            <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>
+          </button>
+        </div>
+      </div>
+      <div id="poolCardContent" class="collapse show">
+        <div class="{% if darkmode %}dark-colors{% endif %} text-center">
+          <p style='padding-top:2rem;'>
+            Check the box to Open the pool, uncheck the box to close it and stop accepting new stake contributions.
+          </p>
+        </div>
+        <div class="{% if darkmode %}dark-colors{% endif %} text-center" style="margin-bottom:2rem;">
+          <center>
+            <style>
+              input::placeholder {
+                color: #ADB5BD;
+              }
+            </style>
+            <input id="poolCheckbox" type="checkbox" class="tight {% if darkmode %}dark-colors{% endif %}" style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;" onclick="poolDescription();enableDisablePool();"{% if poolOpen %}checked{% endif %}>
+            <p id='poolToggle' class="mb-1 text-center {% if darkmode %}dark-colors{% endif %}"><span class="text-success text-sm font-weight-bolder"></span>{% if poolOpen %}Pool Open{% else %}Pool Closed{% endif %}</p>
+          </center>
+        </div>
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          The following Neurons have provided their stake to the pool.
+          <br><br>
+        </p>
+        <div class="row mb-4"  style='padding-left:2rem;padding-right:2rem;'>
+          <p id='poolStakeTable' class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+
+  var poolTableData;
+
+  document.addEventListener('DOMContentLoaded', (event) => {
+    getPoolAddresses();
+  });
+
+  function getPoolAddresses() {
+    fetch('/pool/addresses', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Network response was not ok.');
+      }
+    }).then(text => {
+      if (!text || text == '') {
+        handlePoolDisplay(text);
+        return;
+      }
+      poolTableData = JSON.parse(text);
+      handlePoolDisplay(poolTableData)
+      if (poolTableData.length > 0) {
+        createPoolTable(text);
+      }
+    }).catch(error => console.error('Error:', error));
+  }
+
+  function handlePoolDisplay(text) {
+    if (text && text.length > 0) {
+      document.getElementById("poolDisplay").style.display = "block";
+    } else {
+      document.getElementById("poolDisplay").style.display = "none";
+    }
+  }
+
+  function createPoolTable(text) {
+    // example text '[{
+    //   "parent": 1234,
+    //   "child": 5678,
+    //   "charity": 0,
+    //   "address": "EJzhjaTUDmRBRrBk7QhWn8ZWEzEwWBLbcy",
+    //   "name": "alias",
+    //   "reward": 0.11532413,
+    //   "ts": "2024-08-16 02:25:00.575062+00:00",
+    //   "deleted": "2024-08-16 02:25:00.575062+00:00"}]'
+    let data = JSON.parse(text);
+    // Initialize the table HTML
+    let tableHTML = `
+      <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+        <table id="delegateChildren" class="table align-items-center mb-0">
+          <thead>
+            <tr>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the alias or address of the remote Neuron">Pool Contributor</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the amount of stake the pool contributor providing to this Neuron. Can take up to 24 day to update.">Stake</th>
+            </tr>
+          </thead>
+        <tbody>
+    `;
+    let totalCount = 0;
+    let totalStakingPower = 0;
+    console.log(data);
+    data.forEach(item => {
+        let alias = item.alias ? item.alias : item.address;
+        let aliasLabel = item.alias ? `wallet address: ${item.address}` : `wallet`;
+        let stakingPower = parseFloat(item.lent_out);
+        totalCount += 1;
+        totalStakingPower+= isNaN(stakingPower) ? 0 : stakingPower;
+        tableHTML += `
+          <tr id="childRow${item.child}" class="yellow-hover">
+            <td>
+              <div class="py-1">
+                <code style="display: block; color: grey;" class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="${aliasLabel}">${alias}</code>
+                <code style="display: block; color: darkgrey;" class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="vault address">${item.vaultaddress ? item.vaultaddress : ''}</code>
+              </div>
+            </td>
+        `;
+        tableHTML += `
+            <td>
+              <div class="py-1" style="display: inline-flex;">
+                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${stakingPower}</h6>
+              </div>
+            </td>
+        `;
+    });
+    // Close the table and div tags
+    tableHTML += `
+      <tr class="yellow-hover">
+        <td>
+          <div class="py-1">
+            <h6 class="mb-0 text-sm text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="how many Neurons delegate stake to the pool">Total Contributor Count</h6>
+          </div>
+        </td>
+    `;
+    tableHTML += `
+        <td>
+          <div class="py-1" style="display: inline-flex;">
+            <h6 class="mb-0 text-sm text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="total most recent stake used">Total Stake Contributed</h6>
+          </div>
+        </td>
+    `;
+    tableHTML += `
+      <tr class="yellow-hover">
+        <td>
+          <div class="py-1">
+            <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="how many Neurons this delegate stakes for" style="font-weight: bold;">${totalCount}</h6>
+          </div>
+        </td>
+    `;
+    tableHTML += `
+        <td>
+          <div class="py-1" style="display: inline-flex;">
+            <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="total most recent stake used" style="font-weight: bold;">${totalStakingPower}</h6>
+          </div>
+        </td>
+    `;
+    tableHTML += `
+          </tbody>
+        </table>
+      </div>
+    `;
+    // Set the innerHTML of the specified element
+    document.getElementById('poolStakeTable').innerHTML = tableHTML;
+  }
+
+  function jsonToCsv(jsonArray, columnsToExclude = []) {
+    if (!jsonArray || jsonArray.length === 0) {
+        return '';
+    }
+    let headers = Object.keys(jsonArray[0]);
+    headers = headers.filter(header => !columnsToExclude.includes(header));
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+    jsonArray.forEach(obj => {
+        const values = headers.map(header => {
+            const escaped = ('' + obj[header]).replace(/"/g, '""');
+            return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+    });
+    return csvRows.join('\n');
+  }
+
+  function downloadCsv(csvContent, filename) {
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  }
+
+  function getCsv(){
+    if (!poolTableData) {
+      fetch('/pool/addresses', { method: 'GET' })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      }).then(json => {
+          poolTableData = json;
+          const includedColumns = ["child", "lent_out"];
+          const csvOutput = jsonToCsv(json, includedColumns);
+          downloadCsv(csvOutput, "pooled.csv")
+      }).catch(error => console.error('Error:', error));
+    } else {
+      const includedColumns = ["child", "lent_out"];
+      const csvOutput = jsonToCsv(poolTableData, includedColumns);
+      downloadCsv(csvOutput, "pooled.csv")
+    }
+  }
+
+  // openclose pool display
+
+  setPoolToggle();
+  function enableDisablePool() {
+    if (document.getElementById("poolCheckbox").checked){
+      enablePool();
+    } else {
+      disablePool();
+    }
+  }
+  function enablePool() {
+    fetch('/pool/lend/enable', { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+            console.log("Pool enabled");
+            document.getElementById("poolCheckbox").checked = true;
+            poolDescription();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function disablePool() {
+    fetch('/pool/lend/disable', { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+            console.log("Pool disabled");
+            document.getElementById("poolCheckbox").checked = false;
+            poolDescription();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  function poolDescription() {
+    if (document.getElementById("poolCheckbox").checked){
+      document.getElementById("poolToggle").innerHTML = "Pool Open";
+    } else {
+      document.getElementById("poolToggle").innerHTML = "Pool Closed";
+    }
+  }
+</script>
+{% endblock %}

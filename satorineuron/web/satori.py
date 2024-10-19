@@ -4,14 +4,16 @@
 
 # run with:
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
+import datetime as dt
+from satorilib.api.time import timestampToSeconds, secondsToTimestamp
 from flask_cors import CORS
 from typing import Union
 from functools import wraps, partial
-import requests
 import shutil
 import os
 import sys
 import json
+import random
 import secrets
 import time
 import traceback
@@ -22,7 +24,8 @@ from queue import Queue
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
-from satorilib.concepts.structs import StreamId, StreamOverviews
+from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
+from satorilib.concepts import constants
 from satorilib.api.wallet.wallet import TransactionFailure
 from satorilib.api.time import timeToSeconds, nowStr
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
@@ -92,18 +95,21 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
-            # 'prod': 'http://24.199.113.168'}[ENV],
+                # 'prod': 'https://central.satorinet.io'}[ENV],
+                # 'prod': 'http://24.199.113.168'}[ENV], # c
+                # 'prod': 'http://137.184.38.160'}[ENV], # n
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
+            # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
                 'local': ['ws://192.168.0.10:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
-            # 'prod': ['ws://pubsub2.satorinet.foundation:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
+            # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
@@ -200,6 +206,15 @@ def closeVault(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         start.closeVault()
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def vaultRequired(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if start.vault is None:
+            return redirect('/vault')
         return f(*args, **kwargs)
     return decorated_function
 
@@ -641,30 +656,6 @@ def relay():
         "data": 420,
     }
     '''
-
-    # def accept_submittion(data: dict):
-    #    if not start.relayValidation.validRelay(data):
-    #        return 'Invalid payload. here is an example: {"source": "satori", "name": "nameOfSomeAPI", "target": "optional", "data": 420}', 400
-    #    if not start.relayValidation.streamClaimed(
-    #        name=data.get('name'),
-    #        target=data.get('target')
-    #    ):
-    #        save = start.relayValidation.registerStream(
-    #            data=data)
-    #        if save == False:
-    #            return 'Unable to register stream with server', 500
-    #        # get pubkey, recreate connection...
-    #        start.checkin()
-    #        start.pubsConnect()
-    #    # ...pass data onto pubsub
-    #    start.publish(
-    #        topic=StreamId(
-    #            source=data.get('source', 'satori'),
-    #            author=start.wallet.publicKey,
-    #            stream=data.get('name'),
-    #            target=data.get('target')).topic(),
-    #        data=data.get('data'))
-    #    return 'Success: ', 200
     return acceptRelaySubmission(start, json.loads(request.get_json()))
 
 
@@ -844,6 +835,9 @@ def registerStream():
             **({'hook': newRelayStream.hook.data} if newRelayStream.hook.data not in ['', None] else {}),
             **({'history': newRelayStream.history.data} if newRelayStream.history.data not in ['', None] else {}),
         }
+        # randomize the offset in order to lessen spiking issues
+        data['cadence'] = data.get('cadence', Stream.minimumCadence)
+        data['offset'] = data.get('offset', random.uniform(0, data['cadence']))
         if data.get('hook') in ['', None, {}]:
             hook, status = generateHookFromTarget(data.get('target', ''))
             if status == 200:
@@ -966,6 +960,7 @@ def removeStreamByPost():
 @app.route('/index', methods=['GET'])
 @app.route('/dashboard', methods=['GET'])
 @userInteracted
+@vaultRequired
 @closeVault
 @authRequired
 def dashboard():
@@ -1028,13 +1023,24 @@ def dashboard():
         [model.miniOverview() for model in start.engine.models]
         if start.engine is not None else [])  # StreamOverviews.demo()
     start.electrumxCheck()
-    holdingBalance = round(
-        start.wallet.balanceAmount + (
-            start.vault.balanceAmount if start.vault is not None else 0), 8)
-    stakeStatus = holdingBalance >= 5 or start.details.wallet.get('rewardaddress', None) not in [
-        None,
-        start.details.wallet.get('address'),
-        start.details.wallet.get('vaultaddress')]
+    #holdingBalance = round(
+    #    start.wallet.balanceAmount + (
+    #        start.vault.balanceAmount if start.vault is not None else 0), 8)
+    #stakeStatus = holdingBalance >= 5 or start.details.wallet.get('rewardaddress', None) not in [
+    #    None,
+    #    start.details.wallet.get('address'),
+    #    start.details.wallet.get('vaultaddress')]
+    #=======
+    #start.openWallet()
+    #if start.vault is not None:
+    #    start.openVault()
+    holdingBalance = start.holdingBalance
+    stakeStatus = holdingBalance >= 5 or (
+        start.details.wallet.get('rewardaddress', None) not in [
+            None,
+            start.details.wallet.get('address'),
+            start.details.wallet.get('vaultaddress')]
+        if start.details is not None else 0)
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
@@ -1044,6 +1050,7 @@ def dashboard():
         'miningMode': start.miningMode and stakeStatus,
         'miningDisplay': 'none',
         'proxyDisplay': 'none',
+        'stakeRequired': constants.stakeRequired,
         'holdingBalance': holdingBalance,
         'streamOverviews': streamOverviews,
         'configOverrides': config.get(),
@@ -1379,6 +1386,7 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 
 @app.route('/wallet/<network>', methods=['GET', 'POST'])
 @userInteracted
+@vaultRequired
 @closeVault
 @authRequired
 def wallet(network: str = 'main'):
@@ -1390,7 +1398,10 @@ def wallet(network: str = 'main'):
         # if rvn is None or not rvn.isEncrypted:
         #    flash('unable to open vault')
 
-    alias = start.wallet.alias or start.server.getWalletAlias()
+    try:
+        alias = start.wallet.alias or start.server.getWalletAlias()
+    except Exception as e:
+        alias = None
     if config.get().get('wallet lock'):
         if request.method == 'POST':
             accept_submittion(forms.VaultPassword(formdata=request.form))
@@ -1526,6 +1537,11 @@ def vault():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
+        global firstRun
+        theFirstRun = firstRun
+        firstRun = False
+        if theFirstRun:
+            return redirect('/dashboard')
         # start.workingUpdates.put('downloading balance...')
         from satorilib.api.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
@@ -1536,7 +1552,11 @@ def vault():
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
         myWallet = start.getWallet(network='main')
-        alias = myWallet.alias or start.server.getWalletAlias()
+        
+        try:
+            alias = myWallet.alias or start.server.getWalletAlias()
+        except Exception as e:
+            alias = None
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
@@ -1548,6 +1568,7 @@ def vault():
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
+            'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
@@ -1561,6 +1582,7 @@ def vault():
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
+        'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
@@ -1572,6 +1594,8 @@ def reportVault(network: str = 'main'):
         return redirect('/dashboard')
     # the network portion should be whatever network I'm on.
     vault = start.getVault(network=network)
+    if vault.isEncrypted:
+        return redirect('/vault')
     vaultAddress = vault.address
     print(vault.publicKey)
     success, result = start.server.reportVault(
@@ -1601,6 +1625,8 @@ def mineToAddress(address: str):
     network = 'main'
     start.details.wallet['rewardaddress'] = address
     vault = start.getVault(network=network)
+    if vault.isEncrypted:
+        return redirect('/vault')
     success, result = start.server.mineToAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
@@ -1619,6 +1645,8 @@ def stakeForAddress(address: str):
     # the network portion should be whatever network I'm on.
     network = 'main'
     vault = start.getVault(network=network)
+    if vault.isEncrypted:
+        return redirect('/vault')
     success, result = start.server.stakeForAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
@@ -1637,6 +1665,8 @@ def lendToAddress(address: str):
     # the network portion should be whatever network I'm on.
     network = 'main'
     vault = start.getVault(network=network)
+    if vault.isEncrypted:
+        return redirect('/vault')
     success, result = start.server.lendToAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
@@ -1689,6 +1719,39 @@ def disableMineToVault(network: str = 'main'):
     return f'Failed to disable minetovault: {result}', 400
 
 
+@app.route('/pool/lend/enable', methods=['GET'])
+@authRequired
+def poolEnable():
+    if start.vault is None:
+        flash('Must unlock your vault to enable minetovault.')
+        return redirect('/dashboard')
+    success, result = start.poolAccepting(True)
+    if success:
+        return 'OK', 200
+    return f'Failed to enable minetovault: {result}', 400
+
+
+@app.route('/pool/lend/disable', methods=['GET'])
+@authRequired
+def poolDisable():
+    if start.vault is None:
+        flash('Must unlock your vault to disable minetovault.')
+        return redirect('/dashboard')
+    success, result = start.poolAccepting(False)
+    if success:
+        return 'OK', 200
+    return f'Failed to disable minetovault: {result}', 400
+
+
+@app.route('/pool/addresses', methods=['GET'])
+@authRequired
+def poolAddresses():
+    success, result = start.server.poolAddresses()
+    if success:
+        return result, 200
+    return f'Failed poolAddresses: {result}', 400
+
+
 @app.route('/proxy/parent/status', methods=['GET'])
 @userInteracted
 @authRequired
@@ -1731,6 +1794,7 @@ def removeProxyChild(address: str, id: int):
 
 @app.route('/vote', methods=['GET', 'POST'])
 @userInteracted
+@vaultRequired
 @authRequired
 def vote():
 
@@ -1813,6 +1877,7 @@ def vote():
 
 @app.route('/proposals', methods=['GET'])
 @userInteracted
+@vaultRequired
 @authRequired
 def proposals():
     return render_template('proposals.html', **getResp({'title': 'Proposals'}))

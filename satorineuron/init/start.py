@@ -12,6 +12,7 @@ import satorineuron
 import satoriengine
 from satoriwallet.api.blockchain import Electrumx
 from satorilib.concepts.structs import StreamId, Stream
+from satorilib.concepts import constants
 from satorilib.api import disk
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
 # from satorilib.api.ipfs import Ipfs
@@ -19,6 +20,7 @@ from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
+from satorilib.api.time import timestampToSeconds
 from satorineuron import VERSION
 from satorineuron import logging
 from satorineuron import config
@@ -64,7 +66,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         super(StartupDag, self).__init__(*args)
         self.version = [int(x) for x in VERSION.split('.')]
         self.env = env
-        self.walletOnlyMode = walletOnlyMode
+        if isinstance(walletOnlyMode, bool):
+            self.walletOnlyMode = walletOnlyMode
+        elif isinstance(walletOnlyMode, str) and walletOnlyMode == 'False':
+            self.walletOnlyMode = False
+        else:
+            self.walletOnlyMode = bool(walletOnlyMode)
         self.userInteraction = time.time()
         self.electrumCooldown = 10
         self.asyncThread: AsyncThread = AsyncThread()
@@ -114,6 +121,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             target=self.walletTimeoutWatcher, daemon=True)
         self.walletTimeoutThread.start()
         self.lastBlockTime = time.time()
+        self.poolIsAccepting: bool = False
         if not config.get().get('disable_restart', False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True)
@@ -166,6 +174,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def checkinCheck(self):
         while True:
             time.sleep(60*60*6)
+            # loop through streams, if I haven't had an observation on a stream
+            # in more than 24 hours, delete it. and restart
+            # for stream in self.subscriptions:
+            #    ts = timestampToSeconds(
+            #        self.cacheOf(stream.streamId).getLatestObservationTime()
+            #    )
+            #    if ts > 0 and ts + 60*60*24 < time.time():
+            #        self.server.removeStream(stream.streamId.topic())
+            #        self.triggerRestart()
             if self.server.checkinCheck():
                 self.triggerRestart()  # should just be start()
 
@@ -194,6 +211,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     @property
     def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
         return self._evrmoreWallet if self.env == 'prod' else self._ravencoinWallet
+
 
     # @property
     # def ravencoinWallet(self) -> RavencoinWallet:
@@ -323,19 +341,41 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         return existing_vault
             vault = wallet_class(
                 walletPath=vault_path,
-                reserve=0.25,
-                isTestnet=self.networkIsTest(network),
-                password=password,
-                connection=connection,
-                type="vault")
-            setattr(self, vault_attr, vault)
-            vault()
-            logging.info(f'initialized {network.title()} vault', color='green')
-            return vault
-        except Exception as e:
-            logging.error(
-                f'failed to open {network} vault: {str(e)}', color='red')
-            raise e
+
+    #@property
+    #def holdingBalance(self) -> float:
+    #    self._holdingBalance = round(
+    #        self.wallet.balanceAmount + (
+    #            self.vault.balanceAmount if self.vault is not None else 0), 8)
+    #    return self._holdingBalance
+
+    #@property
+    #def ravencoinWallet(self) -> RavencoinWallet:
+    #    if self._ravencoinWallet is None:
+    #        self._ravencoinWallet = RavencoinWallet(
+    #            config.walletPath('wallet.yaml'),
+    #            reserve=0.25,
+    #            isTestnet=self.networkIsTest('ravencoin'))
+    #    return self._ravencoinWallet
+
+    #@property
+    #def evrmoreWallet(self) -> EvrmoreWallet:
+    #    if self._evrmoreWallet is None:
+    #        self._evrmoreWallet = EvrmoreWallet(
+    #            config.walletPath('wallet.yaml'),
+    #            reserve=0.25,
+    #            isTestnet=self.networkIsTest(network),
+    #            password=password,
+    #            connection=connection,
+    #            type="vault")
+    #        setattr(self, vault_attr, vault)
+    #        vault()
+    #        logging.info(f'initialized {network.title()} vault', color='green')
+    #        return vault
+    #    except Exception as e:
+    #        logging.error(
+    #            f'failed to open {network} vault: {str(e)}', color='red')
+    #        raise e
 
     def ravencoinVault(
         self,
@@ -567,6 +607,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
+                self.poolIsAccepting = bool(
+                    self.details.wallet.get('accepting', False))
                 self.oracleKey = self.details.oracleKey
                 self.idKey = self.details.idKey
                 self.subscriptionKeys = self.details.subscriptionKeys
@@ -870,14 +912,34 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             # if latestTag.isNew:
             #    self.triggerRestart()
 
-    def publish(self, topic: str, data: str, observationTime: str, observationHash: str):
+    def publish(
+        self,
+        topic: str,
+        data: str,
+        observationTime: str,
+        observationHash: str,
+        toCentral: bool = True,
+        isPrediction: bool = False,
+    ) -> True:
         ''' publishes to all the pubsub servers '''
-        for pub in self.pubs:
-            pub.publish(
+        # does this take proxy into account? I don't think so.
+        # if self.holdingBalance < constants.stakeRequired:
+        #    return False
+        if not isPrediction:
+            for pub in self.pubs:
+                pub.publish(
+                    topic=topic,
+                    data=data,
+                    observationTime=observationTime,
+                    observationHash=observationHash)
+        if toCentral:
+            self.server.publish(
                 topic=topic,
                 data=data,
                 observationTime=observationTime,
-                observationHash=observationHash)
+                observationHash=observationHash,
+                isPrediction=isPrediction,
+                useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
 
     def performStakeCheck(self):
         self.stakeStatus = self.server.stakeCheck()
@@ -915,4 +977,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             address=mineToAddress)
         if success:
             self.mineToVault = False
+        return success, result
+
+    def poolAccepting(self, status: bool):
+        success, result = self.server.poolAccepting(status)
+        if success:
+            self.poolIsAccepting = status
         return success, result
