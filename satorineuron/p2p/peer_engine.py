@@ -49,6 +49,8 @@ class PeerEngine(metaclass=SingletonMeta):
             self.connection_thread.daemon = True
             self.connection_thread.start()
             logging.info('PeerEngine started', color='green')
+            peers = list_peers(self.interface)
+            logging.info(f'Current peers:{peers}', color ='blue')
 
     def stop(self):
         self.is_running = False

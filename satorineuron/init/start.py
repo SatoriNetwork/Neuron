@@ -29,7 +29,7 @@ from satorineuron.structs.start import StartupDagStruct
 from satorineuron.structs.pubsub import SignedStreamId
 from satorineuron.synergy.engine import SynergyManager
 
-from satorineuron.p2p.peer_engine import get_peer_engine, PeerEngine
+from satorineuron.p2p.peer_engine import get_peer_engine
 from typing import List, Dict
 
 def getStart():

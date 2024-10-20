@@ -126,7 +126,7 @@ Example:
 
 
         `nc -l -v -p 51820` # Use it in Machine A or Machine B to listen to the given port.
-
+        `nc -l -p 51820 > received_message.csv`
 ## 10. Send Message
 
 
@@ -135,5 +135,5 @@ Example:
                                 or
 
         `nc 10.0.0.2 51820`     # If MAchine B is listening, run it on MAchine A
-                       
+        `nc 10.0.0.2 51820 < message.csv`
 
