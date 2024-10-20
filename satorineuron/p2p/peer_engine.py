@@ -1,9 +1,44 @@
+'''
+have:
+start.py -> starts the PeerEngine -> config -> maintains connections -> waits for updates
+
+want:
+start.py ->
+starts the PeerEngine ->
+makes a connection to peerserver ->
+gets peers, merges with config ->
+connects to peers ->
+maintains connections ->
+waits for updates
+
+PeerEngine (singleton)
+    connects to the server, asking for peers, and then manages their connections
+    - PeerManager (regular class)
+    - PeerServerClient (regular class)
+    - wait for updates: (thread listening to a Queue)
+        - listen for what other connections the rest of the neuron wants to
+            - make
+            - break
+
+Next Steps:
+    - fix the PeerServer to work according to diagram
+        - share wireguard connection details with clients
+    - fix the PeerServerClient to work according to diagram
+        - checkin with server (providing own details)
+        - able to ask server to connect to a peer
+        - heartbeat to tell server we're still around (10 minutes)
+    - refactor whatever is needed and complete this PeerEngine
+'''
+
 import json
 import threading
 import time
+from queue import Queue
 from typing import List, Dict
 from satorineuron import logging
 # from satorilib.api.interfaces.p2p import P2PInterface
+from satorineuron.p2p.peer_manager import PeerManager
+# from satorineuron.p2p.peer_client import PeerServerClient
 from satorineuron.p2p.wireguard_manager import (
     add_peer,
     remove_peer,
@@ -27,132 +62,25 @@ class SingletonMeta(type):
 
 
 class PeerEngine(metaclass=SingletonMeta):
+    ''' connects to server and manages peers '''
+
     def __init__(self, interface="wg0", config_file="peers.json", port=51820):
-        self.interface = interface
-        self.config_file = config_file
-        self.port = port
-        self.peers = self.load_peers()
-        self.active_connections: Dict[str, bool] = {}
-        self.connection_lock = threading.Lock()
-        self.is_running = False
-        self.connection_thread = None
-        self.listening = False
-        self.connecting = False
+        # create these:
+        self.connectTo = Queue()  # start.peerEngine.connectTo.put('some peer')
+        # PeerManager()
+        # PeerServerClient()
 
     def start(self):
-        if not self.is_running:
-            self.is_running = True
-            logging.info(start_wireguard_service(
-                self.interface), color='green')
-            self.connection_thread = threading.Thread(
-                target=self._maintain_connections)
-            self.connection_thread.daemon = True
-            self.connection_thread.start()
-            logging.info('PeerEngine started', color='green')
-
-    def stop(self):
-        self.is_running = False
-        if self.connection_thread:
-            self.connection_thread.join()
-        self._disconnect_all_peers()
-        logging.info('PeerEngine stopped', color='yellow')
-
-    def load_peers(self):
-        try:
-            with open(self.config_file, 'r') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            return []
-
-    def save_peers(self):
-        with open(self.config_file, 'w') as f:
-            json.dump(self.peers, f, indent=2)
-
-    def add_peer(self, public_key: str, allowed_ips: str, endpoint: str = None):
-        new_peer = {
-            "public_key": public_key,
-            "allowed_ips": allowed_ips,
-            "endpoint": endpoint
-        }
-        self.peers.append(new_peer)
-        logging.info(add_peer(self.interface, public_key,
-                     allowed_ips, endpoint), color='cyan')
-        self.save_peers()
-        with self.connection_lock:
-            self.active_connections[public_key] = False
-
-    def remove_peer(self, public_key: str):
-        self.peers = [
-            peer for peer in self.peers if peer['public_key'] != public_key]
-        logging.info(remove_peer(self.interface, public_key), color='cyan')
-        self.save_peers()
-        with self.connection_lock:
-            if public_key in self.active_connections:
-                del self.active_connections[public_key]
-
-    def list_peers(self) -> List[Dict[str, str]]:
-        return list_peers(self.interface)
-
-    def _maintain_connections(self):
-        while self.is_running:
-            current_peers = self.list_peers()
-            with self.connection_lock:
-                for peer in current_peers:
-                    self.active_connections[peer['public_key']] = True
-                for public_key in list(self.active_connections.keys()):
-                    if public_key not in [p['public_key'] for p in current_peers]:
-                        self.active_connections[public_key] = False
-            time.sleep(60)  # Check connections every minute
-
-    def _disconnect_all_peers(self):
-        for peer in self.peers:
-            try:
-                remove_peer(self.interface, peer['public_key'])
-                logging.info(
-                    f"Disconnected from peer: {peer['public_key']}", color='yellow')
-            except Exception as e:
-                logging.warning(
-                    f"Error disconnecting from peer {peer['public_key']}: {str(e)}", color='red')
+        # starts both PeerManager and PeerServerClient
+        pass
 
     def start_listening(self):
-        if not self.listening:
-            self.listening = True
-            logging.info(
-                f"Starting port listening on {self.port}", color='green')
-            try:
-                start_port_listening(self.port)
-            except KeyboardInterrupt:
-                logging.info("Stopping listener...", color='yellow')
-            finally:
-                self.stop_listening()
-                logging.info("Listener stopped.", color='yellow')
-
-    def stop_listening(self):
-        if self.listening:
-            self.listening = False
-            stop_port_listening()
-
-    def start_connection(self, target_ip: str):
-        if not self.connecting:
-            self.connecting = True
-            logging.info(
-                f"Connecting to {target_ip}:{self.port}", color='green')
-            try:
-                start_port_connection(target_ip, self.port)
-            except KeyboardInterrupt:
-                logging.info("Stopping connection...", color='yellow')
-            finally:
-                self.stop_connection()
-                logging.info("Connection stopped.", color='yellow')
-
-    def stop_connection(self):
-        if self.connecting:
-            self.connecting = False
-            stop_port_connection()
-
-    def get_connection_status(self) -> Dict[str, bool]:
-        return dict(self.active_connections)
-
-
-def get_peer_engine() -> PeerEngine:
-    return PeerEngine()
+        '''
+        wireguard automatically connects to peers when they are added to the
+        config file
+        '''
+        while True:
+            requestedPeerConnection = self.connectTo.get()
+            # something like this:
+            # result = self.PeerServerClient.requestConnect(requestedPeerConnection)
+            # self.PeerManager.addPeer(result)

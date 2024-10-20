@@ -1,8 +1,8 @@
-from satorineuron.p2p.peer_engine import get_peer_engine, PeerEngine
+from satorineuron.p2p.peer_manager import PeerManager
 from typing import List, Dict
 
-# Get the PeerEngine instance
-peer_engine = get_peer_engine()
+# Get the PeerManager instance
+peer_engine = PeerManager()
 
 # Start the peer engine
 peer_engine.start()
