@@ -14,7 +14,7 @@ from satorineuron.p2p.wireguard_manager import (
 )
 
 
-class PeerManager:
+class PeerViewer:
     def __init__(self, interface="wg0", config_file="peers.json", port=51820):
         self.interface = interface
         self.config_file = config_file
@@ -104,7 +104,7 @@ class PeerManager:
 
 
 def main():
-    manager = PeerManager()
+    manager = PeerViewer()
 
     while True:
         print("\nWireGuard Peer Management")
