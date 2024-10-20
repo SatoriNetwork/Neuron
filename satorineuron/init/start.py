@@ -571,10 +571,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
         engine_thread = threading.Thread(target=self.aiengine.run, daemon=True)
         engine_thread.start()
-        # # listener behaviour subject, this listens to the new predictions
-        # self.aiengine.prediction_produced.subscribe(
-        #     on_next=lambda x: handleNewPrediction(x)
-        # )
+
         self.aiengine.prediction_produced.subscribe(lambda x: handleNewPrediction(x) if x is not None else None)
 
     def subConnect(self):
