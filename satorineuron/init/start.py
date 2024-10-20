@@ -133,6 +133,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
         if not alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
+        else:
+            if not os.path.exists(config.walletPath('wallet-migration-backup.yaml')):
+                # backup the wallet
+                import shutil
+                shutil.copy(
+                    config.walletPath('wallet.yaml'),
+                    config.walletPath('wallet-migration-backup.yaml'))
+        if os.path.exists(config.walletPath('vault.yaml')) and not os.path.exists(config.walletPath('vault-migration-backup.yaml')):
+            # backup the wallet
+            import shutil
+            shutil.copy(
+                config.walletPath('vault.yaml'),
+                config.walletPath('vault-migration-backup.yaml'))
         self.ranOnce = False
         while True:
             if self.asyncThread.loop is not None:
