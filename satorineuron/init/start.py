@@ -115,7 +115,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.miningMode: bool = False
         self.mineToVault: bool = False
         self.poolIsAccepting: bool = False
-        if not config.get().get('disable_restart', False):
+        if not config.get().get("disable_restart", False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True
             )
@@ -430,8 +430,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.updateConnectionStatus(connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
-                self.poolIsAccepting = bool(
-                    self.details.wallet.get('accepting', False))
+                self.poolIsAccepting = bool(self.details.wallet.get("accepting", False))
                 self.oracleKey = self.details.oracleKey
                 self.idKey = self.details.idKey
                 self.subscriptionKeys = self.details.subscriptionKeys
@@ -533,7 +532,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return [s for s in streams if s.predicting is None]
 
     def buildEngine(self):
-        ''' start the engine, it will run w/ what it has til ipfs is synced '''
+        """start the engine, it will run w/ what it has til ipfs is synced"""
 
         def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
             # testing
@@ -554,7 +553,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
-            publications=StartupDag.predictionStreams(self.publications))
+            publications=StartupDag.predictionStreams(self.publications),
+        )
         self.engine.run()
         # else:
         #    logging.warning('Running in Local Mode.', color='green')
@@ -568,11 +568,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 streams=self.subscriptions
             )
         )
-
-        engine_thread = threading.Thread(target=self.aiengine.run, daemon=True)
-        engine_thread.start()
-
-        self.aiengine.prediction_produced.subscribe(lambda x: handleNewPrediction(x) if x is not None else None)
+        self.aiengine.prediction_produced.subscribe(
+            lambda x: handleNewPrediction(x) if x is not None else None
+        )
 
     def subConnect(self):
         """establish a random pubsub connection used only for subscribing"""
@@ -772,7 +770,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         toCentral: bool = True,
         isPrediction: bool = False,
     ) -> True:
-        ''' publishes to all the pubsub servers '''
+        """publishes to all the pubsub servers"""
         if self.holdingBalance < constants.stakeRequired:
             return False
         if not isPrediction:

@@ -35,7 +35,9 @@ def establishConnection(
         ):
             if response.startswith('{"topic":') or response.startswith('{"data":'):
                 logging.info("received message:", response, print=True)
-                getStart().engine.data.newData.on_next(Observation.parse(response))
+                obs = Observation.parse(response)
+                getStart().engine.data.newData.on_next(obs)
+                getStart().aiengine.new_observation.on_next(obs)
 
         # furthermore, shouldn't we do more than route it to the correct models?
         # like, shouldn't we save it to disk, compress if necessary, pin, and
@@ -215,4 +217,5 @@ def getEngine(
         getStart=getStart,
         data=dataMananger,
         # models=modelManager)
-        models=set())
+        models=set(),
+    )
