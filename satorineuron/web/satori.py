@@ -117,7 +117,6 @@ while True:
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
 
-        # print('building engine')
         # start.buildEngine()
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
@@ -549,25 +548,25 @@ def modeDark():
     return redirect(url_for('dashboard'))
 
 
-@app.route('/test/connected', methods=['GET'])
-@userInteracted
-def testconnected():
-    print(start.wallet.connected())
-    return redirect(url_for('dashboard'))
+#@app.route('/test/connected', methods=['GET'])
+#@userInteracted
+#def testconnected():
+#    logging.debug(start.wallet.connected())
+#    return redirect(url_for('dashboard'))
 
 
-@app.route('/test/disconnect', methods=['GET'])
-@userInteracted
-def testdisconnect():
-    print(start.disconnectWallets())
-    return redirect(url_for('dashboard'))
+#@app.route('/test/disconnect', methods=['GET'])
+#@userInteracted
+#def testdisconnect():
+#    logging.debug(start.disconnectWallets())
+#    return redirect(url_for('dashboard'))
 
 
-@app.route('/test/connect', methods=['GET'])
-@userInteracted
-def testconnect():
-    print(start.reconnectWallets())
-    return redirect(url_for('dashboard'))
+#@app.route('/test/connect', methods=['GET'])
+#@userInteracted
+#def testconnect():
+#    logging.debug(start.reconnectWallets())
+#    return redirect(url_for('dashboard'))
 
 
 ###############################################################################
@@ -747,6 +746,8 @@ def sendSatoriTransactionUsing(
 
         # doesn't respect the cooldown
         myWallet.getUnspentSignatures(force=True)
+        if myWallet.isEncrypted:
+            return 'Vault is encrypted, please unlock it and try again.'
         try:
             # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronTransaction(
@@ -1387,9 +1388,6 @@ def wallet(network: str = 'main'):
         # if rvn is None or not rvn.isEncrypted:
         #    flash('unable to open vault')
 
-    print(start.wallet.alias)
-    print(start.wallet.balanceAmount)
-    print(start.wallet)
     try:
         alias = start.wallet.alias or start.server.getWalletAlias()
     except Exception as e:
@@ -1592,7 +1590,6 @@ def reportVault(network: str = 'main'):
     if vault.isEncrypted:
         return redirect('/vault')
     vaultAddress = vault.address
-    print(vault.publicKey)
     success, result = start.server.reportVault(
         walletSignature=start.getWallet(network=network).sign(vaultAddress),
         vaultSignature=vault.sign(vaultAddress),
@@ -1932,8 +1929,8 @@ def proposalVote():
             return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
     except Exception as e:
         error_message = f"Error in proposalVote: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
         return jsonify({'status': 'error', 'message': error_message}), 500
 
 
@@ -1971,8 +1968,8 @@ def getProposalVotes(id):
             }), 404
     except Exception as e:
         error_message = f"Error fetching votes: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
         return jsonify({
             'status': 'error',
             'message': error_message
@@ -1989,10 +1986,10 @@ def proposalCreate():
     elif request.method == 'POST':
         try:
             data = request.json
-            print(
+            logging.debug(
                 f"Received proposal data in proposalCreate: {json.dumps(data, indent=2)}")
             success, result = start.server.submitProposal(data)
-            print(
+            logging.debug(
                 f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
             if success:
                 return jsonify({
@@ -2003,15 +2000,15 @@ def proposalCreate():
             else:
                 error_message = result.get(
                     'error', 'Failed to create proposal')
-                print(f"Failed to create proposal: {error_message}")
+                logging.debug(f"Failed to create proposal: {error_message}")
                 return jsonify({
                     'status': 'error',
                     'message': error_message
                 }), 400
         except Exception as e:
             error_message = f"Error in proposalCreate route: {str(e)}"
-            print(error_message)
-            print(traceback.format_exc())
+            logging.warning(error_message)
+            logging.warning(traceback.format_exc())
             return jsonify({
                 'status': 'error',
                 'message': 'Server error occurred'

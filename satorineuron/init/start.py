@@ -257,13 +257,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             force=force)
         # Setup subscriptions fpr header and scripthash
         walletInstance.setupSubscriptions()
+        walletInstance.subscribe()
         if vaultInstance is not None:
             vaultInstance.setupSubscriptions()
-
-        # Start a thread to listen for updates
-        self.processThread = Thread(
-            target=self._processNotifications)
-        self.processThread.start()
+            vaultInstance.subscribe()
 
         # test - both show as being subscribed to...
         # time.sleep(5)
@@ -278,51 +275,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         walletInstance.callTransactionHistory()
         if vaultInstance is not None:
             vaultInstance.callTransactionHistory()
-
-    # _processNotifications method to listening for updates
-    def _processNotifications(self):
-        """
-        Processes incoming notifications for the subscribed scripthash and headers.
-        """
-        logging.debug("_processNotifications started")
-        try:
-            for notification in self.electrumx.receive_notifications():
-                logging.debug(f"Received notification {notification}")
-                if self.stopAllSubscriptions.is_set():
-                    logging.debug("Stop event set, breaking loop")
-                    break
-                if 'method' in notification:
-                    if notification['method'] == 'blockchain.scripthash.subscribe':
-                        if 'params' in notification and len(notification['params']) == 2:
-                            scripthash, status = notification['params']
-                            if self._evrmoreWallet.scripthash == scripthash:
-                                logging.debug(
-                                    f"Received update for wallet scripthash {scripthash}: {status}")
-                                if callable(self._evrmoreWallet.get):
-                                    self._evrmoreWallet.get()
-                                if callable(self._evrmoreWallet.callTransactionHistory):
-                                    self._evrmoreWallet.callTransactionHistory()
-                            if self._evrmoreVault is not None and self._evrmoreVault.scripthash == scripthash:
-                                logging.debug(
-                                    f"Received update for vault scripthash {scripthash}: {status}")
-                                if callable(self._evrmoreVault.get):
-                                    self._evrmoreVault.get()
-                                if callable(self._evrmoreVault.callTransactionHistory):
-                                    self._evrmoreVault.callTransactionHistory()
-                    elif notification['method'] == 'blockchain.headers.subscribe':
-                        if 'params' in notification and len(notification['params']) > 0:
-                            header = notification['params'][0]
-                            logging.debug(
-                                f"Received new block header: height {header.get('height')}, hash {header.get('hex')[:64]}")
-                            self.lastBlockTime = time.time()
-                            # if callable(self.onBlockNotification):
-                            #     self.onBlockNotification(notification)
-                    else:
-                        logging.error(
-                            f"Received unknown method: {notification['method']}")
-        except Exception as e:
-            logging.error(f"Error in _processNotifications: {str(e)}")
-        logging.debug("_processNotifications ended")
 
     # new method
     def _initialize_wallet(
@@ -572,13 +524,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         "Connection done, starting processing again", color="green")
                     self.lastBlockTime = time.time()
                     self._evrmoreWallet.clearSubscriptions()
+                    self._evrmoreVault.clearSubscriptions()
                     self._evrmoreWallet.setupSubscriptions()
                     self._evrmoreVault.setupSubscriptions()
-                    logging.info(
-                        "Starting the thread for the process notification")
-                    self.processThread = Thread(
-                        target=self._processNotifications)
-                    self.processThread.start()
+                    self._evrmoreWallet.subscribe()
+                    self._evrmoreVault.subscribe()
                 except Exception as e:
                     logging.error(f"Error while reconnecting {e}")
 
