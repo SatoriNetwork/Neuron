@@ -1,0 +1,236 @@
+{% block content %}
+<div class="row">
+  <div class="col-lg-12 col-md-12 mb-md-0">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
+            <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+              Data streams published by Satori Neurons.
+              <br>
+              Please vote on which data streams should be predicted.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div style="margin-left:24px;margin-top:15px" class="flex flex-row gap-2">
+        <input style="width:30%;border-radius:5px;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
+        <button class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" style="border-radius:5px;background:white" onClick="debounceSearch();">Search</button>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0">
+            <thead ondblclick='toggleVotingDetails();'>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Oracle</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
+              </tr>
+            </thead>
+            <tbody id="updating_table">
+              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" id='totalsRow' style='display:none;'>
+                <td colspan="3">
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 id='streamsWalletVoteTotal' class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
+                  </div>
+                </td>
+                {%if vault.isDecrypted %}
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 id='streamsVaultVoteTotal' class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
+                  </div>
+                </td>
+                {% endif %}
+              </tr> 
+              {% for stream in streams %}
+              <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %} {% if stream['wallet_vote'] != 0 or (vault.isDecrypted and stream['vault_vote'] != 0) %}{% if darkmode %}yellow-dark-selected{% else %}yellow-selected{% endif %}{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['stream'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['target'] }}</h6>
+                  </div>
+                </td>
+                 <!-- Additional details row -->
+                <tr class="stream-details" style="display: none;">
+                    <td colspan="5">
+                        <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px">
+                            <h3 style="font-weight:bold">STREAM DETAILS</h3>
+                            <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> {{ stream['stream'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> {{ stream['target'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> {{ stream['cadence'] }} seconds</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> {{ stream['stream_id'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>URL:</strong> <a href="{{ stream['url'] }}" target="_blank">{{ stream['url'] }}</a></p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> {{ stream['author'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> {{ stream['source'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> {{ stream['tags'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> {{ stream['oracle_address'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Description:</strong> {{ stream['description'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Alias:</strong> {{ stream['oracle_alias'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> {{ stream['oracle_pubkey'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> {{ stream['stream_created_ts'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Total Vote:</strong> {{ stream['total_vote'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Wallet Vote:</strong> {{ stream['wallet_vote'] }}</p>
+                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vault Vote:</strong> {{ stream['vault_vote'] }}</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+              </tr> 
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+    const darkmode = {{ 'true' if darkmode else 'false' }};  
+    const vault = { isDecrypted: {{ 'true' if vault.isDecrypted else 'false' }} };
+
+    function toggleStreamDetails(row) {
+        const detailsRow = row.nextElementSibling;
+        if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+            detailsRow.style.display = 'table-row';
+        } else {
+            detailsRow.style.display = 'none'; // Hide the details row
+        }
+    }
+
+    let timeout = null;
+
+    function debounceSearch() {
+      console.log("debounceSearch called")
+        if(timeout) {
+          clearTimeout(timeout);
+        }
+        timeout = setTimeout(() => {
+            const searchText = document.getElementById('searchInput').value;
+            fetchStreams(searchText);
+        }, 500);
+    }
+
+    function fetchStreams(searchText) {
+        console.log("SearchText", searchText)
+        const tableBody = document.getElementById('updating_table');
+        tableBody.innerHTML = '';
+        const noDataRow = document.createElement('tr');
+        noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
+        tableBody.appendChild(noDataRow);
+
+        fetch(`/streams?search=${encodeURIComponent(searchText)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok, status: ${response.status}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    throw new Error('Response was not in JSON format');
+                }
+            })
+            .then(data => {
+              console.log("Data", data.streams)
+              updateStreamDisplay(data.streams, darkmode, vault)
+            })
+            .catch(error => console.error('Error fetching streams:', error));
+    }
+
+    function updateStreamDisplay(streams, darkmode, vault) {
+      const tableBody = document.getElementById('updating_table');
+      tableBody.innerHTML = '';
+
+      // Check if there are any streams to display
+      if (streams.length === 0) {
+          const noDataRow = document.createElement('tr');
+          noDataRow.innerHTML = '<td style="text-align:center" colspan="3">No streams found.</td>'; // Adjust colspan based on your table structure
+          tableBody.appendChild(noDataRow);
+          return;
+      }
+
+      // Populate the table with new stream data
+      streams.forEach(stream => {
+        const row = document.createElement('tr');
+        row.style.cursor = "pointer";
+        row.onclick = () => toggleStreamDetails(row);
+        row.id = `stream_${stream.stream_id}`;
+
+        let rowClass = darkmode ? 'yellow-dark-hover' : 'yellow-hover';
+        if (stream.wallet_vote != 0 || (vault.isDecrypted && stream.vault_vote != 0)) {
+            rowClass += darkmode ? ' yellow-dark-selected' : ' yellow-selected';
+        }
+        row.className = rowClass;
+
+        row.innerHTML = `
+            <td>
+                <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" title="${stream.oracle_address}">${stream.oracle_alias || stream.oracle_address}</h6>
+                </div>
+            </td>
+            <td>
+                <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.stream}</h6>
+                </div>
+            </td>
+            <td>
+                <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.target}</h6>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(row);
+
+        // Stream Details
+        const streamDetailRow = document.createElement('tr')
+        streamDetailRow.class = `stream-details`;
+        streamDetailRow.style.display = "none";
+        streamDetailRow.innerHTML = `
+            <td colspan="5">
+                <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px">
+                    <h3 style="font-weight:bold">STREAM DETAILS</h3>
+                    <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> ${stream.stream_id}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> ${stream.author}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> ${stream.source}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> ${stream.oracle_address}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Description:</strong> ${stream.description}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Alias:</strong> ${stream.oracle_alias}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> ${stream.oracle_pubkey}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Total Vote:</strong> ${stream.total_vote}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Wallet Vote:</strong> ${stream.wallet_vote}</p>
+                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vault Vote:</strong> ${stream.vault_vote}</p>
+                    </div>
+                </div>
+            </td>
+        `
+        tableBody.appendChild(streamDetailRow);
+    });
+  }
+</script>
+{% endblock %}

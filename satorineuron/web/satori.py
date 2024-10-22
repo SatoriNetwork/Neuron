@@ -1842,16 +1842,6 @@ def vote():
         accept_submittion(forms.VaultPassword(formdata=request.form))
 
     myWallet = start.getWallet(network=start.network)
-    if start.vault is not None and not start.vault.isEncrypted:
-        return render_template('vote.html', **getResp({
-            'title': 'Vote',
-            'network': start.network,
-            'vaultPasswordForm': presentVaultPasswordForm(),
-            'vaultOpened': True,
-            'wallet': myWallet,
-            'vault': start.vault,
-            'streams': getStreams(myWallet),
-            **getVotes(myWallet)}))
     return render_template('vote.html', **getResp({
         'title': 'Vote',
         'network': start.network,
@@ -1861,6 +1851,89 @@ def vote():
         'vault': start.vault,
         'streams': getStreams(myWallet),
         **getVotes(myWallet)}))
+    
+@app.route('/streams', methods=['GET', 'POST'])
+@userInteracted
+@vaultRequired
+@authRequired
+def streams():
+    def sanitize_for_json(data):
+        import math
+        from flask import jsonify, request, render_template
+
+        """
+        This function will recursively check the structure and replace any NaN or None
+        values with appropriate JSON-compatible values (e.g., None -> null, NaN -> 0).
+        """
+        if isinstance(data, dict):
+            return {k: sanitize_for_json(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [sanitize_for_json(item) for item in data]
+        elif data is None:  # Replace None with JSON null
+            return None
+        elif isinstance(data, float) and math.isnan(data):  # Replace NaN with 0
+            return 0
+        else:
+            return data
+        
+    def getStreams(wallet, searchText=None):
+        # todo convert result to the strucutre the template expects:
+        # [ {'cols': 'value'}]
+        streams = start.server.getSanctionVote(wallet, start.vault)
+        if searchText:
+            searchedStreams = [s for s in streams if searchText.lower() in s['stream'].lower()]
+            return sanitize_for_json(searchedStreams)
+        # logging.debug('streams', [
+        #              s for s in streams if s['oracle_alias'] is not None], color='yellow')
+        return sanitize_for_json(streams)
+        # return [{
+        #    'sanctioned': 10,
+        #    'active': True,
+        #    'oracle_pubkey': 'pubkey',
+        #    'oacle_alias': 'alias',
+        #    'stream': 'stream',
+        #    'target': 'target',
+        #    'start': 'start',
+        #    'cadence': 60*10,
+        #    'id': '0',
+        #    'total_vote': 27,
+        # }, {
+        #    'sanctioned': 0,
+        #    'active': False,
+        #    'oracle': 'pubkey',
+        #    'alias': 'alias',
+        #    'stream': 'stream',
+        #    'target': 'target',
+        #    'start': 'start',
+        #    'cadence': 60*15,
+        #    'id': '1',
+        #    'vote': 36,
+        # }]
+
+    def accept_submittion(passwordForm):
+        _vault = start.openVault(password=passwordForm.password.data)
+        # if rvn is None and not rvn.isEncrypted:
+        #    flash('unable to open vault')
+
+    if request.method == 'POST':
+        accept_submittion(forms.VaultPassword(formdata=request.form))
+
+    myWallet = start.getWallet(network=start.network)
+    searchText = request.args.get('search', None)  # Get search text from query parameters
+        
+    if searchText is not None:  # Check if the request is a JSON request
+        streamsData = getStreams(myWallet, searchText)
+        return jsonify({'streams': streamsData})  # Return the streams data in a 'streams' key
+
+    return render_template('streams.html', **getResp({
+        'title': 'Streams',
+        'network': start.network,
+        'vaultPasswordForm': presentVaultPasswordForm(),
+        'vaultOpened': False,
+        'wallet': myWallet,
+        'vault': start.vault,
+        'darkmode': darkmode,
+        'streams': getStreams(myWallet, searchText)}))
 
 
 @app.route('/proposals', methods=['GET'])
