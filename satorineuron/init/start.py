@@ -266,11 +266,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.processThread.start()
 
         # test - both show as being subscribed to...
-        # time.sleep(10)
-        # self.stopAllSubscriptions.set()
+        # time.sleep(5)
         # walletInstance.stopSubscription()
+        # time.sleep(5)
         # vaultInstance.stopSubscription()
         # time.sleep(10)
+        # self.stopAllSubscriptions.set()
         # exit()
 
         # Get Transaction history in separate threads
