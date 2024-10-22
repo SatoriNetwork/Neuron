@@ -1,7 +1,8 @@
 '''
 example:
 
-publickey = 8gIspO1tyen6T7rf1bITrnBEGKvB9gf06JP+NXbt0FA=
+publickey = 6mh+Iy5f3lwXju4tNzSvrkhweSkHl3YjJmkRrshtiUI=
 allowed_ips = 10.0.0.1/32
-endpoint = 198.120.0.1:51820
+endpoint = 111.92.75.245:51820
 '''
+"54vQCewYfidTo8vmAlf3P5/MTRMEEuXBZPqvlLCZQVQ="

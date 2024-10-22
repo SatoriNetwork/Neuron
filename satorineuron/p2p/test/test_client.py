@@ -1,6 +1,6 @@
 import unittest
 import time
-from client import MessageClient, RateLimitConfig, MessageStats
+from satorineuron.p2p.client_server.client import MessageClient, RateLimitConfig, MessageStats
 
 
 class TestMessageClient(unittest.TestCase):
