@@ -95,9 +95,9 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
-                #'prod': 'https://central.satorinet.io'}[ENV],
-                #'prod': 'http://24.199.113.168'}[ENV], # c
-                #'prod': 'http://137.184.38.160'}[ENV],  # n
+            # 'prod': 'https://central.satorinet.io'}[ENV],
+            # 'prod': 'http://24.199.113.168'}[ENV], # c
+            # 'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
                 'dev': 'http://localhost:5002',
@@ -213,7 +213,8 @@ def closeVault(f):
 def vaultRequired(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if start.vault is None:
+        # race condition possible on start.vault is None
+        if start.vault is None and not os.path.exists(config.walletPath('vault.yaml')):
             return redirect('/vault')
         return f(*args, **kwargs)
     return decorated_function
@@ -1561,6 +1562,9 @@ def vault():
             'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
     # start.workingUpdates.put('loading...')
+    # race condition:
+    while os.path.exists(config.walletPath('vault.yaml')) and start.vault is None:
+        time.sleep(1)
     return render_template('vault.html', **getResp({
         'title': 'Vault',
         'walletIcon': 'lock',
