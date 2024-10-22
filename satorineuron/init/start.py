@@ -111,8 +111,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
+        self.udpQueue: Queue = Queue()
         self.stakeStatus: bool = False
         self.miningMode: bool = False
+        self.mineToVault: bool = False
         self.stopAllSubscriptions = threading.Event()
         self.walletTimeoutSeconds = 60*20
         self.walletTimeoutThread = threading.Thread(
