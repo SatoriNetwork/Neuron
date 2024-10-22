@@ -1387,6 +1387,9 @@ def wallet(network: str = 'main'):
         # if rvn is None or not rvn.isEncrypted:
         #    flash('unable to open vault')
 
+    print(start.wallet.alias)
+    print(start.wallet.balanceAmount)
+    print(start.wallet)
     try:
         alias = start.wallet.alias or start.server.getWalletAlias()
     except Exception as e:

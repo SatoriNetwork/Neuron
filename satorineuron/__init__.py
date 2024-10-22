@@ -11,7 +11,7 @@ logging.setup(level={
     'warning': logging.WARNING,
     'error': logging.ERROR,
     'critical': logging.CRITICAL,
-}[config.get().get('logging level', 'warning').lower()])
+}[config.get().get('logging level', 'debug').lower()])
 
 VERSION = '0.2.27'
 MOTTO = 'Let your workings remain a mystery, just show people the results.'

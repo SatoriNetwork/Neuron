@@ -133,19 +133,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
         if not alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
-        else:
-            if not os.path.exists(config.walletPath('wallet-migration-backup.yaml')):
-                # backup the wallet
-                import shutil
-                shutil.copy(
-                    config.walletPath('wallet.yaml'),
-                    config.walletPath('wallet-migration-backup.yaml'))
-        if os.path.exists(config.walletPath('vault.yaml')) and not os.path.exists(config.walletPath('vault-migration-backup.yaml')):
-            # backup the wallet
-            import shutil
-            shutil.copy(
-                config.walletPath('vault.yaml'),
-                config.walletPath('vault-migration-backup.yaml'))
+        self.performMigrationBackup('wallet')
+        self.performMigrationBackup('vault')
         self.ranOnce = False
         while True:
             if self.asyncThread.loop is not None:
@@ -154,6 +143,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     interval=60*60*24 if alreadySetup else 60*60*12)
                 break
             time.sleep(60*15)
+
+    def performMigrationBackup(self, name: str = 'wallet'):
+        if os.path.exists(config.walletPath(f'{name}.yaml')) and not os.path.exists(config.walletPath(f'{name}-migration-backup.yaml')):
+            import shutil
+            shutil.copy(
+                config.walletPath(f'{name}.yaml'),
+                config.walletPath(f'{name}-migration-backup.yaml'))
 
     def disconnectWallets(self):
         if self.electrumx is not None:
@@ -263,10 +259,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         walletInstance.setupSubscriptions()
         if vaultInstance is not None:
             vaultInstance.setupSubscriptions()
+
         # Start a thread to listen for updates
         self.processThread = Thread(
             target=self._processNotifications)
         self.processThread.start()
+
+        # test - both show as being subscribed to...
+        # time.sleep(10)
+        # self.stopAllSubscriptions.set()
+        # walletInstance.stopSubscription()
+        # vaultInstance.stopSubscription()
+        # time.sleep(10)
+        # exit()
+
         # Get Transaction history in separate threads
         walletInstance.callTransactionHistory()
         if vaultInstance is not None:
@@ -564,6 +570,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     logging.info(
                         "Connection done, starting processing again", color="green")
                     self.lastBlockTime = time.time()
+                    self._evrmoreWallet.clearSubscriptions()
                     self._evrmoreWallet.setupSubscriptions()
                     self._evrmoreVault.setupSubscriptions()
                     logging.info(
