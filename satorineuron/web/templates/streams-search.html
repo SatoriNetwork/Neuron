@@ -16,7 +16,7 @@
       </div>
       <div style="margin-left:24px;margin-top:15px" class="flex flex-row gap-2">
         <input style="width:30%;border-radius:5px;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
-        <button class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" style="border-radius:5px;background:white" onClick="debounceSearch();">Search</button>
+        <!-- <button class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" style="border-radius:5px;background:white" onClick="debounceSearch();">Search</button> -->
       </div>
       <div class="card-body px-0 pb-2">
         <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
@@ -51,7 +51,8 @@
                 {% endif %}
               </tr> 
               {% for stream in streams %}
-              <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %} {% if stream['wallet_vote'] != 0 or (vault.isDecrypted and stream['vault_vote'] != 0) %}{% if darkmode %}yellow-dark-selected{% else %}yellow-selected{% endif %}{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');">
+              <!-- <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %} {% if stream['wallet_vote'] != 0 or (vault.isDecrypted and stream['vault_vote'] != 0) %}{% if darkmode %}yellow-dark-selected{% else %}yellow-selected{% endif %}{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');"> -->
+              <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');">
                 <td>
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
@@ -105,6 +106,7 @@
 <script type="text/javascript">
     const darkmode = {{ 'true' if darkmode else 'false' }};  
     const vault = { isDecrypted: {{ 'true' if vault.isDecrypted else 'false' }} };
+    let storedStreams = {{ streams|tojson }};
 
     function toggleStreamDetails(row) {
         const detailsRow = row.nextElementSibling;
@@ -118,25 +120,29 @@
     let timeout = null;
 
     function debounceSearch() {
-      console.log("debounceSearch called")
-        if(timeout) {
-          clearTimeout(timeout);
-        }
-        timeout = setTimeout(() => {
-            const searchText = document.getElementById('searchInput').value;
-            fetchStreams(searchText);
-        }, 500);
+      if(timeout) {
+        clearTimeout(timeout);
+      }
+      const tableBody = document.getElementById('updating_table');
+      tableBody.innerHTML = '';
+      const noDataRow = document.createElement('tr');
+      noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
+      tableBody.appendChild(noDataRow);
+
+      timeout = setTimeout(() => {
+          const searchText = document.getElementById('searchInput').value;
+          fetchStreams(searchText);
+      }, 200);
     }
 
     function fetchStreams(searchText) {
-        console.log("SearchText", searchText)
-        const tableBody = document.getElementById('updating_table');
-        tableBody.innerHTML = '';
-        const noDataRow = document.createElement('tr');
-        noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
-        tableBody.appendChild(noDataRow);
+        const filteredStreams = storedStreams.filter(stream => 
+            stream.stream.toLowerCase().includes(searchText) ||
+            stream.target.toLowerCase().includes(searchText)
+        );
+        updateStreamDisplay(filteredStreams, darkmode, vault)
 
-        fetch(`/streams?search=${encodeURIComponent(searchText)}`)
+        {/* fetch(`/streams?search=${encodeURIComponent(searchText)}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`Network response was not ok, status: ${response.status}`);
@@ -153,7 +159,7 @@
               console.log("Data", data.streams)
               updateStreamDisplay(data.streams, darkmode, vault)
             })
-            .catch(error => console.error('Error fetching streams:', error));
+            .catch(error => console.error('Error fetching streams:', error)); */}
     }
 
     function updateStreamDisplay(streams, darkmode, vault) {
@@ -176,9 +182,9 @@
         row.id = `stream_${stream.stream_id}`;
 
         let rowClass = darkmode ? 'yellow-dark-hover' : 'yellow-hover';
-        if (stream.wallet_vote != 0 || (vault.isDecrypted && stream.vault_vote != 0)) {
-            rowClass += darkmode ? ' yellow-dark-selected' : ' yellow-selected';
-        }
+        // if (stream.wallet_vote != 0 || (vault.isDecrypted && stream.vault_vote != 0)) {
+        //    rowClass += darkmode ? ' yellow-dark-selected' : ' yellow-selected';
+        // }
         row.className = rowClass;
 
         row.innerHTML = `
