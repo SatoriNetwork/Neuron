@@ -535,21 +535,24 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """start the engine, it will run w/ what it has til ipfs is synced"""
 
         def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
-            # testing
-            # TODO: find the prediction stream we can publish to from this raw data stream
             print("topic=", streamForecast.streamId.topic())
             print("data=", streamForecast.forecast["pred"].iloc[0])
             print("observationTime=", streamForecast.observationTime)
             print("observationHash=", streamForecast.observationHash)
             print("isPrediction=", True)
             print("useAuthorizedCall=", self.version[1] >= 2 and self.version[2] >= 6)
+            predictionStream = [
+                p for p in StartupDag.predictionStreams(self.publications)
+                if streamForecast.streamId == p.predicting]
+            print("predictionStream=", predictionStream)
+            print("predictionStreamtopic=", predictionStream.streamId.topic())
             # self.server.publish(
-            #    topic=streamForecast.streamId.topic(), # this is the raw data stream, should be the correlate prediction stream instead
-            #    data=streamForecast.forecast['pred'].iloc[0],
-            #    observationTime=streamForecast.observationTime,
-            #    observationHash=streamForecast.observationHash,
-            #    isPrediction=True,
-            #    useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
+            #     topic=predictionStream.streamId.topic(),
+            #     data=streamForecast.forecast['pred'].iloc[0],
+            #     observationTime=streamForecast.observationTime,
+            #     observationHash=streamForecast.observationHash,
+            #     isPrediction=True,
+            #     useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
 
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
@@ -565,7 +568,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 # meaning it doesn't know what publications streams it's predictions
                 # should be published on. So we have to handle that transalation
                 # up in this later instead before we publish.
-                streams=self.subscriptions
+                streams=self.subscriptions,
+                pubstreams=StartupDag.predictionStreams(self.publications)
             )
         )
         self.aiengine.prediction_produced.subscribe(
