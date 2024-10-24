@@ -1,10 +1,9 @@
-# peer_client.py
 import requests
 import time
 import threading
 import json
 from dataclasses import dataclass
-from wireguard_manager import start_wireguard_service, add_peer, remove_peer, list_peers, start_port_listening, start_port_connection
+from wireguard_manager import start_wireguard_service, add_peer, save_config, list_peers, start_port_listening, start_port_connection, stop_port_listening
 
 @dataclass
 class WireguardConfig:
@@ -19,6 +18,7 @@ class MessageClient:
         self.wireguard_config = wireguard_config
         self.running = False
         self.connected_peers = set()
+        self.listening = False
         self.peer_wireguard_configs = {}
         self.ensure_wireguard_running()
     
@@ -43,7 +43,7 @@ class MessageClient:
             return None
 
     def connect_to_peer(self, peer_id):
-        """Request connection to another peer"""
+        """Request connection to another peer and configure WireGuard."""
         url = f"{self.server_url}/connect"
         data = {
             "from_peer": self.client_id,
@@ -53,59 +53,92 @@ class MessageClient:
         try:
             response = requests.post(url, json=data)
             response_data = response.json()
-            
+
             if response_data.get('status') == 'connected':
                 print(f"Successfully connected to {peer_id}")
                 self.connected_peers.add(peer_id)
 
                 to_peer_config = response_data['to_peer_config']
                 print(f"WireGuard config for peer {peer_id}: {to_peer_config}")
-                # Extract and configure WireGuard details
-                to_peer_config = response_data['to_peer_config']
-                print(f"Received WireGuard config for peer {peer_id}")
-
+                
+                # Store the peer's WireGuard config
+                self.peer_wireguard_configs[peer_id] = to_peer_config
+                
                 # Apply WireGuard configuration
                 interface = "wg0"
                 add_peer(interface, 
                         to_peer_config['public_key'], 
                         to_peer_config['allowed_ips'], 
                         to_peer_config['endpoint'])
-
-                self.peer_wireguard_configs[peer_id] = to_peer_config
-
-                # Verify the connection
-                if self.set_connection(peer_id):
-                    print(f"Connection verified with {peer_id}")
-                    return True
-                else:
-                    print(f"Connection verification failed for {peer_id}")
-                    return False
+                save_config(interface)
+                print(f"Peer {peer_id} configuration saved and applied")
+                return True
+             
             else:
                 print(f"Connection failed: {response_data.get('message', 'Unknown error')}")
                 return False
+                
         except Exception as e:
-            print(f"Error during connection: {e}")
+            print(f"Connection failed: {e}")
             return False
 
-    def set_connection(self, peer_id):
-        """Test WireGuard connection with peer"""
-        try:
-            config = self.peer_wireguard_configs.get(peer_id)
-            if not config:
-                return False
+    # def set_connection(self, peer_id):
+    #     """Test WireGuard connection with peer"""
+    #     try:
+    #         config = self.peer_wireguard_configs.get(peer_id)
+    #         if not config:
+    #             print(f"No configuration found for peer {peer_id}")
+    #             return False
             
-            # Test the connection using port communication
-            port = 51820
-            threading.Thread(target=start_port_listening, args=(port,), daemon=True).start()
-            time.sleep(1)  # Give time for listener to start
-            start_port_connection(config['endpoint'].split(':')[0], port)
-            # start_port_connection(wireguard_config['allowed_ips'], port)
-            return True
+    #         # Test the connection using port communication
+    #         port = 51820
+    #         try:
+    #             start_port_listening(port)
+    #         except Exception as e:
+    #             if "already in use" in str(e).lower():
+    #                 print(f"Port {port} is already in use. This might mean a listener is already running.")
+    #                 # You could either:
+    #                 # 1. Try a different port
+    #                 # 2. Skip starting the listener since it's already running
+    #                 return True  # If the port is in use, it likely means the listener is already active
+    #             else:
+    #                 raise  # Re-raise if it's a different type of error
+    #         time.sleep(1)  # Give time for listener to start
+    #         return True
             
-        except Exception as e:
-            print(f"Connection test failed: {e}")
-            return False
+    #     except Exception as e:
+    #         print(f"Connection test failed: {str(e)}")
+    #         return False
         
+    #     finally:
+    #             stop_port_listening()
+    #             print("\nListener stopped. Returning to menu...")
+    #             time.sleep(1)
+    def start_listening(self):
+        """Start port listening mode"""
+        if not self.listening:
+            self.listening = True
+            port =51821
+            print(f"\nStarting port listening on {port}")
+            print("Press Ctrl+C to stop listening and return to menu...")
+            print("-" * 50)
+
+            try:
+                start_port_listening(port)
+            except KeyboardInterrupt:
+                print("\nStopping listener...")
+            finally:
+                self.stop_listening()
+                print("\nListener stopped. Returning to menu...")
+                time.sleep(1)
+
+    def stop_listening(self):
+        """Stop port listening"""
+        if self.listening:
+            self.listening = False
+            stop_port_listening()
+    
+
     def test_connection(self, peer_id):
         """Test WireGuard connection with peer"""
         try:
@@ -114,8 +147,10 @@ class MessageClient:
                 return False
             
             # Test the connection using port communication
-            port = 51820
-            threading.Thread(target=start_port_connection, args=(port,), daemon=True).start()
+            port = 51821
+            # threading.Thread(target=start_port_connection, args=(config['allowed_ips'],port), daemon=True).start()
+            allowed_ip=config['allowed_ips'].split('/')[0]
+            start_port_connection(allowed_ip,port)
             time.sleep(1)  # Give time for listener to start
             # start_port_connection(config['endpoint'].split(':')[0], port)
             # start_port_connection(wireguard_config['allowed_ips'], port)
@@ -186,14 +221,16 @@ if __name__ == "__main__":
     print(f"\nClient started with ID: {CLIENT_ID}")
     print(f"Performing check-ins every 10 minutes")
 
-    try:
-        while True:
+    # try:
+    while True:
+        try:
             print("\nAvailable Commands:")
             print("1. Connect to peer")
             print("2. Show connected peers")
-            print("3. Test connection with peer")
-            print("4. List peers")
-            print("5. Exit")
+            print("3. set connection with peer")
+            print("4. Test connection with peer")
+            print("5. List peers")
+            print("6. Exit")
             
             choice = input("\nChoose an option: ")
 
@@ -216,6 +253,16 @@ if __name__ == "__main__":
                     print("\nNo connected peers")
 
             elif choice == "3":
+                client.start_listening()
+                # peer_id = input("Enter peer ID to set connection with: ")
+                # if peer_id not in client.connected_peers:
+                #     print("Not connected to this peer")
+                #     continue
+                # if client.set_connection(peer_id):
+                #     print(f"Connection with {peer_id} is working")
+                # pass
+
+            elif choice == "4":
                 if not client.connected_peers:
                     print("\nNo connected peers to test")
                     continue
@@ -230,7 +277,7 @@ if __name__ == "__main__":
                 else:
                     print(f"Connection with {peer_id} failed")
 
-            elif choice == "4":
+            elif choice == "5":
                 peers = client.get_peers()
                 if peers:
                     print("\nActive peers:")
@@ -242,8 +289,20 @@ if __name__ == "__main__":
                             print("-" * 50)
                 else:
                     print("\nNo peers found or error retrieving peer list")
-            elif choice == "5":
+            
+            elif choice == "6":
                 print("\nShutting down client...")
-                break
-    finally:
-        client.stop()
+                client.stop()  # Stop background tasks
+                break  # Break out of the main loop
+            
+            else:
+                print("\nInvalid option. Please try again.")
+
+        except KeyboardInterrupt:
+            print("\nReceived interrupt signal. Shutting down...")
+            continue
+        # finally:
+        #     print("Cleaning up...")
+        #     client.stop()  # Ensure background tasks are stopped
+        #     print("Client shutdown complete.")
+        #     exit(0)  # Ensure the program exits
