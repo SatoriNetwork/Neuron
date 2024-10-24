@@ -1,476 +1,369 @@
 {% block content %}
 <style>
-  .vote-option {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-  }
-  .vote-btn {
-  }
-  .vote-stats {
-      font-size: 0.9em;
-      color: #666;
-  }
-  .proposal-card {
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      overflow: hidden;
-  }
-  .proposal-card-header {
-    background-color: #ffffff;
-    padding: 15px;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  .proposal-card-header h4 {
-    margin: 0;
-    color: #333;
-  }
-  .proposal-card-body {
-    background-color: #ffffff;
-    padding: 20px;
-  }
-  .image-placeholder {
-      width: 100%;
-      height: 200px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 20px;
-      border-radius: 4px;
-      overflow: hidden;
-  }
-  .image-placeholder img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-  }
-  .proposal-info {
-      margin-bottom: 20px;
-  }
-  .proposal-info dt {
-      font-weight: bold;
-      color: #555;
-      margin-top: 10px;
-  }
-  .proposal-info dd {
-      margin-left: 0;
-      margin-bottom: 5px;
+    .vote-option {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .vote-btn {
+    }
+    .vote-stats {
+        font-size: 0.9em;
+        color: #666;
+    }
+    .proposal-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .proposal-card-header {
+      background-color: #ffffff;
+      padding: 15px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .proposal-card-header h4 {
+      margin: 0;
       color: #333;
-  }
-  .vote-options {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-around;
-      gap: 10px;
-      margin-bottom: 20px;
-  }
-  .vote-option {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 1;
-  }
-  .vote-btn-old {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      background-color: #007bff;
-      box-shadow:unset;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin-bottom: 5px;
-  }
-  .vote-btn:hover {
-      background-color: #0056b3;
-      box-shadow:unset;
-  }
-  .vote-percentage {
-      font-size: 0.9em;
-      color: #666;
-  }
-  .vote-results {
-      margin-bottom: 15px;
-  }
-  .vote-results p {
-      margin: 5px 0;
-  }
-  .proposal-voted-message {
-      display: block;
-      margin-top: 15px;
-      font-style: italic;
-      color: #666;
-      padding: 10px;
-      border-radius: 4px;
-  }
-  .welcome-card {
-      text-align: center;
+    }
+    .proposal-card-body {
+      background-color: #ffffff;
       padding: 20px;
-      background-color: #fff9fa;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  .welcome-card h2 {
-      color: black;
-      margin-bottom: 15px;
-  }
-</style>
+    }
+    .image-placeholder {
+        width: 100%;
+        height: 200px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .image-placeholder img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .proposal-info {
+        margin-bottom: 20px;
+    }
+    .proposal-info dt {
+        font-weight: bold;
+        color: #555;
+        margin-top: 10px;
+    }
+    .proposal-info dd {
+        margin-left: 0;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .vote-options {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .vote-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+    .vote-btn-old {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        background-color: #007bff;
+        box-shadow:unset;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-bottom: 5px;
+    }
+    .vote-btn:hover {
+        background-color: #0056b3;
+        box-shadow:unset;
+    }
+    .vote-percentage {
+        font-size: 0.9em;
+        color: #666;
+    }
+    .vote-results {
+        margin-bottom: 15px;
+    }
+    .vote-results p {
+        margin: 5px 0;
+    }
+    .proposal-voted-message {
+        display: block;
+        margin-top: 15px;
+        font-style: italic;
+        color: #666;
+        padding: 10px;
+        border-radius: 4px;
+    }
+    .proposal-list-item {
+        cursor: pointer;
+    }
+    .proposal-list-item:hover {
+        background-color: #f8f9fa;
+    }
+    .proposal-list-item.active {
+        background-color: #007bff;
+        color: white;
+    }
+  
+    .proposal-info.text-center dl {
+      display: inline-block;
+      text-align: center;
+    }
+  
+    .proposal-info.text-center dt {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+  
+    .proposal-info.text-center dd {
+      margin-left: 0;
+    }
+  
+    .proposal-list-item {
+        cursor: pointer;
+    }
+    .proposal-list-item:hover {
+        background-color: #f8f9fa;
+    }
+    .proposal-list-item.active {
+        background-color: #007bff;
+        color: white;
 
-<div class="row">
-  <!-- Left column: List of proposal titles -->
-  <div class="col-md-3">
-    <div class="proposal-card">
-      <div class="proposal-card-header">
-        <h4>Proposals</h4>
+
+    }
+
+    .btn-sm {
+        margin: 0 5px;
+    }
+  </style>
+  
+  
+  <div class="row">
+    <!-- Left column: Lists of active, past, and unapproved proposal titles -->
+    <div class="col-md-3 proposal-list-container">
+      <!-- Active Proposals -->
+      <div class="proposal-card">
+        <div class="proposal-card-header">
+          <h4>Active Proposals</h4>
+        </div>
+        <div class="proposal-card-body">
+          <ul class="list-group proposal-list" id="active-proposal-list">
+            <!-- Active proposal list items will be dynamically inserted here -->
+          </ul>
+        </div>
       </div>
-      <div class="proposal-card-body">
-        <ul class="list-group proposal-list" id="proposal-list">
-          <!-- Proposal list items will be dynamically inserted here -->
-        </ul>
+      
+      <!-- Past Proposals -->
+      <div class="proposal-card mt-4">
+        <div class="proposal-card-header">
+          <h4 id="past-proposals-header">Past Proposals</h4>
+        </div>
+        <div class="proposal-card-body">
+          <ul class="list-group proposal-list" id="past-proposal-list">
+            <!-- Past proposal list items will be dynamically inserted here -->
+          </ul>
+        </div>
+      </div>
+  
+      <!-- Unapproved Proposals (visible only to authorized users) -->
+      <div id="unapproved-proposals-section" class="proposal-card mt-4" style="display: none;">
+        <div class="proposal-card-header">
+          <h4>Unapproved Proposals</h4>
+        </div>
+        <div class="proposal-card-body">
+          <ul class="list-group proposal-list" id="unapproved-proposal-list">
+            <!-- Unapproved proposal list items will be dynamically inserted here -->
+          </ul>
+        </div>
       </div>
     </div>
-  </div>
-  <!-- Right column: Detailed view of selected proposal -->
-  <div class="col-md-9 proposal-detail-container">
-    <div id="proposal-details">
-      <!-- Welcome card and proposal details will be dynamically inserted here -->
-      <div class="card {% if darkmode %}dark-colors{% endif %}">
-        <div class="row" style='padding-left:2rem;padding-right:2rem;'>
-          <div class="col-xl-12 col-sm-12 mb-xl-0">
-            <center>
-              <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
-                style="padding-top:1.5rem; text-transform: none;"
-                type="button"
-                data-toggle="collapse"
-                data-target="#createProposalBody"
-                aria-expanded="false"
-                aria-controls="createProposalBody">
-                <h4 class="{% if darkmode %}dark-colors{% endif %}">Welcome to Proposals</h4>
-              </button>
-            </center>
-          </div>
+    
+    <!-- Right column: Welcome card and Detailed view of selected proposal -->
+    <div class="col-md-9 proposal-detail-container">
+      <!-- Welcome Card -->
+      <div id="welcome-card" class="proposal-card welcome-card">
+        <div class="proposal-card-header text-center">         
+          <h4>Welcome to Proposals</h4>
         </div>
-        <div>
-          <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-            Proposals allow the community to direct the project.
-            <br><br>
-            Select a proposal from the list to vote.
-            <br><br>
-            <br><br>
+        <div class="proposal-card-body">
+          <p class="text-center">
+            Proposals allow the community to direct the project.<br>
+            Select a proposal from the list on the left to view its details and vote.
           </p>
         </div>
       </div>
+  
+      <!-- Proposal Details -->
+      <div id="proposal-details" style="display: none;">
+        <!-- Proposal details will be dynamically inserted here -->
+        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-top:2rem;" onclick="getCsvVotes()">
+          <i class="material-icons" style="font-size: 28px;" title="Download voters report">file_download</i>
+        </button>
+      </div>
     </div>
   </div>
-</div>
-<script>
-  let isFetchingProposals = false;
+  <script>
+let canApprove = false;
+let userWalletAddress = null;
 
-  document.addEventListener('DOMContentLoaded', (event) => {
-      fetchProposals();
-      //showWelcomeCard();
-  });
 
-  function showWelcomeCard() {
-      const proposalDetails = document.getElementById('proposal-details');
-      proposalDetails.innerHTML = `
-         <div class="card {% if darkmode %}dark-colors{% endif %}">
-          <div class="row" style='padding-left:2rem;padding-right:2rem;'>
-            <div class="col-xl-1 col-sm-1 mb-xl-0">
-            </div>
-            <div class="col-xl-11 col-sm-11 mb-xl-0">
-              <center>
-                <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
-                  style="padding-top:1.5rem; text-transform: none;"
-                  type="button"
-                  data-toggle="collapse"
-                  data-target="#createProposalBody"
-                  aria-expanded="false"
-                  aria-controls="createProposalBody">
-                  <h4 class="{% if darkmode %}dark-colors{% endif %}">Welcome to Proposals</h4>
-                </button>
-              </center>
-            </div>
-            <div class="col-xl-1 col-sm-1 mb-xl-0">
-              <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-top:2rem;" onclick="getCsvVotes()">
-                <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;" title="download voters report">file_download</i>
-              </button>
-            </div>
-          </div>
-          <div>
-            <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
-              Proposals allow the community to vote on the direction of the project.
-              <br><br>
-              Select a proposal from the list on the left to view its details.
-              <br><br>
-              <br><br>
-            </p>
-          </div>
-        </div>
-      `;
-  }
-
-  function fetchProposals() {
-      if (isFetchingProposals) return;
-      isFetchingProposals = true;
-
-      console.log('Fetching proposals...');
-      fetch('/api/proposals', {
-          headers: {
-              'Accept': 'application/json'
-          }
-      })
-      .then(response => {
-          if (!response.ok) {
-              return response.json().then(err => { throw err; });
-          }
-          return response.json();
-      })
-      .then(data => {
-          console.log('Received proposals data:', data);
-          if (data.status === 'success' && Array.isArray(data.proposals)) {
-            console.log(data.proposals);
-            console.log(data.proposals.length);
-            if (data.proposals.length > 0) {
-              updateProposalsList(data.proposals);
-              // don't automatically remove the welcome card
-              //updateProposalDetails(data.proposals, data.user_wallet_address);
-            } else {
-              document.getElementById('proposal-list').innerHTML = '<li>No active proposals</li>';
-              showWelcomeCard();
+document.addEventListener('DOMContentLoaded', (event) => {
+    checkApprovalRights()
+        .then(() => {
+            fetchActiveProposals();
+            if (canApprove) {
+                fetchUnapprovedProposals();
             }
-          } else {
-              throw new Error(data.message || 'Invalid data format received from server');
-          }
-      })
-      .catch(error => {
-          console.error('Error fetching proposals:', error.message);
-          displayErrorMessage('Failed to fetch proposals: ' + error.message);
-      })
-      .finally(() => {
-          isFetchingProposals = false;
-      });
-  }
+        });
 
-  var chosenProposal = null;
-  var chosenProposalVotes = null;
+    // Add click event for Past Proposals header
+    document.getElementById('past-proposals-header').addEventListener('click', fetchExpiredProposals);
+});
 
-  function updateProposalsList(proposals) {
-      const proposalList = document.getElementById('proposal-list');
-      proposalList.innerHTML = ''; // Clear existing list
-      proposals.forEach(proposal => {
-          const listItem = document.createElement('li');
-          listItem.className = 'proposal-list-item';
-          listItem.onclick = () => {
-            chosenProposal = proposal;
-            updateProposalDetails(proposal);
-            fetchProposalVotes(proposal);
-          };
-          listItem.id = `proposal-item-${proposal.id}`;
-          listItem.textContent = proposal.title;
-          proposalList.appendChild(listItem);
-      });
-  }
 
-  function updateProposalDetails(proposal) {
+function checkApprovalRights() {
+    return fetch('/api/user/can-approve')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                canApprove = data.canApprove;
+                userWalletAddress = data.userWalletAddress;
+                if (canApprove) {
+                    document.getElementById('unapproved-proposals-section').style.display = 'block';
+                } else {
+                    document.getElementById('unapproved-proposals-section').style.display = 'none';
+                }
+            } else {
+                throw new Error(data.message || 'Failed to check approval rights');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking approval rights:', error);
+            document.getElementById('unapproved-proposals-section').style.display = 'none';
+        });
+}
+
+function fetchActiveProposals() {
+    fetch('/api/proposals/active')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateProposalsList(data.proposals, 'active-proposal-list');
+            } else {
+                throw new Error(data.message || 'Failed to fetch active proposals');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            displayErrorMessage('Failed to fetch active proposals: ' + error.message);
+        });
+}
+
+function fetchUnapprovedProposals() {
+    fetch('/api/proposals/unapproved')
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 403) {
+                    throw new Error('Unauthorized to view unapproved proposals');
+                }
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                updateProposalsList(data.proposals, 'unapproved-proposal-list', true);
+                document.getElementById('unapproved-proposals-section').style.display = 'block';
+            } else {
+                throw new Error(data.message || 'Failed to fetch unapproved proposals');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (error.message === 'Unauthorized to view unapproved proposals') {
+                document.getElementById('unapproved-proposals-section').style.display = 'none';
+            } else {
+                displayErrorMessage('Failed to fetch unapproved proposals: ' + error.message);
+            }
+        });
+}
+function fetchExpiredProposals() {
+    fetch('/api/proposals/expired')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateProposalsList(data.proposals, 'past-proposal-list');
+                // Show the past proposals
+                document.getElementById('past-proposal-list').style.display = 'block';
+            } else {
+                throw new Error(data.message || 'Failed to fetch expired proposals');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            displayErrorMessage('Failed to fetch expired proposals: ' + error.message);
+        });
+}
+
+
+function showWelcomeCard() {
     const proposalDetails = document.getElementById('proposal-details');
-    proposalDetails.innerHTML = ''; // Clear existing details
-    console.log("Processing proposal:", proposal);
-    if (!proposal || typeof proposal.id === 'undefined') {
-      console.error('Invalid proposal data:', proposal);
-      return; // Skip this iteration if proposal or proposal.id is undefined
-    }
-    const detailDiv = document.createElement('div');
-    detailDiv.id = `proposal-${proposal.id}`;
-    detailDiv.className = 'proposal-detail';
-    detailDiv.style.display = 'block';
-    const options = JSON.parse(JSON.parse(proposal.options));
-    // Ensure there are at least two options
-    if (options.length < 2) {
-      options.push("For", "Against");
-    }
-    // Use placeholder image if no image URL is provided
-    const imageHtml = proposal.image_url
-      ? `<img src="${proposal.image_url}" alt="${proposal.title}">`
-      : `<img src="https://ateressi.sirv.com/iStock-173770914.jpg" alt="Placeholder Image">`;
-    let expirationDate = new Date(proposal.expires);
-    expirationDate.setDate(expirationDate.getDate() - 1);
-    dayBeforeExpiration = expirationDate.toLocaleDateString();
-    detailDiv.innerHTML = `
-      <div class="proposal-card">
-        <div class="proposal-card-header">
-          <h4 class="text-center">${proposal.title}</h4>
-        </div>
-        <div class="proposal-card-body" data-options='${JSON.stringify(options)}'>
-          <div class="image-placeholder">
-            ${imageHtml}
-          </div>
-          <div class="row proposal-info mb-2">
-            <div class="col-xl-3 col-sm-3 mb-xl-0">
-              <dt>Expires</dt>
-              <dd>${dayBeforeExpiration}</dd>
-            </div>
-            <div class="col-xl-3 col-sm-3 mb-xl-0">
-              <dt>Estimated Cost</dt>
-              <dd>${proposal.cost}</dd>
-            </div>
-            <!--<div class="col-xl-3 col-sm-3 mb-xl-0">
-              <dt>Proposed on</dt>
-              <dd>${new Date(proposal.proposal_date).toLocaleDateString()}</dd>
-            </div>-->
-            <!--<div class="col-xl-3 col-sm-3 mb-xl-0">
-              ${proposal.complete_date ? `
-              <dt>Completed</dt>
-              <dd>${new Date(proposal.complete_date).toLocaleDateString()}</dd>
-              ` : ''}
-            </div>-->
-          </div>
-          <div class="row proposal-info mb-5">
-            <div class="col-xl-12 col-sm-12 mb-xl-0">
-              <dt>Description</dt>
-              <dd>${proposal.description}</dd>
-            </div>
-          </div>
-          <div id="vote-options-${proposal.id}" class="vote-options">
-            ${options.map(option => `
-              <div class="vote-option">
-                <div class="input-group input-group-outline is-filled" onclick="">
-                  <input class="tight form-control vote-btn" id="submit" name="submit" size="32" type="submit" value="${option}" onfocus="focused(this)" onfocusout="defocused(this)" onclick="submitVote(${proposal.id}, '${option}')">
+    proposalDetails.innerHTML = `
+        <div class="card {% if darkmode %}dark-colors{% endif %}">
+            <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+                <div class="col-xl-12 col-sm-12 mb-xl-0">
+                    <center>
+                        <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
+                            style="padding-top:1.5rem; text-transform: none;"
+                            type="button"
+                            data-toggle="collapse"
+                            data-target="#createProposalBody"
+                            aria-expanded="false"
+                            aria-controls="createProposalBody">
+                            <h4 class="{% if darkmode %}dark-colors{% endif %}">Welcome to Proposals</h4>
+                        </button>
+                    </center>
                 </div>
-                <!--<button class="btn btn-primary vote-btn-old" onclick="submitVote(${proposal.id}, '${option}')">
-                  ${option}
-                </button>-->
-                <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">0%</div>
-              </div>
-            `).join('')}
-          </div>
-          <span id="voted-message-${proposal.id}" class="proposal-voted-message" style="display: none;"></span>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px;">
+                <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}" style="margin: 0; line-height: 1.5;">
+                    Proposals allow the community to direct the project.
+                </p>
+                <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}" style="margin: 0; line-height: 1.5;">
+                    Select a proposal from the list on the left to view its details and vote.
+                </p>
+            </div>
         </div>
-      </div>
     `;
-    proposalDetails.appendChild(detailDiv);
-  }
+    document.getElementById('welcome-card').style.display = 'block';
+    document.getElementById('proposal-details').style.display = 'none';
+}
+function hideWelcomeCard() {
+    document.getElementById('welcome-card').style.display = 'none';
+    document.getElementById('proposal-details').style.display = 'block';
+}
 
-  function fetchProposalVotes(proposal) {
-    console.log(`Fetching votes for proposal ${proposal.id}`);
-    fetch(`/proposal/votes/get/${proposal.id}`)
-    .then(response => {
-      if (!response.ok) {
-        return response.json().then(err => { throw err; });
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Received vote data:', data);
-        if (data.status === 'success') {
-          updateVoteCounts(proposal.id, data.votes);
-          updateVotingStatus(proposal, data);
-        } else {
-          console.log('No votes found or invalid data format for this proposal.');
-          updateVoteCounts(proposal.id, []);
-        }
-    })
-    .catch(error => {
-      console.error('Unable to fetch vote counts:', error);
-      updateVoteCounts(proposal.id, []);
-    });
-  }
+function fetchProposals() {
+    if (isFetchingProposals) return;
+    isFetchingProposals = true;
 
-  function updateVotingStatus(proposal, data) {
-    const proposalElement = document.getElementById(`proposal-${proposal.id}`);
-    if (proposalElement) {
-      const voteButtons = proposalElement.querySelectorAll('.vote-btn');
-      voteButtons.forEach(button => {
-        if (
-          data.user_has_voted &&
-          //button.innerText.toLowerCase() == data.user_voted.toLowerCase()
-          button.value.toLowerCase() == data.user_voted.toLowerCase()
-        ) {
-          button.style.backgroundColor = '#F6B04266';
-        }
-        if (new Date(proposal.expires).getTime() < new Date().getTime()) {
-          button.disabled = data.disable_voting;
-        }
-      });
-      const votedMessage = proposalElement.querySelector('.proposal-voted-message');
-      if (votedMessage) {
-        if (data.user_has_voted) {
-          votedMessage.textContent = 'You have already voted for this proposal.';
-          votedMessage.style.display = 'block';
-        } else if (!data.can_vote) {
-          votedMessage.textContent = 'This is your proposal.';
-          votedMessage.style.display = 'block';
-        } else if (data.voting_started) {
-          votedMessage.textContent = 'Voting for this proposal has begun.';
-          votedMessage.style.display = 'block';
-        } else {
-          votedMessage.style.display = 'none';
-        }
-      }
-    }
-  }
-
-  function updateVoteCounts(id, votes) {
-    chosenProposalVotes = votes;
-    console.log(`Updating vote counts for proposal ${id}`);
-    console.log('Received votes:', votes);
-
-    const proposalDetail = document.getElementById(`proposal-${id}`);
-    if (!proposalDetail) {
-      console.error(`Proposal detail element not found for id ${id}`);
-      return;
-    }
-
-    // Initialize satori sums
-    const satoriSums = {};
-    let totalSatori = 0;
-
-    // Sum satori values
-    votes.forEach(vote => {
-      if (vote.proposal_id == id) {
-        if (!satoriSums[vote.vote]) {
-          satoriSums[vote.vote] = 0;
-        }
-        const satoriValue = parseFloat(vote.currency) || 0;
-        satoriSums[vote.vote] += satoriValue;
-        totalSatori += satoriValue;
-      }
-    });
-
-    console.log('Satori sums:', satoriSums);
-    console.log('Total Satori:', totalSatori);
-
-    // Update the display
-    Object.keys(satoriSums).forEach(option => {
-      const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
-      if (percentageElement) {
-        const percentage = totalSatori > 0 ? Math.round((satoriSums[option] / totalSatori * 100)) : 0;
-        percentageElement.textContent = `${percentage}%`;
-        console.log(`Updated percentage for ${option}: ${percentage}%`);
-      } else {
-        console.error(`Percentage element not found for option ${option}`);
-      }
-    });
-
-    // Log the results for debugging
-    console.log(`Proposal ${id} - Total Satori: ${totalSatori}`);
-    console.log('Satori sums per option:', satoriSums);
-  }
-
-  function submitVote(id, vote) {
-    console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
-    fetch('/proposals/vote', {
-        method: 'POST',
+    console.log('Fetching proposals...');
+    fetch('/api/proposals', {
         headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            proposal_id: String(id),
-            vote: vote
-        }),
+            'Accept': 'application/json'
+        }
     })
     .then(response => {
         if (!response.ok) {
@@ -479,115 +372,491 @@
         return response.json();
     })
     .then(data => {
-        console.log('Server response:', data);
+        console.log('Received proposals data:', data);
         if (data.status === 'success') {
-            console.log('Vote submitted successfully');
-            disableVoteButtons(id);
-            showVotedMessage(id, 'Your vote has been recorded.');
-            sleep(2000).then(() => {
-              //location.reload();
-              fetchProposalVotes(chosenProposal);
-              //disableVoteButtons(id);
-              updateProposalDetails(chosenProposal);
-              enableVoteButtons(id);
-            });
+            const now = new Date();
+            const activeProposals = data.approved_proposals.filter(p => new Date(p.expires) > now);
+            const pastProposals = data.approved_proposals.filter(p => new Date(p.expires) <= now);
+
+            updateProposalsList(activeProposals, 'active-proposal-list', false);
+            updateProposalsList(pastProposals, 'past-proposal-list', false);
+
+            if (data.can_approve) {
+                console.log('Unapproved proposals:', data.unapproved_proposals);
+                updateProposalsList(data.unapproved_proposals, 'unapproved-proposal-list', true);
+                document.getElementById('unapproved-proposals-section').style.display = 'block';
+            }
+
+            // Always show welcome card after fetching proposals
+            showWelcomeCard();
         } else {
-            throw new Error(data.message || 'Unknown error');
+            throw new Error(data.message || 'Invalid data format received from server');
         }
     })
-    .catch((error) => {
-        console.error('Vote failed:', error.message);
-        displayErrorMessage('Failed to submit vote: ' + error.message);
+    .catch(error => {
+        console.error('Error fetching proposals:', error.message);
+        displayErrorMessage('Failed to fetch proposals: ' + error.message);
+    })
+    .finally(() => {
+        isFetchingProposals = false;
     });
-  }
-
-  function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  function disableVoteButtons(id) {
-    //const voteButtons = document.querySelectorAll(`#vote-options-${id} button`);
-    //voteButtons.forEach(button => button.disabled = true);
-    document.getElementById(`proposal-${id}`).querySelectorAll('.vote-btn').forEach(button => {
-      button.disabled = true;
-    });
-  }
-
-  function enableVoteButtons(id) {
-    //const voteButtons = document.querySelectorAll(`#vote-options-${id} button`);
-    //voteButtons.forEach(button => button.disabled = false);
-    document.getElementById(`proposal-${id}`).querySelectorAll('.vote-btn').forEach(button => {
-      button.disabled = false;
-    });
-  }
+}
 
 
-  function showVotedMessage(id, message) {
-      const messageElement = document.getElementById(`voted-message-${id}`);
-      if (messageElement) {
-          messageElement.textContent = message;
-          messageElement.style.display = 'block';
-      }
-  }
 
-  function displayErrorMessage(message) {
-      console.error(message);
-      alert(message);
-  }
-
-  function jsonToCsvVotes(jsonArray, columnsToExclude = []) {
-    if (!jsonArray || jsonArray.length === 0) {
-        return '';
+function updateProposalsList(proposals, listId, isUnapproved = false) {
+    console.log(`Updating proposals list for ${listId}`, proposals);
+    const proposalList = document.getElementById(listId);
+    if (!proposalList) {
+        console.error(`Proposal list element not found for id ${listId}`);
+        return;
     }
-    let headers = Object.keys(jsonArray[0]);
-    headers = headers.filter(header => !columnsToExclude.includes(header));
-    const csvRows = [];
-    csvRows.push(headers.join(','));
-    jsonArray.forEach(obj => {
-        const values = headers.map(header => {
-            const escaped = ('' + obj[header]).replace(/"/g, '""');
-            return `"${escaped}"`;
-        });
-        csvRows.push(values.join(','));
-    });
-    return csvRows.join('\n');
-  }
+    proposalList.innerHTML = ''; // Clear existing list
 
-  function downloadCsvVotes(csvContent, filename) {
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-  }
-
-  function getCsvVotes(){
-    /// TODO: this code to parse the data to generate a report was taken from
-    /// a different file. It needs to be conformed to parse this data structure:
-    /// chosenProposalVotes correctly.
-    if (!chosenProposalVotes) {
-      fetch('/proxy/parent/status', { method: 'GET' })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Network response was not ok.');
-        }
-      }).then(json => {
-          chosenProposalVotes = json;
-          const excludedColumns = ["parent", "child", "charity"];
-          const csvOutput = jsonToCsvVotes(json, excludedColumns);
-          downloadCsvVotes(csvOutput, "delegate.csv")
-      }).catch(error => console.error('Error:', error));
+    if (proposals.length === 0) {
+        const emptyMessage = document.createElement('li');
+        emptyMessage.className = 'proposal-list-item empty-message';
+        emptyMessage.textContent = listId === 'past-proposal-list' ? 'No past proposals' : 'No proposals available';
+        proposalList.appendChild(emptyMessage);
     } else {
-      const excludedColumns = ["parent", "child", "charity"];
-      const csvOutput = jsonToCsvVotes(chosenProposalVotes, excludedColumns);
-      downloadCsvVotes(csvOutput, "delegate.csv")
+        proposals.forEach(proposal => {
+            const listItem = document.createElement('li');
+            listItem.className = 'proposal-list-item';
+            listItem.onclick = () => {
+                updateProposalDetails(proposal, isUnapproved);
+                hideWelcomeCard();
+            };
+            listItem.id = `proposal-item-${proposal.id}`;
+            listItem.textContent = proposal.title;
+            proposalList.appendChild(listItem);
+        });
     }
+
+    // Ensure the list container is visible
+    const listContainer = proposalList.closest('.proposal-card');
+    if (listContainer) {
+        listContainer.style.display = 'block';
+    }
+
+    console.log(`Updated ${listId} with ${proposals.length} proposals`);
+}
+
+
+function updateProposalDetails(proposal, isUnapproved = false) {
+  const proposalDetails = document.getElementById('proposal-details');
+  proposalDetails.innerHTML = ''; // Clear existing details
+  console.log("Processing proposal:", proposal);
+  if (!proposal || typeof proposal.id === 'undefined') {
+    console.error('Invalid proposal data:', proposal);
+    return;
+  }
+  
+  chosenProposal = proposal;
+
+  const detailDiv = document.createElement('div');
+  detailDiv.id = `proposal-${proposal.id}`;
+  detailDiv.className = 'proposal-detail';
+  detailDiv.style.display = 'block';
+  
+  let options;
+  try {
+    options = JSON.parse(proposal.options);
+    if (typeof options === 'string') {
+      options = JSON.parse(options);
+    }
+    if (!Array.isArray(options)) {
+      options = [options];
+    }
+    options = options.map(opt => typeof opt === 'object' ? opt.option : opt);
+  } catch (e) {
+    console.error('Error parsing options:', e);
+    options = proposal.options.split(',').map(option => option.trim().replace(/^["']|["']$/g, ''));
+  }
+  
+  if (options.length < 2) {
+    options = ["For", "Against"];
+  }
+  
+  console.log('Final options:', options);
+  
+  const imageHtml = proposal.image_url
+    ? `<img src="${proposal.image_url}" alt="${proposal.title}">`
+    : `<img src="https://ateressi.sirv.com/iStock-173770914.jpg" alt="Placeholder Image">`;
+  
+  let expirationDate = new Date(proposal.expires);
+  expirationDate.setDate(expirationDate.getDate() - 1);
+  let dayBeforeExpiration = expirationDate.toLocaleDateString();
+  
+  let approveButtons = '';
+  if (isUnapproved && canApprove) {
+    approveButtons = `
+      <div class="text-center mt-3 mb-3">
+        <button class="btn btn-success btn-sm mr-2" onclick="approveProposal(${proposal.id}, true)">Approve</button>
+        <button class="btn btn-danger btn-sm" onclick="approveProposal(${proposal.id}, false)">Disapprove</button>
+      </div>
+    `;
   }
 
+  detailDiv.innerHTML = `
+  <div class="proposal-card">
+    <div class="proposal-card-header">
+      <h4 class="text-center">${proposal.title}</h4>
+    </div>
+    <div class="proposal-card-body" data-options='${JSON.stringify(options)}'>
+      <div class="image-placeholder">
+        ${imageHtml}
+      </div>
+      <div class="row proposal-info mb-2">
+        <div class="col-xl-3 col-sm-3 mb-xl-0">
+          <dt>Expires</dt>
+          <dd>${dayBeforeExpiration}</dd>
+        </div>
+        <div class="col-xl-3 col-sm-3 mb-xl-0">
+          <dt>Estimated Cost</dt>
+          <dd>${proposal.cost}</dd>
+        </div>
+      </div>
+      <div class="row proposal-info mb-5">
+        <div class="col-xl-12 col-sm-12 mb-xl-0">
+          <dt>Description</dt>
+          <dd>${proposal.description}</dd>
+        </div>
+      </div>
+      <div id="vote-options-${proposal.id}" class="vote-options">
+        ${options.map(option => `
+          <div class="vote-option">
+            <div class="input-group input-group-outline is-filled">
+              <button class="tight form-control vote-btn" onclick="submitVote(${proposal.id}, '${option}')">${option}</button>
+            </div>
+            <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">0%</div>
+          </div>
+        `).join('')}
+      </div>
+      ${approveButtons}
+      <div class="text-center mt-3 mb-3">
+        <button id="csv-generate-button-${proposal.id}" class="btn btn-primary btn-sm">Generate CSV</button>
+      </div>
+      <span id="voted-message-${proposal.id}" class="proposal-voted-message" style="display: none;"></span>
+    </div>
+  </div>
+  `;
+  proposalDetails.appendChild(detailDiv);
 
+  document.getElementById(`csv-generate-button-${proposal.id}`).addEventListener('click', getCsvVotes);
+
+  fetchProposalVotes(proposal);
+}
+
+
+let chosenProposal = null;
+let chosenProposalVotes = null;
+
+function fetchProposalVotes(proposal) {
+  if (!proposal || !proposal.id) {
+    console.error('Invalid proposal object:', proposal);
+    return;
+  }
+  console.log(`Fetching votes for proposal ${proposal.id}`);
+  fetch(`/proposal/votes/get/${proposal.id}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        console.log('Processed vote data:', data.votes);
+        updateVoteCounts(proposal.id, data.votes);
+        updateVotingStatus(proposal, data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch vote data');
+      }
+    })
+    .catch(error => {
+      console.error('Unable to fetch vote counts:', error);
+    });
+}
+
+function updateVoteCounts(id, votes) {
+  console.log(`Updating vote counts for proposal ${id}`);
+  console.log('Processed votes:', votes);
+
+  const proposalDetail = document.getElementById(`proposal-${id}`);
+  if (!proposalDetail) {
+    console.error(`Proposal detail element not found for id ${id}`);
+    return;
+  }
+
+  Object.entries(votes).forEach(([option, data]) => {
+    const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
+    if (percentageElement) {
+      percentageElement.textContent = `${data.percentage.toFixed(2)}% (${data.count} vote${data.count !== 1 ? 's' : ''}, ${data.satori.toFixed(2)} satori)`;
+    } else {
+      console.error(`Percentage element not found for option "${option}"`);
+    }
+  });
+}
+function updateVotingStatus(proposal, data) {
+  const proposalElement = document.getElementById(`proposal-${proposal.id}`);
+  if (proposalElement) {
+    const voteButtons = proposalElement.querySelectorAll('.vote-btn');
+    const votedMessage = proposalElement.querySelector('.proposal-voted-message');
+
+    voteButtons.forEach(button => {
+      button.disabled = data.disable_voting;
+      if (data.user_has_voted && button.textContent.toLowerCase() === data.user_voted.toLowerCase()) {
+        button.style.backgroundColor = '#F6B04266';
+      } else {
+        button.style.backgroundColor = ''; // Reset background color for non-voted options
+      }
+    });
+
+    if (votedMessage) {
+      if (data.user_has_voted) {
+        votedMessage.textContent = 'You have already voted';
+        votedMessage.style.display = 'block';
+      } else if (!data.can_vote) {
+        votedMessage.textContent = 'You cannot vote on this proposal.';
+        votedMessage.style.display = 'block';
+      } else {
+        votedMessage.style.display = 'none';
+      }
+    }
+
+    // Update total votes and satori if you have elements to display this information
+    const totalVotesElement = proposalElement.querySelector('.total-votes');
+    if (totalVotesElement) {
+      totalVotesElement.textContent = `Total Votes: ${data.total_votes}`;
+    }
+
+    const totalSatoriElement = proposalElement.querySelector('.total-satori');
+    if (totalSatoriElement) {
+      totalSatoriElement.textContent = `Total Satori: ${data.total_satori.toFixed(2)}`;
+    }
+  } else {
+    console.error(`Proposal element not found for id ${proposal.id}`);
+  }
+}
+
+function getCsvVotes() {
+  if (!chosenProposal || !chosenProposalVotes || Object.keys(chosenProposalVotes).length === 0) {
+    console.error('No proposal selected or no vote data available');
+    alert('No voting data available. Please select a proposal and ensure vote data is loaded.');
+    return;
+  }
+
+  console.log('Generating CSV with vote data:', chosenProposalVotes);
+
+  const csvRows = ['Option,Count,Satori,Vote Percentage,Satori Percentage'];
+  Object.entries(chosenProposalVotes).forEach(([option, data]) => {
+    csvRows.push(`"${option}",${data.count},${data.satori},${data.percentage}%,${data.satoriPercentage}%`);
+  });
+
+  const csvContent = csvRows.join('\n');
+  downloadCsvVotes(csvContent, `proposal-${chosenProposal.id}-votes.csv`);
+}
+
+function downloadCsvVotes(csvContent, filename) {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  if (navigator.msSaveBlob) { // IE 10+
+    navigator.msSaveBlob(blob, filename);
+  } else {
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }}
+function approveProposal(id, approve) {
+    const endpoint = approve ? `/api/proposals/approve/${id}` : `/api/proposals/disapprove/${id}`;
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(`Proposal ${approve ? 'approved' : 'disapproved'} successfully`);
+            fetchUnapprovedProposals();
+            fetchActiveProposals();
+        } else {
+            throw new Error(data.message || `Failed to ${approve ? 'approve' : 'disapprove'} proposal`);
+        }
+    })
+    .catch(error => {
+        console.error(`Error ${approve ? 'approving' : 'disapproving'} proposal:`, error.message);
+        alert(`Failed to ${approve ? 'approve' : 'disapprove'} proposal: ${error.message}`);
+    });
+}
+function approveProposal(id, approve) {
+    const endpoint = approve ? `/api/proposals/approve/${id}` : `/api/proposals/disapprove/${id}`;
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(`Proposal ${approve ? 'approved' : 'disapproved'} successfully`);
+            fetchUnapprovedProposals();  // Refresh the unapproved proposals list
+            fetchActiveProposals();     // Refresh the active proposals list
+        } else {
+            throw new Error(data.message || `Failed to ${approve ? 'approve' : 'disapprove'} proposal`);
+        }
+    })
+    .catch(error => {
+        console.error(`Error ${approve ? 'approving' : 'disapproving'} proposal:`, error.message);
+        alert(`Failed to ${approve ? 'approve' : 'disapprove'} proposal: ${error.message}`);
+    });
+}
+
+function updateVotingStatus(proposal, data) {
+    const proposalElement = document.getElementById(`proposal-${proposal.id}`);
+    if (proposalElement) {
+        const voteButtons = proposalElement.querySelectorAll('.vote-btn');
+        const votedMessage = proposalElement.querySelector('.proposal-voted-message');
+
+        voteButtons.forEach(button => {
+            button.disabled = data.disable_voting;
+            if (data.user_has_voted && button.value.toLowerCase() === data.user_voted.toLowerCase()) {
+                button.style.backgroundColor = '#F6B04266';
+            } else {
+                button.style.backgroundColor = ''; // Reset background color for non-voted options
+            }
+        });
+
+        if (votedMessage) {
+            if (data.user_has_voted) {
+                votedMessage.textContent = 'You have already voted';
+                votedMessage.style.display = 'block';
+            } else if (!data.can_vote) {
+                votedMessage.textContent = 'You cannot vote on this proposal.';
+                votedMessage.style.display = 'block';
+            } else {
+                votedMessage.style.display = 'none';
+            }
+        }
+    } else {
+        console.error(`Proposal element not found for id ${proposal.id}`);
+    }
+}
+function updateVoteCounts(id, votes) {
+    console.log(`Updating vote counts for proposal ${id}`);
+    console.log('Received votes:', votes);
+
+    const proposalDetail = document.getElementById(`proposal-${id}`);
+    if (!proposalDetail) {
+        console.error(`Proposal detail element not found for id ${id}`);
+        return;
+    }
+
+    let totalSatori = 0;
+    Object.values(votes).forEach(data => {
+        totalSatori += data.satori;
+    });
+
+    Object.entries(votes).forEach(([option, data]) => {
+        const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
+        if (percentageElement) {
+            const satoriPercentage = totalSatori > 0 ? (data.satori / totalSatori * 100).toFixed(2) : 0;
+            percentageElement.textContent = `${satoriPercentage}%`;
+        } else {
+            console.error(`Percentage element not found for option "${option}"`);
+        }
+    });
+
+    // Log the results for debugging
+    console.log(`Proposal ${id} - Total Satori: ${totalSatori}`);
+    console.log('Satori sums per option:', votes);
+}
+function submitVote(id, vote) {
+  console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
+  fetch('/proposals/vote', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      proposal_id: parseInt(id),
+      vote: vote
+    }),
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.text().then(text => {
+        throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Server response:', data);
+    if (data.status === 'success') {
+      console.log('Vote submitted successfully');
+      disableVoteButtons(id);
+      showVotedMessage(id, 'Your vote has been recorded.');
+      // Update the local state to reflect the new vote
+      if (chosenProposal && chosenProposal.id === id) {
+        chosenProposal.user_voted = vote;
+        chosenProposal.user_has_voted = true;
+      }
+      // Refetch votes to update percentages
+      if (chosenProposal) {
+        fetchProposalVotes(chosenProposal);
+      } else {
+        console.warn('No chosen proposal to update votes for');
+      }
+    } else {
+      throw new Error(data.message || 'Unknown error');
+    }
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+    displayErrorMessage('Failed to submit vote: ' + error.message);
+  });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+function disableVoteButtons(id) {
+    document.getElementById(`proposal-${id}`).querySelectorAll('.vote-btn').forEach(button => {
+        button.disabled = true;
+    });
+}
+
+function enableVoteButtons(id) {
+    document.getElementById(`proposal-${id}`).querySelectorAll('.vote-btn').forEach(button => {
+        button.disabled = false;
+    });
+}
+
+function showVotedMessage(id, message) {
+    const messageElement = document.getElementById(`voted-message-${id}`);
+    if (messageElement) {
+        messageElement.textContent = message;
+        messageElement.style.display = 'block';
+    }
+}
+
+function displayErrorMessage(message) {
+    console.error(message);
+    alert(message);
+}
 </script>
 {% endblock %}

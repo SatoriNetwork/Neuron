@@ -56,6 +56,7 @@ app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 updateTime = 0
 updateQueue = Queue()
 timeout = 1
+DEVMODE = os.environ.get('DEVMODE')
 ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 CORS(app, origins=[{
@@ -86,53 +87,48 @@ while True:
     try:
         start = StartupDag(
             env=ENV,
+            dev=DEVMODE,
             walletOnlyMode=config.get().get(
                 'wallet only mode',
                 os.environ.get('WALLETONLYMODE', False)),
             urlServer={
-                # TODO: local endpoint should be in a config file.
-                'local': 'http://192.168.0.10:5002',
-                'dev': 'http://localhost:5002',
-                'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
-            # 'prod': 'https://central.satorinet.io'}[ENV],
-            # 'prod': 'http://24.199.113.168'}[ENV], # c
-            # 'prod': 'http://137.184.38.160'}[ENV],  # n
+                'local': 'http://satoricentral:5000',
+                'dev': 'https://stage.satorinet.io',
+                'test': 'https://stage.satorinet.io',
+                'prod': 'https://stage.satorinet.io'}['local' if DEVMODE else 'prod'],
             urlMundo={
-                'local': 'http://192.168.0.10:5002',
-                'dev': 'http://localhost:5002',
+                'local': 'https://stage.satorinet.io',
+                'dev': 'https://stage.satorinet.io',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://mundo.satorinet.io'}[ENV],
-            # 'prod': 'https://64.23.142.242'}[ENV],
+                'prod': 'https://mundo.satorinet.io'
+            }[ENV],
             urlPubsubs={
                 'local': ['ws://192.168.0.10:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
-                'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
-            # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
+                'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']
+            }[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
-                'prod': 'https://synergy.satorinet.io:24602'}[ENV],
-            isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
-
-        # start.buildEngine()
-        # threading.Thread(target=start.start, daemon=True).start()
-        logging.info(f'environment: {ENV}', print=True)
-        logging.info('Satori Neuron is starting...', color='green')
+                'prod': 'https://synergy.satorinet.io:24602'
+            }[ENV],
+            isDebug=sys.argv[1] if len(sys.argv) > 1 else False
+        )
+        
+        logging.info(f'environment: {ENV}', extra={'print': True})
+        logging.info('Satori Neuron is starting...', extra={'color': 'green'})
         break
     except ConnectionError as e:
-        # try again...
         traceback.print_exc()
-        logging.error(f'ConnectionError in app startup: {e}', color='red')
+        logging.error(f'ConnectionError in app startup: {e}', extra={'color': 'red'})
         time.sleep(30)
-    # except RemoteDisconnected as e:
     except Exception as e:
-        # try again...
         traceback.print_exc()
-        logging.error(f'Exception in app startup: {e}', color='red')
+        logging.error(f'Exception in app startup: {e}', extra={'color': 'red'})
         time.sleep(30)
+
 
 ###############################################################################
 ## Functions ##################################################################
@@ -1868,116 +1864,153 @@ def vote():
 
 
 @app.route('/proposals', methods=['GET'])
-@userInteracted
-@vaultRequired
 @authRequired
 def proposals():
     return render_template('proposals.html', **getResp({'title': 'Proposals'}))
 
 
-@app.route('/api/proposals', methods=['GET'])
-@userInteracted
-def getProposals():
+
+
+
+
+
+
+@app.route('/api/proposals/unapproved', methods=['GET'])
+def get_unapproved_proposals():
     try:
-        proposals_data = start.server.getProposals()
+        # Get the current wallet address
+        # wallet_address = start.wallet.address
+        STATIC_WALLET_ADDRESS = '19482'  
+
+        result = start.server.getUnapprovedProposals(STATIC_WALLET_ADDRESS)
+        return jsonify(result), 200 if result['status'] == 'success' else 400
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+
+@app.route('/api/proposals/approve/<int:proposal_id>', methods=['POST'])
+def approve_proposal(proposal_id: int):
+    """
+    Approve a proposal if the user has the necessary permissions.
+    """
+    try:
+
+        success, result = start.server.approveProposal(proposal_id)
+        if success:
+            return jsonify({'status': 'success', 'message': 'Proposal approved successfully'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': result.get('error', 'Failed to approve proposal')}), 400
+    except Exception as e:
+        error_message = f"Error in approve_proposal: {str(e)}"
+      
+        return jsonify({'status': 'error', 'message': error_message}), 500
+    
+
+def check_approval_rights():
+    # MOCK: Uncomment the line below and remove the next one when ready to use actual wallet address
+    # user_wallet_address = start.wallet.address if start.wallet else None
+    user_wallet_address = 'EQGB7cBW3HvafARDoYsgceJS2W7ZhKe3b6'  # MOCK: Remove this line when using actual wallet
+    
+    authorized_addresses = ['EQGB7cBW3HvafARDoYsgceJS2W7ZhKe3b6', 'EV6VsM8QkrDGf1HaUrQ5ZQzhUHk48iHkMG']
+    can_approve = user_wallet_address in authorized_addresses
+    
+    return can_approve, user_wallet_address
+
+@app.route('/api/user/can-approve', methods=['GET'])
+def get_approval_rights():
+    try:
+        can_approve, user_wallet_address = check_approval_rights()
         return jsonify({
             'status': 'success',
-            'proposals': proposals_data,
+            'canApprove': can_approve,
+            'userWalletAddress': user_wallet_address
         })
-
     except Exception as e:
-        error_message = f"Failed to fetch proposals: {str(e)}"
-        logging.error(error_message)
-        logging.error(traceback.format_exc())
-        return jsonify({
-            'status': 'error',
-            'message': error_message
-        }), 500
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/proposals/vote', methods=['POST'])
-@userInteracted
 def proposalVote():
+    print("Entered proposalVote function")  # Debug print statement
     try:
-        data = request.json
+        data = request.get_json()
+        print(f"Received vote data in satori.py: {data}")  # Debug print
+
+        if not data:
+            return jsonify({'status': 'error', 'message': 'No JSON data received'}), 400
+
         proposal_id = data.get('proposal_id')
         vote = data.get('vote')
+
         if not proposal_id or vote is None:
             return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
-        # Ensure proposal_id is a string
-        proposal_id = str(proposal_id)
-        # Fetch all proposals
-        proposals = start.server.getProposals()
-        # Find the specific proposal
-        proposal = next(
-            (p for p in proposals if str(p['id']) == proposal_id), None)
-        if not proposal:
-            return jsonify({'status': 'error', 'message': 'Proposal not found'}), 404
-        # Parse the options
-        try:
-            options = json.loads(json.loads(proposal['options']))
-        except json.JSONDecodeError:
-            return jsonify({'status': 'error', 'message': 'Invalid options format in proposal'}), 500
-        # Validate the vote
-        if vote not in options:
-            return jsonify({'status': 'error', 'message': f'Invalid vote. Valid options are: {", ".join(options)}'}), 400
-        # Call server function with prepared data
-        success, result = start.server.submitProposalVote(proposal_id, vote)
+
+        success, result = start.server.submitProposalVote(str(proposal_id), vote)
+        print(f"Vote submission result: success={success}, result={result}")  # Debug print
+
         if success:
             return jsonify({'status': 'success', 'message': 'Vote submitted successfully'}), 200
         else:
-            return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
+            error_message = result.get('error', 'Unknown error')
+            return jsonify({'status': 'error', 'message': error_message}), 400
+
     except Exception as e:
         error_message = f"Error in proposalVote: {str(e)}"
-        logging.warning(error_message)
-        logging.warning(traceback.format_exc())
+        print(error_message)
+        print(traceback.format_exc())
+        return jsonify({'status': 'error', 'message': error_message}), 500
+
+@app.route('/api/proposals/disapprove/<int:proposal_id>', methods=['POST'])
+def disapprove_proposal(proposal_id: int):
+    """
+    Disapprove and delete a proposal if the user has the necessary permissions.
+    """
+    try:
+        success, result = start.server.disapproveProposal(proposal_id)
+        if success:
+            return jsonify({'status': 'success', 'message': 'Proposal disapproved and deleted successfully'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': result.get('error', 'Failed to disapprove and delete proposal')}), 400
+    except Exception as e:
+        error_message = f"Error in disapprove_proposal: {str(e)}"
+        return jsonify({'status': 'error', 'message': error_message}), 500
+    
+
+
+@app.route('/api/proposals/active', methods=['GET'])
+def get_active_proposals():
+    """
+    Fetch active proposals.
+    """
+    try:
+        result = start.server.getActiveProposals()
+        if result['status'] == 'success':
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        error_message = f"Error in get_active_proposals: {str(e)}"
+        return jsonify({'status': 'error', 'message': error_message}), 500
+
+@app.route('/api/proposals/expired', methods=['GET'])
+def get_expired_proposals():
+    """
+    Fetch expired proposals.
+    """
+    try:
+        result = start.server.getExpiredProposals()
+        if result['status'] == 'success':
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        error_message = f"Error in get_expired_proposals: {str(e)}"
         return jsonify({'status': 'error', 'message': error_message}), 500
 
 
-@app.route('/proposal/votes/get/<int:id>', methods=['GET'])
-@userInteracted
-def getProposalVotes(id):
-    try:
-        votes = start.server.getProposalVotes(str(id))
-        proposal = next(
-            (p for p in start.server.getProposals() if p['id'] == id), None)
-        if proposal and votes is not None:
-            user_wallet_address = start.wallet.address
-            user_has_voted = any(
-                vote['address'] == user_wallet_address for vote in votes)
-            user_voted = None
-            if user_has_voted:
-                user_voted = next(
-                    vote['vote'] for vote in votes if vote['address'] == user_wallet_address)
-            voting_started = bool(votes)
-            can_vote = str(proposal['wallet_id']) != user_wallet_address
-            disable_voting = not can_vote or user_has_voted
-            return jsonify({
-                'status': 'success',
-                'votes': votes,
-                'user_has_voted': user_has_voted,
-                'user_voted': user_voted,
-                'voting_started': voting_started,
-                'can_vote': can_vote,
-                'disable_voting': disable_voting
-            }), 200
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': 'Failed to fetch vote counts or proposal not found'
-            }), 404
-    except Exception as e:
-        error_message = f"Error fetching votes: {str(e)}"
-        logging.warning(error_message)
-        logging.warning(traceback.format_exc())
-        return jsonify({
-            'status': 'error',
-            'message': error_message
-        }), 500
-
 
 @app.route('/proposal/create', methods=['GET', 'POST'])
-@userInteracted
 def proposalCreate():
     if request.method == 'GET':
         return render_template(
@@ -1986,10 +2019,10 @@ def proposalCreate():
     elif request.method == 'POST':
         try:
             data = request.json
-            logging.debug(
+            print(
                 f"Received proposal data in proposalCreate: {json.dumps(data, indent=2)}")
             success, result = start.server.submitProposal(data)
-            logging.debug(
+            print(
                 f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
             if success:
                 return jsonify({
@@ -2000,23 +2033,22 @@ def proposalCreate():
             else:
                 error_message = result.get(
                     'error', 'Failed to create proposal')
-                logging.debug(f"Failed to create proposal: {error_message}")
+                print(f"Failed to create proposal: {error_message}")
                 return jsonify({
                     'status': 'error',
                     'message': error_message
                 }), 400
         except Exception as e:
             error_message = f"Error in proposalCreate route: {str(e)}"
-            logging.warning(error_message)
-            logging.warning(traceback.format_exc())
+            print(error_message)
+            print(traceback.format_exc())
             return jsonify({
                 'status': 'error',
                 'message': 'Server error occurred'
             }), 500
-
+        
 
 @app.route('/test', methods=['GET'])
-@userInteracted
 def testConnection():
     try:
         success, result = start.server.testConnection()
@@ -2027,6 +2059,132 @@ def testConnection():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+
+@app.route('/api/test', methods=['GET'])
+def get_test_data():
+    try:
+        test_data = start.server.getTestData()
+        # Log the test data
+        print("Fetched test data:", json.dumps(test_data, indent=2))
+        return jsonify({
+            'status': 'success',
+            'data': test_data,
+        })
+    except Exception as e:
+        error_message = f"Failed to fetch test data: {str(e)}"
+        print(error_message)
+        print(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'message': error_message
+        }), 500
+
+@app.route('/proposal/votes/get/<int:id>', methods=['GET'])
+def getProposalVotes(id):
+    try:
+        votes_data = start.server.getProposalVotes(str(id))
+        proposal = start.server.getProposalById(str(id))
+
+        if proposal and votes_data.get('status') == 'success':
+            votes_list = votes_data['votes']
+            user_wallet_address = start.wallet.address
+
+            # Process votes
+            user_vote = next((vote for vote in votes_list if vote['address'] == user_wallet_address), None)
+            user_has_voted = user_vote is not None
+            user_voted = user_vote['vote'] if user_vote else None
+            can_vote = str(proposal['wallet_id']) != user_wallet_address and not user_has_voted
+            disable_voting = not can_vote or user_has_voted
+
+            # Calculate totals
+            valid_votes = [vote for vote in votes_list if not pd.isna(vote['satori'])]
+            total_satori = sum(float(vote['satori']) for vote in valid_votes)
+
+            # Process votes by option
+            vote_counts = {}
+            for vote in votes_list:
+                option = vote['vote']
+                satori = float(vote['satori']) if not pd.isna(vote['satori']) else 0
+                
+                if option not in vote_counts:
+                    vote_counts[option] = {
+                        'count': 0,
+                        'satori': 0,
+                        'percentage': 0
+                    }
+                
+                vote_counts[option]['count'] += 1
+                vote_counts[option]['satori'] += satori
+                if total_satori > 0:
+                    vote_counts[option]['percentage'] = (vote_counts[option]['satori'] / total_satori) * 100
+
+            return jsonify({
+                'status': 'success',
+                'votes': vote_counts,
+                'user_has_voted': user_has_voted,
+                'user_voted': user_voted,
+                'can_vote': can_vote,
+                'disable_voting': disable_voting,
+                'voting_started': True
+            }), 200
+
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch vote counts or proposal not found'
+        }), 404
+
+    except Exception as e:
+        error_message = f"Error fetching votes: {str(e)}"
+        print(error_message)
+        print(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'message': error_message
+        }), 500
+@app.route('/create-proposal', methods=['GET', 'POST'])
+def create_proposal():
+    if request.method == 'GET':
+        return render_template('create-proposal.html', title='Create New Proposal')
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            print(f"Received proposal data in create_proposal: {json.dumps(data, indent=2)}")
+            
+            success, result = start.server.submitProposal(data)
+            
+            print(f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
+            
+            if success:
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Proposal created successfully',
+                    'proposal': result
+                }), 200
+            else:
+                error_message = result.get('error', 'Failed to create proposal')
+                print(f"Failed to create proposal: {error_message}")
+                return jsonify({
+                    'status': 'error',
+                    'message': error_message
+                }), 400
+        except Exception as e:
+            error_message = f"Error in create_proposal route: {str(e)}"
+            print(error_message)
+            print(traceback.format_exc())
+            return jsonify({
+                'status': 'error',
+                'message': 'Server error occurred'
+            }), 500
+@app.route('/test', methods=['GET'])
+def test_connection():
+    try:
+        success, result = start.server.testConnection()
+        if success:
+            return jsonify({'status': 'success', 'message': 'API is working correctly', 'details': result}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'API test failed', 'details': result}), 500
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
 @userInteracted

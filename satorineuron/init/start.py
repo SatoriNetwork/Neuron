@@ -1,3 +1,12 @@
+'''
+current:
+  ENV = 'prod' (evrmore) | 'test' (use ravencoin)
+ 
+need:
+  ENV = 'prod' (evrmore) | 'test' (use ravencoin)
+  DEVMODE = False (connect to satori servers) | True (connect to local servers)
+'''
+
 from typing import Union
 from threading import Thread, Event
 import os
@@ -56,6 +65,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self,
         *args,
         env: str = 'dev',
+        dev: bool = False,
         walletOnlyMode: bool = False,
         urlServer: str = None,
         urlMundo: str = None,
@@ -76,6 +86,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.electrumCooldown = 10
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
+        self.dev = dev
         # self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
         # self.chatUpdates: BehaviorSubject = BehaviorSubject(None)
         self.workingUpdates: Queue = Queue()
