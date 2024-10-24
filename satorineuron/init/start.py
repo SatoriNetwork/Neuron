@@ -534,6 +534,51 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def buildEngine(self):
         """start the engine, it will run w/ what it has til ipfs is synced"""
 
+        class StreamPair:
+            """Matches the Subscription streams with the Publication Streams"""
+            def __init__(self, subscriptions, publications):
+                self.subscriptions = subscriptions
+                self.publications = publications
+                self.filtered_subscriptions = None
+
+            def get_publication_streams(self):
+                return {
+                    pub.streamId.stream.replace('_p', ''): pub 
+                    for pub in self.publications
+                }
+
+            def filter_subscriptions(self):
+                pub_streams = self.get_publication_streams()
+                
+                self.filtered_subscriptions = [
+                    sub for sub in self.subscriptions
+                    if sub.streamId.stream in pub_streams or 
+                        sub.streamId.stream.replace('_p', '') in pub_streams
+                ]
+                return self.filtered_subscriptions
+
+            def get_matched_pairs(self):
+                pub_streams = self.get_publication_streams()
+                sub_list = []
+                pub_list = []
+                
+                for sub in self.subscriptions:
+                    stream_name = sub.streamId.stream
+                    base_name = stream_name.replace('_p', '')
+                    
+                    if stream_name in pub_streams or base_name in pub_streams:
+                        matching_pub = next(
+                            (pub for pub in self.publications 
+                                if pub.streamId.stream.replace('_p', '') == base_name),
+                            None
+                        )
+                        if matching_pub:
+                            sub_list.append(sub)
+                            pub_list.append(matching_pub)
+                            
+                return sub_list, pub_list
+
+
         def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
             print("topic=", streamForecast.streamId.topic())
             print("data=", streamForecast.forecast["pred"].iloc[0])
@@ -545,7 +590,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 p for p in StartupDag.predictionStreams(self.publications)
                 if streamForecast.streamId == p.predicting]
             print("predictionStream=", predictionStream)
-            print("predictionStreamtopic=", predictionStream.streamId.topic())
+            print("predictionStreamtopic=", predictionStream[0].streamId.topic())
             # self.server.publish(
             #     topic=predictionStream.streamId.topic(),
             #     data=streamForecast.forecast['pred'].iloc[0],
@@ -554,22 +599,22 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             #     isPrediction=True,
             #     useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
 
+        streampair = StreamPair(self.subscriptions, StartupDag.predictionStreams(self.publications))
+        subscriptions, publications = streampair.get_matched_pairs()
+
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
-            subscriptions=self.subscriptions,
-            publications=StartupDag.predictionStreams(self.publications),
+            subscriptions=subscriptions,
+            publications=publications,
         )
         self.engine.run()
         # else:
         #    logging.warning('Running in Local Mode.', color='green')
 
+
         self.aiengine: satoriengine.framework.engine.Engine = (
             satoriengine.framework.engine.Engine(
-                # this engine takes in "streams" which is subscriptions...
-                # meaning it doesn't know what publications streams it's predictions
-                # should be published on. So we have to handle that transalation
-                # up in this later instead before we publish.
-                streams=self.subscriptions,
-                pubstreams=StartupDag.predictionStreams(self.publications)
+                streams=subscriptions,
+                pubstreams=publications
             )
         )
         self.aiengine.prediction_produced.subscribe(
