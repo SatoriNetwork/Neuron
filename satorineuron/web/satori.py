@@ -95,6 +95,7 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
+                # 'prod': 'http://24.199.113.168'}[ENV],  # c
                 #'prod': 'https://central.satorinet.io'}[ENV],
                 #'prod': 'http://24.199.113.168'}[ENV], # c
                 #'prod': 'http://137.184.38.160'}[ENV],  # n
@@ -1881,7 +1882,10 @@ def streams():
         # if searchText:
         #     searchedStreams = [s for s in streams if searchText.lower() in s['stream'].lower()]
         #     return sanitize_for_json(searchedStreams)
-        return sanitize_for_json(streams)
+        sanitized_streams = sanitize_for_json(streams)
+        # sorting streams based on total_vote
+        sorted_streams = sorted(sanitized_streams, key=lambda x: x.get('total_vote', 0), reverse=True)
+        return sorted_streams
 
     # Commenting down as of now, will be used in future if we need to make the call to server for search streams
     # as of now we have limited streams so we can search in client side

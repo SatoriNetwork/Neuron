@@ -14,9 +14,19 @@
           </div>
         </div>
       </div>
-      <div style="margin-left:24px;margin-top:15px" class="flex flex-row gap-2">
+      <div style="margin-left:24px;margin-top:15px" class="d-flex flex-row gap-2">
         <input style="width:30%;border-radius:5px;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
-        <!-- <button class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" style="border-radius:5px;background:white" onClick="debounceSearch();">Search</button> -->
+        <button id="popularitySortBtn" onclick="toggleSort('votedfor')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Voted For <div style="margin-top:-3px" id="votedforIcon"></div></button>
+        <button id="popularitySortBtn" onclick="toggleSort('popularity')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Popularity <div style="margin-top:-3px" id="popularityIcon">↓</div></button>
+        <button id="dateSortBtn" onclick="toggleSort('date')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Date <div style="margin-top:-3px" id="dateIcon"></div></button>
+        <select style="padding:5px" id="categorySelect" onchange="filterByCategory()">
+          <option value="" disabled selected>Select Category</option>
+          <option value="all">All Categories</option>
+          <option value="weather">Weather</option>
+          <option value="crypto">Crypto</option>
+          <option value="stocks">Stocks</option>
+          <option value="government">Government Entities</option>
+        </select>
       </div>
       <div class="card-body px-0 pb-2">
         <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
@@ -26,6 +36,7 @@
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Oracle</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Actions</th>
               </tr>
             </thead>
             <tbody id="updating_table">
@@ -52,7 +63,7 @@
               </tr> 
               {% for stream in streams %}
               <!-- <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %} {% if stream['wallet_vote'] != 0 or (vault.isDecrypted and stream['vault_vote'] != 0) %}{% if darkmode %}yellow-dark-selected{% else %}yellow-selected{% endif %}{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');"> -->
-              <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');">
+              <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
                 <td>
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
@@ -68,6 +79,48 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['target'] }}</h6>
                   </div>
                 </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    {% if stream.vote == 0 %}
+                      <div id="stream_{{stream['stream_id']}}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True', event);">
+                        <i class="material-icons opacity-10">thumb_up</i>
+                      </div>
+                    {% else %}
+                      <div id="stream_remove_{{stream['stream_id']}}" onclick="removeVote({{ stream['stream_id'] }}, '{{vault.isDecrypted}}' === 'True', event)">
+                        <i class="material-icons opacity-10">thumb_down</i>
+                      </div>
+                    {% endif %}
+                  </div>
+                </td>
+                <td style='display:none;'>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">{{ ((stream['sanctioned']) | round | int) if stream['sanctioned'] > 0 else 0 }}</h6>
+                  </div>
+                </td>
+                <td class='walletValueCellIdentifier' style='display:none;'>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="streamIdWallet_{{stream['stream_id']}}" name="streamIdWallet_{{stream['stream_id']}}" placeholder="{{ stream['wallet_vote'] if stream['wallet_vote'] != 0 else '' }}" value="{{ stream['wallet_vote'] if stream['wallet_vote'] != 0 else '' }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamWalletVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateWalletStreamsVotes();saveStreamVotesWallet();">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                {%if vault.isDecrypted %}
+                <td class='vaultValueCellIdentifier' style='display:none;'>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
+                        <div class="input-group input-group-outline">
+                          <input id="streamIdVault_{{stream['stream_id']}}" name="streamIdVault_{{stream['stream_id']}}" placeholder="{{ stream['vault_vote'] if stream['vault_vote'] != 0 else '' }}" value="{{ stream['vault_vote'] if stream['vault_vote'] != 0 else '' }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamVaultVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateVaultStreamsVotes();saveStreamVotesVault();">
+                        </div>
+                      </div>
+                    </h6>
+                  </div>
+                </td>
+                {% endif %}
                  <!-- Additional details row -->
                 <tr class="stream-details" style="display: none;">
                     <td colspan="5">
@@ -104,138 +157,431 @@
   </div>
 </div>
 <script type="text/javascript">
-    const darkmode = {{ 'true' if darkmode else 'false' }};  
-    const vault = { isDecrypted: {{ 'true' if vault.isDecrypted else 'false' }} };
-    let storedStreams = {{ streams|tojson }};
+  function getWalletStreamsCount() {
+    let count = 0;
+    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+      if (parseFloat(element.value) > 0){
+        count += 1;
+      }
+    }
+    return count;
+  }
 
-    function toggleStreamDetails(row) {
-        const detailsRow = row.nextElementSibling;
-        if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-            detailsRow.style.display = 'table-row';
-        } else {
-            detailsRow.style.display = 'none'; // Hide the details row
+  function updateWalletStreamsByCount(value) {
+    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+      if (parseFloat(element.value) > 0){
+        element.value = value;
+      }
+    }
+  }
+
+  function updateVaultStreamsByCount(value) {
+    for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+      if (parseFloat(element.value) > 0) {
+        element.value = value;
+      }
+    }
+  }
+
+  function updateWalletStreamsTotal() {
+    try {
+      let total = getWalletStreamsTotal();
+      document.getElementById('streamsWalletVoteTotal').innerHTML = total + ' %';
+    } catch (error) {
+      document.getElementById('streamsWalletVoteTotal').innerHTML = 0 + ' %';
+    }
+  }
+
+  function validateWalletStreamsVotes() {
+    updateWalletStreamsTotal();
+    let total = parseFloat(document.getElementById('streamsWalletVoteTotal').innerHTML.split(' ')[0]);
+    if (total > 100.0) {
+      for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+        element.value = parseInt(parseInt(element.value) / total * 100);
+      }
+      updateWalletStreamsTotal();
+    } 
+    return true;
+  }
+
+  function validateVaultStreamsVotes() {
+    updateVaultStreamsTotal();
+    let total = parseFloat(document.getElementById('streamsVaultVoteTotal').innerHTML.split(' ')[0]);
+    if (total > 100.0) {
+      for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+        element.value = parseInt(parseInt(element.value) / total * 100);
+      }
+      updateVaultStreamsTotal();
+    } 
+    return true;
+  }
+
+  function saveStreamVotesWallet() {
+    let walletStreamIds = [];
+    let walletVotes = [];
+    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
+      const voteValue = parseInt(element.value) || 0;
+      if (voteValue > 0) {
+        walletStreamIds.push(parseInt(element.name.split('_')[1]));
+        walletVotes.push(voteValue);
+      }
+    }
+    console.log("Payload", {
+      walletStreamIds: walletStreamIds,
+      walletVotes: walletVotes,
+    });
+    
+    fetch(
+      '/vote/submit/sanction/wallet', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          walletStreamIds: walletStreamIds,
+          walletVotes: walletVotes,
+        })})
+    .then(response => {
+        if (response.ok) {
+            console.log("stream votes submitted");
         }
-    }
-
-    let timeout = null;
-
-    function debounceSearch() {
-      if(timeout) {
-        clearTimeout(timeout);
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  
+  function saveStreamVotesVault() {
+    let vaultStreamIds = [];
+    let vaultVotes = [];
+    for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
+      const voteValue = parseInt(element.value) || 0;
+      if (voteValue > 0) {
+        vaultStreamIds.push(parseInt(element.name.split('_')[1]));
+        vaultVotes.push(voteValue);
       }
-      const tableBody = document.getElementById('updating_table');
-      tableBody.innerHTML = '';
-      const noDataRow = document.createElement('tr');
-      noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
-      tableBody.appendChild(noDataRow);
+    }
+    fetch(
+      '/vote/submit/sanction/vault', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          vaultStreamIds: vaultStreamIds,
+          vaultVotes: vaultVotes,
+        })})
+    .then(response => {
+        if (response.ok) {
+            console.log("stream votes submitted");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
 
-      timeout = setTimeout(() => {
-          const searchText = document.getElementById('searchInput').value;
-          fetchStreams(searchText);
-      }, 200);
+  function clickVote(obj, includeVault, event) {
+    event.stopPropagation();
+    let walletInput = document.getElementById('streamIdWallet_' + obj.id.split('_')[1]);
+    if (walletInput.value === '0' || walletInput.value === '') {
+      console.log("Inside Wallet Input")
+      let count = getWalletStreamsCount() + 1;
+      console.log("count", count)
+      if (count > 100) {
+        alert('Limit reached: you can vote for no more than 100 streams.');
+        return;
+      }
+      if (obj.classList.contains('yellow-hover')) {
+        obj.classList.add('yellow-selected');
+      } else {
+        obj.classList.add('yellow-dark-selected');
+      }
+      walletInput.value = 100/count;
+      updateWalletStreamsByCount(100/count);
+    } else {
+      console.log("Not Inside Wallet Input")
+      if (obj.classList.contains('yellow-selected')) {
+        obj.classList.remove('yellow-selected');
+      } else {
+        obj.classList.remove('yellow-dark-selected');
+      }
+      let count = getWalletStreamsCount() - 1;
+      console.log("count", count)
+      walletInput.value = 0;
+      updateWalletStreamsByCount(100/count);
+    }
+    validateWalletStreamsVotes();
+    saveStreamVotesWallet();
+    if (includeVault) {
+      console.log("Inside vault");
+      let vaultInput = document.getElementById('streamIdVault_' + obj.id.split('_')[1]);
+      if (vaultInput.value === '0') {
+        console.log("Inside Vault Input")
+        let count = getVaultStreamsCount() + 1;
+        console.log("count", count)
+        vaultInput.value = 100;
+        updateVaultStreamsByCount(100/count);
+      } else {
+        console.log("Not Inside Vault Input")
+        let count = getVaultStreamsCount() - 1;
+        console.log("count", count)
+        vaultInput.value = 0;
+        updateVaultStreamsByCount(100/count);
+      }
+      validateVaultStreamsVotes();
+      saveStreamVotesVault();
+    } 
+  }
+
+  function removeVote(streamId, includeVault, event) {
+    event.stopPropagation();
+    {/* fetch(
+      '/vote/submit/sanction/wallet', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          walletStreamIds: streamId,
+        })})
+    .then(response => {
+        if (response.ok) {
+            console.log("stream votes removed");
+        }
+    })
+    .catch(error => console.error('Error:', error)); */}
+    if(includeVault) {
+      {/*  fetch(
+        '/vote/submit/sanction/wallet', { 
+          method: 'POST', 
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            walletStreamIds: streamId,
+          })})
+      .then(response => {
+          if (response.ok) {
+              console.log("stream votes removed");
+          }
+      })
+      .catch(error => console.error('Error:', error)); */}
+    }
+  }
+
+  const darkmode = {{ 'true' if darkmode else 'false' }};  
+  const vault = { isDecrypted: {{ 'true' if vault.isDecrypted else 'false' }} };
+  let storedStreams = {{ streams|tojson }};
+  let sortOrder = {
+    popularity: 'desc',
+    date: 'asc',
+    votedfor: 'asc'
+  };
+
+  function toggleStreamDetails(row) {
+      const detailsRow = row.nextElementSibling;
+      if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+          detailsRow.style.display = 'table-row';
+      } else {
+          detailsRow.style.display = 'none';
+      }
+  }
+
+  let timeout = null;
+  let sortTimeout = null;
+  let filteTimeout = null;
+
+  function toggleSort(type) {
+    if(sortTimeout) {
+      clearTimeout(sortTimeout);
+    }
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = '';
+    const noDataRow = document.createElement('tr');
+    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
+    tableBody.appendChild(noDataRow);
+
+    sortTimeout = setTimeout(() => {
+      sortOrder[type] = sortOrder[type] === 'asc' ? 'desc' : 'asc';
+      const iconElement = document.getElementById(`${type}Icon`);
+      if (sortOrder[type] === 'asc') {
+        iconElement.innerHTML = '↑';
+      } else {
+        iconElement.innerHTML = '↓';
+      }
+      
+      sortBy(type, sortOrder[type]);
+    }, 200);
+  }
+
+  function sortBy(type, order) {
+    let sortedStreams = [...storedStreams];
+
+    if (type === 'popularity') {
+      sortedStreams.sort((a, b) => {
+        const voteA = a.total_vote || 0;
+        const voteB = b.total_vote || 0;
+        return order === 'asc' ? voteA - voteB : voteB - voteA;
+      });
+    } else if (type === 'date') {
+      sortedStreams.sort((a, b) => {
+        const dateA = new Date(a.stream_created_ts);
+        const dateB = new Date(b.stream_created_ts);
+        return order === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+    } else if (type === "votedfor") {
+      sortedStreams.sort((a, b) => {
+        const voteA = a.total_vote || 0;
+        const voteB = b.total_vote || 0;
+        return order === 'asc' ? voteA - voteB : voteB - voteA;
+      });
     }
 
-    function fetchStreams(searchText) {
-        const filteredStreams = storedStreams.filter(stream => 
-            stream.stream.toLowerCase().includes(searchText) ||
-            stream.target.toLowerCase().includes(searchText)
-        );
-        updateStreamDisplay(filteredStreams, darkmode, vault)
+    updateStreamDisplay(sortedStreams, darkmode, vault);
+  }
 
-        {/* fetch(`/streams?search=${encodeURIComponent(searchText)}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Network response was not ok, status: ${response.status}`);
-                }
-
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    return response.json();
-                } else {
-                    throw new Error('Response was not in JSON format');
-                }
-            })
-            .then(data => {
-              console.log("Data", data.streams)
-              updateStreamDisplay(data.streams, darkmode, vault)
-            })
-            .catch(error => console.error('Error fetching streams:', error)); */}
+  function filterByCategory() {
+    if(filteTimeout) {
+      clearTimeout(filteTimeout);
     }
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = '';
+    const noDataRow = document.createElement('tr');
+    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
+    tableBody.appendChild(noDataRow);
 
-    function updateStreamDisplay(streams, darkmode, vault) {
-      const tableBody = document.getElementById('updating_table');
-      tableBody.innerHTML = '';
-
-      // Check if there are any streams to display
-      if (streams.length === 0) {
-          const noDataRow = document.createElement('tr');
-          noDataRow.innerHTML = '<td style="text-align:center" colspan="3">No streams found.</td>'; // Adjust colspan based on your table structure
-          tableBody.appendChild(noDataRow);
-          return;
+    filteTimeout = setTimeout(() => {
+      const category = document.getElementById('categorySelect').value;
+      if (category === 'all') {
+        filteredStreams = [...storedStreams];
+      } else {
+        filteredStreams = [...storedStreams];
+        filteredStreams = storedStreams.filter(stream => stream.category === category);
       }
 
-      // Populate the table with new stream data
-      streams.forEach(stream => {
-        const row = document.createElement('tr');
-        row.style.cursor = "pointer";
-        row.onclick = () => toggleStreamDetails(row);
-        row.id = `stream_${stream.stream_id}`;
+      updateStreamDisplay(filteredStreams, darkmode, vault);
+    }, 200);
+  }
 
-        let rowClass = darkmode ? 'yellow-dark-hover' : 'yellow-hover';
-        // if (stream.wallet_vote != 0 || (vault.isDecrypted && stream.vault_vote != 0)) {
-        //    rowClass += darkmode ? ' yellow-dark-selected' : ' yellow-selected';
-        // }
-        row.className = rowClass;
+  function debounceSearch() {
+    console.log("debounceSearch called")
+    if(timeout) {
+      clearTimeout(timeout);
+    }
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = '';
+    const noDataRow = document.createElement('tr');
+    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
+    tableBody.appendChild(noDataRow);
 
-        row.innerHTML = `
-            <td>
-                <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" title="${stream.oracle_address}">${stream.oracle_alias || stream.oracle_address}</h6>
-                </div>
-            </td>
-            <td>
-                <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.stream}</h6>
-                </div>
-            </td>
-            <td>
-                <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.target}</h6>
-                </div>
-            </td>
-        `;
-        tableBody.appendChild(row);
+    timeout = setTimeout(() => {
+        const searchText = document.getElementById('searchInput').value;
+        fetchStreams(searchText);
+    }, 200);
+  }
 
-        // Stream Details
-        const streamDetailRow = document.createElement('tr')
-        streamDetailRow.class = `stream-details`;
-        streamDetailRow.style.display = "none";
-        streamDetailRow.innerHTML = `
-            <td colspan="5">
-                <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px">
-                    <h3 style="font-weight:bold">STREAM DETAILS</h3>
-                    <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> ${stream.stream_id}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> ${stream.author}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> ${stream.source}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> ${stream.oracle_address}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Description:</strong> ${stream.description}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Alias:</strong> ${stream.oracle_alias}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> ${stream.oracle_pubkey}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Total Vote:</strong> ${stream.total_vote}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Wallet Vote:</strong> ${stream.wallet_vote}</p>
-                        <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vault Vote:</strong> ${stream.vault_vote}</p>
-                    </div>
-                </div>
-            </td>
-        `
-        tableBody.appendChild(streamDetailRow);
+  function fetchStreams(searchText) {
+    console.log("searchText", searchText);
+    console.log("storedStreams", storedStreams);
+
+      const filteredStreams = storedStreams.filter(stream => 
+          stream.stream.toLowerCase().includes(searchText) ||
+          stream.target.toLowerCase().includes(searchText)
+      );
+
+      const popularityIconElement = document.getElementById(`popularityIcon`);
+      const dateIconElement = document.getElementById(`dateIcon`);
+      const votedforIconElement = document.getElementById(`votedforIcon`);
+      document.getElementById('categorySelect').value = "";
+
+      popularityIconElement.innerHTML = '↓';
+      dateIconElement.innerHTML = '';
+      votedforIconElement.innerHTML = '';
+
+      updateStreamDisplay(filteredStreams, darkmode, vault)
+
+      {/* fetch(`/streams?search=${encodeURIComponent(searchText)}`)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error(`Network response was not ok, status: ${response.status}`);
+              }
+
+              const contentType = response.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                  return response.json();
+              } else {
+                  throw new Error('Response was not in JSON format');
+              }
+          })
+          .then(data => {
+            console.log("Data", data.streams)
+            updateStreamDisplay(data.streams, darkmode, vault)
+          })
+          .catch(error => console.error('Error fetching streams:', error)); */}
+  }
+
+  function updateStreamDisplay(streams, darkmode, vault) {
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = '';
+
+    // Check if there are any streams to display
+    if (streams.length === 0) {
+        const noDataRow = document.createElement('tr');
+        noDataRow.innerHTML = '<td style="text-align:center" colspan="3">No streams found.</td>'; // Adjust colspan based on your table structure
+        tableBody.appendChild(noDataRow);
+        return;
+    }
+
+    streams.forEach(stream => {
+      const row = document.createElement('tr');
+      row.style.cursor = "pointer";
+      row.onclick = () => toggleStreamDetails(row);
+      row.id = `stream_${stream.stream_id}`;
+
+      let rowClass = darkmode ? 'yellow-dark-hover' : 'yellow-hover';
+      // if (stream.wallet_vote != 0 || (vault.isDecrypted && stream.vault_vote != 0)) {
+      //    rowClass += darkmode ? ' yellow-dark-selected' : ' yellow-selected';
+      // }
+      row.className = rowClass;
+
+      row.innerHTML = `
+          <td>
+              <div class="d-flex px-3 py-1">
+                  <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" title="${stream.oracle_address}">${stream.oracle_alias || stream.oracle_address}</h6>
+              </div>
+          </td>
+          <td>
+              <div class="d-flex px-3 py-1">
+                  <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.stream}</h6>
+              </div>
+          </td>
+          <td>
+              <div class="d-flex px-3 py-1">
+                  <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.target}</h6>
+              </div>
+          </td>
+      `;
+      tableBody.appendChild(row);
+
+      // Stream Details
+      const streamDetailRow = document.createElement('tr')
+      streamDetailRow.class = `stream-details`;
+      streamDetailRow.style.display = "none";
+      streamDetailRow.innerHTML = `
+          <td colspan="5">
+              <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px">
+                  <h3 style="font-weight:bold">STREAM DETAILS</h3>
+                  <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> ${stream.stream_id}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> ${stream.author}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> ${stream.source}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> ${stream.oracle_address}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Description:</strong> ${stream.description}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Alias:</strong> ${stream.oracle_alias}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> ${stream.oracle_pubkey}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Total Vote:</strong> ${stream.total_vote}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Wallet Vote:</strong> ${stream.wallet_vote}</p>
+                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vault Vote:</strong> ${stream.vault_vote}</p>
+                  </div>
+              </div>
+          </td>
+      `
+      tableBody.appendChild(streamDetailRow);
     });
   }
 </script>
