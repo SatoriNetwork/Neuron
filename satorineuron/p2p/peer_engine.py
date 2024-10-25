@@ -35,22 +35,13 @@ import json
 import threading
 import time
 import requests
-from queue import Queue
+from queue import Queue , Empty
 from typing import List, Dict
 from satorineuron import logging
 from satorineuron.p2p.peer_manager import PeerManager
 from satorineuron.p2p.peer_client import MessageClient
 from satorineuron.p2p.my_conf import WireguardInfo
-# from satorineuron.p2p.wireguard_manager import (
-#     add_peer,
-#     remove_peer,
-#     list_peers,
-#     start_wireguard_service,
-#     start_port_listening,
-#     stop_port_listening,
-#     start_port_connection,
-#     stop_port_connection
-# )
+from satorineuron.p2p.wireguard_manager import save_config
 
 
 class SingletonMeta(type):
@@ -82,10 +73,12 @@ class PeerEngine(metaclass=SingletonMeta):
 
     def start(self):
         # starts both PeerManager and PeerServerClient
+        logging.info('PeerEngine started', color='green')
         self.peerManager.start()
-        self.checkin()
+        self.start_background_tasks()
         self.get_peers()
-        pass
+        self.start_listening()
+        # pass
 
     def start_listening(self):
         '''
@@ -93,7 +86,16 @@ class PeerEngine(metaclass=SingletonMeta):
         config file
         '''
         while True:
-            requestedPeerConnection = self.connectTo.get()
+            try: 
+                requestedPeerConnection = self.connectTo.get(block=False)
+                self.peerManager.add_peer( 
+                            requestedPeerConnection["wireguard_config"]['public_key'], 
+                            requestedPeerConnection["wireguard_config"]['allowed_ips'], 
+                            requestedPeerConnection["wireguard_config"]['endpoint'])
+                save_config(self.interface)
+            except Empty:
+                break  # Exit the loop when queue is empty
+            # print(requestedPeerConnection)
             # something like this:
             # result = self.PeerServerClient.requestConnect(requestedPeerConnection)
             # self.PeerManager.addPeer(result)
@@ -103,9 +105,16 @@ class PeerEngine(metaclass=SingletonMeta):
         try:
             response = requests.get(f"{self.server_url}/list_peers")
             if response.status_code == 200:
-                print(response.json()['peers'])
-                return response.json()['peers']
-                
+                all_peers = response.json()['peers']
+                other_peers = [peer for peer in all_peers if peer['peer_id'] != self.client_id]
+                # return other_peers
+                for peer in other_peers:
+                        peer_data = {
+                            'id': peer['peer_id'],
+                            'wireguard_config': peer['wireguard_config']
+                        }
+                        self.connectTo.put(peer_data)
+                return other_peers
             else:
                 raise Exception(f"Failed to get peers: {response.status_code}")
             
@@ -116,18 +125,29 @@ class PeerEngine(metaclass=SingletonMeta):
     def checkin(self):
         """Perform check-in with server, also serves as heartbeat"""
         wg_info = self.my_info.get_wireguard_info()
-        # print(wg_info)
         self.wireguard_config["wireguard_config"]=wg_info
-        # print(self.wireguard_config)
         try:
             response = requests.post(
                 f"{self.server_url}/checkin",
                 json={
                     "peer_id": self.client_id,
-                    "wireguard_config": self.wireguard_config
+                    "wireguard_config": self.wireguard_config["wireguard_config"]
                 }
             )
             return response.json()
         except Exception as e:
             print(f"Checkin failed: {e}")
             return None
+        
+    def start_background_tasks(self):
+        """Start background checkin task"""
+        self.running = True
+
+        def background_loop():
+            while self.running:
+                self.checkin()
+                time.sleep(600)  # 10 minute interval for heartbeat
+
+        self.background_thread = threading.Thread(target=background_loop)
+        self.background_thread.daemon = True
+        self.background_thread.start()
