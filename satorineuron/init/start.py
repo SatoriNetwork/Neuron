@@ -476,6 +476,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.walletOnlyMode:
             self.initializeWalletAndVault()
             self.createServerConn()
+            logging.info('in WALLETONLYMODE')
             return
         self.initializeWalletAndVault()
         self.setMiningMode()

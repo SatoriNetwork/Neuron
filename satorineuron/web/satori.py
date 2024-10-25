@@ -96,7 +96,7 @@ while True:
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
             # 'prod': 'https://central.satorinet.io'}[ENV],
-            # 'prod': 'http://24.199.113.168'}[ENV], # c
+            # 'prod': 'http://24.199.113.168'}[ENV],  # c
             # 'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
@@ -548,23 +548,23 @@ def modeDark():
     return redirect(url_for('dashboard'))
 
 
-#@app.route('/test/connected', methods=['GET'])
-#@userInteracted
-#def testconnected():
+# @app.route('/test/connected', methods=['GET'])
+# @userInteracted
+# def testconnected():
 #    logging.debug(start.wallet.connected())
 #    return redirect(url_for('dashboard'))
 
 
-#@app.route('/test/disconnect', methods=['GET'])
-#@userInteracted
-#def testdisconnect():
+# @app.route('/test/disconnect', methods=['GET'])
+# @userInteracted
+# def testdisconnect():
 #    logging.debug(start.disconnectWallets())
 #    return redirect(url_for('dashboard'))
 
 
-#@app.route('/test/connect', methods=['GET'])
-#@userInteracted
-#def testconnect():
+# @app.route('/test/connect', methods=['GET'])
+# @userInteracted
+# def testconnect():
 #    logging.debug(start.reconnectWallets())
 #    return redirect(url_for('dashboard'))
 
