@@ -3,7 +3,7 @@ import time
 import threading
 import json
 from dataclasses import dataclass
-from wireguard_manager import start_wireguard_service, add_peer, save_config, list_peers, start_port_listening, start_port_connection, stop_port_listening
+from satorineuron.p2p.wireguard_manager import start_wireguard_service, add_peer, save_config, list_peers, start_port_listening, start_port_connection, stop_port_listening
 
 @dataclass
 class WireguardConfig:
@@ -82,38 +82,6 @@ class MessageClient:
             print(f"Connection failed: {e}")
             return False
 
-    # def set_connection(self, peer_id):
-    #     """Test WireGuard connection with peer"""
-    #     try:
-    #         config = self.peer_wireguard_configs.get(peer_id)
-    #         if not config:
-    #             print(f"No configuration found for peer {peer_id}")
-    #             return False
-            
-    #         # Test the connection using port communication
-    #         port = 51820
-    #         try:
-    #             start_port_listening(port)
-    #         except Exception as e:
-    #             if "already in use" in str(e).lower():
-    #                 print(f"Port {port} is already in use. This might mean a listener is already running.")
-    #                 # You could either:
-    #                 # 1. Try a different port
-    #                 # 2. Skip starting the listener since it's already running
-    #                 return True  # If the port is in use, it likely means the listener is already active
-    #             else:
-    #                 raise  # Re-raise if it's a different type of error
-    #         time.sleep(1)  # Give time for listener to start
-    #         return True
-            
-    #     except Exception as e:
-    #         print(f"Connection test failed: {str(e)}")
-    #         return False
-        
-    #     finally:
-    #             stop_port_listening()
-    #             print("\nListener stopped. Returning to menu...")
-    #             time.sleep(1)
     def start_listening(self):
         """Start port listening mode"""
         if not self.listening:
@@ -148,12 +116,9 @@ class MessageClient:
             
             # Test the connection using port communication
             port = 51821
-            # threading.Thread(target=start_port_connection, args=(config['allowed_ips'],port), daemon=True).start()
             allowed_ip=config['allowed_ips'].split('/')[0]
             start_port_connection(allowed_ip,port)
             time.sleep(1)  # Give time for listener to start
-            # start_port_connection(config['endpoint'].split(':')[0], port)
-            # start_port_connection(wireguard_config['allowed_ips'], port)
             return True
             
         except Exception as e:
@@ -254,14 +219,7 @@ if __name__ == "__main__":
 
             elif choice == "3":
                 client.start_listening()
-                # peer_id = input("Enter peer ID to set connection with: ")
-                # if peer_id not in client.connected_peers:
-                #     print("Not connected to this peer")
-                #     continue
-                # if client.set_connection(peer_id):
-                #     print(f"Connection with {peer_id} is working")
-                # pass
-
+                
             elif choice == "4":
                 if not client.connected_peers:
                     print("\nNo connected peers to test")
@@ -300,7 +258,8 @@ if __name__ == "__main__":
 
         except KeyboardInterrupt:
             print("\nReceived interrupt signal. Shutting down...")
-            continue
+            exit(0)
+            # continue
         # finally:
         #     print("Cleaning up...")
         #     client.stop()  # Ensure background tasks are stopped
