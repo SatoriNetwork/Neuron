@@ -156,7 +156,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.stopAllSubscriptions.set()
             self.electrumx = None
             self.wallet.electrumx = None
-            self.vault.electrumx = None
+            if self.vault is not None:
+                self.vault.electrumx = None
             self.walletTimeoutSeconds = 60*60
 
     def reconnectWallets(self):
