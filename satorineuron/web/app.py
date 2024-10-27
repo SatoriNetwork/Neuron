@@ -3,6 +3,8 @@ import sys
 import time
 import subprocess
 
+lastPull = 0
+
 
 def startSatori():
     return subprocess.Popen([sys.executable, 'satori.py'])
@@ -11,6 +13,8 @@ def startSatori():
 def pullSatori():
     process = subprocess.Popen(['/bin/bash', 'pull.sh'])
     process.wait()
+    global lastPull
+    lastPull = time.time()
 
 
 def isDevMode() -> bool:
@@ -22,7 +26,8 @@ def monitorAndRestartSatori():
         print("Starting Satori...")
         # actually it seems we can interrupt with ctrl+c either way
         # isDev= isDevMode()
-        pullSatori()
+        if time.time() - lastPull > 60*60:
+            pullSatori()
         process = startSatori()
         # if not isDev:
         process.wait()
