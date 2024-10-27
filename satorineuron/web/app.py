@@ -13,7 +13,9 @@ def monitorAndRestartSatori():
         process = startSatori()
         while True:
             try:
+                print(f'pol')
                 return_code = process.poll()
+                print(f'pol2')
                 if return_code is not None:
                     print(f'Satori exited with code {return_code}.')
                     break

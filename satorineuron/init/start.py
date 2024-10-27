@@ -25,7 +25,7 @@ from satorineuron import VERSION
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.init.restart import restartLocalSatori
-from satorineuron.init.tag import LatestTag
+from satorineuron.init.tag import LatestTag, Version
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import StartupDagStruct
@@ -64,7 +64,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False
     ):
         super(StartupDag, self).__init__(*args)
-        self.version = [int(x) for x in VERSION.split('.')]
+        self.version = Version(VERSION)
+        self.watchForVersionUpdates()
         self.env = env
         if isinstance(walletOnlyMode, bool):
             self.walletOnlyMode = walletOnlyMode
@@ -143,6 +144,44 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     interval=60*60*24 if alreadySetup else 60*60*12)
                 break
             time.sleep(60*15)
+
+    def watchForVersionUpdates(self):
+        '''
+        if we notice the code version has updated, download code restart
+        in order to restart we have to kill the main thread manually.
+        '''
+        def getPidByName(name: str) -> Union[int, None]:
+            """
+            Returns the PID of a process given a name or partial command name match.
+            If multiple matches are found, returns the first match.
+            Returns None if no process is found with the given name.
+            """
+            import psutil
+            for proc in psutil.process_iter(['pid', 'cmdline']):
+                try:
+                    # Check if the process command line matches the target name
+                    if name in ' '.join(proc.info['cmdline']):
+                        return proc.info['pid']
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue  # Process terminated or access denied, skip
+            return None  # No process found with the given name
+
+        def terminatePid(pid: int):
+            import signal
+            os.kill(pid, signal.SIGTERM)  # Send SIGTERM to the process
+
+        def watchForever():
+            latestTag = LatestTag(self.version, serverURL=self.urlServer)
+            while True:
+                time.sleep(60*60*6)
+                if latestTag.mustUpdate():
+                    terminatePid(getPidByName('satori.py'))
+
+        self.watchVersionThread = threading.Thread(
+            target=watchForever,
+            daemon=True)
+        self.watchVersionThread.start()
+
 
     def performMigrationBackup(self, name: str = 'wallet'):
         if os.path.exists(config.walletPath(f'{name}.yaml')) and not os.path.exists(config.walletPath(f'{name}-migration-backup.yaml')):
@@ -920,7 +959,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 observationTime=observationTime,
                 observationHash=observationHash,
                 isPrediction=isPrediction,
-                useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
+                useAuthorizedCall=self.version >= Version('0.2.6'))
 
     def performStakeCheck(self):
         self.stakeStatus = self.server.stakeCheck()
