@@ -50,6 +50,7 @@ class StartupDagStruct(object):
         self.signedStreamIds: list['SignedStreamId'] = None
         self.relayValidation: 'ValidateRelayStream' = None
         self.server: SatoriServerClient = None
+        self.electrumx: Electrumx = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
         self.relay: 'RawStreamRelayEngine' = None

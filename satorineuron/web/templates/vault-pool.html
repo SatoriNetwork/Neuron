@@ -1,5 +1,5 @@
 {% block content %}
-<div class="row mb-0" style='padding-bottom:1rem;display:none;' id='poolDisplay'><br id="poolbr">
+<div class="row mb-0" style='padding-bottom:1rem;display:block;' id='poolDisplay'><br id="poolbr">
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
@@ -21,7 +21,7 @@
           </button>
         </div>
       </div>
-      <div id="poolCardContent" class="collapse show">
+      <div id="poolCardContent" class="collapse hide">
         <div class="{% if darkmode %}dark-colors{% endif %} text-center">
           <p style='padding-top:2rem;'>
             Check the box to Open the pool, uncheck the box to close it and stop accepting new stake contributions.
@@ -80,9 +80,9 @@
 
   function handlePoolDisplay(text) {
     if (text && text.length > 0) {
-      document.getElementById("poolDisplay").style.display = "block";
+      document.getElementById("poolCardContent").class = "collapse show";
     } else {
-      document.getElementById("poolDisplay").style.display = "none";
+      document.getElementById("poolCardContent").class = "collapse";
     }
   }
 
