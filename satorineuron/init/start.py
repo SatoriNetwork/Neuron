@@ -65,7 +65,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     ):
         super(StartupDag, self).__init__(*args)
         self.version = Version(VERSION)
-        self.watchForVersionUpdates()
+        # TODO: test and turn on with new installer
+        #self.watchForVersionUpdates()
         self.env = env
         if isinstance(walletOnlyMode, bool):
             self.walletOnlyMode = walletOnlyMode
