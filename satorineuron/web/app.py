@@ -17,19 +17,19 @@ def pullSatori():
     lastPull = time.time()
 
 
-def isDevMode() -> bool:
-    return os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev')) != 'prod'
+def isProdMode() -> bool:
+    return os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev')) == 'prod'
 
 
 def monitorAndRestartSatori():
     while True:
         print("Starting Satori...")
         # actually it seems we can interrupt with ctrl+c either way
-        # isDev= isDevMode()
+        # isProd = isProdMode()
         if time.time() - lastPull > 60*60:
             pullSatori()
         process = startSatori()
-        # if not isDev:
+        # if isProd:
         process.wait()
         # else: #(must be able to interrupt with ctrl+c)
         #    while True:
