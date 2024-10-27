@@ -489,6 +489,7 @@ def import_wallet():
 @authRequired
 def restart():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+    start.restartQueue.put(True)
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -516,6 +517,7 @@ def restart():
 @authRequired
 def shutdown():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(shutdown=True)))
+    start.restartQueue.put(False)
     html = (
         '<!DOCTYPE html>'
         '<html>'
