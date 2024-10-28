@@ -94,7 +94,7 @@ while True:
             urlServer={
                 # TODO: local endpoint should be in a config file.
                 'local': 'http://192.168.0.10:5002',
-                'dev': 'https://stage.satorinet.io',#'dev': 'http://localhost:5002',
+                'dev': 'https://stage.satorinet.io',  # 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
             # 'prod': 'https://central.satorinet.io'}[ENV],
@@ -102,19 +102,20 @@ while True:
             # 'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
-                'dev': 'https://mundo.satorinet.io',#'dev': 'http://localhost:5002',
+                'dev': 'https://mundo.satorinet.io',  # 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
             # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
                 'local': ['ws://192.168.0.10:24603'],
-                'dev': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],#'dev': ['ws://localhost:24603'],
+                # 'dev': ['ws://localhost:24603'],
+                'dev': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
             # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
-                'dev': 'https://synergy.satorinet.io:24602',#'dev': 'https://localhost:24602',
+                'dev': 'https://synergy.satorinet.io:24602',  # 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
