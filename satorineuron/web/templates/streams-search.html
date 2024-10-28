@@ -82,11 +82,11 @@
                 <td>
                   <div class="d-flex gap-2">
                     {% if stream.vote == 0 %}
-                      <div id="stream_{{stream['stream_id']}}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True', event);">
+                      <div id="stream_{{stream['stream_id']}}" onclick="incrementVote({{ stream['stream_id'] }}, event);">
                         <i class="material-icons opacity-10">thumb_up</i>
                       </div>
                     {% else %}
-                      <div id="stream_remove_{{stream['stream_id']}}" onclick="removeVote({{ stream['stream_id'] }}, '{{vault.isDecrypted}}' === 'True', event)">
+                      <div id="stream_remove_{{stream['stream_id']}}" onclick="removeVote({{ stream['stream_id'] }}, event);">
                         <i class="material-icons opacity-10">thumb_down</i>
                       </div>
                     {% endif %}
@@ -326,36 +326,42 @@
     } 
   }
 
-  function removeVote(streamId, includeVault, event) {
+  // Increment Vote
+  function incrementVote(streamId, event) {
     event.stopPropagation();
-    {/* fetch(
-      '/vote/submit/sanction/wallet', { 
+    fetch(
+      '/vote_on/sanction/incremental', { 
         method: 'POST', 
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-          walletStreamIds: streamId,
+          streamId: streamId,
         })})
-    .then(response => {
+    .then(async (response) => {
         if (response.ok) {
-            console.log("stream votes removed");
+            const responseData = await response.json();
+            console.log("responseData", responseData.message)
         }
     })
-    .catch(error => console.error('Error:', error)); */}
-    if(includeVault) {
-      {/*  fetch(
-        '/vote/submit/sanction/wallet', { 
-          method: 'POST', 
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            walletStreamIds: streamId,
-          })})
-      .then(response => {
-          if (response.ok) {
-              console.log("stream votes removed");
-          }
-      })
-      .catch(error => console.error('Error:', error)); */}
-    }
+    .catch(error => console.error('Error:', error));
+  }
+
+  // Remove Vote
+  function removeVote(streamId, event) {
+    event.stopPropagation();
+    fetch(
+      '/clear_vote_on/sanction/incremental', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          streamId: streamId,
+        })})
+    .then(async (response) => {
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log("responseData", responseData.message)
+        }
+    })
+    .catch(error => console.error('Error:', error));
   }
 
   const darkmode = {{ 'true' if darkmode else 'false' }};  

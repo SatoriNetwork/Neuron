@@ -1903,7 +1903,25 @@ def streams():
         'vault': start.vault,
         'darkmode': darkmode,
         'streams': getStreams()}))
+    
+@app.route('/vote_on/sanction/incremental', methods=['POST'])
+@userInteracted
+@authRequired
+def incrementalVote():
+    streamId = request.json.get('streamId', "")
+    print("streamId", streamId)
+    message = start.server.incrementVote(streamId=streamId)
+    return jsonify({'message': message}), 200
 
+
+@app.route('/clear_vote_on/sanction/incremental', methods=['POST'])
+@userInteracted
+@authRequired
+def removeVote():
+    streamId = request.json.get('streamId', "")
+    print("streamId", streamId)
+    message = start.server.removeVote(streamId=streamId)
+    return jsonify({'message': message}), 200
 
 @app.route('/proposals', methods=['GET'])
 @userInteracted
