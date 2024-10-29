@@ -89,32 +89,37 @@ while True:
             walletOnlyMode=config.get().get(
                 'wallet only mode',
                 os.environ.get('WALLETONLYMODE', False)),
+            # TODO: notice the dev mode is the same as prod for now, we should
+            #       have separate servers or run locally for dev mode
             urlServer={
                 # TODO: local endpoint should be in a config file.
                 'local': 'http://192.168.0.10:5002',
-                'dev': 'http://localhost:5002',
+                'dev': 'https://stage.satorinet.io',  # 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
+            # 'prod': 'https://central.satorinet.io'}[ENV],
+            # 'prod': 'http://24.199.113.168'}[ENV],  # c
+            # 'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
-                'dev': 'http://localhost:5002',
+                'dev': 'https://mundo.satorinet.io',  # 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
-                #'prod': 'https://64.23.142.242'}[ENV],
+            # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
                 'local': ['ws://192.168.0.10:24603'],
-                'dev': ['ws://localhost:24603'],
+                # 'dev': ['ws://localhost:24603'],
+                'dev': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
             # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
-                'dev': 'https://localhost:24602',
+                'dev': 'https://synergy.satorinet.io:24602',  # 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
 
-        # print('building engine')
         # start.buildEngine()
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
@@ -210,7 +215,8 @@ def closeVault(f):
 def vaultRequired(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if start.vault is None:
+        # race condition possible on start.vault is None
+        if start.vault is None and not os.path.exists(config.walletPath('vault.yaml')):
             return redirect('/vault')
         return f(*args, **kwargs)
     return decorated_function
@@ -233,6 +239,14 @@ def authRequired(f):
     return decorated_function
 
 
+def userInteracted(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        start.userInteracted()
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 passphrase_html = '''
     <!doctype html>
     <title>Satori</title>
@@ -246,6 +260,7 @@ passphrase_html = '''
 
 
 @app.route('/unlock', methods=['GET', 'POST'])
+@userInteracted
 def passphrase():
 
     def tryToInterpretAsInteger(password: str, exectedPassword: Union[str, int]) -> bool:
@@ -283,6 +298,7 @@ def passphrase():
 
 
 @app.route('/lock/enable', methods=['GET', 'POST'])
+@userInteracted
 def lockEnable():
     # vaultPath = config.walletPath('vault.yaml')
     # if os.path.exists(vaultPath) or create:
@@ -292,6 +308,7 @@ def lockEnable():
 
 
 @app.route('/lock/relock', methods=['GET', 'POST'])
+@userInteracted
 @authRequired
 def lockRelock():
     ''' no ability to disable, this gives the user peace of mind '''
@@ -313,6 +330,7 @@ def not_found(e):
 
 
 @app.route('/favicon.ico')
+@userInteracted
 def favicon():
     return send_from_directory(
         os.path.join(app.root_path, 'static/img/favicon'),
@@ -321,6 +339,7 @@ def favicon():
 
 
 @app.route('/static/<path:path>')
+@userInteracted
 @authRequired
 def sendStatic(path):
     if start.vault is not None and not start.vault.isEncrypted:
@@ -330,6 +349,7 @@ def sendStatic(path):
 
 
 @app.route('/upload_history_csv', methods=['POST'])
+@userInteracted
 @authRequired
 def uploadHistoryCsv():
     msg, status, f = getFile('.csv')
@@ -342,6 +362,7 @@ def uploadHistoryCsv():
 
 
 @app.route('/upload_datastream_csv', methods=['POST'])
+@userInteracted
 @authRequired
 def uploadDatastreamCsv():
     msg, status, f = getFile('.csv')
@@ -359,8 +380,6 @@ def uploadDatastreamCsv():
 # def test():
 #    logging.info(request.MOBILE)
 #    return render_template('test.html')
-
-
 # @app.route('/kwargs')
 # def kwargs():
 #    ''' ...com/kwargs?0-name=widget_name0&0-value=widget_value0&0-type=widget_type0&1-name=widget_name1&1-value=widget_value1&1-#type=widget_type1 '''
@@ -372,15 +391,15 @@ def uploadDatastreamCsv():
 #            kwargs[request.args.get(f'{i}-name') +
 #                   '-type'] = request.args.get(f'{i}-type')
 #    return jsonify(kwargs)
-
-
 @app.route('/ping', methods=['GET'])
+@userInteracted
 def ping():
     from datetime import datetime
     return jsonify({'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
 
 @app.route('/pause/<timeout>', methods=['GET'])
+@userInteracted
 @authRequired
 def pause(timeout):
     try:
@@ -393,6 +412,7 @@ def pause(timeout):
 
 
 @app.route('/unpause', methods=['GET'])
+@userInteracted
 @authRequired
 def unpause():
     start.unpause()
@@ -400,6 +420,7 @@ def unpause():
 
 
 @app.route('/backup/<target>', methods=['GET'])
+@userInteracted
 @authRequired
 def backup(target: str = 'satori'):
     if start.vault is not None and not start.vault.isEncrypted:
@@ -421,6 +442,7 @@ def backup(target: str = 'satori'):
 
 
 @app.route('/import_wallet', methods=['POST'])
+@userInteracted
 @authRequired
 def import_wallet():
     if start.vault is None or start.vault.isEncrypted:
@@ -466,9 +488,11 @@ def import_wallet():
 
 
 @app.route('/restart', methods=['GET'])
+@userInteracted
 @authRequired
 def restart():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+    start.restartQueue.put(1)
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -492,9 +516,11 @@ def restart():
 
 
 @app.route('/shutdown', methods=['GET'])
+@userInteracted
 @authRequired
 def shutdown():
     start.udpQueue.put(Envelope(ip='', vesicle=Signal(shutdown=True)))
+    start.restartQueue.put(0)
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -510,6 +536,7 @@ def shutdown():
 
 
 @app.route('/mode/light', methods=['GET'])
+@userInteracted
 @authRequired
 def modeLight():
     global darkmode
@@ -518,11 +545,34 @@ def modeLight():
 
 
 @app.route('/mode/dark', methods=['GET'])
+@userInteracted
 @authRequired
 def modeDark():
     global darkmode
     darkmode = True
     return redirect(url_for('dashboard'))
+
+
+# @app.route('/test/connected', methods=['GET'])
+# @userInteracted
+# def testconnected():
+#    logging.debug(start.wallet.connected())
+#    return redirect(url_for('dashboard'))
+
+
+# @app.route('/test/disconnect', methods=['GET'])
+# @userInteracted
+# def testdisconnect():
+#    logging.debug(start.disconnectWallets())
+#    return redirect(url_for('dashboard'))
+
+
+# @app.route('/test/connect', methods=['GET'])
+# @userInteracted
+# def testconnect():
+#    logging.debug(start.reconnectWallets())
+#    return redirect(url_for('dashboard'))
+
 
 ###############################################################################
 ## Routes - forms #############################################################
@@ -530,6 +580,7 @@ def modeDark():
 
 
 @app.route('/configuration', methods=['GET', 'POST'])
+@userInteracted
 @authRequired
 @closeVault
 def editConfiguration():
@@ -582,6 +633,7 @@ def editConfiguration():
 
 
 @app.route('/hook/<target>', methods=['GET'])
+@userInteracted
 @authRequired
 def hook(target: str = 'Close'):
     ''' generates a hook for the given target '''
@@ -589,6 +641,7 @@ def hook(target: str = 'Close'):
 
 
 @app.route('/hook/', methods=['GET'])
+@userInteracted
 @authRequired
 def hookEmptyTarget():
     ''' generates a hook for the given target '''
@@ -597,6 +650,7 @@ def hookEmptyTarget():
 
 
 @app.route('/relay', methods=['POST'])
+@userInteracted
 @authRequired
 def relay():
     '''
@@ -611,18 +665,21 @@ def relay():
 
 
 @app.route('/mining/mode/on', methods=['GET'])
+@userInteracted
 @authRequired
 def miningModeOn():
     return str(start.setMiningMode(True)), 200
 
 
 @app.route('/mining/mode/off', methods=['GET'])
+@userInteracted
 @authRequired
 def miningModeOff():
     return str(start.setMiningMode(False)), 200
 
 
 @app.route('/delegate/get', methods=['GET'])
+@userInteracted
 @authRequired
 def delegateGet():
     success, msg = start.server.delegateGet()
@@ -632,6 +689,7 @@ def delegateGet():
 
 
 @app.route('/delegate/remove', methods=['GET'])
+@userInteracted
 @authRequired
 def delegateRemove():
     success, msg = start.server.delegateRemove()
@@ -641,6 +699,7 @@ def delegateRemove():
 
 
 @app.route('/stake/check', methods=['GET'])
+@userInteracted
 @authRequired
 def stakeCheck():
     status = start.performStakeCheck()
@@ -648,6 +707,7 @@ def stakeCheck():
 
 
 @app.route('/send_satori_transaction_from_wallet/<network>', methods=['POST'])
+@userInteracted
 @authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
     # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
@@ -659,6 +719,7 @@ def sendSatoriTransactionFromWallet(network: str = 'main'):
 
 
 @app.route('/send_satori_transaction_from_vault/<network>', methods=['POST'])
+@userInteracted
 @authRequired
 def sendSatoriTransactionFromVault(network: str = 'main'):
     result = sendSatoriTransactionUsing(start.vault, network, 'vault')
@@ -690,6 +751,8 @@ def sendSatoriTransactionUsing(
 
         # doesn't respect the cooldown
         myWallet.getUnspentSignatures(force=True)
+        if myWallet.isEncrypted:
+            return 'Vault is encrypted, please unlock it and try again.'
         try:
             # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronTransaction(
@@ -750,6 +813,7 @@ def sendSatoriTransactionUsing(
 
 
 @app.route('/register_stream', methods=['POST'])
+@userInteracted
 @authRequired
 def registerStream():
     import importlib
@@ -799,6 +863,7 @@ def registerStream():
 
 
 @app.route('/edit_stream/<topic>', methods=['GET'])
+@userInteracted
 @authRequired
 def editStream(topic=None):
     # name,target,cadence,offset,datatype,description,tags,url,uri,headers,payload,hook
@@ -822,6 +887,7 @@ def editStream(topic=None):
 # @app.route('/remove_stream/<source>/<stream>/<target>/', methods=['GET'])
 # def removeStream(source=None, stream=None, target=None):
 @app.route('/remove_stream/<topic>', methods=['GET'])
+@userInteracted
 @authRequired
 def removeStream(topic=None):
     # removeRelayStream = {
@@ -861,6 +927,7 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
 
 
 @app.route('/remove_stream_by_post', methods=['POST'])
+@userInteracted
 @authRequired
 def removeStreamByPost():
 
@@ -899,6 +966,7 @@ def removeStreamByPost():
 @app.route('/home', methods=['GET'])
 @app.route('/index', methods=['GET'])
 @app.route('/dashboard', methods=['GET'])
+@userInteracted
 @vaultRequired
 @closeVault
 @authRequired
@@ -961,14 +1029,14 @@ def dashboard():
     streamOverviews = (
         [model.miniOverview() for model in start.engine.models]
         if start.engine is not None else [])  # StreamOverviews.demo()
-    start.openWallet()
-    if start.vault is not None:
-        start.openVault()
+    start.electrumxCheck()
     holdingBalance = start.holdingBalance
-    stakeStatus = holdingBalance >= 5 or start.details.wallet.get('rewardaddress', None) not in [
-        None,
-        start.details.wallet.get('address'),
-        start.details.wallet.get('vaultaddress')]
+    stakeStatus = holdingBalance >= 5 or (
+        start.details.wallet.get('rewardaddress', None) not in [
+            None,
+            start.details.wallet.get('address'),
+            start.details.wallet.get('vaultaddress')]
+        if start.details is not None else 0)
     return render_template('dashboard.html', **getResp({
         'firstRun': theFirstRun,
         'wallet': start.wallet,
@@ -1042,14 +1110,6 @@ def dashboard():
     }))
 
 
-# @app.route('/fetch/balance', methods=['POST'])
-# @authRequired
-# def fetchBalance():
-#    start.openWallet()
-#    if start.vault is not None:
-#    return 'OK', 200
-
-
 @app.route('/fetch/wallet/stats/daily', methods=['GET'])
 @authRequired
 def fetchWalletStatsDaily():
@@ -1074,6 +1134,7 @@ def fetchWalletStatsDaily():
 
 
 @app.route('/pin_depin', methods=['POST'])
+@userInteracted
 @authRequired
 def pinDepinStream():
     # tell the server we want to toggle the pin of this stream
@@ -1150,7 +1211,6 @@ def connectionsStatus():
 #
 #    import time
 #    return Response(update(), mimetype='text/event-stream')
-
 @app.route('/model-updates')
 def modelUpdates():
     def update():
@@ -1223,6 +1283,7 @@ def workingUpdatesEnd():
 
 
 @app.route('/chat', methods=['GET'])
+@userInteracted
 @authRequired
 def chatPage():
     def presentChatForm():
@@ -1240,6 +1301,7 @@ def chatPage():
 
 
 @app.route('/chat/session', methods=['POST'])
+@userInteracted
 @authRequired
 def chatSession():
     def query(chatForm: str = ''):
@@ -1253,6 +1315,7 @@ def chatSession():
 
 
 @app.route('/chat/updates')
+@userInteracted
 @authRequired
 def chatUpdates():
     def update():
@@ -1273,6 +1336,7 @@ def chatUpdates():
 
 
 @app.route('/chat/updates/end')
+@userInteracted
 @authRequired
 def chatUpdatesEnd():
     start.chatUpdates.send('chat_updates_end')
@@ -1280,10 +1344,10 @@ def chatUpdatesEnd():
 
 
 @app.route('/remove_wallet_alias/<network>')
+@userInteracted
 @authRequired
 def removeWalletAlias(network: str = 'main', alias: str = ''):
-    myWallet = start.openWallet(network=network)
-    myWallet.setAlias(None)
+    start.wallet.setAlias(None)
     start.server.removeWalletAlias()
     return wallet(network=network)
     # return render_template('wallet-page.html', **getResp({
@@ -1298,10 +1362,10 @@ def removeWalletAlias(network: str = 'main', alias: str = ''):
 
 
 @app.route('/update_wallet_alias/<network>/<alias>')
+@userInteracted
 @authRequired
 def updateWalletAlias(network: str = 'main', alias: str = ''):
-    myWallet = start.openWallet(network=network)
-    myWallet.setAlias(alias)
+    start.wallet.setAlias(alias)
     start.server.updateWalletAlias(alias)
     return wallet(network=network)
     # ('wallet-page.html', **getResp({
@@ -1316,10 +1380,12 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 
 
 @app.route('/wallet/<network>', methods=['GET', 'POST'])
+@userInteracted
 @vaultRequired
 @closeVault
 @authRequired
 def wallet(network: str = 'main'):
+
     def accept_submittion(passwordForm):
         _vault = start.openVault(
             password=passwordForm.password.data,
@@ -1327,9 +1393,10 @@ def wallet(network: str = 'main'):
         # if rvn is None or not rvn.isEncrypted:
         #    flash('unable to open vault')
 
-    myWallet = start.openWallet(network=network)
-
-    alias = myWallet.alias or start.server.getWalletAlias()
+    try:
+        alias = start.wallet.alias or start.server.getWalletAlias()
+    except Exception as e:
+        alias = None
     if config.get().get('wallet lock'):
         if request.method == 'POST':
             accept_submittion(forms.VaultPassword(formdata=request.form))
@@ -1342,8 +1409,8 @@ def wallet(network: str = 'main'):
                 'unlocked': True,
                 'walletlockEnabled': True,
                 'network': network,
-                'image': getQRCode(myWallet.address),
-                'wallet': myWallet,
+                'image': getQRCode(start.wallet.address),
+                'wallet': start.wallet,
                 'exampleAlias': getRandomName(),
                 'alias': alias,
                 'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
@@ -1365,8 +1432,8 @@ def wallet(network: str = 'main'):
         'unlocked': True,
         'walletlockEnabled': False,
         'network': network,
-        'image': getQRCode(myWallet.address),
-        'wallet': myWallet,
+        'image': getQRCode(start.wallet.address),
+        'wallet': start.wallet,
         'exampleAlias': getRandomName(),
         'alias': alias,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
@@ -1401,6 +1468,7 @@ def presentSendSatoriTransactionform(formData):
 
 
 @app.route('/wallet_lock/enable', methods=['GET'])
+@userInteracted
 @authRequired
 def enableWalletLock():
     # the network portion should be whatever network I'm on.
@@ -1409,6 +1477,7 @@ def enableWalletLock():
 
 
 @app.route('/wallet_lock/disable', methods=['GET'])
+@userInteracted
 @authRequired
 def disableWalletLock():
     if start.vault is None:
@@ -1419,6 +1488,7 @@ def disableWalletLock():
 
 
 @app.route('/vault/<network>', methods=['GET', 'POST'])
+@userInteracted
 @authRequired
 def vaultMainTest(network: str = 'main'):
     return vault()
@@ -1435,6 +1505,7 @@ def presentVaultPasswordForm():
 
 
 @app.route('/vault', methods=['GET', 'POST'])
+@userInteracted
 @authRequired
 def vault():
 
@@ -1475,8 +1546,12 @@ def vault():
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
-        myWallet = start.openWallet(network='main')
-        alias = myWallet.alias or start.server.getWalletAlias()
+        myWallet = start.getWallet(network='main')
+
+        try:
+            alias = myWallet.alias or start.server.getWalletAlias()
+        except Exception as e:
+            alias = None
         return render_template('vault.html', **getResp({
             'title': 'Vault',
             'walletIcon': 'lock',
@@ -1488,10 +1563,14 @@ def vault():
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': start.vault,
+            'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
     # start.workingUpdates.put('loading...')
+    # race condition:
+    while os.path.exists(config.walletPath('vault.yaml')) and start.vault is None:
+        time.sleep(1)
     return render_template('vault.html', **getResp({
         'title': 'Vault',
         'walletIcon': 'lock',
@@ -1501,10 +1580,12 @@ def vault():
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'wallet': start.vault,
+        'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
 @app.route('/vault/report', methods=['GET'])
+@userInteracted
 @authRequired
 def reportVault(network: str = 'main'):
     if start.vault is None:
@@ -1514,7 +1595,6 @@ def reportVault(network: str = 'main'):
     if vault.isEncrypted:
         return redirect('/vault')
     vaultAddress = vault.address
-    print(vault.publicKey)
     success, result = start.server.reportVault(
         walletSignature=start.getWallet(network=network).sign(vaultAddress),
         vaultSignature=vault.sign(vaultAddress),
@@ -1526,12 +1606,14 @@ def reportVault(network: str = 'main'):
 
 
 @app.route('/mining/to/address', methods=['GET'])
+@userInteracted
 @authRequired
 def mineToAddressStatus():
     return str(start.server.mineToAddressStatus()), 200
 
 
 @app.route('/mine/to/address/<address>', methods=['GET'])
+@userInteracted
 @authRequired
 def mineToAddress(address: str):
     if start.vault is None:
@@ -1552,6 +1634,7 @@ def mineToAddress(address: str):
 
 
 @app.route('/stake/for/address/<address>', methods=['GET'])
+@userInteracted
 @authRequired
 def stakeForAddress(address: str):
     if start.vault is None:
@@ -1571,6 +1654,7 @@ def stakeForAddress(address: str):
 
 
 @app.route('/lend/to/address/<address>', methods=['GET'])
+@userInteracted
 @authRequired
 def lendToAddress(address: str):
     if start.vault is None:
@@ -1590,6 +1674,7 @@ def lendToAddress(address: str):
 
 
 @app.route('/lend/remove', methods=['GET'])
+@userInteracted
 @authRequired
 def lendRemove():
     success, result = start.server.lendRemove()
@@ -1599,12 +1684,14 @@ def lendRemove():
 
 
 @app.route('/lend/address', methods=['GET'])
+@userInteracted
 @authRequired
 def lendAddress():
     return str(start.server.lendAddress()), 200
 
 
 @app.route('/mine_to_vault/enable/<network>', methods=['GET'])
+@userInteracted
 @authRequired
 def enableMineToVault(network: str = 'main'):
     if start.vault is None:
@@ -1617,12 +1704,37 @@ def enableMineToVault(network: str = 'main'):
 
 
 @app.route('/mine_to_vault/disable/<network>', methods=['GET'])
+@userInteracted
 @authRequired
 def disableMineToVault(network: str = 'main'):
     if start.vault is None:
         flash('Must unlock your vault to disable minetovault.')
         return redirect('/dashboard')
     success, result = start.disableMineToVault()
+    if success:
+        return 'OK', 200
+    return f'Failed to disable minetovault: {result}', 400
+
+
+@app.route('/pool/lend/enable', methods=['GET'])
+@authRequired
+def poolEnable():
+    if start.vault is None:
+        flash('Must unlock your vault to enable minetovault.')
+        return redirect('/dashboard')
+    success, result = start.poolAccepting(True)
+    if success:
+        return 'OK', 200
+    return f'Failed to enable minetovault: {result}', 400
+
+
+@app.route('/pool/lend/disable', methods=['GET'])
+@authRequired
+def poolDisable():
+    if start.vault is None:
+        flash('Must unlock your vault to disable minetovault.')
+        return redirect('/dashboard')
+    success, result = start.poolAccepting(False)
     if success:
         return 'OK', 200
     return f'Failed to disable minetovault: {result}', 400
@@ -1638,6 +1750,7 @@ def poolAddresses():
 
 
 @app.route('/proxy/parent/status', methods=['GET'])
+@userInteracted
 @authRequired
 def proxyParentStatus():
     success, result = start.server.stakeProxyChildren()
@@ -1647,6 +1760,7 @@ def proxyParentStatus():
 
 
 @app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
+@userInteracted
 @authRequired
 def charityProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyCharity(address, childId=id)
@@ -1656,6 +1770,7 @@ def charityProxyChild(address: str, id: int):
 
 
 @app.route('/proxy/child/no_charity/<address>/<id>', methods=['GET'])
+@userInteracted
 @authRequired
 def charityNotProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyCharityNot(address, childId=id)
@@ -1665,6 +1780,7 @@ def charityNotProxyChild(address: str, id: int):
 
 
 @app.route('/proxy/child/remove/<address>/<id>', methods=['GET'])
+@userInteracted
 @authRequired
 def removeProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyRemove(address, childId=id)
@@ -1674,6 +1790,7 @@ def removeProxyChild(address: str, id: int):
 
 
 @app.route('/vote', methods=['GET', 'POST'])
+@userInteracted
 @vaultRequired
 @authRequired
 def vote():
@@ -1756,6 +1873,7 @@ def vote():
 
 
 @app.route('/proposals', methods=['GET'])
+@userInteracted
 @vaultRequired
 @authRequired
 def proposals():
@@ -1763,6 +1881,7 @@ def proposals():
 
 
 @app.route('/api/proposals', methods=['GET'])
+@userInteracted
 def getProposals():
     try:
         proposals_data = start.server.getProposals()
@@ -1782,6 +1901,7 @@ def getProposals():
 
 
 @app.route('/proposals/vote', methods=['POST'])
+@userInteracted
 def proposalVote():
     try:
         data = request.json
@@ -1814,12 +1934,13 @@ def proposalVote():
             return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
     except Exception as e:
         error_message = f"Error in proposalVote: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
         return jsonify({'status': 'error', 'message': error_message}), 500
 
 
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])
+@userInteracted
 def getProposalVotes(id):
     try:
         votes = start.server.getProposalVotes(str(id))
@@ -1852,8 +1973,8 @@ def getProposalVotes(id):
             }), 404
     except Exception as e:
         error_message = f"Error fetching votes: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
         return jsonify({
             'status': 'error',
             'message': error_message
@@ -1861,6 +1982,7 @@ def getProposalVotes(id):
 
 
 @app.route('/proposal/create', methods=['GET', 'POST'])
+@userInteracted
 def proposalCreate():
     if request.method == 'GET':
         return render_template(
@@ -1869,10 +1991,10 @@ def proposalCreate():
     elif request.method == 'POST':
         try:
             data = request.json
-            print(
+            logging.debug(
                 f"Received proposal data in proposalCreate: {json.dumps(data, indent=2)}")
             success, result = start.server.submitProposal(data)
-            print(
+            logging.debug(
                 f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
             if success:
                 return jsonify({
@@ -1883,15 +2005,15 @@ def proposalCreate():
             else:
                 error_message = result.get(
                     'error', 'Failed to create proposal')
-                print(f"Failed to create proposal: {error_message}")
+                logging.debug(f"Failed to create proposal: {error_message}")
                 return jsonify({
                     'status': 'error',
                     'message': error_message
                 }), 400
         except Exception as e:
             error_message = f"Error in proposalCreate route: {str(e)}"
-            print(error_message)
-            print(traceback.format_exc())
+            logging.warning(error_message)
+            logging.warning(traceback.format_exc())
             return jsonify({
                 'status': 'error',
                 'message': 'Server error occurred'
@@ -1899,6 +2021,7 @@ def proposalCreate():
 
 
 @app.route('/test', methods=['GET'])
+@userInteracted
 def testConnection():
     try:
         success, result = start.server.testConnection()
@@ -1911,6 +2034,7 @@ def testConnection():
 
 
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
+@userInteracted
 @authRequired
 def voteSubmitManifestWallet():
     # logging.debug(request.json, color='yellow')
@@ -1953,6 +2077,7 @@ def systemMetrics():
 
 
 @app.route('/vote/submit/sanction/wallet', methods=['POST'])
+@userInteracted
 @authRequired
 def voteSubmitSanctionWallet():
     # logging.debug(request.json, color='yellow')
@@ -1974,6 +2099,7 @@ def voteSubmitSanctionWallet():
 
 
 @app.route('/vote/submit/sanction/vault', methods=['POST'])
+@userInteracted
 @authRequired
 def voteSubmitSanctionVault():
     # logging.debug(request.json, color='yellow')
@@ -1998,6 +2124,7 @@ def voteSubmitSanctionVault():
 
 
 @app.route('/vote/remove_all/sanction', methods=['GET'])
+@userInteracted
 @authRequired
 def voteRemoveAllSanction():
     # logging.debug(request.json, color='yellow')
@@ -2009,6 +2136,7 @@ def voteRemoveAllSanction():
 
 
 @app.route('/relay_csv', methods=['GET'])
+@userInteracted
 @authRequired
 def relayCsv():
     ''' returns a csv file of the current relay streams '''
@@ -2034,6 +2162,7 @@ def relayCsv():
 
 
 @app.route('/relay_history_csv/<topic>', methods=['GET'])
+@userInteracted
 @authRequired
 def relayHistoryCsv(topic: str = None):
     ''' returns a csv file of the history of the relay stream '''
@@ -2054,6 +2183,7 @@ def relayHistoryCsv(topic: str = None):
 
 
 @app.route('/merge_history_csv/<topic>', methods=['POST'])
+@userInteracted
 @authRequired
 def mergeHistoryCsv(topic: str = None):
     ''' merge history uploaded  '''
@@ -2079,6 +2209,7 @@ def mergeHistoryCsv(topic: str = None):
 
 
 @app.route('/remove_history_csv/<topic>', methods=['GET'])
+@userInteracted
 @authRequired
 def removeHistoryCsv(topic: str = None):
     ''' removes history '''
@@ -2092,6 +2223,7 @@ def removeHistoryCsv(topic: str = None):
 
 
 @app.route('/trigger_relay/<topic>', methods=['GET'])
+@userInteracted
 @authRequired
 def triggerRelay(topic: str = None):
     ''' triggers relay stream to happen '''
@@ -2148,6 +2280,7 @@ def triggerRelay(topic: str = None):
 #    start.engine.data.newData.on_next(x)
 #
 #    return request.json
+
 
 ###############################################################################
 ## Routes - history ###########################################################

@@ -1,29 +1,48 @@
+import os
 import sys
 import time
 import subprocess
 
+lastPull = 0
+
 
 def startSatori():
-    return subprocess.Popen([sys.executable, 'satori.py'])
+    return subprocess.Popen([sys.executable, '/Satori/Neuron/satorineuron/web/satori.py'])
+
+
+def pullSatori():
+    process = subprocess.Popen(['/bin/bash', 'pull.sh'])
+    process.wait()
+    global lastPull
+    lastPull = time.time()
+
+
+def isProdMode() -> bool:
+    return os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev')) == 'prod'
 
 
 def monitorAndRestartSatori():
     while True:
         print("Starting Satori...")
+        if time.time() - lastPull > 60*60:
+            pullSatori()
         process = startSatori()
         while True:
             try:
                 return_code = process.poll()
                 if return_code is not None:
                     print(f'Satori exited with code {return_code}.')
-                    break
+                    if return_code == 2:  # just restart satori
+                        break
+                    return return_code  # shutdown or restart container
                 time.sleep(1)
             except KeyboardInterrupt:
                 print("Shutting down monitor...")
                 process.terminate()
                 process.wait()
-                return
+                return 0
 
 
 if __name__ == "__main__":
-    monitorAndRestartSatori()
+    return_code = monitorAndRestartSatori()
+    os._exit(return_code)

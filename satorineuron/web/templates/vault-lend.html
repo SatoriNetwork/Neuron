@@ -74,6 +74,7 @@
       });
   }
   function checkEnterForLendingAddress(event){
+    document.getElementById("addStakingAddressConfirmation").innerHTML = '';
     if (event.key === "Enter" || event.keyCode === 13) {
       console.log('enter detected');
       if (document.getElementById("addLendingAddress").value.length == 0) {
