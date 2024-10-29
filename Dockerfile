@@ -26,7 +26,7 @@ RUN apt-get update && \
     #chmod -R 777 /Satori/Engine && \
     #chmod -R 777 /Satori/Neuron && \
 ## File system setup
-ARG BRANCH_FLAG=main
+ARG BRANCH_FLAG=krishna
 RUN mkdir /Satori && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Synapse.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \

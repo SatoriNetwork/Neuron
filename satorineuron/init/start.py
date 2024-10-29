@@ -548,13 +548,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             ]
             print("predictionStream=", predictionStream)
             print("predictionStreamtopic=", predictionStream[0].streamId.topic())
-            # self.server.publish(
-            #     topic=predictionStream.streamId.topic(),
-            #     data=streamForecast.forecast['pred'].iloc[0],
-            #     observationTime=streamForecast.observationTime,
-            #     observationHash=streamForecast.observationHash,
-            #     isPrediction=True,
-            #     useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
+            self.server.publish(
+                topic=predictionStream[0].streamId.topic(),
+                data=streamForecast.forecast['pred'].iloc[0],
+                observationTime=streamForecast.observationTime,
+                observationHash=streamForecast.observationHash,
+                isPrediction=True,
+                useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
 
         streamPairs = StreamPairs(
             self.subscriptions, StartupDag.predictionStreams(self.publications)
