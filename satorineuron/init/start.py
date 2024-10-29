@@ -10,12 +10,8 @@ from reactivex.subject import BehaviorSubject
 from queue import Queue
 import satorineuron
 import satoriengine
-<<<<<<< HEAD
-from satorilib.concepts.structs import StreamId, Stream, StreamPairs, StreamPair
-=======
 from satoriwallet.api.blockchain import Electrumx
 from satorilib.concepts.structs import StreamId, Stream
->>>>>>> main
 from satorilib.concepts import constants
 from satorilib.api import disk
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
@@ -70,13 +66,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False,
     ):
         super(StartupDag, self).__init__(*args)
-<<<<<<< HEAD
-        self.version = [int(x) for x in VERSION.split(".")]
-=======
         self.version = Version(VERSION)
         # TODO: test and turn on with new installer
         #self.watchForVersionUpdates()
->>>>>>> main
         self.env = env
         if isinstance(walletOnlyMode, bool):
             self.walletOnlyMode = walletOnlyMode
@@ -127,10 +119,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
-<<<<<<< HEAD
-        self.poolIsAccepting: bool = False
-        if not config.get().get("disable_restart", False):
-=======
         self.stopAllSubscriptions = threading.Event()
         self.walletTimeoutSeconds = 60*20
         self.walletTimeoutThread = threading.Thread(
@@ -139,7 +127,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBlockTime = time.time()
         self.poolIsAccepting: bool = False
         if not config.get().get('disable_restart', False):
->>>>>>> main
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True
             )
@@ -421,29 +408,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         )
         return self._holdingBalance
 
-<<<<<<< HEAD
-    @property
-    def ravencoinWallet(self) -> RavencoinWallet:
-        if self._ravencoinWallet is None:
-            self._ravencoinWallet = RavencoinWallet(
-                config.walletPath("wallet.yaml"),
-                reserve=0.25,
-                isTestnet=self.networkIsTest("ravencoin"),
-            )
-        return self._ravencoinWallet
-
-    @property
-    def evrmoreWallet(self) -> EvrmoreWallet:
-        if self._evrmoreWallet is None:
-            self._evrmoreWallet = EvrmoreWallet(
-                config.walletPath("wallet.yaml"),
-                reserve=0.25,
-                isTestnet=self.networkIsTest("evrmore"),
-            )
-        return self._evrmoreWallet
-
-=======
->>>>>>> main
     def ravencoinVault(
         self,
         password: Union[str, None] = None,
@@ -522,34 +486,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             create=create,
             connection=self.electrumx)
 
-<<<<<<< HEAD
-    def openWallet(
-        self, network: Union[str, None] = None
-    ) -> Union[EvrmoreWallet, RavencoinWallet]:
-        wallet = self.getWallet(network)
-        if self.lastWalletCall + self.electrumCooldown < time.time():
-            self.lastWalletCall = time.time()
-            wallet = wallet()
-            if wallet.electrumx.conn is not None:
-                self.updateConnectionStatus(connTo=ConnectionTo.electrumx, status=True)
-            else:
-                self.updateConnectionStatus(connTo=ConnectionTo.electrumx, status=False)
-            logging.info("opened wallet", color="green")
-        else:
-            logging.info("respecting wallet cooldown", color="green")
-        return wallet
-
-    def closeVault(self) -> Union[RavencoinWallet, EvrmoreWallet, None]:
-        """close the vault, reopen it without decrypting it."""
-        try:
-            self._ravencoinVault.close()
-        except Exception as _:
-            pass
-        try:
-            self._evrmoreVault.close()
-        except Exception as _:
-            pass
-=======
     def electrumxCheck(self) -> bool:
         ''' returns connection status to electrumx '''
         if self.electrumx is None or not self.electrumx.connected():
@@ -573,7 +509,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 except Exception as e:
                     logging.error(
                         f'Error closing vault: {str(e)}', color='red')
->>>>>>> main
 
     def openVault(
         self,
@@ -586,26 +521,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         it. this allows us to get it's balance, but not spend from it.
         """
         self.closeVault()
-<<<<<<< HEAD
-        vault = self.getVault(network, password, create)
-        if (
-            vault is not None
-            and self.lastVaultCall + self.electrumCooldown < time.time()
-        ):
-            self.lastVaultCall = time.time()
-            vault = vault()
-            if vault.electrumx.conn is not None:
-                self.updateConnectionStatus(connTo=ConnectionTo.electrumx, status=True)
-            else:
-                self.updateConnectionStatus(connTo=ConnectionTo.electrumx, status=False)
-            logging.info("opened vault", color="green")
-        else:
-            logging.info("respecting vault cooldown", color="green")
-        return vault
-=======
         network = network or self.network
         return self.getVault(network, password, create)
->>>>>>> main
 
     def start(self):
         """start the satori engine."""
@@ -755,12 +672,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.updateConnectionStatus(connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
-<<<<<<< HEAD
-                self.poolIsAccepting = bool(self.details.wallet.get("accepting", False))
-=======
                 self.poolIsAccepting = bool(
                     self.details.wallet.get('accepting', False))
->>>>>>> main
                 self.oracleKey = self.details.oracleKey
                 self.idKey = self.details.idKey
                 self.subscriptionKeys = self.details.subscriptionKeys
@@ -1110,16 +1023,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         toCentral: bool = True,
         isPrediction: bool = False,
     ) -> True:
-<<<<<<< HEAD
-        """publishes to all the pubsub servers"""
-        if self.holdingBalance < constants.stakeRequired:
-            return False
-=======
         ''' publishes to all the pubsub servers '''
         # does this take proxy into account? I don't think so.
         # if self.holdingBalance < constants.stakeRequired:
         #    return False
->>>>>>> main
         if not isPrediction:
             for pub in self.pubs:
                 pub.publish(
@@ -1135,12 +1042,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 observationTime=observationTime,
                 observationHash=observationHash,
                 isPrediction=isPrediction,
-<<<<<<< HEAD
-                useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6,
-            )
-=======
                 useAuthorizedCall=self.version >= Version('0.2.6'))
->>>>>>> main
 
     def performStakeCheck(self):
         self.stakeStatus = self.server.stakeCheck()
