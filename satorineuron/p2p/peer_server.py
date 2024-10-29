@@ -8,10 +8,27 @@ class PeerServer:
     def __init__(self):
         self.app = Flask(__name__)
         self.peer_connections = defaultdict(set)
-        self.init_routes()
-        self.init_db()
+        self._init_routes()
+        self._init_db()
 
-    def init_db(self):
+    # unused?
+    #def _save_peer_checkin(self, peer_id, timestamp, wireguard_config=None):
+    #    conn = sqlite3.connect('peers.db')
+    #    cursor = conn.cursor()
+    #    if wireguard_config:
+    #        cursor.execute(
+    #            'INSERT OR REPLACE INTO peers (peer_id, last_seen, wireguard_config) VALUES (?, ?, ?)', 
+    #            (peer_id, timestamp, json.dumps(wireguard_config))
+    #        )
+    #    else:
+    #        cursor.execute(
+    #            'UPDATE peers SET last_seen = ? WHERE peer_id = ?',
+    #            (timestamp, peer_id)
+    #        )
+    #    conn.commit()
+    #    conn.close()
+    
+    def _init_db(self):
         """Initialize SQLite database"""
         conn = sqlite3.connect('peers.db')
         cursor = conn.cursor()
@@ -25,26 +42,10 @@ class PeerServer:
         conn.commit()
         conn.close()
 
-    def save_peer_checkin(self, peer_id, timestamp, wireguard_config=None):
-        conn = sqlite3.connect('peers.db')
-        cursor = conn.cursor()
-        if wireguard_config:
-            cursor.execute(
-                'INSERT OR REPLACE INTO peers (peer_id, last_seen, wireguard_config) VALUES (?, ?, ?)', 
-                (peer_id, timestamp, json.dumps(wireguard_config))
-            )
-        else:
-            cursor.execute(
-                'UPDATE peers SET last_seen = ? WHERE peer_id = ?',
-                (timestamp, peer_id)
-            )
-        conn.commit()
-        conn.close()
-    
-    def init_routes(self):
+    def _init_routes(self):
         """Initialize Flask routes"""
-        self.app.route('/connect', methods=['POST'])(self.connect_peer)
         self.app.route('/checkin', methods=['POST'])(self.check_in)
+        self.app.route('/connect', methods=['POST'])(self.connect_peer)
         self.app.route('/list_peers', methods=['GET'])(self.list_peers)
 
     def check_in(self):
@@ -53,7 +54,6 @@ class PeerServer:
         peer_id = data['peer_id']
         timestamp = time.time()
         wireguard_config = data.get('wireguard_config')
-
         conn = sqlite3.connect('peers.db')
         cursor = conn.cursor()
         cursor.execute(
@@ -62,38 +62,11 @@ class PeerServer:
         )
         conn.commit()
         conn.close()
-
         return jsonify({
             "status": "checked in",
             "peer_id": peer_id,
             "timestamp": timestamp
         })
-
-    def list_peers(self):
-        """Get list of all peers and their last seen timestamps"""
-        conn = sqlite3.connect('peers.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT peer_id, last_seen, wireguard_config FROM peers')
-        peers = cursor.fetchall()
-        conn.close()
-
-        peer_list = []
-        for peer in peers:
-            peer_id, last_seen, wireguard_config = peer
-            peer_info = {
-                "peer_id": peer_id,
-                "last_seen": last_seen,
-                "last_seen_readable": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_seen)),
-                "wireguard_config": json.loads(wireguard_config) if wireguard_config else None
-            }
-            peer_list.append(peer_info)
-
-        return jsonify({
-            "status": "success",
-            "peers": peer_list,
-            "total_peers": len(peer_list)
-        })
-
 
     def connect_peer(self):
         """Handle peer connection requests"""
@@ -127,6 +100,30 @@ class PeerServer:
             "from_peer_config": from_peer_config,
             "to_peer_config": to_peer_config
         })
+
+    def list_peers(self):
+        """Get list of all peers and their last seen timestamps"""
+        conn = sqlite3.connect('peers.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT peer_id, last_seen, wireguard_config FROM peers')
+        peers = cursor.fetchall()
+        conn.close()
+        peer_list = []
+        for peer in peers:
+            peer_id, last_seen, wireguard_config = peer
+            peer_info = {
+                "peer_id": peer_id,
+                "last_seen": last_seen,
+                "last_seen_readable": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_seen)),
+                "wireguard_config": json.loads(wireguard_config) if wireguard_config else None
+            }
+            peer_list.append(peer_info)
+        return jsonify({
+            "status": "success",
+            "peers": peer_list,
+            "total_peers": len(peer_list)
+        })
+
 
     def run(self, host='0.0.0.0', port=51820):
         self.app.run(host=host, port=port)

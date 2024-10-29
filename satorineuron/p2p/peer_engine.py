@@ -11,15 +11,15 @@ connects to peers ->
 maintains connections ->
 waits for updates
 
-Next step:
-PeerEngine (singleton)
-    connects to the server, asking for peers, and then manages their connections
-    - PeerManager (regular class)
-    - PeerServerClient (regular class)
-    - wait for updates: (thread listening to a Queue)
-        - listen for what other connections the rest of the neuron wants to
-            - make
-            - break
+Next step:complete
+# PeerEngine (singleton)
+#     connects to the server, asking for peers, and then manages their connections
+#     - PeerManager (regular class)
+#     - PeerServerClient (regular class)
+#     - wait for updates: (thread listening to a Queue)
+#         - listen for what other connections the rest of the neuron wants to
+#             - make
+#             - break
 
 # Next Steps:complete
 #     - fix the PeerServer to work according to diagram
@@ -146,7 +146,7 @@ class PeerEngine(metaclass=SingletonMeta):
         def background_loop():
             while self.running:
                 self.checkin()
-                time.sleep(600)  # 10 minute interval for heartbeat
+                time.sleep(60*10)
 
         self.background_thread = threading.Thread(target=background_loop)
         self.background_thread.daemon = True
