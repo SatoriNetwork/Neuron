@@ -24,30 +24,23 @@ def isProdMode() -> bool:
 def monitorAndRestartSatori():
     while True:
         print("Starting Satori...")
-        # actually it seems we can interrupt with ctrl+c either way
-        # isProd = isProdMode()
         if time.time() - lastPull > 60*60:
             pullSatori()
         process = startSatori()
-        # if isProd:
-        process.wait()
-        # else: #(must be able to interrupt with ctrl+c)
-        #    while True:
-        #        try:
-        #            return_code = process.poll()
-        #            if return_code is not None:
-        #                print(f'Satori exited with code {return_code}.')
-        #                if return_code == 0: # restart container
-        #                    return 0
-        #                elif return_code != 1: # restart satori
-        #                    break
-        #                return return_code
-        #            time.sleep(1)
-        #        except KeyboardInterrupt:
-        #            print("Shutting down monitor...")
-        #            process.terminate()
-        #            process.wait()
-        #            return 0
+        while True:
+            try:
+                return_code = process.poll()
+                if return_code is not None:
+                    print(f'Satori exited with code {return_code}.')
+                    if return_code == 3: # just restart satori
+                        break
+                    return return_code # shutdown or restart container
+                time.sleep(1)
+            except KeyboardInterrupt:
+                print("Shutting down monitor...")
+                process.terminate()
+                process.wait()
+                return 0
 
 
 if __name__ == "__main__":

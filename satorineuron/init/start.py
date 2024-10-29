@@ -128,6 +128,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True)
             self.restartThread.start()
+
+        self.restartQueue: Queue = Queue()
+        self.restartQueueThread = threading.Thread(
+            target=self.restartWithQueue, args=(self.restartQueue,), daemon=True)
+        self.restartQueueThread.start()
+
         self.checkinCheckThread = threading.Thread(
             target=self.checkinCheck, daemon=True)
         self.checkinCheckThread.start()
@@ -900,12 +906,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #        break
         #    time.sleep(1)
 
-    def triggerRestart(self):
+    def triggerRestart(self, return_code=1):
         from satorisynapse import Envelope, Signal
         self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
         import time
         time.sleep(5)
-        os._exit(0)
+        os._exit(return_code) # 0 = shutdown, 1 = restart
         # import requests
         # requests.get('http://127.0.0.1:24601/restart')
 
@@ -932,6 +938,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             # latestTag.get()
             # if latestTag.isNew:
             #    self.triggerRestart()
+
+    def restartWithQueue(self, queue):
+        return_code = int(queue.get()) # Wait for signal
+        self.triggerRestart(return_code)
 
     def publish(
         self,
