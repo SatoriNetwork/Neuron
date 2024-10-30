@@ -29,9 +29,15 @@ Next step:complete
 #         - able to ask server to connect to a peer
 #         - heartbeat to tell server we're still around (10 minutes)
 #     - refactor whatever is needed and complete this PeerEngine
+
+Next step:
+peerEngine
+    send a ping message to the peer which is connected to the neuron
+    receive a message back and show it as logs
 '''
 
 import json
+import subprocess
 import threading
 import time
 import requests
@@ -78,6 +84,7 @@ class PeerEngine(metaclass=SingletonMeta):
         self.start_background_tasks()
         self.get_peers()
         self.start_listening()
+        self.start_ping_loop()
         # pass
 
     def start_listening(self):
@@ -151,3 +158,29 @@ class PeerEngine(metaclass=SingletonMeta):
         self.background_thread = threading.Thread(target=background_loop)
         self.background_thread.daemon = True
         self.background_thread.start()
+
+    def start_ping_loop(self, interval=5):
+        def ping_peers():
+            while True:
+                time.sleep(interval)
+                for  peer in self.peerManager.list_peers():
+                    # print(peer)
+                    peer_id = "client 2"
+                    ping_ip = peer.get('allowed_ips', '').split('/')[0]
+                    try:
+                        self.run_ping_command(ping_ip)
+                    except Exception as e:
+                        logging.error(f"Failed to ping peer {peer_id}: {e}")
+                # time.sleep(interval)
+        
+        # Start pinging in a separate thread to avoid blocking other operations
+        threading.Thread(target=ping_peers, daemon=True).start()
+
+    def run_ping_command(self, ip):
+        # Run the system ping command
+        result = subprocess.run(["ping", "-c", "1", ip], capture_output=True, text=True)
+        # print(result)
+        if result.returncode == 0:
+            logging.info(f"Ping to {ip} successful: {result.stdout}", color="blue")
+        else:
+            logging.error(f"Ping to {ip} failed: {result.stderr}", color="blue")
