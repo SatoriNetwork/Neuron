@@ -11,10 +11,11 @@ from queue import Queue
 import satorineuron
 import satoriengine
 from satoriwallet.api.blockchain import Electrumx
-from satorilib.concepts.structs import StreamId, Stream
+from satorilib.concepts.structs import StreamId, Stream, StreamPairs, StreamPair
 from satorilib.concepts import constants
 from satorilib.api import disk
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
+
 
 # from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
