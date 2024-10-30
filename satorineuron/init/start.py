@@ -66,7 +66,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         super(StartupDag, self).__init__(*args)
         self.version = Version(VERSION)
         # TODO: test and turn on with new installer
-        #self.watchForVersionUpdates()
+        # self.watchForVersionUpdates()
         self.env = env
         if isinstance(walletOnlyMode, bool):
             self.walletOnlyMode = walletOnlyMode
@@ -113,7 +113,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
-        self.udpQueue: Queue = Queue()
+        self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
@@ -188,7 +188,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             target=watchForever,
             daemon=True)
         self.watchVersionThread.start()
-
 
     def performMigrationBackup(self, name: str = 'wallet'):
         if os.path.exists(config.walletPath(f'{name}.yaml')) and not os.path.exists(config.walletPath(f'{name}-migration-backup.yaml')):
@@ -908,12 +907,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def triggerRestart(self, return_code=1):
         from satorisynapse import Envelope, Signal
-        self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+        self.udpQueue.put(
+            Envelope(ip='', vesicle=Signal(restart=True)))  # TODO: remove
         import time
         time.sleep(5)
-        os._exit(return_code) # 0 = shutdown, 1 = restart
-        # import requests
-        # requests.get('http://127.0.0.1:24601/restart')
+        os._exit(return_code)  # 0 = shutdown, 1 = restart container, 2 = restart app
 
     def emergencyRestart(self):
         import time
@@ -940,7 +938,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             #    self.triggerRestart()
 
     def restartWithQueue(self, queue):
-        return_code = int(queue.get()) # Wait for signal
+        return_code = int(queue.get())  # Wait for signal
         self.triggerRestart(return_code)
 
     def publish(
