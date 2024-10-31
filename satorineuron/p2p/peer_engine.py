@@ -30,7 +30,7 @@ Next step:complete
 #         - heartbeat to tell server we're still around (10 minutes)
 #     - refactor whatever is needed and complete this PeerEngine
 
-Next step:
+Next step:complete
 peerEngine
     send a ping message to the peer which is connected to the neuron
     receive a message back and show it as logs
@@ -121,6 +121,7 @@ class PeerEngine(metaclass=SingletonMeta):
                             'wireguard_config': peer['wireguard_config']
                         }
                         self.connectTo.put(peer_data)
+                        self.connect_to_peer(peer_data['id'])
                 return other_peers
             else:
                 raise Exception(f"Failed to get peers: {response.status_code}")
@@ -184,3 +185,43 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.info(f"Ping to {ip} successful: {result.stdout}", color="blue")
         else:
             logging.error(f"Ping to {ip} failed: {result.stderr}", color="blue")
+
+    def connect_to_peer(self, peer_id):
+        """Request connection to another peer and configure WireGuard."""
+        url = f"{self.server_url}/connect"
+        data = {
+            "from_peer": self.client_id,
+            "to_peer": peer_id
+        }
+
+        try:
+            response = requests.post(url, json=data)
+            response_data = response.json()
+
+            if response_data.get('status') == 'connected':
+                print(f"Successfully connected to {peer_id}")
+                # self.connected_peers.add(peer_id)
+
+                # to_peer_config = response_data['to_peer_config']
+                # print(f"WireGuard config for peer {peer_id}: {to_peer_config}")
+                
+                # Store the peer's WireGuard config
+                # self.peer_wireguard_configs[peer_id] = to_peer_config
+                
+                # Apply WireGuard configuration
+                # interface = "wg0"
+                # add_peer(interface, 
+                #         to_peer_config['public_key'], 
+                #         to_peer_config['allowed_ips'], 
+                #         to_peer_config['endpoint'])
+                # save_config(interface)
+                # print(f"Peer {peer_id} configuration saved and applied")
+                return True
+             
+            else:
+                print(f"Connection failed: {response_data.get('message', 'Unknown error')}")
+                return False
+                
+        except Exception as e:
+            print(f"Connection failed: {e}")
+            return False
