@@ -89,10 +89,12 @@ while True:
             walletOnlyMode=config.get().get(
                 'wallet only mode',
                 os.environ.get('WALLETONLYMODE', False)),
+            # TODO: notice the dev mode is the same as prod for now, we should
+            #       have separate servers or run locally for dev mode
             urlServer={
                 # TODO: local endpoint should be in a config file.
                 'local': 'http://192.168.0.10:5002',
-                'dev': 'http://localhost:5002',
+                'dev': 'https://stage.satorinet.io',  # 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
             # 'prod': 'https://central.satorinet.io'}[ENV],
@@ -100,19 +102,20 @@ while True:
             # 'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 'local': 'http://192.168.0.10:5002',
-                'dev': 'http://localhost:5002',
+                'dev': 'https://mundo.satorinet.io',  # 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
             # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
                 'local': ['ws://192.168.0.10:24603'],
-                'dev': ['ws://localhost:24603'],
+                # 'dev': ['ws://localhost:24603'],
+                'dev': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
             # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
             urlSynergy={
                 'local': 'https://192.168.0.10:24602',
-                'dev': 'https://localhost:24602',
+                'dev': 'https://synergy.satorinet.io:24602',  # 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
@@ -484,12 +487,39 @@ def import_wallet():
             shutil.rmtree(wallet_path + '_backup', ignore_errors=True)
 
 
-@app.route('/restart', methods=['GET'])
+@app.route('/power/refresh', methods=['GET'])
+@userInteracted
+@authRequired
+def refresh():
+    start.restartQueue.put(2)
+    html = (
+        '<!DOCTYPE html>'
+        '<html>'
+        '<head>'
+        '    <title>Restarting Satori Neuron</title>'
+        '    <script type="text/javascript">'
+        '        setTimeout(function(){'
+        '            window.location.href = window.location.protocol + "//" + window.location.host;'
+        '        }, 1000 * 60);'
+        '    </script>'
+        '</head>'
+        '<body>'
+        '    <p>The Satori Neuron application is attempting to restart. <b>Please wait,</b> the restart process can take a minute.</p>'
+        '    <p>If after a minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' +
+        " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
+        '    <p>Thank you.</p>'
+        '</body>'
+        '</html>'
+    )
+    return html, 200
+
+
+@app.route('/power/restart', methods=['GET'])
 @userInteracted
 @authRequired
 def restart():
-    start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
-    start.restartQueue.put(True)
+    start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))# TODO: remove
+    start.restartQueue.put(1)
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -502,9 +532,8 @@ def restart():
         '    </script>'
         '</head>'
         '<body>'
-        '    <p>Satori Neuron is attempting to restart. <b>Please wait,</b> the restart process can take several minutes as it downloads updates.</p>'
-        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' +
-        " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
+        '    <p>The Satori Neuron docker container is attempting to restart. <b>Please wait,</b> the restart process can take several minutes as it downloads updates.</p>'
+        '    <p>You can close this window since Satori will open a new one during the restart process.</p>'
         '    <p>Thank you.</p>'
         '</body>'
         '</html>'
@@ -512,20 +541,21 @@ def restart():
     return html, 200
 
 
-@app.route('/shutdown', methods=['GET'])
+@app.route('/power/shutdown', methods=['GET'])
 @userInteracted
 @authRequired
 def shutdown():
-    start.udpQueue.put(Envelope(ip='', vesicle=Signal(shutdown=True)))
-    start.restartQueue.put(False)
+    start.udpQueue.put(Envelope(ip='', vesicle=Signal(shutdown=True)))# TODO: remove
+    start.restartQueue.put(0)
     html = (
         '<!DOCTYPE html>'
         '<html>'
         '<head>'
-        '    <title>Shutting Down Satori Neuron</title>'
+        '    <title>Satori Neuron Shut Down</title>'
         '</head>'
         '<body>'
-        '    <p>Satori Neuron is attempting to shut down. To verify it has shut down you can make sure the container is not running under the Container tab in Docker, and you can close the terminal window which shows the logs of the Satori Neuron.</p>'
+        '    <p>The Satori Neuron has shut down. To verify see that the docker container is not running. You can close this window.</p>'
+        '    <p>Thank you.</p>'
         '</body>'
         '</html>'
     )
@@ -2324,13 +2354,13 @@ def synapsePorts():
     return str(start.peer.gatherChannels())
 
 
-@app.route('/synapse/stream')
+@app.route('/synapse/stream')# TODO: remove
 def synapseStream():
     ''' here we listen for messages from the synergy engine '''
 
     def event_stream():
         while True:
-            message = start.udpQueue.get()
+            message = start.udpQueue.get()# TODO: remove
             if isinstance(message, Envelope):
                 yield 'data:' + message.toJson + '\n\n'
 

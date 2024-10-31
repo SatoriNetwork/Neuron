@@ -25,7 +25,7 @@ from satorineuron import VERSION
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.init.restart import restartLocalSatori
-from satorineuron.init.tag import LatestTag
+from satorineuron.init.tag import LatestTag, Version
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import StartupDagStruct
@@ -64,7 +64,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False
     ):
         super(StartupDag, self).__init__(*args)
-        self.version = [int(x) for x in VERSION.split('.')]
+        self.version = Version(VERSION)
+        # TODO: test and turn on with new installer
+        # self.watchForVersionUpdates()
         self.env = env
         if isinstance(walletOnlyMode, bool):
             self.walletOnlyMode = walletOnlyMode
@@ -111,7 +113,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
-        self.udpQueue: Queue = Queue()
+        self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
@@ -126,10 +128,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True)
             self.restartThread.start()
+
         self.restartQueue: Queue = Queue()
         self.restartQueueThread = threading.Thread(
             target=self.restartWithQueue, args=(self.restartQueue,), daemon=True)
         self.restartQueueThread.start()
+
         self.checkinCheckThread = threading.Thread(
             target=self.checkinCheck, daemon=True)
         self.checkinCheckThread.start()
@@ -147,6 +151,43 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     interval=60*60*24 if alreadySetup else 60*60*12)
                 break
             time.sleep(60*15)
+
+    def watchForVersionUpdates(self):
+        '''
+        if we notice the code version has updated, download code restart
+        in order to restart we have to kill the main thread manually.
+        '''
+        def getPidByName(name: str) -> Union[int, None]:
+            """
+            Returns the PID of a process given a name or partial command name match.
+            If multiple matches are found, returns the first match.
+            Returns None if no process is found with the given name.
+            """
+            import psutil
+            for proc in psutil.process_iter(['pid', 'cmdline']):
+                try:
+                    # Check if the process command line matches the target name
+                    if name in ' '.join(proc.info['cmdline']):
+                        return proc.info['pid']
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue  # Process terminated or access denied, skip
+            return None  # No process found with the given name
+
+        def terminatePid(pid: int):
+            import signal
+            os.kill(pid, signal.SIGTERM)  # Send SIGTERM to the process
+
+        def watchForever():
+            latestTag = LatestTag(self.version, serverURL=self.urlServer)
+            while True:
+                time.sleep(60*60*6)
+                if latestTag.mustUpdate():
+                    terminatePid(getPidByName('satori.py'))
+
+        self.watchVersionThread = threading.Thread(
+            target=watchForever,
+            daemon=True)
+        self.watchVersionThread.start()
 
     def performMigrationBackup(self, name: str = 'wallet'):
         if os.path.exists(config.walletPath(f'{name}.yaml')) and not os.path.exists(config.walletPath(f'{name}-migration-backup.yaml')):
@@ -866,12 +907,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def triggerRestart(self, return_code=1):
         from satorisynapse import Envelope, Signal
-        self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+        self.udpQueue.put(
+            Envelope(ip='', vesicle=Signal(restart=True)))  # TODO: remove
         import time
         time.sleep(5)
-        os._exit(return_code) # 0 = shutdown, 1 = restart
-        # import requests
-        # requests.get('http://127.0.0.1:24601/restart')
+        os._exit(return_code)  # 0 = shutdown, 1 = restart container, 2 = restart app
 
     def emergencyRestart(self):
         import time
@@ -898,9 +938,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             #    self.triggerRestart()
 
     def restartWithQueue(self, queue):
-        restart = queue.get() # Wait for signal
-        return_code = 1 if restart else 0
-        self.triggerRestart()
+        return_code = int(queue.get())  # Wait for signal
+        self.triggerRestart(return_code)
 
     def publish(
         self,
@@ -929,7 +968,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 observationTime=observationTime,
                 observationHash=observationHash,
                 isPrediction=isPrediction,
-                useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
+                useAuthorizedCall=self.version >= Version('0.2.6'))
 
     def performStakeCheck(self):
         self.stakeStatus = self.server.stakeCheck()
