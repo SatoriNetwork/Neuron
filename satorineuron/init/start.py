@@ -784,7 +784,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             print("observationTime=", streamForecast.observationTime)
             print("observationHash=", streamForecast.observationHash)
             print("isPrediction=", True)
-            print("useAuthorizedCall=", self.version[1] >= 2 and self.version[2] >= 6)
+            print("useAuthorizedCall=", self.version >= Version('0.2.6'))
             predictionStream = [
                 p
                 for p in StartupDag.predictionStreams(self.publications)
@@ -798,7 +798,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 observationTime=streamForecast.observationTime,
                 observationHash=streamForecast.observationHash,
                 isPrediction=True,
-                useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
+                useAuthorizedCall=self.version >= Version('0.2.6'))
 
         streamPairs = StreamPairs(
             self.subscriptions, StartupDag.predictionStreams(self.publications)
