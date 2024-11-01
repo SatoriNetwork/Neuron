@@ -420,8 +420,8 @@
 
     const proposalDetail = document.getElementById(`proposal-${id}`);
     if (!proposalDetail) {
-        console.error(`Proposal detail element not found for id ${id}`);
-        return;
+      console.error(`Proposal detail element not found for id ${id}`);
+      return;
     }
 
     // Initialize satori sums
@@ -430,14 +430,14 @@
 
     // Sum satori values
     votes.forEach(vote => {
-        if (vote.proposal_id == id) {
-            if (!satoriSums[vote.vote]) {
-                satoriSums[vote.vote] = 0;
-            }
-            const satoriValue = parseFloat(vote.currency) || 0;
-            satoriSums[vote.vote] += satoriValue;
-            totalSatori += satoriValue;
+      if (vote.proposal_id == id) {
+        if (!satoriSums[vote.vote]) {
+          satoriSums[vote.vote] = 0;
         }
+        const satoriValue = parseFloat(vote.currency) || 0;
+        satoriSums[vote.vote] += satoriValue;
+        totalSatori += satoriValue;
+      }
     });
 
     console.log('Satori sums:', satoriSums);
@@ -445,14 +445,14 @@
 
     // Update the display
     Object.keys(satoriSums).forEach(option => {
-        const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
-        if (percentageElement) {
-            const percentage = totalSatori > 0 ? Math.round((satoriSums[option] / totalSatori * 100)) : 0;
-            percentageElement.textContent = `${percentage}%`;
-            console.log(`Updated percentage for ${option}: ${percentage}%`);
-        } else {
-            console.error(`Percentage element not found for option ${option}`);
-        }
+      const percentageElement = document.getElementById(`${option.toLowerCase()}-percentage-${id}`);
+      if (percentageElement) {
+        const percentage = totalSatori > 0 ? Math.round((satoriSums[option] / totalSatori * 100)) : 0;
+        percentageElement.textContent = `${percentage}%`;
+        console.log(`Updated percentage for ${option}: ${percentage}%`);
+      } else {
+        console.error(`Percentage element not found for option ${option}`);
+      }
     });
 
     // Log the results for debugging
