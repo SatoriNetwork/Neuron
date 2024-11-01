@@ -216,7 +216,10 @@ def vaultRequired(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # race condition possible on start.vault is None
-        if start.vault is None and not os.path.exists(config.walletPath('vault.yaml')):
+        if (not start.walletOnlyMode and  # allow bypass in this mode
+                start.vault is None and
+                not os.path.exists(config.walletPath('vault.yaml'))
+                ):
             return redirect('/vault')
         return f(*args, **kwargs)
     return decorated_function
@@ -518,7 +521,8 @@ def refresh():
 @userInteracted
 @authRequired
 def restart():
-    start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))# TODO: remove
+    start.udpQueue.put(
+        Envelope(ip='', vesicle=Signal(restart=True)))  # TODO: remove
     start.restartQueue.put(1)
     html = (
         '<!DOCTYPE html>'
@@ -545,7 +549,8 @@ def restart():
 @userInteracted
 @authRequired
 def shutdown():
-    start.udpQueue.put(Envelope(ip='', vesicle=Signal(shutdown=True)))# TODO: remove
+    start.udpQueue.put(
+        Envelope(ip='', vesicle=Signal(shutdown=True)))  # TODO: remove
     start.restartQueue.put(0)
     html = (
         '<!DOCTYPE html>'
@@ -2354,13 +2359,13 @@ def synapsePorts():
     return str(start.peer.gatherChannels())
 
 
-@app.route('/synapse/stream')# TODO: remove
+@app.route('/synapse/stream')  # TODO: remove
 def synapseStream():
     ''' here we listen for messages from the synergy engine '''
 
     def event_stream():
         while True:
-            message = start.udpQueue.get()# TODO: remove
+            message = start.udpQueue.get()  # TODO: remove
             if isinstance(message, Envelope):
                 yield 'data:' + message.toJson + '\n\n'
 

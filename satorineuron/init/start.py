@@ -14,7 +14,7 @@ from satoriwallet.api.blockchain import Electrumx
 from satorilib.concepts.structs import StreamId, Stream
 from satorilib.concepts import constants
 from satorilib.api import disk
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet, evrmoreElectrumServers, evrmoreElectrumServersSubscription
 # from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
@@ -302,25 +302,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             connection=self.electrumx,
             force=force)
         # Setup subscriptions fpr header and scripthash
-        walletInstance.setupSubscriptions()
-        walletInstance.subscribe()
-        if vaultInstance is not None:
-            vaultInstance.setupSubscriptions()
-            vaultInstance.subscribe()
+        if self.electrumx.connected():
+            walletInstance.setupSubscriptions()
+            walletInstance.subscribe()
+            if vaultInstance is not None:
+                vaultInstance.setupSubscriptions()
+                vaultInstance.subscribe()
 
-        # test - both show as being subscribed to...
-        # time.sleep(5)
-        # walletInstance.stopSubscription()
-        # time.sleep(5)
-        # vaultInstance.stopSubscription()
-        # time.sleep(10)
-        # self.stopAllSubscriptions.set()
-        # exit()
+            # test - both show as being subscribed to...
+            # time.sleep(5)
+            # walletInstance.stopSubscription()
+            # time.sleep(5)
+            # vaultInstance.stopSubscription()
+            # time.sleep(10)
+            # self.stopAllSubscriptions.set()
+            # exit()
 
-        # Get Transaction history in separate threads
-        walletInstance.callTransactionHistory()
-        if vaultInstance is not None:
-            vaultInstance.callTransactionHistory()
+            # Get Transaction history in separate threads
+            walletInstance.callTransactionHistory()
+            if vaultInstance is not None:
+                vaultInstance.callTransactionHistory()
 
     # new method
     def _initialize_wallet(
@@ -580,23 +581,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     logging.error(f"Error while reconnecting {e}")
 
     def createElectrumxConnection(self):
-        servers: list[str] = [
-            '146.190.149.237:50002',
-            '146.190.38.120:50002',
-            'electrum1-mainnet.evrmorecoin.org:50002',
-            'electrum2-mainnet.evrmorecoin.org:50002']
-        serversSubscription: list[str] = [
-            '146.190.149.237:50001',
-            '146.190.38.120:50001',
-            'electrum1-mainnet.evrmorecoin.org:50001',
-            'electrum2-mainnet.evrmorecoin.org:50001']
-        hostPort = random.choice(servers)
-        hostPortSubscription = random.choice(serversSubscription)
-        self.electrumx = Electrumx(
-            host=hostPort.split(':')[0],
-            port=int(hostPort.split(':')[1]),
-            hostSubscription=hostPortSubscription.split(':')[0],
-            portSubscription=int(hostPortSubscription.split(':')[1]))
+        hostPort = random.choice(evrmoreElectrumServers)
+        hostPortSubscription = random.choice(
+            evrmoreElectrumServersSubscription)
+        try:
+            self.electrumx = Electrumx(
+                host=hostPort.split(':')[0],
+                port=int(hostPort.split(':')[1]),
+                hostSubscription=hostPortSubscription.split(':')[0],
+                portSubscription=int(hostPortSubscription.split(':')[1]))
+        except Exception as e:
+            logging.warning(
+                'unable to connect to electrum opperating without wallet abilities:', e)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
@@ -911,7 +907,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             Envelope(ip='', vesicle=Signal(restart=True)))  # TODO: remove
         import time
         time.sleep(5)
-        os._exit(return_code)  # 0 = shutdown, 1 = restart container, 2 = restart app
+        # 0 = shutdown, 1 = restart container, 2 = restart app
+        os._exit(return_code)
 
     def emergencyRestart(self):
         import time
