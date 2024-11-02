@@ -50,6 +50,7 @@ class StartupDagStruct(object):
         self.signedStreamIds: list['SignedStreamId'] = None
         self.relayValidation: 'ValidateRelayStream' = None
         self.server: SatoriServerClient = None
+        self.electrumx: Electrumx = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
         self.relay: 'RawStreamRelayEngine' = None
@@ -57,7 +58,7 @@ class StartupDagStruct(object):
         self.publications: list[Stream] = None
         self.subscriptions: list[Stream] = None
         self.asyncThread: AsyncThread = None
-        self.udpQueue: Queue
+        self.udpQueue: Queue  # TODO: remove
         self.stakeStatus: bool = False
 
     def cacheOf(self, streamId: StreamId):
