@@ -1904,166 +1904,283 @@ def vote():
         **getVotes(myWallet)}))
 
 
-@app.route('/proposals', methods=['GET'])
-@userInteracted
-@vaultRequired
-@authRequired
-def proposals():
-    return render_template('proposals.html', **getResp({'title': 'Proposals'}))
-
-
-@app.route('/api/proposals', methods=['GET'])
-@userInteracted
-def getProposals():
+@app.route('/proposal/vote/submit', methods=['POST'])
+@authenticate
+@registered
+def submitProposalVote(wallet: Wallet):
+    ''' save a vote '''
     try:
-        proposals_data = start.server.getProposals()
-        return jsonify({
-            'status': 'success',
-            'proposals': proposals_data,
-        })
-
-    except Exception as e:
-        error_message = f"Failed to fetch proposals: {str(e)}"
-        logging.error(error_message)
-        logging.error(traceback.format_exc())
-        return jsonify({
-            'status': 'error',
-            'message': error_message
-        }), 500
-
-
-@app.route('/proposals/vote', methods=['POST'])
-@userInteracted
-def proposalVote():
-    try:
-        data = request.json
-        proposal_id = data.get('proposal_id')
-        vote = data.get('vote')
-        if not proposal_id or vote is None:
-            return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
-        # Ensure proposal_id is a string
-        proposal_id = str(proposal_id)
-        # Fetch all proposals
-        proposals = start.server.getProposals()
-        # Find the specific proposal
-        proposal = next(
-            (p for p in proposals if str(p['id']) == proposal_id), None)
-        if not proposal:
-            return jsonify({'status': 'error', 'message': 'Proposal not found'}), 404
-        # Parse the options
-        try:
-            options = json.loads(json.loads(proposal['options']))
-        except json.JSONDecodeError:
-            return jsonify({'status': 'error', 'message': 'Invalid options format in proposal'}), 500
-        # Validate the vote
+        payload = getPayload(request)
+        if payload is None:
+            return 'payload json', 400
+        # turn the data in to VoteSchema object, save to database
+        proposalId = int(payload.get('proposal_id'))
+        vote = payload.get('vote')
+        from satoricentral import database
+        df = database.read(
+            query="select options, expires from proposal where id = %s;",
+            params=[str(proposalId)])
+        if (
+            not isinstance(df, pd.DataFrame) or
+            len(df) != 1 or
+            'options' not in df.columns or
+            'expires' not in df.columns
+        ):
+            raise Exception('proposal not found')
+        options = json.loads(df['options'].values[0])
         if vote not in options:
-            return jsonify({'status': 'error', 'message': f'Invalid vote. Valid options are: {", ".join(options)}'}), 400
-        # Call server function with prepared data
-        success, result = start.server.submitProposalVote(proposal_id, vote)
+            raise Exception('invalid vote')
+        if dt.datetime.now(dt.timezone.utc) > df['expires'][0]:
+            raise Exception('proposal expired')
+        success = database.write(
+            query="""
+                INSERT INTO vote (wallet_id, proposal_id, vote)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (wallet_id, proposal_id)
+                DO UPDATE SET vote = EXCLUDED.vote;
+            """,
+            params=[str(wallet.id), str(proposalId), vote])
         if success:
-            return jsonify({'status': 'success', 'message': 'Vote submitted successfully'}), 200
-        else:
-            return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
+            return 'OK', 200
+        return 'FAILED', 200
     except Exception as e:
-        error_message = f"Error in proposalVote: {str(e)}"
-        logging.warning(error_message)
-        logging.warning(traceback.format_exc())
-        return jsonify({'status': 'error', 'message': error_message}), 500
+        return str(e), 400
 
-
-@app.route('/proposal/votes/get/<int:id>', methods=['GET'])
-@userInteracted
-def getProposalVotes(id):
+@app.route('/proposals/disapprove/<int:proposal_id>', methods=['POST']) 
+def disapproveProposal(proposal_id: int):
+    '''Disapprove and mark proposal as deleted'''
     try:
-        votes = start.server.getProposalVotes(str(id))
-        proposal = next(
-            (p for p in start.server.getProposals() if p['id'] == id), None)
-        if proposal and votes is not None:
-            user_wallet_address = start.wallet.address
-            user_has_voted = any(
-                vote['address'] == user_wallet_address for vote in votes)
-            user_voted = None
-            if user_has_voted:
-                user_voted = next(
-                    vote['vote'] for vote in votes if vote['address'] == user_wallet_address)
-            voting_started = bool(votes)
-            can_vote = str(proposal['wallet_id']) != user_wallet_address
-            disable_voting = not can_vote or user_has_voted
+        from satoricentral import database
+        success = database.write(
+            query="UPDATE proposal SET deleted = NOW(), approved = 0 WHERE id = %s;",
+            params=[proposal_id]
+        )
+        if success:
             return jsonify({
-                'status': 'success',
-                'votes': votes,
-                'user_has_voted': user_has_voted,
-                'user_voted': user_voted,
-                'voting_started': voting_started,
-                'can_vote': can_vote,
-                'disable_voting': disable_voting
+                'status': 'success', 
+                'message': 'Proposal disapproved and deleted successfully'
             }), 200
         else:
             return jsonify({
-                'status': 'error',
-                'message': 'Failed to fetch vote counts or proposal not found'
-            }), 404
+                'status': 'error', 
+                'message': 'Failed to disapprove and delete proposal'
+            }), 500
     except Exception as e:
-        error_message = f"Error fetching votes: {str(e)}"
-        logging.warning(error_message)
-        logging.warning(traceback.format_exc())
+        logger.error(f"Error in disapproveProposal: {str(e)}")
+        return jsonify({
+            'status': 'error', 
+            'message': str(e)
+        }), 400
+    
+
+
+@app.route('/proposals/approve/<int:proposal_id>', methods=['POST'])
+@authenticate  # Make sure this decorator exists
+@registered   # Make sure this decorator exists 
+def approveProposal(wallet: Wallet, proposal_id: int):
+    try:
+        from satoricentral import database
+        # First verify the proposal exists
+        check_df = database.read(
+            query="SELECT id FROM proposal WHERE id = %s",
+            params=[proposal_id]
+        )
+        if not isinstance(check_df, pd.DataFrame) or len(check_df) == 0:
+            return jsonify({'status': 'error', 'message': 'Proposal not found'}), 404
+            
+        # Update the proposal
+        success = database.write(
+            query="UPDATE proposal SET approved = 1 WHERE id = %s;",
+            params=[proposal_id]
+        )
+        
+        if success:
+            return jsonify({
+                'status': 'success', 
+                'message': 'Proposal approved successfully'
+            }), 200
+        else:
+            return jsonify({
+                'status': 'error', 
+                'message': 'Failed to approve proposal'
+            }), 500
+    except Exception as e:
+        logger.error(f"Error in approveProposal: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    
+
+@app.route('/proposals/active', methods=['GET'])
+def getActiveProposals():
+    try:
+        from satoricentral import database
+        df = database.read(query="SELECT * FROM proposal WHERE approved = 1 AND expires > CURRENT_TIMESTAMP;")
+        proposals = []
+        if isinstance(df, pd.DataFrame) and len(df) > 0:
+            proposals = df.to_dict(orient='records')
+        return jsonify(proposals), 200
+    except Exception as e:
+        logger.error(f"Error in getActiveProposals: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    
+
+@app.route('/proposals/expired', methods=['GET'])
+def getExpiredProposals():
+    try:
+        from satoricentral import database
+        df = database.read(query="SELECT * FROM proposal WHERE approved = 1 AND expires <= CURRENT_TIMESTAMP;")
+        proposals = []
+        if isinstance(df, pd.DataFrame) and len(df) > 0:
+            proposals = df.to_dict(orient='records')
+        return jsonify(proposals), 200
+    except Exception as e:
+        logger.error(f"Error in getExpiredProposals: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    
+
+
+@app.route('/proposal/submit', methods=['POST'])
+@authenticate
+@registered
+def submitProposal(wallet: Wallet):
+    ''' save a proposal '''
+    logger.debug('submitProposal', print=True)
+    try:
+        payload = getPayload(request)
+        if payload is None:
+            return 'payload json', 400
+        logger.debug(payload, print=True)
+
+        # Validate required fields
+        required_fields = ['title', 'description', 'options']
+        for field in required_fields:
+            if field not in payload:
+                raise ValueError(f"Missing required field: {field}")
+
+        # Extract and validate data
+        title = payload['title']
+        description = payload['description']
+        cost = payload.get('cost', 0)
+        # Ensure options are stored as JSON string
+        options = json.dumps(payload['options'])
+        image_url = payload.get('image_url')
+        print('options:', options)
+        if 'expires' in payload:
+            expires = dt.datetime.fromisoformat(
+                payload['expires']).replace(tzinfo=pytz.UTC)
+            print('expires:', expires)
+            if expires <= dt.datetime.now(dt.timezone.utc):
+                raise ValueError("Expiration date must be in the future")
+
+        # Insert proposal into database
+        from satoricentral import database
+        success = database.write(
+            query="INSERT INTO proposal (wallet_id, title, description, options, cost, image_url, expires) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+            if 'expires' in payload else
+            "INSERT INTO proposal (wallet_id, title, description, options, cost, image_url) VALUES (%s, %s, %s, %s, %s, %s);",
+            params=[str(wallet.id), title, description, options,
+                    str(cost), image_url, datetimeToTimestamp(expires)]
+            if 'expires' in payload else
+            [str(wallet.id), title, description, options, str(cost), image_url]
+        )
+
+        if success:
+            return 'Proposal submitted successfully', 200
+        else:
+            return 'Failed to submit proposal', 500
+    except Exception as e:
+        return str(e), 400
+    
+
+@app.route('/proposal/votes/get/<proposal>', methods=['GET'])
+def getProposalVotes(proposal: str):
+    try:
+        from satoricentral import database
+        print(f"Fetching votes for proposal {proposal}")
+        
+        # Get individual vote records with raw data
+        df = database.read(
+            query="""
+            SELECT
+                v.vote,
+                w.address,
+                COALESCE(v.satori, 0) as satori
+            FROM vote AS v
+            INNER JOIN wallet AS w ON v.wallet_id = w.id
+            WHERE v.proposal_id = %s
+            AND v.deleted IS NULL
+            GROUP BY v.vote, w.address, v.satori  -- Use GROUP BY instead of DISTINCT
+            ORDER BY satori DESC;
+            """,
+            params=[proposal]
+        )
+        
+        print(f"Raw query result: {df}")  # Debug print
+        
+        votes = []
+        total_satori = 0
+        
+        if isinstance(df, pd.DataFrame) and len(df) > 0:
+            # Handle NaN values and convert to proper format
+            df['satori'] = df['satori'].fillna(0).astype(float)
+            
+            # Calculate total satori
+            total_satori = df['satori'].sum()
+            
+            # Convert to list of dictionaries
+            votes = df.to_dict(orient='records')
+            print(f"Processed votes: {votes}")  # Debug print
+
+        # Check if proposal has expired
+        expired_df = database.read(
+            query="""
+            SELECT 
+                CASE WHEN expires <= CURRENT_TIMESTAMP THEN true ELSE false END as is_expired 
+            FROM proposal 
+            WHERE id = %s
+            """,
+            params=[proposal]
+        )
+        
+        disable_voting = False
+        if isinstance(expired_df, pd.DataFrame) and len(expired_df) > 0:
+            disable_voting = bool(expired_df['is_expired'].iloc[0])
+
+        response_data = {
+            'status': 'success',
+            'votes': votes,
+            'total_satori': float(total_satori),
+            'disable_voting': disable_voting,
+            'user_has_voted': False  # This should be updated based on user wallet
+        }
+        
+        print(f"Sending response: {response_data}")  # Debug print
+        return jsonify(response_data), 200
+            
+    except Exception as e:
+        print(f"Error in getProposalVotes: {str(e)}")
+        print(f"Full traceback: {traceback.format_exc()}")  # Add full traceback
         return jsonify({
             'status': 'error',
-            'message': error_message
-        }), 500
-
-
-@app.route('/proposal/create', methods=['GET', 'POST'])
-@userInteracted
-def proposalCreate():
-    if request.method == 'GET':
-        return render_template(
-            'proposals-create.html',
-            **getResp({'title': 'Create New Proposal'}))
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            logging.debug(
-                f"Received proposal data in proposalCreate: {json.dumps(data, indent=2)}")
-            success, result = start.server.submitProposal(data)
-            logging.debug(
-                f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
-            if success:
-                return jsonify({
-                    'status': 'success',
-                    'message': 'Proposal created successfully',
-                    'proposal': result
-                }), 200
-            else:
-                error_message = result.get(
-                    'error', 'Failed to create proposal')
-                logging.debug(f"Failed to create proposal: {error_message}")
-                return jsonify({
-                    'status': 'error',
-                    'message': error_message
-                }), 400
-        except Exception as e:
-            error_message = f"Error in proposalCreate route: {str(e)}"
-            logging.warning(error_message)
-            logging.warning(traceback.format_exc())
-            return jsonify({
-                'status': 'error',
-                'message': 'Server error occurred'
-            }), 500
-
-
-@app.route('/test', methods=['GET'])
-@userInteracted
-def testConnection():
+            'message': str(e)
+        }), 400
+@app.route('/proposals/unapproved', methods=['GET'])
+def getUnapprovedProposals():
     try:
-        success, result = start.server.testConnection()
-        if success:
-            return jsonify({'status': 'success', 'message': 'API is working correctly', 'details': result}), 200
-        else:
-            return jsonify({'status': 'error', 'message': 'API test failed', 'details': result}), 500
+        df = database.read(
+            query="SELECT * FROM proposal WHERE approved = 0 AND deleted IS NULL;"
+        )
+        proposals = []
+        if isinstance(df, pd.DataFrame) and len(df) > 0:
+            # Handle NaT values before conversion to dict
+            date_columns = df.select_dtypes(include=['datetime64[ns]']).columns
+            for col in date_columns:
+                df[col] = df[col].astype(str).replace('NaT', None)
+            proposals = df.to_dict(orient='records')
+            
+        return jsonify(proposals), 200
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
-
+    
 
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
 @userInteracted
