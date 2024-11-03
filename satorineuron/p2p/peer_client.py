@@ -258,8 +258,8 @@ if __name__ == "__main__":
 
         except KeyboardInterrupt:
             print("\nReceived interrupt signal. Shutting down...")
-            exit(0)
-            # continue
+            # exit(0)
+            continue
         # finally:
         #     print("Cleaning up...")
         #     client.stop()  # Ensure background tasks are stopped
