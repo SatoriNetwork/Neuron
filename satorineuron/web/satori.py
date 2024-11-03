@@ -86,9 +86,7 @@ while True:
     try:
         start = StartupDag(
             env=ENV,
-            walletOnlyMode=config.get().get(
-                'wallet only mode',
-                os.environ.get('WALLETONLYMODE', False)),
+            runMode=config.get().get('run mode', os.environ.get('RUNMODE')),
             # TODO: notice the dev mode is the same as prod for now, we should
             #       have separate servers or run locally for dev mode
             urlServer={
@@ -219,7 +217,7 @@ def vaultRequired(f):
         if (not start.walletOnlyMode and  # allow bypass in this mode
                 start.vault is None and
                 not os.path.exists(config.walletPath('vault.yaml'))
-                ):
+            ):
             return redirect('/vault')
         return f(*args, **kwargs)
     return decorated_function
@@ -819,7 +817,9 @@ def sendSatoriTransactionUsing(
                         network=(
                             'ravencoin' if start.networkIsTest(network)
                             else 'evrmore'))
-                    if r.text != '':
+                    if r.text.startswith('{"code":1,"message":'):
+                        flash(f'Send Failed: {r.json().get("message")}')
+                    elif r.text != '':
                         return r.text
                     else:
                         flash(
