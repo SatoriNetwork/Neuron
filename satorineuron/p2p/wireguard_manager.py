@@ -1,6 +1,7 @@
 import subprocess
 import signal
 import os
+import random
 import sys
 
 # Global variables to store process IDs
@@ -55,14 +56,52 @@ def save_config(interface):
     run_command(f"wg-quick save {interface}")
 
 
+# def start_wireguard_service(interface):
+#     """Start the WireGuard service for the specified interface."""
+#     try:
+#         output = run_command(f"wg-quick up {interface}")
+#         return f"WireGuard service started for interface {interface}: {output}"
+#     except Exception as e:
+#         return f"Failed to start WireGuard service for interface {interface}: {str(e)}"
+def generate_unique_ip():
+    """Generate a unique IP address in the range 10.x.y.z with a /16 subnet."""
+    return f"10.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(1, 254)}"
+
+def set_wireguard_ip(interface, ip_address):
+    """Set a unique IP address with a /16 subnet in the WireGuard configuration."""
+    config_file_path = f"/etc/wireguard/{interface}.conf"
+    try:
+        with open(config_file_path, 'r') as file:
+            config_data = file.readlines()
+        
+        # Update the IP address in the configuration file with a /16 mask
+        config_data = [
+            line if not line.startswith("Address") else f"Address = {ip_address}/16\n"
+            for line in config_data
+        ]
+
+        with open(config_file_path, 'w') as file:
+            file.writelines(config_data)
+        
+        return f"IP address {ip_address}/16 set for {interface}."
+    except FileNotFoundError:
+        return f"Configuration file for {interface} not found."
+    except Exception as e:
+        return f"Failed to set IP address for {interface}: {str(e)}"
+
 def start_wireguard_service(interface):
-    """Start the WireGuard service for the specified interface."""
+    """Set up a unique address with /16 subnet and start the WireGuard service for the specified interface."""
+    ip_address = generate_unique_ip()
+    setup_result = set_wireguard_ip(interface, ip_address)
+    
+    if "Failed" in setup_result:
+        return setup_result
+    
     try:
         output = run_command(f"wg-quick up {interface}")
-        return f"WireGuard service started for interface {interface}: {output}"
+        return f"WireGuard service started for {interface} with IP {ip_address}/16: {output}"
     except Exception as e:
-        return f"Failed to start WireGuard service for interface {interface}: {str(e)}"
-
+        return f"Failed to start WireGuard service for {interface}: {str(e)}"
 
 def start_port_listening(port):
     """Start listening on the specified port using netcat."""

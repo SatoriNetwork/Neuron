@@ -1,11 +1,11 @@
 '''
 todo:
-    provide unique ip address that a peer can use as it's id as a separate endpoint
-        peer logic:
-            always ask for unique ip on startup before checking in with PeerServer
-    remove stale peers (last_seen > 1 hour) (30 minute thread, purging peers by last_seen > 1 hour + 1 minute)
-        remove stale connections too
-        remove stale publications and subscriptions too
+    # provide unique ip address that a peer can use as it's id as a separate endpoint
+    #     peer logic:
+    #         always ask for unique ip on startup before checking in with PeerServer
+    # remove stale peers (last_seen > 1 hour) (30 minute thread, purging peers by last_seen > 1 hour + 1 minute)
+    #     remove stale connections too
+    #     remove stale publications and subscriptions too
     accept a list of subscription and publication datastreams, save to a table by peer_id
         add endpoint for updating subscriptions and publications (reuse checkin endpoint?)
     connect peers together based on requests for datastreams (connect peer to publisher peer first, subscriber of desired datastream second)
