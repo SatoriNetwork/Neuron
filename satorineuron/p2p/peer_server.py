@@ -42,14 +42,6 @@ class PeerServer:
                 wireguard_config TEXT
             )
         ''')
-        
-        # # Peers table for storing peer information
-        # cursor.execute('''
-        #     CREATE TABLE IF NOT EXISTS publications (
-        #         peer_id TEXT PRIMARY KEY,
-        #         stream TEXT
-        #     )
-        # ''')
         # Publications table - modified to handle multiple streams per peer
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS publications (
@@ -61,13 +53,6 @@ class PeerServer:
             )
         ''')
 
-        # # Peers table for storing peer information
-        # cursor.execute('''
-        #     CREATE TABLE IF NOT EXISTS subscriptions (
-        #         peer_id TEXT PRIMARY KEY,
-        #         stream TEXT
-        #     )
-        # ''')
          # Subscriptions table - modified to handle multiple streams per peer
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS subscriptions (
@@ -168,27 +153,6 @@ class PeerServer:
         self.app.route('/list_connections', methods=['GET'])(self.list_connections)
         self.app.route('/disconnect', methods=['POST'])(self.disconnect_peer)
 
-    # def check_in(self):
-    #     """Handle peer check-in/heartbeat"""
-    #     data = request.get_json()
-    #     peer_id = data['peer_id']
-    #     timestamp = time.time()
-    #     wireguard_config = data.get('wireguard_config')
-        
-    #     conn = sqlite3.connect('peers.db')
-    #     cursor = conn.cursor()
-    #     cursor.execute(
-    #         'INSERT OR REPLACE INTO peers (peer_id, last_seen, wireguard_config) VALUES (?, ?, ?)',
-    #         (peer_id, timestamp, json.dumps(wireguard_config))
-    #     )
-    #     conn.commit()
-    #     conn.close()
-        
-    #     return jsonify({
-    #         "status": "checked in",
-    #         "peer_id": peer_id,
-    #         "timestamp": timestamp
-    #     })
     def check_in(self):
         """Handle peer check-in/heartbeat with publication and subscription updates"""
         data = request.get_json()
@@ -258,12 +222,6 @@ class PeerServer:
         cursor.execute('SELECT wireguard_config FROM peers WHERE peer_id = ?', (from_peer,))
         from_peer_result = cursor.fetchone()
         
-        # if not (to_peer_result and from_peer_result):
-        #     conn.close()
-        #     return jsonify({"status": "error", "message": "peer not found"}), 400
-
-        # to_peer_config = json.loads(to_peer_result[0])
-        # from_peer_config = json.loads(from_peer_result[0])
         if not (to_peer_result and from_peer_result):
                 return jsonify({
                     "status": "error",
@@ -342,32 +300,6 @@ class PeerServer:
             "to_peer": to_peer
         })
 
-    # def list_peers(self):
-    #     """Get list of all peers and their last seen timestamps"""
-    #     conn = sqlite3.connect('peers.db')
-    #     cursor = conn.cursor()
-    #     cursor.execute('SELECT peer_id, last_seen, wireguard_config FROM peers')
-    #     peers = cursor.fetchall()
-    #     conn.close()
-        
-    #     peer_list = []
-    #     for peer in peers:
-    #         peer_id, last_seen, wireguard_config = peer
-    #         peer_info = {
-    #             "peer_id": peer_id,
-    #             "last_seen": last_seen,
-    #             "last_seen_readable": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_seen)),
-    #             "wireguard_config": json.loads(wireguard_config) if wireguard_config else None,
-    #             "connected_peers": list(self.peer_connections[peer_id])
-    #         }
-    #         peer_list.append(peer_info)
-            
-    #     return jsonify({
-    #         "status": "success",
-    #         "peers": peer_list,
-    #         "total_peers": len(peer_list)
-    #     })
-    
     def list_peers(self):
         """Get list of all peers with their publications and subscriptions"""
         conn = sqlite3.connect('peers.db')

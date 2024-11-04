@@ -1,7 +1,3 @@
-# # 1. need  flask app
-# # 2. a memory stucture of all of the neurons by timestamp when we last heard from them
-# # 3. have some rest endpoints one of them is checkin  other is to connect
-
 # list peer
 # curl http://188.166.4.120:51820/peers
 

@@ -49,8 +49,8 @@ class PeerEngine(metaclass=SingletonMeta):
         self.port=port
         self.my_info = WireguardInfo()
         self.wireguard_config= {}
-        # self.wg_info = self.my_info.get_wireguard_info()
-        self.client_id=""
+        self.wg_info = self.my_info.get_wireguard_info()
+        self.client_id=self.wg_info['public_key']
         self.server_url="http://188.166.4.120:51820"
         self.connectTo = Queue() 
         self.peerManager = PeerManager(self.interface,self.config_file,self.port)
@@ -60,6 +60,7 @@ class PeerEngine(metaclass=SingletonMeta):
         logging.info('PeerEngine started', color='green')
         self.peerManager.start()
         self.start_background_tasks()
+        # print(self.client_id)
         self.get_peers()
         self.start_listening()
         self.start_ping_loop()
@@ -87,7 +88,7 @@ class PeerEngine(metaclass=SingletonMeta):
             if response.status_code == 200:
                 all_peers = response.json()['peers']
                 other_peers = [peer for peer in all_peers if peer['peer_id'] != self.client_id]
-                print(self.client_id)
+                print(other_peers)
                 # return other_peers
                 for peer in other_peers:
                         peer_data = {
@@ -106,9 +107,7 @@ class PeerEngine(metaclass=SingletonMeta):
 
     def checkin(self):
         """Perform check-in with server, also serves as heartbeat"""
-        wg_info = self.my_info.get_wireguard_info()
-        self.wireguard_config["wireguard_config"]=wg_info
-        self.client_id=wg_info['public_key']
+        self.wireguard_config["wireguard_config"]=self.wg_info
         try:
             response = requests.post(
                 f"{self.server_url}/checkin",
@@ -140,14 +139,12 @@ class PeerEngine(metaclass=SingletonMeta):
             while True:
                 time.sleep(interval)
                 for  peer in self.peerManager.list_peers():
-                    # print(peer)
                     peer_id = peer.get("public_key")
                     ping_ip = peer.get('allowed_ips', '').split('/')[0]
                     try:
                         self.run_ping_command(ping_ip)
                     except Exception as e:
                         logging.error(f"Failed to ping peer {peer_id}: {e}")
-                # time.sleep(interval)
         
         # Start pinging in a separate thread to avoid blocking other operations
         threading.Thread(target=ping_peers, daemon=True).start()
@@ -172,25 +169,8 @@ class PeerEngine(metaclass=SingletonMeta):
         try:
             response = requests.post(url, json=data)
             response_data = response.json()
-
             if response_data.get('status') == 'connected':
                 print(f"Successfully connected to {peer_id}")
-                # self.connected_peers.add(peer_id)
-
-                # to_peer_config = response_data['to_peer_config']
-                # print(f"WireGuard config for peer {peer_id}: {to_peer_config}")
-                
-                # Store the peer's WireGuard config
-                # self.peer_wireguard_configs[peer_id] = to_peer_config
-                
-                # Apply WireGuard configuration
-                # interface = "wg0"
-                # add_peer(interface, 
-                #         to_peer_config['public_key'], 
-                #         to_peer_config['allowed_ips'], 
-                #         to_peer_config['endpoint'])
-                # save_config(interface)
-                # print(f"Peer {peer_id} configuration saved and applied")
                 return True
              
             else:
