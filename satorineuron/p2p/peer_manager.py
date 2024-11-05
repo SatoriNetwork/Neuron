@@ -31,11 +31,11 @@ class PeerManager():
         self.listening = False
         self.connecting = False
 
-    def start(self):
+    def start(self,unique_ip):
         if not self.is_running:
             self.is_running = True
             logging.info(start_wireguard_service(
-                self.interface), color='green')
+                self.interface,unique_ip), color='green')
             self.connection_thread = threading.Thread(
                 target=self._maintain_connections)
             self.connection_thread.daemon = True

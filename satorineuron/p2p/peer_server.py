@@ -6,12 +6,12 @@ todo:
     # remove stale peers (last_seen > 1 hour) (30 minute thread, purging peers by last_seen > 1 hour + 1 minute)
     #     remove stale connections too
     #     remove stale publications and subscriptions too
-    accept a list of subscription and publication datastreams, save to a table by peer_id
-        add endpoint for updating subscriptions and publications (reuse checkin endpoint?)
-    connect peers together based on requests for datastreams (connect peer to publisher peer first, subscriber of desired datastream second)
-        - if peer is already connected to publisher, connect to one of the publisher subscribers they are not already connected to
-        - if the publisher already has too many direct connections, connect to a subscriber of the publisher 
-        - (don't want to overload any one peer 200 max)
+    # accept a list of subscription and publication datastreams, save to a table by peer_id
+    #     add endpoint for updating subscriptions and publications (reuse checkin endpoint?)
+    # connect peers together based on requests for datastreams (connect peer to publisher peer first, subscriber of desired datastream second)
+    #     - if peer is already connected to publisher, connect to one of the publisher subscribers they are not already connected to
+    #     - if the publisher already has too many direct connections, connect to a subscriber of the publisher 
+    #     - (don't want to overload any one peer 200 max)
 '''
 from flask import Flask, request, jsonify
 import time
@@ -19,6 +19,7 @@ import sqlite3
 from collections import defaultdict
 import json
 import threading
+import random
 
 class PeerServer:
     def __init__(self):
@@ -147,11 +148,33 @@ class PeerServer:
 
     def _init_routes(self):
         """Initialize Flask routes"""
+        self.app.route('/get_unique_ip', methods=['GET'])(self.get_unique_ip)
         self.app.route('/checkin', methods=['POST'])(self.check_in)
         self.app.route('/connect', methods=['POST'])(self.connect_peer)
         self.app.route('/list_peers', methods=['GET'])(self.list_peers)
         self.app.route('/list_connections', methods=['GET'])(self.list_connections)
+        self.app.route('/connect_datastream', methods=['POST'])(self.connect_datastream)
         self.app.route('/disconnect', methods=['POST'])(self.disconnect_peer)
+
+    def get_unique_ip(self):
+        """Generate a unique IP address for a peer"""
+        unique_ip = self._generate_unique_ip()
+        return jsonify({"ip_address": unique_ip})
+
+    def _generate_unique_ip(self):
+        """Generate a unique IP address in the range 10.x.y.z with a /16 subnet"""
+        conn = sqlite3.connect('peers.db')
+        cursor = conn.cursor()
+
+        while True:
+            ip_address = f"10.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(1, 254)}"
+            cursor.execute("SELECT COUNT(*) FROM peers WHERE wireguard_config LIKE ?", (f"%{ip_address}%",))
+            count = cursor.fetchone()[0]
+            if count == 0:
+                conn.close()
+                return ip_address
+
+        conn.close()
 
     def check_in(self):
         """Handle peer check-in/heartbeat with publication and subscription updates"""
@@ -270,7 +293,122 @@ class PeerServer:
             "to_peer_config": to_peer_config,
             "connected_at": timestamp
         })
+    
+    def connect_datastream(self):
+        data = request.get_json()
+        return self.connect_peers_for_datastream(data['peer_id'], data['stream'])
+    
+    def connect_peers_for_datastream(self, requesting_peer_id, desired_stream):
+        """Connect peers based on datastream requirements"""
+        conn = sqlite3.connect('peers.db')
+        cursor = conn.cursor()
+        
+        try:
+            # Find publishers of the desired stream
+            cursor.execute('''
+                SELECT p.peer_id, COUNT(c.to_peer) as connection_count
+                FROM peers p
+                JOIN publications pub ON p.peer_id = pub.peer_id
+                LEFT JOIN connections c ON p.peer_id = c.from_peer
+                WHERE pub.stream = ? AND p.peer_id != ?
+                GROUP BY p.peer_id
+                ORDER BY connection_count ASC
+            ''', (desired_stream, requesting_peer_id))
+            publishers = cursor.fetchall()
+            
+            if not publishers:
+                return {"status": "error", "message": "No publishers found for stream"}
+            
+            # Try to connect to a publisher directly if they have less than 200 connections
+            for publisher_id, connection_count in publishers:
+                if connection_count < 200:
+                    # Check if already connected
+                    if publisher_id not in self.peer_connections[requesting_peer_id]:
+                        return self.connect_peer_internal(requesting_peer_id, publisher_id)
+            
+            # If all publishers are at capacity, find their subscribers
+            cursor.execute('''
+                SELECT s.peer_id, COUNT(c.to_peer) as connection_count
+                FROM subscriptions s
+                JOIN connections c ON s.peer_id = c.from_peer
+                WHERE s.stream = ? 
+                AND s.peer_id != ?
+                AND EXISTS (
+                    SELECT 1 FROM connections 
+                    WHERE from_peer = s.peer_id 
+                    AND to_peer IN (
+                        SELECT peer_id FROM publications WHERE stream = ?
+                    )
+                )
+                GROUP BY s.peer_id
+                HAVING connection_count < 200
+                ORDER BY connection_count ASC
+            ''', (desired_stream, requesting_peer_id, desired_stream))
+            
+            subscribers = cursor.fetchall()
+            
+            if subscribers:
+                subscriber_id, _ = subscribers[0]
+                return self.connect_peer_internal(requesting_peer_id, subscriber_id)
+                
+            return {"status": "error", "message": "No available peers for connection"}
+            
+        finally:
+            conn.close()
 
+    def connect_peer_internal(self, from_peer, to_peer):
+        """Internal method to handle peer connection"""
+        conn = sqlite3.connect('peers.db')
+        cursor = conn.cursor()
+        
+        try:
+            # Get peer information
+            cursor.execute('SELECT wireguard_config FROM peers WHERE peer_id = ?', (to_peer,))
+            to_peer_result = cursor.fetchone()
+            cursor.execute('SELECT wireguard_config FROM peers WHERE peer_id = ?', (from_peer,))
+            from_peer_result = cursor.fetchone()
+            
+            if not (to_peer_result and from_peer_result):
+                return {
+                    "status": "error",
+                    "message": "One or both peers not found"
+                }
+
+            to_peer_config = json.loads(to_peer_result[0])
+            from_peer_config = json.loads(from_peer_result[0])
+            
+            # Record the connection
+            timestamp = time.time()
+            cursor.execute('''
+                INSERT OR REPLACE INTO connections 
+                (from_peer, to_peer, connected_at, active) 
+                VALUES (?, ?, ?, 1)
+            ''', (from_peer, to_peer, timestamp))
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO connections 
+                (from_peer, to_peer, connected_at, active) 
+                VALUES (?, ?, ?, 1)
+            ''', (to_peer, from_peer, timestamp))
+            
+            conn.commit()
+            
+            # Update in-memory connections
+            self.peer_connections[from_peer].add(to_peer)
+            self.peer_connections[to_peer].add(from_peer)
+            
+            return {
+                "status": "connected",
+                "from_peer": from_peer,
+                "to_peer": to_peer,
+                "from_peer_config": from_peer_config,
+                "to_peer_config": to_peer_config,
+                "connected_at": timestamp
+            }
+            
+        finally:
+            conn.close()
+    
     def disconnect_peer(self):
         """Handle peer disconnection requests"""
         data = request.get_json()

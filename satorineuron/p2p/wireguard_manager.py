@@ -55,18 +55,6 @@ def save_config(interface):
     """Save the current WireGuard configuration."""
     run_command(f"wg-quick save {interface}")
 
-
-# def start_wireguard_service(interface):
-#     """Start the WireGuard service for the specified interface."""
-#     try:
-#         output = run_command(f"wg-quick up {interface}")
-#         return f"WireGuard service started for interface {interface}: {output}"
-#     except Exception as e:
-#         return f"Failed to start WireGuard service for interface {interface}: {str(e)}"
-def generate_unique_ip():
-    """Generate a unique IP address in the range 10.x.y.z with a /16 subnet."""
-    return f"10.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(1, 254)}"
-
 def set_wireguard_ip(interface, ip_address):
     """Set a unique IP address with a /16 subnet in the WireGuard configuration."""
     config_file_path = f"/etc/wireguard/{interface}.conf"
@@ -89,17 +77,16 @@ def set_wireguard_ip(interface, ip_address):
     except Exception as e:
         return f"Failed to set IP address for {interface}: {str(e)}"
 
-def start_wireguard_service(interface):
+def start_wireguard_service(interface,unique_ip):
     """Set up a unique address with /16 subnet and start the WireGuard service for the specified interface."""
-    ip_address = generate_unique_ip()
-    setup_result = set_wireguard_ip(interface, ip_address)
+    setup_result = set_wireguard_ip(interface, unique_ip)
     
     if "Failed" in setup_result:
         return setup_result
     
     try:
         output = run_command(f"wg-quick up {interface}")
-        return f"WireGuard service started for {interface} with IP {ip_address}/16: {output}"
+        return f"WireGuard service started for {interface} with IP {unique_ip}/16: {output}"
     except Exception as e:
         return f"Failed to start WireGuard service for {interface}: {str(e)}"
 

@@ -24,7 +24,7 @@ from queue import Queue , Empty
 from typing import List, Dict
 from satorineuron import logging
 from satorineuron.p2p.peer_manager import PeerManager
-from satorineuron.p2p.peer_client import MessageClient
+# from satorineuron.p2p.peer_client import MessageClient
 from satorineuron.p2p.my_conf import WireguardInfo
 from satorineuron.p2p.wireguard_manager import save_config
 
@@ -51,19 +51,29 @@ class PeerEngine(metaclass=SingletonMeta):
         self.wireguard_config= {}
         self.client_id=''
         self.server_url="http://188.166.4.120:51820"
+        self.ip_address = self._get_unique_ip()
         self.connectTo = Queue() 
         self.peerManager = PeerManager(self.interface,self.config_file,self.port)
+        self.publications = []
+        self.subscriptions = []
+
+    def _get_unique_ip(self):
+        """Get a unique IP address from the PeerServer"""
+        response = requests.get(f"{self.server_url}/get_unique_ip")
+        if response.status_code == 200:
+            return response.json()["ip_address"]
+        else:
+            raise Exception(f"Failed to get unique IP address: {response.status_code}")
 
     def start(self):
         # starts both PeerManager and PeerServerClient
-        logging.info('PeerEngine started', color='green')
-        self.peerManager.start()
+        logging.info('PeerEngine started', color='green')  
+        self.peerManager.start(self._get_unique_ip())
         wg_info = self.my_info.get_wireguard_info()
         self.client_id=wg_info['public_key']
         self.start_background_tasks()
-        self.get_peers()
-        self.start_listening()
-        self.start_ping_loop()
+        # self.start_listening()
+        # self.start_ping_loop()
 
     def start_listening(self):
         '''
@@ -95,7 +105,7 @@ class PeerEngine(metaclass=SingletonMeta):
                             'wireguard_config': peer['wireguard_config']
                         }
                         self.connectTo.put(peer_data)
-                        self.connect_to_peer(peer_data['id'])
+                        # self.connect_to_peer(peer_data['id'])
                 return other_peers
             else:
                 raise Exception(f"Failed to get peers: {response.status_code}")
@@ -105,22 +115,62 @@ class PeerEngine(metaclass=SingletonMeta):
             return []
 
     def checkin(self):
-        """Perform check-in with server, also serves as heartbeat"""
+        """Perform check-in with server, including datastream information"""
         wg_info = self.my_info.get_wireguard_info()
-        self.wireguard_config["wireguard_config"]=wg_info
+        self.wireguard_config["wireguard_config"] = wg_info
         try:
             response = requests.post(
                 f"{self.server_url}/checkin",
                 json={
                     "peer_id": self.client_id,
-                    "wireguard_config": self.wireguard_config["wireguard_config"]
+                    "wireguard_config": self.wireguard_config["wireguard_config"],
+                    "publications": self.publications,
+                    "subscriptions": self.subscriptions
                 }
             )
             return response.json()
         except Exception as e:
             print(f"Checkin failed: {e}")
             return None
-        
+
+    def request_datastream(self, stream_name):
+        """Request connection to peers for a specific datastream"""
+        try:
+            response = requests.post(
+                f"{self.server_url}/connect_datastream",
+                json={
+                    "peer_id": self.client_id,
+                    "stream": stream_name
+                }
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if data["status"] == "connected":
+                    peer_data = {
+                        'id': data['to_peer'],
+                        'wireguard_config': data['to_peer_config']
+                    }
+                    self.connectTo.put(peer_data)
+                return data
+            else:
+                raise Exception(f"Failed to request datastream: {response.status_code}")
+        except Exception as e:
+            print(f"Datastream request failed: {e}")
+            return None
+
+    def add_publication(self, stream_name):
+        """Add a publication stream"""
+        if stream_name not in self.publications:
+            self.publications.append(stream_name)
+            self.checkin()  # Update server with new publication
+
+    def add_subscription(self, stream_name):
+        """Add a subscription stream"""
+        if stream_name not in self.subscriptions:
+            self.subscriptions.append(stream_name)
+            self.checkin()  # Update server with new subscription
+            self.request_datastream(stream_name)  # Request connection to relevant peers
+
     def start_background_tasks(self):
         """Start background checkin task"""
         self.running = True
@@ -128,6 +178,7 @@ class PeerEngine(metaclass=SingletonMeta):
         def background_loop():
             while self.running:
                 self.checkin()
+                self.get_peers()
                 time.sleep(60*30)
 
         self.background_thread = threading.Thread(target=background_loop)
