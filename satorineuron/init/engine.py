@@ -55,7 +55,8 @@ def establishConnection(
         # such as not relaying duplicate values, etc. so it seems its more than
         # just a function, and shouldn't be eliminated.
 
-    logging.info("subscribing to:" if subscription else "publishing to:", url)
+    logging.info(
+        'subscribing to:' if subscription else 'publishing to:', url, color='blue')
     return SatoriPubSubConn(
         uid=pubkey,
         router=router if subscription else None,

@@ -5,7 +5,7 @@ import time
 import json
 import random
 import threading
-
+from enum import Enum
 from reactivex.subject import BehaviorSubject
 from queue import Queue
 import satorineuron
@@ -14,9 +14,7 @@ from satoriwallet.api.blockchain import Electrumx
 from satorilib.concepts.structs import StreamId, Stream, StreamPairs, StreamPair
 from satorilib.concepts import constants
 from satorilib.api import disk
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
-
-
+from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet, evrmoreElectrumServers, evrmoreElectrumServersSubscription
 # from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
@@ -30,7 +28,7 @@ from satorineuron.init.restart import restartLocalSatori
 from satorineuron.init.tag import LatestTag, Version
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
-from satorineuron.structs.start import StartupDagStruct
+from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.structs.pubsub import SignedStreamId
 from satorineuron.synergy.engine import SynergyManager
 
@@ -58,8 +56,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def __init__(
         self,
         *args,
-        env: str = "dev",
-        walletOnlyMode: bool = False,
+        env: str = 'dev',
+        runMode: str = None,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -69,14 +67,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         super(StartupDag, self).__init__(*args)
         self.version = Version(VERSION)
         # TODO: test and turn on with new installer
-        #self.watchForVersionUpdates()
+        # self.watchForVersionUpdates()
         self.env = env
-        if isinstance(walletOnlyMode, bool):
-            self.walletOnlyMode = walletOnlyMode
-        elif isinstance(walletOnlyMode, str) and walletOnlyMode == "False":
-            self.walletOnlyMode = False
-        else:
-            self.walletOnlyMode = bool(walletOnlyMode)
+        self.runMode = RunMode.choose(runMode)
         self.userInteraction = time.time()
         self.electrumCooldown = 10
         self.asyncThread: AsyncThread = AsyncThread()
@@ -116,28 +109,27 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
-        self.udpQueue: Queue = Queue()
+        self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
         self.stopAllSubscriptions = threading.Event()
-        self.walletTimeoutSeconds = 60*20
-        self.walletTimeoutThread = threading.Thread(
-            target=self.walletTimeoutWatcher, daemon=True)
-        self.walletTimeoutThread.start()
+        if self.runMode != RunMode.worker:
+            self.walletTimeoutSeconds = 60*20
+            self.walletTimeoutThread = threading.Thread(
+                target=self.walletTimeoutWatcher, daemon=True)
+            self.walletTimeoutThread.start()
         self.lastBlockTime = time.time()
         self.poolIsAccepting: bool = False
-        if not config.get().get('disable_restart', False):
+        if not config.get().get('disable restart', False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True
             )
             self.restartThread.start()
-
         self.restartQueue: Queue = Queue()
         self.restartQueueThread = threading.Thread(
             target=self.restartWithQueue, args=(self.restartQueue,), daemon=True)
         self.restartQueueThread.start()
-
         self.checkinCheckThread = threading.Thread(
             target=self.checkinCheck, daemon=True
         )
@@ -149,12 +141,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.performMigrationBackup('wallet')
         self.performMigrationBackup('vault')
         self.ranOnce = False
+        if self.runMode == RunMode.normal:
+            startFunction = self.start
+        elif self.runMode == RunMode.worker:
+            startFunction = self.startWorker
+        elif self.runMode == RunMode.walletOnly:
+            startFunction = self.startWalletOnly
         while True:
             if self.asyncThread.loop is not None:
                 self.checkinThread = self.asyncThread.repeatRun(
-                    task=self.start,
-                    interval=60 * 60 * 24 if alreadySetup else 60 * 60 * 12,
-                )
+                    task=startFunction,
+                    interval=60*60*24 if alreadySetup else 60*60*12)
                 break
             time.sleep(60 * 15)
 
@@ -194,7 +191,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             target=watchForever,
             daemon=True)
         self.watchVersionThread.start()
-
 
     def performMigrationBackup(self, name: str = 'wallet'):
         if os.path.exists(config.walletPath(f'{name}.yaml')) and not os.path.exists(config.walletPath(f'{name}-migration-backup.yaml')):
@@ -251,6 +247,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         """returns the reference to the cache of a stream"""
         return self.caches.get(streamId)
+
+    @property
+    def walletOnlyMode(self) -> bool:
+        return self.runMode == RunMode.walletOnly
 
     @property
     def rewardAddress(self) -> str:
@@ -310,25 +310,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             connection=self.electrumx,
             force=force)
         # Setup subscriptions fpr header and scripthash
-        walletInstance.setupSubscriptions()
-        walletInstance.subscribe()
-        if vaultInstance is not None:
-            vaultInstance.setupSubscriptions()
-            vaultInstance.subscribe()
+        if self.electrumx is not None and self.electrumx.connected():
+            walletInstance.setupSubscriptions()
+            walletInstance.subscribe()
+            if vaultInstance is not None:
+                vaultInstance.setupSubscriptions()
+                vaultInstance.subscribe()
 
-        # test - both show as being subscribed to...
-        # time.sleep(5)
-        # walletInstance.stopSubscription()
-        # time.sleep(5)
-        # vaultInstance.stopSubscription()
-        # time.sleep(10)
-        # self.stopAllSubscriptions.set()
-        # exit()
+            # test - both show as being subscribed to...
+            # time.sleep(5)
+            # walletInstance.stopSubscription()
+            # time.sleep(5)
+            # vaultInstance.stopSubscription()
+            # time.sleep(10)
+            # self.stopAllSubscriptions.set()
+            # exit()
 
-        # Get Transaction history in separate threads
-        walletInstance.callTransactionHistory()
-        if vaultInstance is not None:
-            vaultInstance.callTransactionHistory()
+            # Get Transaction history in separate threads
+            walletInstance.callTransactionHistory()
+            if vaultInstance is not None:
+                vaultInstance.callTransactionHistory()
 
     # new method
     def _initialize_wallet(
@@ -532,7 +533,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60 * 60)
         self.ranOnce = True
         self.setupElectrumxConnection()
-        if self.walletOnlyMode:
+        if self.runMode == RunMode.walletOnly:
             self.initializeWalletAndVault()
             self.createServerConn()
             logging.info('in WALLETONLYMODE')
@@ -580,6 +581,43 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.buildEngine()
         time.sleep(60 * 60 * 24)
 
+    def startWalletOnly(self):
+        ''' start the satori engine. '''
+        logging.info('running in walletOnly mode', color='blue')
+        # while True:
+        if self.ranOnce:
+            time.sleep(60*60)
+        self.ranOnce = True
+        self.setupElectrumxConnection()
+        self.initializeWalletAndVault()
+        self.createServerConn()
+
+    def startWorker(self):
+        ''' start the satori engine. '''
+        logging.info('running in worker mode', color='blue')
+        # while True:
+        if self.ranOnce:
+            time.sleep(60*60)
+        self.ranOnce = True
+        self.createElectrumxConnection(
+            hostPort='0.0.0.0:50002',
+            hostPortSubscription='0.0.0.0:50001')
+        self.initializeWalletAndVault()
+        self.setMiningMode()
+        self.createRelayValidation()
+        self.createServerConn()
+        self.checkin()
+        self.setRewardAddress()
+        self.verifyCaches()
+        # self.startSynergyEngine()
+        self.subConnect()
+        self.pubsConnect()
+        if self.isDebug:
+            return
+        self.startRelay()
+        self.buildEngine()
+        time.sleep(60*60*24)
+
     def setupElectrumxConnection(self):
         self.createElectrumxConnection()
         # if you want it to continue to connect all the time, enable this
@@ -620,24 +658,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 except Exception as e:
                     logging.error(f"Error while reconnecting {e}")
 
-    def createElectrumxConnection(self):
-        servers: list[str] = [
-            '146.190.149.237:50002',
-            '146.190.38.120:50002',
-            'electrum1-mainnet.evrmorecoin.org:50002',
-            'electrum2-mainnet.evrmorecoin.org:50002']
-        serversSubscription: list[str] = [
-            '146.190.149.237:50001',
-            '146.190.38.120:50001',
-            'electrum1-mainnet.evrmorecoin.org:50001',
-            'electrum2-mainnet.evrmorecoin.org:50001']
-        hostPort = random.choice(servers)
-        hostPortSubscription = random.choice(serversSubscription)
-        self.electrumx = Electrumx(
-            host=hostPort.split(':')[0],
-            port=int(hostPort.split(':')[1]),
-            hostSubscription=hostPortSubscription.split(':')[0],
-            portSubscription=int(hostPortSubscription.split(':')[1]))
+    def createElectrumxConnection(self, hostPort: str = None, hostPortSubscription: str = None):
+        hostPort = hostPort or random.choice(evrmoreElectrumServers)
+        hostPortSubscription = hostPortSubscription or random.choice(
+            evrmoreElectrumServersSubscription)
+        try:
+            self.electrumx = Electrumx(
+                host=hostPort.split(':')[0],
+                port=int(hostPort.split(':')[1]),
+                hostSubscription=hostPortSubscription.split(':')[0],
+                portSubscription=int(hostPortSubscription.split(':')[1]))
+        except Exception as e:
+            logging.warning(
+                'unable to connect to electrum opperating without wallet abilities:', e)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
@@ -976,14 +1009,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def triggerRestart(self, return_code=1):
         from satorisynapse import Envelope, Signal
-
-        self.udpQueue.put(Envelope(ip="", vesicle=Signal(restart=True)))
+        self.udpQueue.put(
+            Envelope(ip='', vesicle=Signal(restart=True)))  # TODO: remove
         import time
 
         time.sleep(5)
-        os._exit(return_code) # 0 = shutdown, 1 = restart
-        # import requests
-        # requests.get('http://127.0.0.1:24601/restart')
+        # 0 = shutdown, 1 = restart container, 2 = restart app
+        os._exit(return_code)
 
     def emergencyRestart(self):
         import time
@@ -1012,7 +1044,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             #    self.triggerRestart()
 
     def restartWithQueue(self, queue):
-        return_code = int(queue.get()) # Wait for signal
+        return_code = int(queue.get())  # Wait for signal
         self.triggerRestart(return_code)
 
     def publish(
