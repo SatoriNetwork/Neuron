@@ -812,7 +812,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def buildEngine(self):
         """start the engine, it will run w/ what it has til ipfs is synced"""
 
-        def streamDisplayer(subsription : Stream, streamForecast: "satoriengine.StreamForecast" = None):
+        def streamDisplayer(subsription : Stream):
             return StreamOverview(
             streamId=subsription.streamId,
             value='',
@@ -821,27 +821,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             predictions=[])
 
         def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
-            print("topic=", streamForecast.streamId.topic())
-            print("data=", streamForecast.forecast["pred"].iloc[0])
-            print("observationTime=", streamForecast.observationTime)
-            print("observationHash=", streamForecast.observationHash)
-            print("isPrediction=", True)
-            print("useAuthorizedCall=", self.version >= Version('0.2.6'))
+            logging.debug("topic=", streamForecast.streamId.topic(), color="magenta")
+            logging.debug("data=", streamForecast.forecast["pred"].iloc[0], color="magenta")
+            logging.debug("observationTime=", streamForecast.observationTime, color="magenta")
+            logging.debug("observationHash=", streamForecast.observationHash, color="magenta")
+            logging.debug("useAuthorizedCall=", self.version >= Version('0.2.6'), color="magenta")
             predictionStream = [
                 p
                 for p in StartupDag.predictionStreams(self.publications)
                 if streamForecast.streamId == p.predicting
             ]
-            print("predictionStream=", predictionStream)
-            print("predictionStreamtopic=", predictionStream[0].streamId.topic())
-            # self.streamDisplay = [ streamDisplayer(subscription, streamForecast) for subscription in self.subscriptions if subscription.streamId == streamForecast.streamId ]
+            logging.debug("predictionStream=", predictionStream, color="magenta")
+            logging.debug("predictionStreamtopic=", predictionStream[0].streamId.topic(), color="magenta")
+
             for stream_display in self.streamDisplay:
                 if stream_display.streamId == streamForecast.streamId:
                     stream_display.value = streamForecast.currentValue['value'].iloc[-1]
                     stream_display.prediction = streamForecast.forecast['pred'].iloc[0]
                     stream_display.values = [value for value in streamForecast.currentValue.value]
-                    print(stream_display.values)
                     stream_display.predictions.append(stream_display.prediction)
+
             self.server.publish(
                 topic=predictionStream[0].streamId.topic(),
                 data=streamForecast.forecast['pred'].iloc[0],
