@@ -812,9 +812,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def buildEngine(self):
         """start the engine, it will run w/ what it has til ipfs is synced"""
 
-        def streamDisplayer(subs, streamForecast: "satoriengine.StreamForecast" = None):
+        def streamDisplayer(subsription : Stream, streamForecast: "satoriengine.StreamForecast" = None):
             return StreamOverview(
-            streamId=subs.streamId,
+            streamId=subsription.streamId,
             value='',
             prediction='',
             values=[],
@@ -856,7 +856,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptions, self.publications = streamPairs.get_matched_pairs()
         # print([sub.streamId for sub in self.subscriptions])
 
-        self.streamDisplay = [ streamDisplayer(subscriptions) for subscriptions in self.subscriptions ]
+        self.streamDisplay = [ streamDisplayer(subscription) for subscription in self.subscriptions ]
 
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
             subscriptions=self.subscriptions,
