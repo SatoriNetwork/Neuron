@@ -1021,6 +1021,7 @@ def dashboard():
     global forms
     global badForm
     forms = importlib.reload(forms)
+        
 
     def present_stream_form():
         '''
@@ -1058,9 +1059,10 @@ def dashboard():
     global firstRun
     theFirstRun = firstRun
     firstRun = False
-    streamOverviews = (
-        [model.miniOverview() for model in start.engine.models]
-        if start.engine is not None else [])  # StreamOverviews.demo()
+    # streamOverviews = (
+    #     [model.miniOverview() for model in start.engine.models]
+    #     if start.engine is not None else [])  # StreamOverviews.demo()
+    streamOverviews = [ stream for stream in start.streamDisplay ]
     start.electrumxCheck()
     holdingBalance = start.holdingBalance
     stakeStatus = holdingBalance >= 5 or (

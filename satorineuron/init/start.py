@@ -11,7 +11,7 @@ from queue import Queue
 import satorineuron
 import satoriengine
 from satoriwallet.api.blockchain import Electrumx
-from satorilib.concepts.structs import StreamId, Stream, StreamPairs, StreamPair
+from satorilib.concepts.structs import StreamId, Stream, StreamPairs, StreamPair, StreamOverview
 from satorilib.concepts import constants
 from satorilib.api import disk
 from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet, evrmoreElectrumServers, evrmoreElectrumServersSubscription
@@ -109,6 +109,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
+        self.streamDisplay: list = []
         self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
         self.miningMode: bool = False
@@ -811,6 +812,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def buildEngine(self):
         """start the engine, it will run w/ what it has til ipfs is synced"""
 
+        def streamDisplayer(subs, streamForecast: "satoriengine.StreamForecast" = None):
+            return StreamOverview(
+            streamId=subs.streamId,
+            value='',
+            prediction='',
+            values=[],
+            predictions=[])
+
         def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
             print("topic=", streamForecast.streamId.topic())
             print("data=", streamForecast.forecast["pred"].iloc[0])
@@ -825,6 +834,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             ]
             print("predictionStream=", predictionStream)
             print("predictionStreamtopic=", predictionStream[0].streamId.topic())
+            # self.streamDisplay = [ streamDisplayer(subscription, streamForecast) for subscription in self.subscriptions if subscription.streamId == streamForecast.streamId ]
+            for stream_display in self.streamDisplay:
+                if stream_display.streamId == streamForecast.streamId:
+                    stream_display.value = streamForecast.currentValue['value'].iloc[-1]
+                    stream_display.prediction = streamForecast.forecast['pred'].iloc[0]
+                    stream_display.values = [value for value in streamForecast.currentValue.value]
+                    print(stream_display.values)
+                    stream_display.predictions.append(stream_display.prediction)
             self.server.publish(
                 topic=predictionStream[0].streamId.topic(),
                 data=streamForecast.forecast['pred'].iloc[0],
@@ -836,11 +853,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         streamPairs = StreamPairs(
             self.subscriptions, StartupDag.predictionStreams(self.publications)
         )
-        subscriptions, publications = streamPairs.get_matched_pairs()
+        self.subscriptions, self.publications = streamPairs.get_matched_pairs()
+        # print([sub.streamId for sub in self.subscriptions])
+
+        self.streamDisplay = [ streamDisplayer(subscriptions) for subscriptions in self.subscriptions ]
 
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
-            subscriptions=subscriptions,
-            publications=publications,
+            subscriptions=self.subscriptions,
+            publications=self.publications,
         )
         self.engine.run()
         # else:
@@ -848,7 +868,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
         self.aiengine: satoriengine.framework.engine.Engine = (
             satoriengine.framework.engine.Engine(
-                streams=subscriptions, pubstreams=publications
+                streams=self.subscriptions, pubstreams=self.publications
             )
         )
         self.aiengine.prediction_produced.subscribe(
