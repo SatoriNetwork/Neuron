@@ -67,7 +67,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False
     ):
         super(StartupDag, self).__init__(*args)
-        self.peerEngine = PeerEngine()
         self.version = [int(x) for x in VERSION.split('.')]
         self.version = Version(VERSION)
         # TODO: test and turn on with new installer
@@ -116,6 +115,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.synergy: Union[SynergyManager, None] = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
+        self.peerEngine: PeerEngine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()  # TODO: remove
@@ -528,7 +528,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.createServerConn()
             logging.info('in WALLETONLYMODE')
             return
-        self.peerEngine.start()
         self.initializeWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
@@ -539,6 +538,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.startSynergyEngine()
         self.subConnect()
         self.pubsConnect()
+        self.peerConnect()
         if self.isDebug:
             return
         self.startRelay()
@@ -796,6 +796,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     pubkey=self.wallet.publicKey + ':publishing',
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + '|' + self.oracleKey))
+
+    def peerConnect(self):
+        '''
+        connects to peers for the purpose of syncing datasets
+        '''
+        #signature = self.wallet.sign(self.key)
+        self.peerEngine = PeerEngine(
+            #subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
+            #publications=[pub.streamId.topic() for pub in self.publications],
+            subscriptions=['A', 'B', 'C'],
+            publications=['X', 'Y', 'Z'],
+            #key=signature.decode() + '|' + self.key,
+        )
+        self.peerEngine.start()
 
     def startRelay(self):
         def append(streams: list[Stream]):

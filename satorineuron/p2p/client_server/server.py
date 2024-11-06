@@ -6,6 +6,11 @@
 
 # connect
 # curl -X POST http://188.166.4.120:51820/connect -H "Content-Type: application/json" -d '{"peer_id": "peer2"}'
+'''Adding swap can help provide additional virtual memory when RAM is exhausted. Here’s how to create a 1GB swap file:
+dd if=/dev/zero of=/swapfile bs=1M count=1024
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile'''
 from flask import Flask, request, jsonify
 import time
 import sqlite3

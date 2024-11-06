@@ -52,26 +52,61 @@
 #         self.app.route('/checkin', methods=['POST'])(self.check_in)
 #         self.app.route('/connect', methods=['POST'])(self.connect_peer)
 #         self.app.route('/list_peers', methods=['GET'])(self.list_peers)
-
-#     def check_in(self):
-#         """Handle peer check-in/heartbeat"""
-#         data = request.get_json()
-#         peer_id = data['peer_id']
-#         timestamp = time.time()
-#         wireguard_config = data.get('wireguard_config')
-#         conn = sqlite3.connect('peers.db')
-#         cursor = conn.cursor()
-#         cursor.execute(
-#             'INSERT OR REPLACE INTO peers (peer_id, last_seen, wireguard_config) VALUES (?, ?, ?)',
-#             (peer_id, timestamp, json.dumps(wireguard_config))
-#         )
-#         conn.commit()
-#         conn.close()
-#         return jsonify({
-#             "status": "checked in",
-#             "peer_id": peer_id,
-#             "timestamp": timestamp
-#         })
+    # def check_in(self):
+    #     """Handle peer check-in/heartbeat with publication and subscription updates"""
+    #     # print("Received checkin request with payload:", request.get_data().decode('utf-8'))
+    #     data = request.get_json()
+    #     peer_id = data.get('peer_id')  # This is now the WireGuard public key
+    #     if peer_id is None:
+    #         return jsonify({"status": "error", "message": "Missing peer_id"}), 400
+    #     timestamp = time.time()
+    #     wireguard_config = data.get('wireguard_config')
+    #     publications = data.get('publications', [])
+    #     subscriptions = data.get('subscriptions', [])
+        
+    #     conn = sqlite3.connect('peers.db')
+    #     cursor = conn.cursor()
+    #     try:
+    #         # Update peer information
+    #         cursor.execute(
+    #             'INSERT OR REPLACE INTO peers (peer_id, last_seen, wireguard_config) VALUES (?, ?, ?)',
+    #             (peer_id, timestamp, json.dumps(wireguard_config))
+    #         )
+            
+    #         # Update publications
+    #         cursor.execute('DELETE FROM publications WHERE peer_id = ?', (peer_id,))
+    #         for stream in publications:
+    #             cursor.execute(
+    #                 'INSERT INTO publications (peer_id, stream, created_at) VALUES (?, ?, ?)',
+    #                 (peer_id, stream, timestamp)
+    #             )
+            
+    #         # Update subscriptions
+    #         cursor.execute('DELETE FROM subscriptions WHERE peer_id = ?', (peer_id,))
+    #         for stream in subscriptions:
+    #             cursor.execute(
+    #                 'INSERT INTO subscriptions (peer_id, stream, created_at) VALUES (?, ?, ?)',
+    #                 (peer_id, stream, timestamp)
+    #             )
+            
+    #         conn.commit()
+            
+    #         return jsonify({
+    #             "status": "checked in",
+    #             "peer_id": peer_id,
+    #             "timestamp": timestamp,
+    #             "publications": publications,
+    #             "subscriptions": subscriptions
+    #         })
+            
+    #     except Exception as e:
+    #         conn.rollback()
+    #         return jsonify({
+    #             "status": "error",
+    #             "message": str(e)
+    #         }), 500
+    #     finally:
+    #         conn.close()
 
 #     def connect_peer(self):
 #         """Handle peer connection requests"""

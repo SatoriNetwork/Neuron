@@ -35,7 +35,7 @@ class PeerServer:
         conn = sqlite3.connect('peers.db')
         cursor = conn.cursor()
         
-        # Peers table for storing peer information
+         # Peers table for storing peer information
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS peers (
                 peer_id TEXT PRIMARY KEY,
@@ -77,10 +77,68 @@ class PeerServer:
                 FOREIGN KEY (to_peer) REFERENCES peers (peer_id)
             )
         ''')
-        
-        conn.commit()
-        conn.close()
-    
+        try:
+            # Check if publications table needs updating
+            cursor.execute("PRAGMA table_info(publications)")
+            columns = {row[1] for row in cursor.fetchall()}
+            
+            if 'created_at' not in columns:
+                print("Adding created_at column to publications table...")
+                # Create temporary table with new schema
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS publications_new (
+                        peer_id TEXT,
+                        stream TEXT,
+                        created_at REAL,
+                        PRIMARY KEY (peer_id, stream),
+                        FOREIGN KEY (peer_id) REFERENCES peers (peer_id)
+                    )
+                ''')
+                
+                # Copy data from old table to new table
+                cursor.execute('''
+                    INSERT OR REPLACE INTO publications_new (peer_id, stream, created_at)
+                    SELECT peer_id, stream, ? FROM publications
+                ''', (time.time(),))
+                
+                # Drop old table and rename new table
+                cursor.execute('DROP TABLE publications')
+                cursor.execute('ALTER TABLE publications_new RENAME TO publications')
+            
+            # Do the same for subscriptions table
+            cursor.execute("PRAGMA table_info(subscriptions)")
+            columns = {row[1] for row in cursor.fetchall()}
+            
+            if 'created_at' not in columns:
+                print("Adding created_at column to subscriptions table...")
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS subscriptions_new (
+                        peer_id TEXT,
+                        stream TEXT,
+                        created_at REAL,
+                        PRIMARY KEY (peer_id, stream),
+                        FOREIGN KEY (peer_id) REFERENCES peers (peer_id)
+                    )
+                ''')
+                
+                cursor.execute('''
+                    INSERT OR REPLACE INTO subscriptions_new (peer_id, stream, created_at)
+                    SELECT peer_id, stream, ? FROM subscriptions
+                ''', (time.time(),))
+                
+                cursor.execute('DROP TABLE subscriptions')
+                cursor.execute('ALTER TABLE subscriptions_new RENAME TO subscriptions')
+                
+            
+            conn.commit()
+            print("Database schema updated successfully")
+            
+        except Exception as e:
+            print(f"Error updating database schema: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
     def _start_cleanup_thread(self):
         """Start background thread for cleaning up stale peers and connections"""
         def cleanup_loop():
@@ -177,58 +235,69 @@ class PeerServer:
         conn.close()
 
     def check_in(self):
-        """Handle peer check-in/heartbeat with publication and subscription updates"""
-        data = request.get_json()
-        peer_id = data['peer_id']  # This is now the WireGuard public key
-        timestamp = time.time()
-        wireguard_config = data.get('wireguard_config')
-        publications = data.get('publications', [])
-        subscriptions = data.get('subscriptions', [])
-        
-        conn = sqlite3.connect('peers.db')
-        cursor = conn.cursor()
-        
         try:
-            # Update peer information
-            cursor.execute(
-                'INSERT OR REPLACE INTO peers (peer_id, last_seen, wireguard_config) VALUES (?, ?, ?)',
-                (peer_id, timestamp, json.dumps(wireguard_config))
-            )
+            data = request.get_json()
+            peer_id = data.get('peer_id')
+            timestamp = time.time()
+            wireguard_config = data.get('wireguard_config')
+            publications = data.get('publications', [])
+            subscriptions = data.get('subscriptions', [])
             
-            # Update publications
-            cursor.execute('DELETE FROM publications WHERE peer_id = ?', (peer_id,))
-            for stream in publications:
+           
+            
+            conn = sqlite3.connect('peers.db')
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            try:
+                # print("Updating peer info in database...")
                 cursor.execute(
-                    'INSERT INTO publications (peer_id, stream, created_at) VALUES (?, ?, ?)',
-                    (peer_id, stream, timestamp)
+                    'INSERT OR REPLACE INTO peers (peer_id, last_seen, wireguard_config) VALUES (?, ?, ?)',
+                    (peer_id, timestamp, json.dumps(wireguard_config))
                 )
-            
-            # Update subscriptions
-            cursor.execute('DELETE FROM subscriptions WHERE peer_id = ?', (peer_id,))
-            for stream in subscriptions:
-                cursor.execute(
-                    'INSERT INTO subscriptions (peer_id, stream, created_at) VALUES (?, ?, ?)',
-                    (peer_id, stream, timestamp)
-                )
-            
-            conn.commit()
-            
-            return jsonify({
-                "status": "checked in",
-                "peer_id": peer_id,
-                "timestamp": timestamp,
-                "publications": publications,
-                "subscriptions": subscriptions
-            })
-            
+                
+                # print("Updating publications...")
+                cursor.execute('DELETE FROM publications WHERE peer_id = ?', (peer_id,))
+                for stream in publications:
+                    # print(f"Adding publication: {stream}")
+                    cursor.execute(
+                        'INSERT INTO publications (peer_id, stream, created_at) VALUES (?, ?, ?)',
+                        (peer_id, stream, timestamp)
+                    )
+                
+                # print("Updating subscriptions...")
+                cursor.execute('DELETE FROM subscriptions WHERE peer_id = ?', (peer_id,))
+                for stream in subscriptions:
+                    cursor.execute(
+                        'INSERT INTO subscriptions (peer_id, stream, created_at) VALUES (?, ?, ?)',
+                        (peer_id, stream, timestamp)
+                    )
+                
+                conn.commit()
+                
+                return jsonify({
+                    "status": "checked in",
+                    "peer_id": peer_id,
+                    "timestamp": timestamp,
+                    "publications": publications,
+                    "subscriptions": subscriptions
+                })
+                
+            except Exception as e:
+                print(f"Database error occurred: {str(e)}")
+                conn.rollback()
+                return jsonify({
+                    "status": "error",
+                    "message": str(e)
+                }), 500
+            finally:
+                conn.close()
+                
         except Exception as e:
-            conn.rollback()
+            print(f"Request processing error: {str(e)}")
             return jsonify({
                 "status": "error",
                 "message": str(e)
             }), 500
-        finally:
-            conn.close()
 
     def connect_peer(self):
         """Handle peer connection requests"""
@@ -512,7 +581,7 @@ class PeerServer:
         })
 
     def run(self, host='0.0.0.0', port=51820):
-        self.app.run(host=host, port=port)
+        self.app.run(host=host, port=port, debug=True)
 
 if __name__ == '__main__':
     server = PeerServer()
