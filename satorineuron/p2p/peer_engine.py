@@ -186,6 +186,9 @@ class PeerEngine(metaclass=SingletonMeta):
                         'allowed_ips': data['to_peer_config']['allowed_ips'],
                         'endpoint': data['to_peer_config']['endpoint']
                     }
+                    peer_data['wireguard_config'] = {
+                    'persistent_keepalive': 300  # Set the desired keepalive interval in seconds
+                    }
                     self.connection_queue.put(peer_data)
                     self.connected_peers.add(peer_id)
                     logging.info(f"Successfully connected to peer {peer_id}", color="green")
@@ -300,26 +303,26 @@ class PeerEngine(metaclass=SingletonMeta):
 
     def run_ping_command(self, ip: str):
         """Execute ping command to check peer connectivity"""
-        try:
+        # try:
             # Initial ping attempt
-            result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
-                                 capture_output=True, text=True)
-            if result.returncode == 0:
-                logging.debug(f"Ping to {ip} successful", color="blue")
-                return
-                
-            # Only restart interface and retry if first ping failed
-            logging.warning(f"Ping to {ip} failed, restarting interface", color="yellow")
-            subprocess.run(f"wg-quick down {self.interface}", shell=True)
-            subprocess.run(f"wg-quick up {self.interface}", shell=True)
-            result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
-                                 capture_output=True, text=True)
-            if result.returncode == 0:
-                logging.info(f"Ping to {ip} successful after interface restart", color="green")
-            else:
-                logging.error(f"Ping to {ip} still failing after interface restart", color="red")
-        except Exception as e:
-            logging.error(f"Error during ping operation: {str(e)}", color="red")
+        result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
+                            capture_output=True, text=True)
+        if result.returncode == 0:
+            logging.debug(f"Ping to {ip} successful", color="blue")
+            return
+
+        # Only restart interface and retry if first ping failed
+        # logging.warning(f"Ping to {ip} failed, restarting interface", color="yellow")
+        subprocess.run(f"wg-quick down {self.interface}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(f"wg-quick up {self.interface}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
+                            capture_output=True, text=True)
+        if result.returncode == 0:
+            logging.info(f"Ping to {ip} successful after interface restart", color="green")
+        # else:
+        #     logging.error(f"Ping to {ip} still failing after interface restart", color="red")
+        # except Exception as e:
+        #     logging.error(f"Error during ping operation: {str(e)}", color="red")
             
     def stop(self):
         """Stop the PeerEngine and cleanup"""
