@@ -60,6 +60,7 @@ class PeerEngine(metaclass=SingletonMeta):
         self.subscriptions = subscriptions or []
         self.connected_peers = set()
         self.running = False
+        self.ping_interval = 10
 
     def _get_unique_ip(self):
         """Get a unique IP address from the PeerServer"""
@@ -77,8 +78,9 @@ class PeerEngine(metaclass=SingletonMeta):
         self.client_id = wg_info['public_key']
         self.start_background_tasks()
         self.start_listening()
-        self.start_ping_loop()
+        # self.start_ping_loop()
         self.start_peer_check_loop()
+        self.start_ping_loop(self.ping_interval) 
 
     def start_listening(self):
         """Listen for and process new peer connection requests"""
@@ -108,6 +110,7 @@ class PeerEngine(metaclass=SingletonMeta):
                 raise Exception(f"Failed to get peers: {response.status_code}")
             
             peers = response.json()['peers']
+            current_peers = {peer['public_key']: peer for peer in self.peerManager.list_peers()}
             
             for peer in peers:
                 peer_id = peer['peer_id']
@@ -128,11 +131,41 @@ class PeerEngine(metaclass=SingletonMeta):
                         should_connect = True
                         break
 
-                if should_connect and peer_id not in self.connected_peers:
-                    self.request_connection(peer_id)
+                if should_connect:
+                    # Check if peer exists and if its configuration has changed
+                    if peer_id in current_peers:
+                        existing_peer = current_peers[peer_id]
+                        if self._peer_config_changed(existing_peer, peer):
+                            logging.info(f"Peer {peer_id} configuration changed, updating...", color="yellow")
+                            self.peerManager.remove_peer(peer_id)
+                            self.connected_peers.discard(peer_id)
+                            self.request_connection(peer_id)
+                    elif peer_id not in self.connected_peers:
+                        self.request_connection(peer_id)
 
         except Exception as e:
             logging.error(f"Error in connect_to_peers: {str(e)}")
+
+    def _peer_config_changed(self, existing_peer: dict, new_peer: dict) -> bool:
+        """
+        Compare existing peer configuration with new peer configuration
+        Returns True if there are relevant changes that require reconnection
+        """
+        try:
+            # Extract relevant configuration from new_peer
+            new_config = new_peer.get('wireguard_config', {})
+            new_endpoint = new_config.get('endpoint')
+            new_allowed_ips = new_config.get('allowed_ips')
+
+            # Compare with existing configuration
+            if (existing_peer.get('endpoint') != new_endpoint or 
+                existing_peer.get('allowed_ips') != new_allowed_ips):
+                return True
+
+            return False
+        except Exception as e:
+            logging.error(f"Error comparing peer configurations: {str(e)}")
+            return False
 
     def request_connection(self, peer_id: str):
         """Request connection to a specific peer through the server"""
@@ -228,20 +261,33 @@ class PeerEngine(metaclass=SingletonMeta):
         self.background_thread.daemon = True
         self.background_thread.start()
 
-    def start_ping_loop(self, interval=5):
+    def start_ping_loop(self, interval=10):
         """Start background ping monitoring of connected peers"""
         def ping_peers():
             while self.running:
-                time.sleep(interval)
-                for peer in self.peerManager.list_peers():
-                    peer_id = peer.get("public_key")
-                    ping_ip = peer.get('allowed_ips', '').split('/')[0]
-                    try:
-                        self.run_ping_command(ping_ip)
-                    except Exception as e:
-                        logging.error(f"Failed to ping peer {peer_id}: {e}")
+                try:
+                    peers = self.peerManager.list_peers()
+                    if not peers:
+                        logging.debug("No peers to ping", color="blue")
+                    for peer in peers:
+                        if not self.running:
+                            break
+                        peer_id = peer.get("public_key")
+                        allowed_ips = peer.get('allowed_ips', '')
+                        if allowed_ips:
+                            ping_ip = allowed_ips.split('/')[0]
+                            try:
+                                self.run_ping_command(ping_ip)
+                            except Exception as e:
+                                logging.error(f"Failed to ping peer {peer_id}: {e}", color="red")
+                except Exception as e:
+                    logging.error(f"Error in ping loop: {str(e)}", color="red")
+                finally:
+                    time.sleep(interval)
         
-        threading.Thread(target=ping_peers, daemon=True).start()
+        threading.Thread(target=ping_peers, daemon=True, 
+                        name="peer-ping-monitor").start()
+        logging.info(f"Started ping monitoring with {interval}s interval", color="green")
 
     def start_peer_check_loop(self, interval=15):
         """Start a loop to periodically check for new peers"""
@@ -254,12 +300,27 @@ class PeerEngine(metaclass=SingletonMeta):
 
     def run_ping_command(self, ip: str):
         """Execute ping command to check peer connectivity"""
-        result = subprocess.run(["ping", "-c", "1", ip], capture_output=True, text=True)
-        if result.returncode == 0:
-            logging.info(f"Ping to {ip} successful", color="blue")
-        else:
-            logging.error(f"Ping to {ip} failed: {result.stderr}", color="blue")
-
+        try:
+            # Initial ping attempt
+            result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
+                                 capture_output=True, text=True)
+            if result.returncode == 0:
+                logging.debug(f"Ping to {ip} successful", color="blue")
+                return
+                
+            # Only restart interface and retry if first ping failed
+            logging.warning(f"Ping to {ip} failed, restarting interface", color="yellow")
+            subprocess.run(f"wg-quick down {self.interface}", shell=True)
+            subprocess.run(f"wg-quick up {self.interface}", shell=True)
+            result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
+                                 capture_output=True, text=True)
+            if result.returncode == 0:
+                logging.info(f"Ping to {ip} successful after interface restart", color="green")
+            else:
+                logging.error(f"Ping to {ip} still failing after interface restart", color="red")
+        except Exception as e:
+            logging.error(f"Error during ping operation: {str(e)}", color="red")
+            
     def stop(self):
         """Stop the PeerEngine and cleanup"""
         self.running = False
