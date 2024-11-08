@@ -59,7 +59,7 @@ timeout = 1
 ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 CORS(app, origins=[{
-    'local': 'http://192.168.0.10:5002',
+    'local': 'http://central',
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])
@@ -91,7 +91,8 @@ while True:
                 os.environ.get('WALLETONLYMODE', False)),
             urlServer={
                 # TODO: local endpoint should be in a config file.
-                'local': 'http://192.168.0.10:5002',
+                # 'local': 'http://192.168.0.10:5002',
+                'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
@@ -100,19 +101,22 @@ while True:
                 #'prod': 'http://24.199.113.168'}[ENV], # c
                 #'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
-                'local': 'http://192.168.0.10:5002',
+                # 'local': 'http://192.168.0.10:5002',
+                'local': 'https://mundo.satorinet.io',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
             # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
-                'local': ['ws://192.168.0.10:24603'],
+                # 'local': ['ws://192.168.0.10:24603'],
+                'local': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
             # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
             urlSynergy={
-                'local': 'https://192.168.0.10:24602',
+                # 'local': 'https://192.168.0.10:24602',
+                'local': 'https://synergy.satorinet.io:24602',
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
@@ -1786,7 +1790,23 @@ def removeProxyChild(address: str, id: int):
 @vaultRequired
 @authRequired
 def vote():
-
+    def sanitize_for_json(data):
+        import math
+        """
+        This function will recursively check the structure and replace any NaN or None
+        values with appropriate JSON-compatible values (e.g., None -> null, NaN -> 0).
+        """
+        if isinstance(data, dict):
+            return {k: sanitize_for_json(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [sanitize_for_json(item) for item in data]
+        elif data is None:  # Replace None with JSON null
+            return 0
+        elif isinstance(data, float) and math.isnan(data):  # Replace NaN with 0
+            return 0
+        else:
+            return data
+        
     def getVotes(wallet):
         # def valuesAsNumbers(map: dict):
         #    return {k: int(v) for k, v in map.items()}
@@ -1808,7 +1828,8 @@ def vote():
         streams = start.server.getSanctionVote(wallet, start.vault)
         # logging.debug('streams', [
         #              s for s in streams if s['oracle_alias'] is not None], color='yellow')
-        return streams
+        sanitized_streams = sanitize_for_json(streams)
+        return sanitized_streams
         # return []
         # return [{
         #    'sanctioned': 10,
@@ -1869,7 +1890,7 @@ def streams():
         elif isinstance(data, list):
             return [sanitize_for_json(item) for item in data]
         elif data is None:  # Replace None with JSON null
-            return None
+            return 0
         elif isinstance(data, float) and math.isnan(data):  # Replace NaN with 0
             return 0
         else:
@@ -1883,8 +1904,9 @@ def streams():
         #     searchedStreams = [s for s in streams if searchText.lower() in s['stream'].lower()]
         #     return sanitize_for_json(searchedStreams)
         sanitized_streams = sanitize_for_json(streams)
-        # sorting streams based on total_vote
-        sorted_streams = sorted(sanitized_streams, key=lambda x: x.get('total_vote', 0), reverse=True)
+        # sorting streams based on vote and total_vote
+        sorted_streams_vote = sorted(sanitized_streams, key=lambda x: x.get('vote', 0), reverse=True)
+        sorted_streams = sorted(sorted_streams_vote, key=lambda x: x.get('total_vote', 0), reverse=True)[:10]
         return sorted_streams
 
     # Commenting down as of now, will be used in future if we need to make the call to server for search streams

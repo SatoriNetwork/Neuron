@@ -54,7 +54,7 @@ ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 # DELEGATE = config.get().get('delegate', None)
 CORS(app, origins=[{
-    'local': 'http://192.168.0.10:5002',
+    'local': 'http://central',
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])
@@ -68,22 +68,22 @@ while True:
         start = StartupDag(
             env=ENV,
             urlServer={
-                'local': 'http://192.168.0.10:5002',
+                'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
             urlMundo={
-                'local': 'http://192.168.0.10:5002',
+                'local': 'https://mundo.satorinet.io',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
             urlPubsubs={
-                'local': ['ws://192.168.0.10:24603'],
+                'local': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
             urlSynergy={
-                'local': 'https://192.168.0.10:24602',
+                'local': 'https://synergy.satorinet.io:24602',
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],

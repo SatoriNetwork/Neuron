@@ -1,5 +1,11 @@
 {% block content %}
 <div class="row">
+  <div id="notification" style="display: none; position: fixed; top: 5px; right: 25px; background-color: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; width: 300px">
+    <!-- Notification message will be inserted here -->
+  </div>
+  <div id="notification_error" style="display: none; position: fixed; top: 5px; right: 25px; background-color: #ff0000; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; width: 300px">
+    <!-- Notification message will be inserted here -->
+  </div>
   <div class="col-lg-12 col-md-12 mb-md-0">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
@@ -16,7 +22,7 @@
       </div>
       <div style="margin-left:24px;margin-top:15px" class="d-flex flex-row gap-2">
         <input style="width:30%;border-radius:5px;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
-        <button id="popularitySortBtn" onclick="toggleSort('votedfor')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Voted For <div style="margin-top:-3px" id="votedforIcon"></div></button>
+        <button id="popularitySortBtn" onclick="toggleSort('votedfor')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Voted For <div style="margin-top:-3px" id="votedforIcon">↓</div></button>
         <button id="popularitySortBtn" onclick="toggleSort('popularity')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Popularity <div style="margin-top:-3px" id="popularityIcon">↓</div></button>
         <button id="dateSortBtn" onclick="toggleSort('date')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Date <div style="margin-top:-3px" id="dateIcon"></div></button>
         <select style="padding:5px" id="categorySelect" onchange="filterByCategory()">
@@ -326,6 +332,17 @@
     } 
   }
 
+  function showNotification(message, showError = false) {
+    const notification = document.getElementById(showError ? 'notification_error' : 'notification');
+    notification.innerHTML = message;
+    notification.style.display = 'block';
+    
+    // Hide the notification after 3 seconds
+    setTimeout(() => {
+      notification.style.display = 'none';
+    }, 1000);
+  }
+
   // Increment Vote
   function incrementVote(streamId, event) {
     event.stopPropagation();
@@ -339,10 +356,18 @@
     .then(async (response) => {
         if (response.ok) {
             const responseData = await response.json();
-            console.log("responseData", responseData.message)
+            console.log("responseData", responseData.message);
+            const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(4) div[id="stream_${streamId}"]`);
+            voteActionElement.innerHTML = '<i class="material-icons opacity-10">thumb_down</i>';
+            voteActionElement.onclick = (e) => removeVote(streamId, e);
+            voteActionElement.id = `stream_remove_${streamId}`; // Update the id to match remove vote action
+            showNotification("Vote incremented successfully!");
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Something went wrong!", true);
+    });
   }
 
   // Remove Vote
@@ -358,10 +383,18 @@
     .then(async (response) => {
         if (response.ok) {
           const responseData = await response.json();
-          console.log("responseData", responseData.message)
+          console.log("responseData", responseData.message);
+          const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(4) div[id="stream_remove_${streamId}"]`);
+          voteActionElement.innerHTML = '<i class="material-icons opacity-10">thumb_up</i>';
+          voteActionElement.onclick = (e) => incrementVote(streamId, e);
+          voteActionElement.id = `stream_${streamId}`;
+          showNotification("Vote removed successfully!");
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Something went wrong!", true);
+    });
   }
 
   const darkmode = {{ 'true' if darkmode else 'false' }};  
@@ -370,7 +403,7 @@
   let sortOrder = {
     popularity: 'desc',
     date: 'asc',
-    votedfor: 'asc'
+    votedfor: 'desc'
   };
 
   function toggleStreamDetails(row) {
@@ -479,40 +512,40 @@
     console.log("searchText", searchText);
     console.log("storedStreams", storedStreams);
 
-      const filteredStreams = storedStreams.filter(stream => 
-          stream.stream.toLowerCase().includes(searchText) ||
-          stream.target.toLowerCase().includes(searchText)
-      );
+    const filteredStreams = storedStreams.filter(stream => 
+        stream.stream.toLowerCase().includes(searchText.toLowerCase()) ||
+        stream.target.toLowerCase().includes(searchText.toLowerCase())
+    );
 
-      const popularityIconElement = document.getElementById(`popularityIcon`);
-      const dateIconElement = document.getElementById(`dateIcon`);
-      const votedforIconElement = document.getElementById(`votedforIcon`);
-      document.getElementById('categorySelect').value = "";
+    const popularityIconElement = document.getElementById(`popularityIcon`);
+    const dateIconElement = document.getElementById(`dateIcon`);
+    const votedforIconElement = document.getElementById(`votedforIcon`);
+    document.getElementById('categorySelect').value = "";
 
-      popularityIconElement.innerHTML = '↓';
-      dateIconElement.innerHTML = '';
-      votedforIconElement.innerHTML = '';
+    popularityIconElement.innerHTML = '↓';
+    dateIconElement.innerHTML = '';
+    votedforIconElement.innerHTML = '↓';
 
-      updateStreamDisplay(filteredStreams, darkmode, vault)
+    updateStreamDisplay(filteredStreams, darkmode, vault)
 
-      {/* fetch(`/streams?search=${encodeURIComponent(searchText)}`)
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error(`Network response was not ok, status: ${response.status}`);
-              }
+    {/* fetch(`/streams?search=${encodeURIComponent(searchText)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network response was not ok, status: ${response.status}`);
+            }
 
-              const contentType = response.headers.get('content-type');
-              if (contentType && contentType.includes('application/json')) {
-                  return response.json();
-              } else {
-                  throw new Error('Response was not in JSON format');
-              }
-          })
-          .then(data => {
-            console.log("Data", data.streams)
-            updateStreamDisplay(data.streams, darkmode, vault)
-          })
-          .catch(error => console.error('Error fetching streams:', error)); */}
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                throw new Error('Response was not in JSON format');
+            }
+        })
+        .then(data => {
+          console.log("Data", data.streams)
+          updateStreamDisplay(data.streams, darkmode, vault)
+        })
+        .catch(error => console.error('Error fetching streams:', error)); */}
   }
 
   function updateStreamDisplay(streams, darkmode, vault) {
@@ -539,6 +572,21 @@
       // }
       row.className = rowClass;
 
+      const voteActionHtml = `
+        <td>
+          <div class="d-flex gap-2">
+            ${stream.vote === 0 ? 
+                `<div id="stream_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
+                    <i class="material-icons opacity-10">thumb_up</i>
+                </div>` : 
+                `<div id="stream_remove_${stream.stream_id}" onclick="removeVote(${stream.stream_id}, event);">
+                    <i class="material-icons opacity-10">thumb_down</i>
+                </div>`
+            }
+          </div>
+        </td>
+        `;
+
       row.innerHTML = `
           <td>
               <div class="d-flex px-3 py-1">
@@ -555,6 +603,7 @@
                   <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.target}</h6>
               </div>
           </td>
+          ${voteActionHtml}
       `;
       tableBody.appendChild(row);
 
