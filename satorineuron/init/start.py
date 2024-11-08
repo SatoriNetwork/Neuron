@@ -261,15 +261,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def network(self) -> str:
-        return 'main' if self.env == 'prod' else 'test'
+        return 'main' if self.env in ['prod', 'local'] else 'test'
 
     @property
     def vault(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        return self._evrmoreVault if self.env == 'prod' else self._ravencoinVault
+        return self._evrmoreVault if self.env in ['prod', 'local'] else self._ravencoinVault
 
     @property
     def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        return self._evrmoreWallet if self.env == 'prod' else self._ravencoinWallet
+        return self._evrmoreWallet if self.env in ['prod', 'local'] else self._ravencoinWallet
 
     # @property
     # def ravencoinWallet(self) -> RavencoinWallet:
@@ -738,7 +738,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def setRewardAddress(self) -> bool:
         configRewardAddress: str = str(config.get().get('reward address', ''))
         if (
-            self.env == 'prod' and
+            self.env in ['prod', 'local'] and
             len(configRewardAddress) == 34 and
             configRewardAddress.startswith('E') and
             self.rewardAddress != configRewardAddress
