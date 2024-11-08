@@ -1947,7 +1947,7 @@ def streams():
         sanitized_streams = sanitize_for_json(streams)
         # sorting streams based on vote and total_vote
         sorted_streams_vote = sorted(sanitized_streams, key=lambda x: x.get('vote', 0), reverse=True)
-        sorted_streams = sorted(sorted_streams_vote, key=lambda x: x.get('total_vote', 0), reverse=True)[:10]
+        sorted_streams = sorted(sorted_streams_vote, key=lambda x: x.get('total_vote', 0), reverse=True)
         return sorted_streams
 
     # Commenting down as of now, will be used in future if we need to make the call to server for search streams
