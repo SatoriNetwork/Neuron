@@ -38,9 +38,8 @@
           <table class="table align-items-center mb-0" style="table-layout: fixed;max-width: 100%;">
             <thead ondblclick='toggleVotingDetails();'>
               <tr>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:20%;">Oracle</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:40%;">Oracle</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:40%;">Stream</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:20%;">Target</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:20%;">Actions</th>
               </tr>
             </thead>
@@ -56,11 +55,6 @@
                 <td>
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ stream['stream'] }}</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ stream['target'] }}</h6>
                   </div>
                 </td>
                 <td>
@@ -107,7 +101,7 @@
                 {% endif %}
                  <!-- Additional details row -->
                 <tr class="stream-details" style="display: none;">
-                  <td colspan="4">
+                  <td colspan="3">
                     <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
                       <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
                         <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> {{ stream['stream'] }}</p>
