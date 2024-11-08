@@ -214,10 +214,11 @@ def vaultRequired(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # race condition possible on start.vault is None
-        if (not start.walletOnlyMode and  # allow bypass in this mode
-                start.vault is None and
-                not os.path.exists(config.walletPath('vault.yaml'))
-            ):
+        if (
+            not start.walletOnlyMode and  # allow bypass in this mode
+            start.vault is None and
+            not os.path.exists(config.walletPath('vault.yaml'))
+        ):
             return redirect('/vault')
         return f(*args, **kwargs)
     return decorated_function
