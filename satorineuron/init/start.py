@@ -295,6 +295,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.networkIsTest(network):
             self._initialize_wallet('ravencoin', force=force)
             self._initialize_vault("ravencoin", None, False, force=force)
+        if not self.electrumxCheck():
+            self.createElectrumxConnection()
         walletInstance = self._initialize_wallet(
             network='evrmore',
             connection=self.electrumx,
