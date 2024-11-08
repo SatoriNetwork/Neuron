@@ -86,9 +86,9 @@ while True:
     try:
         start = StartupDag(
             env=ENV,
-            walletOnlyMode=config.get().get(
-                'wallet only mode',
-                os.environ.get('WALLETONLYMODE', False)),
+            runMode=config.get().get('run mode', os.environ.get('RUNMODE')),
+            # TODO: notice the dev mode is the same as prod for now, we should
+            #       have separate servers or run locally for dev mode
             urlServer={
                 # TODO: local endpoint should be in a config file.
                 # 'local': 'http://192.168.0.10:5002',
@@ -122,7 +122,6 @@ while True:
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
 
-        # print('building engine')
         # start.buildEngine()
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)
@@ -218,7 +217,12 @@ def closeVault(f):
 def vaultRequired(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if start.vault is None:
+        # race condition possible on start.vault is None
+        if (
+            not start.walletOnlyMode and  # allow bypass in this mode
+            start.vault is None and
+            not os.path.exists(config.walletPath('vault.yaml'))
+        ):
             return redirect('/vault')
         return f(*args, **kwargs)
     return decorated_function
@@ -489,11 +493,40 @@ def import_wallet():
             shutil.rmtree(wallet_path + '_backup', ignore_errors=True)
 
 
-@app.route('/restart', methods=['GET'])
+@app.route('/power/refresh', methods=['GET'])
+@userInteracted
+@authRequired
+def refresh():
+    start.restartQueue.put(2)
+    html = (
+        '<!DOCTYPE html>'
+        '<html>'
+        '<head>'
+        '    <title>Restarting Satori Neuron</title>'
+        '    <script type="text/javascript">'
+        '        setTimeout(function(){'
+        '            window.location.href = window.location.protocol + "//" + window.location.host;'
+        '        }, 1000 * 60);'
+        '    </script>'
+        '</head>'
+        '<body>'
+        '    <p>The Satori Neuron application is attempting to restart. <b>Please wait,</b> the restart process can take a minute.</p>'
+        '    <p>If after a minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' +
+        " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
+        '    <p>Thank you.</p>'
+        '</body>'
+        '</html>'
+    )
+    return html, 200
+
+
+@app.route('/power/restart', methods=['GET'])
 @userInteracted
 @authRequired
 def restart():
-    start.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+    start.udpQueue.put(
+        Envelope(ip='', vesicle=Signal(restart=True)))  # TODO: remove
+    start.restartQueue.put(1)
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -506,9 +539,8 @@ def restart():
         '    </script>'
         '</head>'
         '<body>'
-        '    <p>Satori Neuron is attempting to restart. <b>Please wait,</b> the restart process can take several minutes as it downloads updates.</p>'
-        '    <p>If after 10 minutes this page has not refreshed, <a href="javascript:void(0);" onclick="window.location.href = window.location.protocol' +
-        " + '//' + " + 'window.location.host;">click here to refresh the Satori Neuron UI</a>.</p>'
+        '    <p>The Satori Neuron docker container is attempting to restart. <b>Please wait,</b> the restart process can take several minutes as it downloads updates.</p>'
+        '    <p>You can close this window since Satori will open a new one during the restart process.</p>'
         '    <p>Thank you.</p>'
         '</body>'
         '</html>'
@@ -516,19 +548,22 @@ def restart():
     return html, 200
 
 
-@app.route('/shutdown', methods=['GET'])
+@app.route('/power/shutdown', methods=['GET'])
 @userInteracted
 @authRequired
 def shutdown():
-    start.udpQueue.put(Envelope(ip='', vesicle=Signal(shutdown=True)))
+    start.udpQueue.put(
+        Envelope(ip='', vesicle=Signal(shutdown=True)))  # TODO: remove
+    start.restartQueue.put(0)
     html = (
         '<!DOCTYPE html>'
         '<html>'
         '<head>'
-        '    <title>Shutting Down Satori Neuron</title>'
+        '    <title>Satori Neuron Shut Down</title>'
         '</head>'
         '<body>'
-        '    <p>Satori Neuron is attempting to shut down. To verify it has shut down you can make sure the container is not running under the Container tab in Docker, and you can close the terminal window which shows the logs of the Satori Neuron.</p>'
+        '    <p>The Satori Neuron has shut down. To verify see that the docker container is not running. You can close this window.</p>'
+        '    <p>Thank you.</p>'
         '</body>'
         '</html>'
     )
@@ -553,25 +588,25 @@ def modeDark():
     return redirect(url_for('dashboard'))
 
 
-@app.route('/test/connected', methods=['GET'])
-@userInteracted
-def testconnected():
-    print(start.wallet.connected())
-    return redirect(url_for('dashboard'))
+# @app.route('/test/connected', methods=['GET'])
+# @userInteracted
+# def testconnected():
+#    logging.debug(start.wallet.connected())
+#    return redirect(url_for('dashboard'))
 
 
-@app.route('/test/disconnect', methods=['GET'])
-@userInteracted
-def testdisconnect():
-    print(start.disconnectWallets())
-    return redirect(url_for('dashboard'))
+# @app.route('/test/disconnect', methods=['GET'])
+# @userInteracted
+# def testdisconnect():
+#    logging.debug(start.disconnectWallets())
+#    return redirect(url_for('dashboard'))
 
 
-@app.route('/test/connect', methods=['GET'])
-@userInteracted
-def testconnect():
-    print(start.reconnectWallets())
-    return redirect(url_for('dashboard'))
+# @app.route('/test/connect', methods=['GET'])
+# @userInteracted
+# def testconnect():
+#    logging.debug(start.reconnectWallets())
+#    return redirect(url_for('dashboard'))
 
 
 ###############################################################################
@@ -751,6 +786,8 @@ def sendSatoriTransactionUsing(
 
         # doesn't respect the cooldown
         myWallet.getUnspentSignatures(force=True)
+        if myWallet.isEncrypted:
+            return 'Vault is encrypted, please unlock it and try again.'
         try:
             # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronTransaction(
@@ -785,7 +822,9 @@ def sendSatoriTransactionUsing(
                         network=(
                             'ravencoin' if start.networkIsTest(network)
                             else 'evrmore'))
-                    if r.text != '':
+                    if r.text.startswith('{"code":1,"message":'):
+                        flash(f'Send Failed: {r.json().get("message")}')
+                    elif r.text != '':
                         return r.text
                     else:
                         flash(
@@ -1566,6 +1605,9 @@ def vault():
             'ethPrivateKey': account.key.to_0x_hex(),
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
     # start.workingUpdates.put('loading...')
+    # race condition:
+    while os.path.exists(config.walletPath('vault.yaml')) and start.vault is None:
+        time.sleep(1)
     return render_template('vault.html', **getResp({
         'title': 'Vault',
         'walletIcon': 'lock',
@@ -1590,7 +1632,6 @@ def reportVault(network: str = 'main'):
     if vault.isEncrypted:
         return redirect('/vault')
     vaultAddress = vault.address
-    print(vault.publicKey)
     success, result = start.server.reportVault(
         walletSignature=start.getWallet(network=network).sign(vaultAddress),
         vaultSignature=vault.sign(vaultAddress),
@@ -2007,8 +2048,8 @@ def proposalVote():
             return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
     except Exception as e:
         error_message = f"Error in proposalVote: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
         return jsonify({'status': 'error', 'message': error_message}), 500
 
 
@@ -2046,8 +2087,8 @@ def getProposalVotes(id):
             }), 404
     except Exception as e:
         error_message = f"Error fetching votes: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
         return jsonify({
             'status': 'error',
             'message': error_message
@@ -2064,10 +2105,10 @@ def proposalCreate():
     elif request.method == 'POST':
         try:
             data = request.json
-            print(
+            logging.debug(
                 f"Received proposal data in proposalCreate: {json.dumps(data, indent=2)}")
             success, result = start.server.submitProposal(data)
-            print(
+            logging.debug(
                 f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
             if success:
                 return jsonify({
@@ -2078,15 +2119,15 @@ def proposalCreate():
             else:
                 error_message = result.get(
                     'error', 'Failed to create proposal')
-                print(f"Failed to create proposal: {error_message}")
+                logging.debug(f"Failed to create proposal: {error_message}")
                 return jsonify({
                     'status': 'error',
                     'message': error_message
                 }), 400
         except Exception as e:
             error_message = f"Error in proposalCreate route: {str(e)}"
-            print(error_message)
-            print(traceback.format_exc())
+            logging.warning(error_message)
+            logging.warning(traceback.format_exc())
             return jsonify({
                 'status': 'error',
                 'message': 'Server error occurred'
@@ -2400,13 +2441,13 @@ def synapsePorts():
     return str(start.peer.gatherChannels())
 
 
-@app.route('/synapse/stream')
+@app.route('/synapse/stream')  # TODO: remove
 def synapseStream():
     ''' here we listen for messages from the synergy engine '''
 
     def event_stream():
         while True:
-            message = start.udpQueue.get()
+            message = start.udpQueue.get()  # TODO: remove
             if isinstance(message, Envelope):
                 yield 'data:' + message.toJson + '\n\n'
 

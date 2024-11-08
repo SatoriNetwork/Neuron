@@ -5,7 +5,7 @@ import time
 import json
 import random
 import threading
-
+from enum import Enum
 from reactivex.subject import BehaviorSubject
 from queue import Queue
 import satorineuron
@@ -14,7 +14,7 @@ from satoriwallet.api.blockchain import Electrumx
 from satorilib.concepts.structs import StreamId, Stream
 from satorilib.concepts import constants
 from satorilib.api import disk
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet, evrmoreElectrumServers, evrmoreElectrumServersSubscription
 # from satorilib.api.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
@@ -25,10 +25,10 @@ from satorineuron import VERSION
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.init.restart import restartLocalSatori
-from satorineuron.init.tag import LatestTag
+from satorineuron.init.tag import LatestTag, Version
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
-from satorineuron.structs.start import StartupDagStruct
+from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.structs.pubsub import SignedStreamId
 from satorineuron.synergy.engine import SynergyManager
 
@@ -56,7 +56,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self,
         *args,
         env: str = 'dev',
-        walletOnlyMode: bool = False,
+        runMode: str = None,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -64,14 +64,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False
     ):
         super(StartupDag, self).__init__(*args)
-        self.version = [int(x) for x in VERSION.split('.')]
+        self.version = Version(VERSION)
+        # TODO: test and turn on with new installer
+        # self.watchForVersionUpdates()
         self.env = env
-        if isinstance(walletOnlyMode, bool):
-            self.walletOnlyMode = walletOnlyMode
-        elif isinstance(walletOnlyMode, str) and walletOnlyMode == 'False':
-            self.walletOnlyMode = False
-        else:
-            self.walletOnlyMode = bool(walletOnlyMode)
+        self.runMode = RunMode.choose(runMode)
         self.userInteraction = time.time()
         self.electrumCooldown = 10
         self.asyncThread: AsyncThread = AsyncThread()
@@ -111,21 +108,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
-        self.udpQueue: Queue = Queue()
+        self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
         self.miningMode: bool = False
         self.mineToVault: bool = False
         self.stopAllSubscriptions = threading.Event()
-        self.walletTimeoutSeconds = 60*20
-        self.walletTimeoutThread = threading.Thread(
-            target=self.walletTimeoutWatcher, daemon=True)
-        self.walletTimeoutThread.start()
+        if self.runMode != RunMode.worker:
+            self.walletTimeoutSeconds = 60*20
+            self.walletTimeoutThread = threading.Thread(
+                target=self.walletTimeoutWatcher, daemon=True)
+            self.walletTimeoutThread.start()
         self.lastBlockTime = time.time()
         self.poolIsAccepting: bool = False
-        if not config.get().get('disable_restart', False):
+        if not config.get().get('disable restart', False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic, daemon=True)
             self.restartThread.start()
+        self.restartQueue: Queue = Queue()
+        self.restartQueueThread = threading.Thread(
+            target=self.restartWithQueue, args=(self.restartQueue,), daemon=True)
+        self.restartQueueThread.start()
         self.checkinCheckThread = threading.Thread(
             target=self.checkinCheck, daemon=True)
         self.checkinCheckThread.start()
@@ -133,34 +135,74 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
         if not alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
-        else:
-            if not os.path.exists(config.walletPath('wallet-migration-backup.yaml')):
-                # backup the wallet
-                import shutil
-                shutil.copy(
-                    config.walletPath('wallet.yaml'),
-                    config.walletPath('wallet-migration-backup.yaml'))
-        if os.path.exists(config.walletPath('vault.yaml')) and not os.path.exists(config.walletPath('vault-migration-backup.yaml')):
-            # backup the wallet
-            import shutil
-            shutil.copy(
-                config.walletPath('vault.yaml'),
-                config.walletPath('vault-migration-backup.yaml'))
+        self.performMigrationBackup('wallet')
+        self.performMigrationBackup('vault')
         self.ranOnce = False
+        if self.runMode == RunMode.normal:
+            startFunction = self.start
+        elif self.runMode == RunMode.worker:
+            startFunction = self.startWorker
+        elif self.runMode == RunMode.walletOnly:
+            startFunction = self.startWalletOnly
         while True:
             if self.asyncThread.loop is not None:
                 self.checkinThread = self.asyncThread.repeatRun(
-                    task=self.start,
+                    task=startFunction,
                     interval=60*60*24 if alreadySetup else 60*60*12)
                 break
             time.sleep(60*15)
+
+    def watchForVersionUpdates(self):
+        '''
+        if we notice the code version has updated, download code restart
+        in order to restart we have to kill the main thread manually.
+        '''
+        def getPidByName(name: str) -> Union[int, None]:
+            """
+            Returns the PID of a process given a name or partial command name match.
+            If multiple matches are found, returns the first match.
+            Returns None if no process is found with the given name.
+            """
+            import psutil
+            for proc in psutil.process_iter(['pid', 'cmdline']):
+                try:
+                    # Check if the process command line matches the target name
+                    if name in ' '.join(proc.info['cmdline']):
+                        return proc.info['pid']
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue  # Process terminated or access denied, skip
+            return None  # No process found with the given name
+
+        def terminatePid(pid: int):
+            import signal
+            os.kill(pid, signal.SIGTERM)  # Send SIGTERM to the process
+
+        def watchForever():
+            latestTag = LatestTag(self.version, serverURL=self.urlServer)
+            while True:
+                time.sleep(60*60*6)
+                if latestTag.mustUpdate():
+                    terminatePid(getPidByName('satori.py'))
+
+        self.watchVersionThread = threading.Thread(
+            target=watchForever,
+            daemon=True)
+        self.watchVersionThread.start()
+
+    def performMigrationBackup(self, name: str = 'wallet'):
+        if os.path.exists(config.walletPath(f'{name}.yaml')) and not os.path.exists(config.walletPath(f'{name}-migration-backup.yaml')):
+            import shutil
+            shutil.copy(
+                config.walletPath(f'{name}.yaml'),
+                config.walletPath(f'{name}-migration-backup.yaml'))
 
     def disconnectWallets(self):
         if self.electrumx is not None:
             self.stopAllSubscriptions.set()
             self.electrumx = None
             self.wallet.electrumx = None
-            self.vault.electrumx = None
+            if self.vault is not None:
+                self.vault.electrumx = None
             self.walletTimeoutSeconds = 60*60
 
     def reconnectWallets(self):
@@ -202,6 +244,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         ''' returns the reference to the cache of a stream '''
         return self.caches.get(streamId)
+
+    @property
+    def walletOnlyMode(self) -> bool:
+        return self.runMode == RunMode.walletOnly
 
     @property
     def rewardAddress(self) -> str:
@@ -260,62 +306,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             connection=self.electrumx,
             force=force)
         # Setup subscriptions fpr header and scripthash
-        walletInstance.setupSubscriptions()
-        if vaultInstance is not None:
-            vaultInstance.setupSubscriptions()
-        # Start a thread to listen for updates
-        self.processThread = Thread(
-            target=self._processNotifications)
-        self.processThread.start()
-        # Get Transaction history in separate threads
-        walletInstance.callTransactionHistory()
-        if vaultInstance is not None:
-            vaultInstance.callTransactionHistory()
+        if self.electrumx is not None and self.electrumx.connected():
+            walletInstance.setupSubscriptions()
+            walletInstance.subscribe()
+            if vaultInstance is not None:
+                vaultInstance.setupSubscriptions()
+                vaultInstance.subscribe()
 
-    # _processNotifications method to listening for updates
-    def _processNotifications(self):
-        """
-        Processes incoming notifications for the subscribed scripthash and headers.
-        """
-        logging.debug("_processNotifications started")
-        try:
-            for notification in self.electrumx.receive_notifications():
-                logging.debug(f"Received notification {notification}")
-                if self.stopAllSubscriptions.is_set():
-                    logging.debug("Stop event set, breaking loop")
-                    break
-                if 'method' in notification:
-                    if notification['method'] == 'blockchain.scripthash.subscribe':
-                        if 'params' in notification and len(notification['params']) == 2:
-                            scripthash, status = notification['params']
-                            if self._evrmoreWallet.scripthash == scripthash:
-                                logging.debug(
-                                    f"Received update for wallet scripthash {scripthash}: {status}")
-                                if callable(self._evrmoreWallet.get):
-                                    self._evrmoreWallet.get()
-                                if callable(self._evrmoreWallet.callTransactionHistory):
-                                    self._evrmoreWallet.callTransactionHistory()
-                            if self._evrmoreVault is not None and self._evrmoreVault.scripthash == scripthash:
-                                logging.debug(
-                                    f"Received update for vault scripthash {scripthash}: {status}")
-                                if callable(self._evrmoreVault.get):
-                                    self._evrmoreVault.get()
-                                if callable(self._evrmoreVault.callTransactionHistory):
-                                    self._evrmoreVault.callTransactionHistory()
-                    elif notification['method'] == 'blockchain.headers.subscribe':
-                        if 'params' in notification and len(notification['params']) > 0:
-                            header = notification['params'][0]
-                            logging.debug(
-                                f"Received new block header: height {header.get('height')}, hash {header.get('hex')[:64]}")
-                            self.lastBlockTime = time.time()
-                            # if callable(self.onBlockNotification):
-                            #     self.onBlockNotification(notification)
-                    else:
-                        logging.error(
-                            f"Received unknown method: {notification['method']}")
-        except Exception as e:
-            logging.error(f"Error in _processNotifications: {str(e)}")
-        logging.debug("_processNotifications ended")
+            # test - both show as being subscribed to...
+            # time.sleep(5)
+            # walletInstance.stopSubscription()
+            # time.sleep(5)
+            # vaultInstance.stopSubscription()
+            # time.sleep(10)
+            # self.stopAllSubscriptions.set()
+            # exit()
+
+            # Get Transaction history in separate threads
+            walletInstance.callTransactionHistory()
+            if vaultInstance is not None:
+                vaultInstance.callTransactionHistory()
 
     # new method
     def _initialize_wallet(
@@ -513,10 +523,48 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60*60)
         self.ranOnce = True
         self.setupElectrumxConnection()
-        if self.walletOnlyMode:
+        if self.runMode == RunMode.walletOnly:
             self.initializeWalletAndVault()
             self.createServerConn()
+            logging.info('in WALLETONLYMODE')
             return
+        self.initializeWalletAndVault()
+        self.setMiningMode()
+        self.createRelayValidation()
+        self.createServerConn()
+        self.checkin()
+        self.setRewardAddress()
+        self.verifyCaches()
+        # self.startSynergyEngine()
+        self.subConnect()
+        self.pubsConnect()
+        if self.isDebug:
+            return
+        self.startRelay()
+        self.buildEngine()
+        time.sleep(60*60*24)
+
+    def startWalletOnly(self):
+        ''' start the satori engine. '''
+        logging.info('running in walletOnly mode', color='blue')
+        # while True:
+        if self.ranOnce:
+            time.sleep(60*60)
+        self.ranOnce = True
+        self.setupElectrumxConnection()
+        self.initializeWalletAndVault()
+        self.createServerConn()
+
+    def startWorker(self):
+        ''' start the satori engine. '''
+        logging.info('running in worker mode', color='blue')
+        # while True:
+        if self.ranOnce:
+            time.sleep(60*60)
+        self.ranOnce = True
+        self.createElectrumxConnection(
+            hostPort='0.0.0.0:50002',
+            hostPortSubscription='0.0.0.0:50001')
         self.initializeWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
@@ -564,34 +612,28 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     logging.info(
                         "Connection done, starting processing again", color="green")
                     self.lastBlockTime = time.time()
+                    self._evrmoreWallet.clearSubscriptions()
+                    self._evrmoreVault.clearSubscriptions()
                     self._evrmoreWallet.setupSubscriptions()
                     self._evrmoreVault.setupSubscriptions()
-                    logging.info(
-                        "Starting the thread for the process notification")
-                    self.processThread = Thread(
-                        target=self._processNotifications)
-                    self.processThread.start()
+                    self._evrmoreWallet.subscribe()
+                    self._evrmoreVault.subscribe()
                 except Exception as e:
                     logging.error(f"Error while reconnecting {e}")
 
-    def createElectrumxConnection(self):
-        servers: list[str] = [
-            '146.190.149.237:50002',
-            '146.190.38.120:50002',
-            'electrum1-mainnet.evrmorecoin.org:50002',
-            'electrum2-mainnet.evrmorecoin.org:50002']
-        serversSubscription: list[str] = [
-            '146.190.149.237:50001',
-            '146.190.38.120:50001',
-            'electrum1-mainnet.evrmorecoin.org:50001',
-            'electrum2-mainnet.evrmorecoin.org:50001']
-        hostPort = random.choice(servers)
-        hostPortSubscription = random.choice(serversSubscription)
-        self.electrumx = Electrumx(
-            host=hostPort.split(':')[0],
-            port=int(hostPort.split(':')[1]),
-            hostSubscription=hostPortSubscription.split(':')[0],
-            portSubscription=int(hostPortSubscription.split(':')[1]))
+    def createElectrumxConnection(self, hostPort: str = None, hostPortSubscription: str = None):
+        hostPort = hostPort or random.choice(evrmoreElectrumServers)
+        hostPortSubscription = hostPortSubscription or random.choice(
+            evrmoreElectrumServersSubscription)
+        try:
+            self.electrumx = Electrumx(
+                host=hostPort.split(':')[0],
+                port=int(hostPort.split(':')[1]),
+                hostSubscription=hostPortSubscription.split(':')[0],
+                portSubscription=int(hostPortSubscription.split(':')[1]))
+        except Exception as e:
+            logging.warning(
+                'unable to connect to electrum opperating without wallet abilities:', e)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
@@ -900,14 +942,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #        break
         #    time.sleep(1)
 
-    def triggerRestart(self):
+    def triggerRestart(self, return_code=1):
         from satorisynapse import Envelope, Signal
-        self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+        self.udpQueue.put(
+            Envelope(ip='', vesicle=Signal(restart=True)))  # TODO: remove
         import time
         time.sleep(5)
-        os._exit(0)
-        # import requests
-        # requests.get('http://127.0.0.1:24601/restart')
+        # 0 = shutdown, 1 = restart container, 2 = restart app
+        os._exit(return_code)
 
     def emergencyRestart(self):
         import time
@@ -932,6 +974,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             # latestTag.get()
             # if latestTag.isNew:
             #    self.triggerRestart()
+
+    def restartWithQueue(self, queue):
+        return_code = int(queue.get())  # Wait for signal
+        self.triggerRestart(return_code)
 
     def publish(
         self,
@@ -960,7 +1006,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 observationTime=observationTime,
                 observationHash=observationHash,
                 isPrediction=isPrediction,
-                useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
+                useAuthorizedCall=self.version >= Version('0.2.6'))
 
     def performStakeCheck(self):
         self.stakeStatus = self.server.stakeCheck()

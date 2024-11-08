@@ -43,7 +43,7 @@ def establishConnection(pubkey: str, key: str, url: str = None, onConnect: calla
         # just a function, and shouldn't be eliminated.
 
     logging.info(
-        'subscribing to:' if subscription else 'publishing to:', url)
+        'subscribing to:' if subscription else 'publishing to:', url, color='blue')
     return SatoriPubSubConn(
         uid=pubkey,
         router=router if subscription else None,

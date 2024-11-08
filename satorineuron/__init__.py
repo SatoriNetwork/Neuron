@@ -7,11 +7,11 @@ from satorilib.api.disk import Cache  # Disk
 Cache.setConfig(config)
 logging.setup(level={
     'debug': logging.DEBUG,
-    'info': logging.INFO,
     'warning': logging.WARNING,
+    'info': logging.INFO,
     'error': logging.ERROR,
     'critical': logging.CRITICAL,
 }[config.get().get('logging level', 'warning').lower()])
 
-VERSION = '0.2.25'
+VERSION = '0.2.32'
 MOTTO = 'Let your workings remain a mystery, just show people the results.'
