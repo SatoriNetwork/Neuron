@@ -14,17 +14,16 @@
             <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
             <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
               Data streams published by Satori Neurons.
-              <br>
-              Please vote on which data streams should be predicted.
             </p>
           </div>
         </div>
       </div>
-      <div style="margin-left:24px;margin-top:15px" class="d-flex flex-row gap-2">
-        <input style="width:30%;border-radius:5px;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
-        <button id="popularitySortBtn" onclick="toggleSort('votedfor')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Voted For <div style="margin-top:-3px" id="votedforIcon">↓</div></button>
-        <button id="popularitySortBtn" onclick="toggleSort('popularity')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Popularity <div style="margin-top:-3px" id="popularityIcon">↓</div></button>
-        <button id="dateSortBtn" onclick="toggleSort('date')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Date <div style="margin-top:-3px" id="dateIcon"></div></button>
+      <div style="margin-left:24px;margin-top:15px;padding-right:26px;" class="d-flex flex-row gap-2">
+        <input style="width:30%;height:51.82px;border-radius:0.5rem;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
+        <button id="popularitySortBtn" class="d-flex flex-row gap-2 btn btn-outline-dark" style="align-items:center;justify-content:center" onclick="toggleSort('votedfor')">Sort by Voted For <div style="margin-top:-3px" id="votedforIcon">↓</div></button>
+        <button id="popularitySortBtn" class="d-flex flex-row gap-2 btn btn-outline-dark" style="align-items:center;justify-content:center" onclick="toggleSort('popularity')">Sort by Popularity <div style="margin-top:-3px" id="popularityIcon">↓</div></button>
+        <button id="dateSortBtn"       class="d-flex flex-row gap-2 btn btn-outline-dark" style="align-items:center;justify-content:center" onclick="toggleSort('date')">Sort by Date <div style="margin-top:-3px" id="dateIcon"></div></button>
+        <!-- not categorized yet
         <select style="padding:5px" id="categorySelect" onchange="filterByCategory()">
           <option value="" disabled selected>Select Category</option>
           <option value="all">All Categories</option>
@@ -32,68 +31,47 @@
           <option value="crypto">Crypto</option>
           <option value="stocks">Stocks</option>
           <option value="government">Government Entities</option>
-        </select>
+        </select>-->
       </div>
       <div class="card-body px-0 pb-2">
         <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
-          <table class="table align-items-center mb-0">
+          <table class="table align-items-center mb-0" style="table-layout: fixed;max-width: 100%;">
             <thead ondblclick='toggleVotingDetails();'>
               <tr>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Oracle</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Actions</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:20%;">Oracle</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:40%;">Stream</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:20%;">Target</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:20%;">Actions</th>
               </tr>
             </thead>
             <tbody id="updating_table">
-              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" id='totalsRow' style='display:none;'>
-                <td colspan="3">
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 id='streamsWalletVoteTotal' class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
-                  </div>
-                </td>
-                {%if vault.isDecrypted %}
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 id='streamsVaultVoteTotal' class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
-                  </div>
-                </td>
-                {% endif %}
-              </tr> 
               {% for stream in streams %}
               <!-- <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %} {% if stream['wallet_vote'] != 0 or (vault.isDecrypted and stream['vault_vote'] != 0) %}{% if darkmode %}yellow-dark-selected{% else %}yellow-selected{% endif %}{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');"> -->
               <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['stream'] }}</h6>
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ stream['stream'] }}</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['target'] }}</h6>
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ stream['target'] }}</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex gap-2">
                     {% if stream.vote == 0 %}
                       <div id="stream_{{stream['stream_id']}}" onclick="incrementVote({{ stream['stream_id'] }}, event);">
-                        <i class="material-icons opacity-10">thumb_up</i>
+                        <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
                       </div>
                     {% else %}
                       <div id="stream_remove_{{stream['stream_id']}}" onclick="removeVote({{ stream['stream_id'] }}, event);">
-                        <i class="material-icons opacity-10">thumb_down</i>
+                        <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                       </div>
                     {% endif %}
                   </div>
@@ -129,31 +107,29 @@
                 {% endif %}
                  <!-- Additional details row -->
                 <tr class="stream-details" style="display: none;">
-                    <td colspan="5">
-                        <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px">
-                            <h3 style="font-weight:bold">STREAM DETAILS</h3>
-                            <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> {{ stream['stream'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> {{ stream['target'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> {{ stream['cadence'] }} seconds</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> {{ stream['stream_id'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>URL:</strong> <a href="{{ stream['url'] }}" target="_blank">{{ stream['url'] }}</a></p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> {{ stream['author'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> {{ stream['source'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> {{ stream['tags'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> {{ stream['oracle_address'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Description:</strong> {{ stream['description'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Alias:</strong> {{ stream['oracle_alias'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> {{ stream['oracle_pubkey'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> {{ stream['stream_created_ts'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Total Vote:</strong> {{ stream['total_vote'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Wallet Vote:</strong> {{ stream['wallet_vote'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vault Vote:</strong> {{ stream['vault_vote'] }}</p>
-                            </div>
-                        </div>
-                    </td>
+                  <td colspan="4">
+                    <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
+                      <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> {{ stream['stream'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> {{ stream['target'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> {{ stream['cadence'] }} seconds</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created:</strong> {{ stream['stream_created_ts'] }}</p>
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> {{ stream['stream_id'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> {{ stream['author'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> {{ stream['source'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> {{ stream['oracle_pubkey'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author Alias:</strong> {{ stream['oracle_alias'] }}</p>-->
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cracle Address:</strong> {{ stream['oracle_address'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> {{ stream['total_vote'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> {{ stream['tags'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Wallet Vote:</strong> {{ stream['vote'] }}</p>
+                        <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="{{ stream['url'] }}" target="_blank">{{ stream['url'] }}</a></p>
+                        <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> {{ stream['description'] }}</p>
+                      </div>
+                    </div>
+                  </td>
                 </tr>
-              </tr> 
+              </tr>
               {% endfor %}
             </tbody>
           </table>
@@ -163,6 +139,11 @@
   </div>
 </div>
 <script type="text/javascript">
+
+  //document.addEventListener('DOMContentLoaded', (event) => {
+  //  getOracleStreams();
+  //});
+
   function getWalletStreamsCount() {
     let count = 0;
     for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
@@ -192,33 +173,33 @@
   function updateWalletStreamsTotal() {
     try {
       let total = getWalletStreamsTotal();
-      document.getElementById('streamsWalletVoteTotal').innerHTML = total + ' %';
+      document.getElementById("streamsWalletVoteTotal").innerHTML = total + ' %';
     } catch (error) {
-      document.getElementById('streamsWalletVoteTotal').innerHTML = 0 + ' %';
+      document.getElementById("streamsWalletVoteTotal").innerHTML = 0 + ' %';
     }
   }
 
   function validateWalletStreamsVotes() {
     updateWalletStreamsTotal();
-    let total = parseFloat(document.getElementById('streamsWalletVoteTotal').innerHTML.split(' ')[0]);
+    let total = parseFloat(document.getElementById("streamsWalletVoteTotal").innerHTML.split(' ')[0]);
     if (total > 100.0) {
       for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
         element.value = parseInt(parseInt(element.value) / total * 100);
       }
       updateWalletStreamsTotal();
-    } 
+    }
     return true;
   }
 
   function validateVaultStreamsVotes() {
     updateVaultStreamsTotal();
-    let total = parseFloat(document.getElementById('streamsVaultVoteTotal').innerHTML.split(' ')[0]);
+    let total = parseFloat(document.getElementById("streamsVaultVoteTotal").innerHTML.split(' ')[0]);
     if (total > 100.0) {
       for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
         element.value = parseInt(parseInt(element.value) / total * 100);
       }
       updateVaultStreamsTotal();
-    } 
+    }
     return true;
   }
 
@@ -236,10 +217,10 @@
       walletStreamIds: walletStreamIds,
       walletVotes: walletVotes,
     });
-    
+
     fetch(
-      '/vote/submit/sanction/wallet', { 
-        method: 'POST', 
+      '/vote/submit/sanction/wallet', {
+        method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           walletStreamIds: walletStreamIds,
@@ -252,7 +233,7 @@
     })
     .catch(error => console.error('Error:', error));
   }
-  
+
   function saveStreamVotesVault() {
     let vaultStreamIds = [];
     let vaultVotes = [];
@@ -264,8 +245,8 @@
       }
     }
     fetch(
-      '/vote/submit/sanction/vault', { 
-        method: 'POST', 
+      '/vote/submit/sanction/vault', {
+        method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           vaultStreamIds: vaultStreamIds,
@@ -329,14 +310,14 @@
       }
       validateVaultStreamsVotes();
       saveStreamVotesVault();
-    } 
+    }
   }
 
   function showNotification(message, showError = false) {
     const notification = document.getElementById(showError ? 'notification_error' : 'notification');
     notification.innerHTML = message;
     notification.style.display = 'block';
-    
+
     // Hide the notification after 3 seconds
     setTimeout(() => {
       notification.style.display = 'none';
@@ -347,8 +328,8 @@
   function incrementVote(streamId, event) {
     event.stopPropagation();
     fetch(
-      '/vote_on/sanction/incremental', { 
-        method: 'POST', 
+      '/vote_on/sanction/incremental', {
+        method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           streamId: streamId,
@@ -358,10 +339,10 @@
             const responseData = await response.json();
             console.log("responseData", responseData.message);
             const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(4) div[id="stream_${streamId}"]`);
-            voteActionElement.innerHTML = '<i class="material-icons opacity-10">thumb_down</i>';
+            voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Approved">thumb_up</i>';
             voteActionElement.onclick = (e) => removeVote(streamId, e);
             voteActionElement.id = `stream_remove_${streamId}`; // Update the id to match remove vote action
-            showNotification("Vote incremented successfully!");
+            showNotification("Vote added");
         }
     })
     .catch(error => {
@@ -374,8 +355,8 @@
   function removeVote(streamId, event) {
     event.stopPropagation();
     fetch(
-      '/clear_vote_on/sanction/incremental', { 
-        method: 'POST', 
+      '/clear_vote_on/sanction/incremental', {
+        method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           streamId: streamId,
@@ -385,10 +366,10 @@
           const responseData = await response.json();
           console.log("responseData", responseData.message);
           const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(4) div[id="stream_remove_${streamId}"]`);
-          voteActionElement.innerHTML = '<i class="material-icons opacity-10">thumb_up</i>';
+          voteActionElement.innerHTML = '<i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>';
           voteActionElement.onclick = (e) => incrementVote(streamId, e);
           voteActionElement.id = `stream_${streamId}`;
-          showNotification("Vote removed successfully!");
+          showNotification("Vote removed");
         }
     })
     .catch(error => {
@@ -397,7 +378,7 @@
     });
   }
 
-  const darkmode = {{ 'true' if darkmode else 'false' }};  
+  const darkmode = {{ 'true' if darkmode else 'false' }};
   const vault = { isDecrypted: {{ 'true' if vault.isDecrypted else 'false' }} };
   let storedStreams = {{ streams|tojson }};
   let sortOrder = {
@@ -437,7 +418,7 @@
       } else {
         iconElement.innerHTML = '↓';
       }
-      
+
       sortBy(type, sortOrder[type]);
     }, 200);
   }
@@ -512,7 +493,7 @@
     console.log("searchText", searchText);
     console.log("storedStreams", storedStreams);
 
-    const filteredStreams = storedStreams.filter(stream => 
+    const filteredStreams = storedStreams.filter(stream =>
         stream.stream.toLowerCase().includes(searchText.toLowerCase()) ||
         stream.target.toLowerCase().includes(searchText.toLowerCase())
     );
@@ -561,6 +542,7 @@
     }
 
     streams.forEach(stream => {
+      console.log(stream);
       const row = document.createElement('tr');
       row.style.cursor = "pointer";
       row.onclick = () => toggleStreamDetails(row);
@@ -575,12 +557,12 @@
       const voteActionHtml = `
         <td>
           <div class="d-flex gap-2">
-            ${stream.vote === 0 ? 
+            ${stream.vote === 0 ?
                 `<div id="stream_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
-                    <i class="material-icons opacity-10">thumb_up</i>
-                </div>` : 
+                    <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
+                </div>` :
                 `<div id="stream_remove_${stream.stream_id}" onclick="removeVote(${stream.stream_id}, event);">
-                    <i class="material-icons opacity-10">thumb_down</i>
+                    <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                 </div>`
             }
           </div>
@@ -612,29 +594,23 @@
       streamDetailRow.class = `stream-details`;
       streamDetailRow.style.display = "none";
       streamDetailRow.innerHTML = `
-          <td colspan="5">
-              <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px">
-                  <h3 style="font-weight:bold">STREAM DETAILS</h3>
-                  <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> ${stream.stream_id}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> ${stream.author}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> ${stream.source}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> ${stream.oracle_address}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Description:</strong> ${stream.description}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Alias:</strong> ${stream.oracle_alias}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> ${stream.oracle_pubkey}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Total Vote:</strong> ${stream.total_vote}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Wallet Vote:</strong> ${stream.wallet_vote}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vault Vote:</strong> ${stream.vault_vote}</p>
-                  </div>
-              </div>
-          </td>
+        <td colspan="5">
+          <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
+            <h4 style="font-weight:bold">STREAM DETAILS</h4>
+            <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
+              <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author Address:</strong> ${stream.oracle_address}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> ${stream.total_vote}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> ${stream.vote}</p>
+              <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> ${stream.description}</p>
+            </div>
+          </div>
+        </td>
       `
       tableBody.appendChild(streamDetailRow);
     });

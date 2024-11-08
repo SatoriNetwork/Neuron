@@ -1,0 +1,22 @@
+{% block content %}
+<div class="row">
+  <div class="col-lg-12 col-md-12 mb-md-0">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
+            <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+              Data streams published by Satori Neurons.
+              <br>
+              <a href="/streams">Click here to search for data streams and vote on which should be predicted.</a>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
