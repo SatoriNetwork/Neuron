@@ -1952,16 +1952,16 @@ def streams():
     #    'vote': 33.333333333333336}
     # TODO: fix, give the brower only what it needs from this list:
     # oracleStreams = filter out the details, just include the stream_id, author alias and address, stream name, total vote and vote
-    oracleStreams = [{
-        'stream_id': os['stream_id'],
-        'author': os['author'],
-        'oracle_alias': os['oracle_alias'],
-        'oracle_address': os['oracle_address'],
-        'stream': os['stream'],
-        'total_vote': os['total_vote'],
-        'vote': os['vote'],
-        'stream_created_ts': os['stream_created_ts'],
-    } for os in oracleStreams]
+    # oracleStreams = [{
+    #    'stream_id': os['stream_id'],
+    #    'author': os['author'],
+    #    'oracle_alias': os['oracle_alias'],
+    #    'oracle_address': os['oracle_address'],
+    #    'stream': os['stream'],
+    #    'total_vote': os['total_vote'],
+    #    'vote': os['vote'],
+    #    'stream_created_ts': os['stream_created_ts'],
+    # } for os in oracleStreams]
     return render_template('streams.html', **getResp({
         'title': 'Streams',
         'network': start.network,
