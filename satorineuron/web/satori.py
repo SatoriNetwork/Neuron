@@ -1921,11 +1921,6 @@ def vote():
 @vaultRequired
 @authRequired
 def streams():
-    def getStreams(searchText=None):
-        streams = start.server.getSearchStreams(searchText=searchText)
-        print(len(streams))
-        return streams
-
     # Commenting down as of now, will be used in future if we need to make the call to server for search streams
     # as of now we have limited streams so we can search in client side
     # Get search text from query parameters
@@ -1933,7 +1928,40 @@ def streams():
     # if searchText is not None:
     #     streamsData = getStreams(searchText)
     #     return jsonify({'streams': streamsData})
-
+    oracleStreams = start.getAllOracleStreams()
+    # print(oracleStreams[0])
+    # {
+    #    'author': 27790,
+    #    'cadence': 600.0,
+    #    'datatype': 'float',
+    #    'description': 'Price AED 10min interval coinbase',
+    #    'oracle_address': 'EHJKq4EW2GfGBvhweasMXCZBVbAaTuDERS',
+    #    'oracle_alias': 'WilQSL_x10',
+    #    'oracle_pubkey': '03e3f3a15c2e174cac7ef8d1d9ff81e9d4ef7e33a59c20cc5cc142f9c69493f306',
+    #    'predicting_id': 0,
+    #    'sanctioned': 0,
+    #    'source': 'satori',
+    #    'stream': 'Coinbase.AED.USDT',
+    #    'stream_created_ts': 'Tue, 09 Jul 2024 10:20:11 GMT',
+    #    'stream_id': 326076,
+    #    'tags': 'AED, coinbase',
+    #    'target': 'data.rates.AED',
+    #    'total_vote': 6537.669052915435,
+    #    'url': 'https://api.coinbase.com/v2/exchange-rates',
+    #    'utc_offset': 227.0,
+    #    'vote': 33.333333333333336}
+    # TODO: fix, give the brower only what it needs from this list:
+    # oracleStreams = filter out the details, just include the stream_id, author alias and address, stream name, total vote and vote
+    oracleStreams = [{
+        'stream_id': os['stream_id'],
+        'author': os['author'],
+        'oracle_alias': os['oracle_alias'],
+        'oracle_address': os['oracle_address'],
+        'stream': os['stream'],
+        'total_vote': os['total_vote'],
+        'vote': os['vote'],
+        'stream_created_ts': os['stream_created_ts'],
+    } for os in oracleStreams]
     return render_template('streams.html', **getResp({
         'title': 'Streams',
         'network': start.network,
@@ -1941,7 +1969,18 @@ def streams():
         'vaultOpened': False,
         'vault': start.vault,
         'darkmode': darkmode,
-        'streams': getStreams()[0:10]}))
+        # TODO: fix this, slicing to only grab a few is a temporary fix because we can't handle all streams because of the inefficiencies in the browser
+        'streams': oracleStreams[0:10]}))
+
+
+@app.route('/streams/detail/<streamId>', methods=['GET', 'POST'])
+@userInteracted
+@authRequired
+def streamsDetail(streamId: str):
+    streams = start.getAllOracleStreams()
+    # TODO: fix this, extract the correct stream by streamId from this list and return the details:
+    details = streams[0]
+    return details, 200
 
 
 @app.route('/vote_on/sanction/incremental', methods=['POST'])

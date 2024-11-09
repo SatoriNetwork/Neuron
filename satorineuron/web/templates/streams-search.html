@@ -46,7 +46,7 @@
             <tbody id="updating_table">
               {% for stream in streams %}
               <!-- <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %} {% if stream['wallet_vote'] != 0 or (vault.isDecrypted and stream['vault_vote'] != 0) %}{% if darkmode %}yellow-dark-selected{% else %}yellow-selected{% endif %}{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');"> -->
-              <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
+              <tr style="cursor:pointer" onclick="toggleStreamDetails(this, {{ stream['stream_id'] }});" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
                 <td>
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
@@ -381,13 +381,32 @@
     votedfor: 'desc'
   };
 
-  function toggleStreamDetails(row) {
-      const detailsRow = row.nextElementSibling;
-      if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-          detailsRow.style.display = 'table-row';
-      } else {
-          detailsRow.style.display = 'none';
-      }
+  function toggleStreamDetails(row, streamId) {
+    /// TODO: fetch or build the details on demand instead of on page load.
+    //fetch(
+    //  `/streams/detail/${streamId}`, {
+    //    method: 'GET',
+    //    headers: {'Content-Type': 'application/json'},
+    //  })
+    //.then(async (response) => {
+    //    if (response.ok) {
+    //      const responseData = await response.json();
+    //      console.log("details", responseData.message);
+    //      // build the details and show it.
+    //    }
+    //})
+    //.catch(error => {
+    //  console.error('Error:', error);
+    //  showNotification("Something went wrong!", true);
+    //});
+
+    /// pre-building them crashes the page when we have 1000s of streams. no good.
+    //const detailsRow = row.nextElementSibling;
+    //if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+    //    detailsRow.style.display = 'table-row';
+    //} else {
+    //    detailsRow.style.display = 'none';
+    //}
   }
 
   let timeout = null;
@@ -590,17 +609,16 @@
       streamDetailRow.innerHTML = `
         <td colspan="5">
           <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
-            <h4 style="font-weight:bold">STREAM DETAILS</h4>
             <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
-              <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author Address:</strong> ${stream.oracle_address}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> ${stream.total_vote}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> ${stream.vote}</p>
+              <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
               <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> ${stream.description}</p>
             </div>
           </div>

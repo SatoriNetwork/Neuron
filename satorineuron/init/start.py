@@ -100,6 +100,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
+        self.allOracleStreams = None
         self.electrumx: Electrumx = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -1053,3 +1054,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if success:
             self.poolIsAccepting = status
         return success, result
+
+    def getAllOracleStreams(self, searchText: Union[str, None]=None, fetch: bool=False):
+        if fetch or self.allOracleStreams is None:
+            self.allOracleStreams = self.server.getSearchStreams(searchText=searchText)
+        return self.allOracleStreams
