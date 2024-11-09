@@ -1942,7 +1942,6 @@ def streams():
 @authRequired
 def incrementalVote():
     streamId = request.json.get('streamId', "")
-    print("streamId", streamId)
     message = start.server.incrementVote(streamId=streamId)
     return jsonify({'message': message}), 200
 
@@ -1952,7 +1951,6 @@ def incrementalVote():
 @authRequired
 def removeVote():
     streamId = request.json.get('streamId', "")
-    print("streamId", streamId)
     message = start.server.removeVote(streamId=streamId)
     return jsonify({'message': message}), 200
 
