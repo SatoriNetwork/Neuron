@@ -96,7 +96,6 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
-            # 'prod': 'http://24.199.113.168'}[ENV],  # c
             # 'prod': 'https://central.satorinet.io'}[ENV],
             # 'prod': 'http://24.199.113.168'}[ENV], # c
             # 'prod': 'http://137.184.38.160'}[ENV],  # n
@@ -1928,7 +1927,7 @@ def streams():
     # if searchText is not None:
     #     streamsData = getStreams(searchText)
     #     return jsonify({'streams': streamsData})
-    oracleStreams = start.getAllOracleStreams()
+    oracleStreams = start.getAllOracleStreams(fetch=True)
     return render_template('streams.html', **getResp({
         'title': 'Streams',
         'network': start.network,

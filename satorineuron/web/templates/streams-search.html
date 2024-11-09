@@ -63,11 +63,11 @@
                 <td>
                   <div class="d-flex gap-2">
                     {% if stream.vote == 0 %}
-                      <div id="stream_{{stream['stream_id']}}" onclick="incrementVote({{ stream['stream_id'] }}, event);">
+                      <div id="stream_increment_{{stream['stream_id']}}" onclick="incrementVote({{ stream['stream_id'] }}, event);">
                         <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
                       </div>
                     {% else %}
-                      <div id="stream_remove_{{stream['stream_id']}}" onclick="removeVote({{ stream['stream_id'] }}, event);">
+                      <div id="stream_decrement_{{stream['stream_id']}}" onclick="decrementVote({{ stream['stream_id'] }}, event);">
                         <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                       </div>
                     {% endif %}
@@ -138,17 +138,16 @@
       '/vote_on/sanction/incremental', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          streamId: streamId,
-        })})
+        body: JSON.stringify({streamId: streamId})})
     .then(async (response) => {
         if (response.ok) {
             const responseData = await response.json();
             console.log("responseData", responseData.message);
-            const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(4) div[id="stream_${streamId}"]`);
+            //const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(3) div[id="stream_${streamId}"]`);
+            const voteActionElement = document.getElementById(`stream_increment_${streamId}`);
             voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Approved">thumb_up</i>';
-            voteActionElement.onclick = (e) => removeVote(streamId, e);
-            voteActionElement.id = `stream_remove_${streamId}`; // Update the id to match remove vote action
+            voteActionElement.onclick = (e) => decrementVote(streamId, e);
+            voteActionElement.id = `stream_decrement_${streamId}`; // Update the id to match remove vote action
             showNotification("Vote added");
         }
     })
@@ -159,23 +158,22 @@
   }
 
   // Remove Vote
-  function removeVote(streamId, event) {
+  function decrementVote(streamId, event) {
     event.stopPropagation();
     fetch(
       '/clear_vote_on/sanction/incremental', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          streamId: streamId,
-        })})
+        body: JSON.stringify({streamId: streamId})})
     .then(async (response) => {
         if (response.ok) {
           const responseData = await response.json();
           console.log("responseData", responseData.message);
-          const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(4) div[id="stream_remove_${streamId}"]`);
+          //const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(3) div[id="stream_decrement_${streamId}"]`);
+          const voteActionElement = document.getElementById(`stream_decrement_${streamId}`);
           voteActionElement.innerHTML = '<i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>';
           voteActionElement.onclick = (e) => incrementVote(streamId, e);
-          voteActionElement.id = `stream_${streamId}`;
+          voteActionElement.id = `stream_increment_${streamId}`;
           showNotification("Vote removed");
         }
     })
@@ -359,10 +357,10 @@
         <td>
           <div class="d-flex gap-2">
             ${stream.vote === 0 ?
-                `<div id="stream_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
+                `<div id="stream_increment_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
                     <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
                 </div>` :
-                `<div id="stream_remove_${stream.stream_id}" onclick="removeVote(${stream.stream_id}, event);">
+                `<div id="stream_decrement_${stream.stream_id}" onclick="decrementVote(${stream.stream_id}, event);">
                     <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                 </div>`
             }
