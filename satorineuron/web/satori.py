@@ -1583,7 +1583,6 @@ def vault():
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
         myWallet = start.getWallet(network='main')
-
         try:
             alias = myWallet.alias or start.server.getWalletAlias()
         except Exception as e:
