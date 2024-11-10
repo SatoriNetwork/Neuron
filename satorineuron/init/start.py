@@ -113,6 +113,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
+        self.allOracleStreams = None
         self.electrumx: Electrumx = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -286,15 +287,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def network(self) -> str:
-        return "main" if self.env == "prod" else "test"
+        return 'main' if self.env in ['prod', 'local'] else 'test'
 
     @property
     def vault(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        return self._evrmoreVault if self.env == "prod" else self._ravencoinVault
+        return self._evrmoreVault if self.env in ['prod', 'local'] else self._ravencoinVault
 
     @property
     def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        return self._evrmoreWallet if self.env == "prod" else self._ravencoinWallet
+        return self._evrmoreWallet if self.env in ['prod', 'local'] else self._ravencoinWallet
 
     # @property
     # def ravencoinWallet(self) -> RavencoinWallet:
@@ -320,6 +321,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.networkIsTest(network):
             self._initialize_wallet("ravencoin", force=force)
             self._initialize_vault("ravencoin", None, False, force=force)
+        if not self.electrumxCheck():
+            self.createElectrumxConnection()
         walletInstance = self._initialize_wallet(
             network="evrmore", connection=self.electrumx, force=force
         )
@@ -797,10 +800,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def setRewardAddress(self) -> bool:
         configRewardAddress: str = str(config.get().get("reward address", ""))
         if (
-            self.env == "prod"
-            and len(configRewardAddress) == 34
-            and configRewardAddress.startswith("E")
-            and self.rewardAddress != configRewardAddress
+            self.env in ['prod', 'local'] and
+            len(configRewardAddress) == 34 and
+            configRewardAddress.startswith('E') and
+            self.rewardAddress != configRewardAddress
         ):
             self.server.setRewardAddress(
                 signature=self.wallet.sign(configRewardAddress),
@@ -1188,3 +1191,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if success:
             self.poolIsAccepting = status
         return success, result
+
+    def getAllOracleStreams(self, searchText: Union[str, None] = None, fetch: bool = False):
+        if fetch or self.allOracleStreams is None:
+            self.allOracleStreams = self.server.getSearchStreams(
+                searchText=searchText)
+        return self.allOracleStreams

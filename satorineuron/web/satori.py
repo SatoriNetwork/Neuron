@@ -59,7 +59,7 @@ timeout = 1
 ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 CORS(app, origins=[{
-    'local': 'http://192.168.0.10:5002',
+    'local': 'http://central',
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])
@@ -91,29 +91,32 @@ while True:
             #       have separate servers or run locally for dev mode
             urlServer={
                 # TODO: local endpoint should be in a config file.
-                'local': 'http://192.168.0.10:5002',
-                'dev': 'https://stage.satorinet.io',  # 'dev': 'http://localhost:5002',
+                # 'local': 'http://192.168.0.10:5002',
+                'local': 'http://central',
+                'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
             # 'prod': 'https://central.satorinet.io'}[ENV],
-            # 'prod': 'http://24.199.113.168'}[ENV],  # c
+            # 'prod': 'http://24.199.113.168'}[ENV], # c
             # 'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
-                'local': 'http://192.168.0.10:5002',
-                'dev': 'https://mundo.satorinet.io',  # 'dev': 'http://localhost:5002',
+                # 'local': 'http://192.168.0.10:5002',
+                'local': 'https://mundo.satorinet.io',
+                'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://mundo.satorinet.io'}[ENV],
             # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
-                'local': ['ws://192.168.0.10:24603'],
-                # 'dev': ['ws://localhost:24603'],
-                'dev': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
+                # 'local': ['ws://192.168.0.10:24603'],
+                'local': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
+                'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
             # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
             urlSynergy={
-                'local': 'https://192.168.0.10:24602',
-                'dev': 'https://synergy.satorinet.io:24602',  # 'dev': 'https://localhost:24602',
+                # 'local': 'https://192.168.0.10:24602',
+                'local': 'https://synergy.satorinet.io:24602',
+                'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
@@ -1582,7 +1585,6 @@ def vault():
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
         myWallet = start.getWallet(network='main')
-
         try:
             alias = myWallet.alias or start.server.getWalletAlias()
         except Exception as e:
@@ -1829,6 +1831,22 @@ def removeProxyChild(address: str, id: int):
 @vaultRequired
 @authRequired
 def vote():
+    def sanitizeJson(data):
+        import math
+        """
+        This function will recursively check the structure and replace any NaN or None
+        values with appropriate JSON-compatible values (e.g., None -> null, NaN -> 0).
+        """
+        if isinstance(data, dict):
+            return {k: sanitizeJson(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [sanitizeJson(item) for item in data]
+        elif data is None:  # Replace None with JSON null
+            return 0
+        elif isinstance(data, float) and math.isnan(data):  # Replace NaN with 0
+            return 0
+        else:
+            return data
 
     def getVotes(wallet):
         # def valuesAsNumbers(map: dict):
@@ -1851,7 +1869,8 @@ def vote():
         streams = start.server.getSanctionVote(wallet, start.vault)
         # logging.debug('streams', [
         #              s for s in streams if s['oracle_alias'] is not None], color='yellow')
-        return streams
+        sanitized_streams = sanitizeJson(streams)
+        return sanitized_streams
         # return []
         # return [{
         #    'sanctioned': 10,
@@ -1886,16 +1905,6 @@ def vote():
         accept_submittion(forms.VaultPassword(formdata=request.form))
 
     myWallet = start.getWallet(network=start.network)
-    if start.vault is not None and not start.vault.isEncrypted:
-        return render_template('vote.html', **getResp({
-            'title': 'Vote',
-            'network': start.network,
-            'vaultPasswordForm': presentVaultPasswordForm(),
-            'vaultOpened': True,
-            'wallet': myWallet,
-            'vault': start.vault,
-            'streams': getStreams(myWallet),
-            **getVotes(myWallet)}))
     return render_template('vote.html', **getResp({
         'title': 'Vote',
         'network': start.network,
@@ -1905,6 +1914,46 @@ def vote():
         'vault': start.vault,
         'streams': getStreams(myWallet),
         **getVotes(myWallet)}))
+
+
+@app.route('/streams', methods=['GET', 'POST'])
+@userInteracted
+@vaultRequired
+@authRequired
+def streams():
+    # Commenting down as of now, will be used in future if we need to make the call to server for search streams
+    # as of now we have limited streams so we can search in client side
+    # Get search text from query parameters
+    # searchText = request.args.get('search', None)
+    # if searchText is not None:
+    #     streamsData = getStreams(searchText)
+    #     return jsonify({'streams': streamsData})
+    oracleStreams = start.getAllOracleStreams(fetch=True)
+    return render_template('streams.html', **getResp({
+        'title': 'Streams',
+        'network': start.network,
+        'vault': start.vault,
+        'darkmode': darkmode,
+        'streams': oracleStreams[0:100],
+        'allStreams': oracleStreams}))
+
+
+@app.route('/vote_on/sanction/incremental', methods=['POST'])
+@userInteracted
+@authRequired
+def incrementalVote():
+    streamId = request.json.get('streamId', "")
+    message = start.server.incrementVote(streamId=streamId)
+    return jsonify({'message': message}), 200
+
+
+@app.route('/clear_vote_on/sanction/incremental', methods=['POST'])
+@userInteracted
+@authRequired
+def removeVote():
+    streamId = request.json.get('streamId', "")
+    message = start.server.removeVote(streamId=streamId)
+    return jsonify({'message': message}), 200
 
 
 @app.route('/proposals', methods=['GET'])
