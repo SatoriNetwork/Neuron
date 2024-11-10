@@ -762,6 +762,17 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
     return redirect(f'/vault/{network}')
 
 
+@app.route('/bridge_satori_transaction_from_vault', methods=['POST'])
+@userInteracted
+@authRequired
+def bridgeSatoriTransactionFromVault():
+    # only support main network for this
+    result = bridgeSatoriTransactionUsing(start.vault)
+    if isinstance(result, str) and len(result) == 64:
+        flash(str(result))
+    return redirect('/vault/main')
+
+
 def sendSatoriTransactionUsing(
     myWallet: Union[RavencoinWallet, EvrmoreWallet],
     network: str,
@@ -820,6 +831,88 @@ def sendSatoriTransactionUsing(
                         walletId=responseJson.get('partialId'),
                         network=(
                             'ravencoin' if start.networkIsTest(network)
+                            else 'evrmore'))
+                    if r.text.startswith('{"code":1,"message":'):
+                        flash(f'Send Failed: {r.json().get("message")}')
+                    elif r.text != '':
+                        return r.text
+                    else:
+                        flash(
+                            'Send Failed: wait 10 minutes, refresh, and try again.')
+                else:
+                    return result.result
+            else:
+                flash(f'Send Failed: {result.msg}')
+        except TransactionFailure as e:
+            flash(f'Send Failed: {e}')
+        refreshWallet()
+        return result
+
+    sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
+    sendForm = {}
+    override = override or {}
+    sendForm['sweep'] = override.get('sweep', sendSatoriForm.sweep.data)
+    sendForm['amount'] = override.get(
+        'amount', sendSatoriForm.amount.data or 0)
+    sendForm['address'] = override.get(
+        'address', sendSatoriForm.address.data or '')
+    return accept_submittion(sendForm)
+
+
+def bridgeSatoriTransactionUsing(
+    myWallet: Union[RavencoinWallet, EvrmoreWallet],
+    override: Union[dict[str, str], None] = None
+):
+    if myWallet is None:
+        flash(f'Send Failed: {e}')
+        return redirect('/vault/main')
+
+    import importlib
+    global forms
+    global badForm
+    forms = importlib.reload(forms)
+
+    def accept_submittion(sendSatoriForm):
+        def refreshWallet():
+            time.sleep(4)
+            # doesn't respect the cooldown
+            myWallet.get(allWalletInfo=False)
+
+        # doesn't respect the cooldown
+        myWallet.getUnspentSignatures(force=True)
+        if myWallet.isEncrypted:
+            return 'Vault is encrypted, please unlock it and try again.'
+        try:
+            # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
+            result = myWallet.typicalNeuronBridgeTransaction(
+                amount=sendSatoriForm['amount'] or 0,
+                address=sendSatoriForm['address'] or '')
+            if result.msg == 'creating partial, need feeSatsReserved.':
+                responseJson = start.server.requestSimpleBridgePartial(
+                    network='main')
+                result = myWallet.typicalNeuronBridgeTransaction(
+                    amount=sendSatoriForm['amount'] or 0,
+                    address=sendSatoriForm['address'] or '',
+                    completerAddress=responseJson.get('completerAddress'),
+                    feeSatsReserved=responseJson.get('feeSatsReserved'),
+                    changeAddress=responseJson.get('changeAddress'),
+                )
+            if result is None:
+                flash('Send Failed: wait 10 minutes, refresh, and try again.')
+            elif result.success:
+                if (  # checking any on of these should suffice in theory...
+                    result.tx is not None and
+                    result.reportedFeeSats is not None and
+                    result.reportedFeeSats > 0 and
+                    result.msg == 'send transaction requires fee.'
+                ):
+                    r = start.server.broadcastSimpleBridgePartial(
+                        tx=result.tx,
+                        reportedFeeSats=result.reportedFeeSats,
+                        feeSatsReserved=responseJson.get('feeSatsReserved'),
+                        walletId=responseJson.get('partialId'),
+                        network=(
+                            'ravencoin' if start.networkIsTest('main')
                             else 'evrmore'))
                     if r.text.startswith('{"code":1,"message":'):
                         flash(f'Send Failed: {r.json().get("message")}')
@@ -1025,7 +1118,6 @@ def dashboard():
     global forms
     global badForm
     forms = importlib.reload(forms)
-        
 
     def present_stream_form():
         '''
@@ -1066,7 +1158,7 @@ def dashboard():
     # streamOverviews = (
     #     [model.miniOverview() for model in start.engine.models]
     #     if start.engine is not None else [])  # StreamOverviews.demo()
-    streamOverviews = [ stream for stream in start.streamDisplay ]
+    streamOverviews = [stream for stream in start.streamDisplay]
     start.electrumxCheck()
     holdingBalance = start.holdingBalance
     stakeStatus = holdingBalance >= 5 or (
