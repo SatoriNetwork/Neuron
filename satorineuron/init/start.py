@@ -1055,7 +1055,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.poolIsAccepting = status
         return success, result
 
-    def getAllOracleStreams(self, searchText: Union[str, None]=None, fetch: bool=False):
+    def getAllOracleStreams(self, searchText: Union[str, None] = None, fetch: bool = False):
         if fetch or self.allOracleStreams is None:
-            self.allOracleStreams = self.server.getSearchStreams(searchText=searchText)
+            self.allOracleStreams = self.server.getSearchStreams(
+                searchText=searchText)
         return self.allOracleStreams
