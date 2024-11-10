@@ -1,0 +1,412 @@
+{% block content %}
+<div class="row">
+  <div id="notification" style="display: none; position: fixed; top: 5px; right: 25px; background-color: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; width: 300px">
+    <!-- Notification message will be inserted here -->
+  </div>
+  <div id="notification_error" style="display: none; position: fixed; top: 5px; right: 25px; background-color: #ff0000; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; width: 300px">
+    <!-- Notification message will be inserted here -->
+  </div>
+  <div class="col-lg-12 col-md-12 mb-md-0">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-6 col-7">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
+            <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+              Real-world data streams published by Satori Neurons
+            </p>
+          </div>
+        </div>
+      </div>
+      <div style="margin-left:24px;margin-top:15px;padding-right:26px;" class="d-flex flex-row gap-2">
+        <input style="width: -webkit-fill-available;height:51.82px;border-radius:0.5rem;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
+        <!--<button id="popularitySortBtn" class="d-flex flex-row gap-2 btn btn-outline-dark" style="align-items:center;justify-content:center" onclick="toggleSort('votedfor')">Sort by Voted For <div style="margin-top:-3px" id="votedforIcon">↓</div></button>-->
+        <button id="popularitySortBtn" class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center" onclick="toggleSort('popularity')">Sort by Popularity <div style="margin-top:-3px" id="popularityIcon">↓</div></button>
+        <!--<button id="dateSortBtn"       class="d-flex flex-row gap-2 btn btn-outline-dark" style="align-items:center;justify-content:center" onclick="toggleSort('date')">Sort by Date <div style="margin-top:-3px" id="dateIcon"></div></button>-->
+        <!-- not categorized yet
+        <select style="padding:5px" id="categorySelect" onchange="filterByCategory()">
+          <option value="" disabled selected>Select Category</option>
+          <option value="all">All Categories</option>
+          <option value="weather">Weather</option>
+          <option value="crypto">Crypto</option>
+          <option value="stocks">Stocks</option>
+          <option value="government">Government Entities</option>
+        </select>-->
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0" style="table-layout: fixed;max-width: 100%;">
+            <thead ondblclick='toggleVotingDetails();'>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:40%;">Oracle</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:40%;">Stream</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:20%;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="updating_table">
+              {% for stream in streams %}
+              <tr
+                id="stream_{{stream['stream_id']}}"
+                class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}"
+                style="cursor:pointer"
+                onclick="toggleStreamDetails(this, {{ stream['stream_id'] }});">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ stream['stream'] }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    {% if stream.vote == 0 %}
+                      <div id="stream_increment_{{stream['stream_id']}}" onclick="incrementVote({{ stream['stream_id'] }}, event);">
+                        <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
+                      </div>
+                    {% else %}
+                      <div id="stream_decrement_{{stream['stream_id']}}" onclick="decrementVote({{ stream['stream_id'] }}, event);">
+                        <i class="material-icons opacity-10" title="Approved">thumb_up</i>
+                      </div>
+                    {% endif %}
+                  </div>
+                </td>
+                 <!-- Additional details row -->
+                <tr class="stream-details" style="display: none;">
+                  <td colspan="3">
+                    <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
+                      <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> {{ stream['stream'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> {{ stream['target'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> {{ stream['cadence'] }} seconds</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created:</strong> {{ stream['stream_created_ts'] }}</p>
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> {{ stream['stream_id'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> {{ stream['author'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> {{ stream['source'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> {{ stream['oracle_pubkey'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author Alias:</strong> {{ stream['oracle_alias'] }}</p>-->
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cracle Address:</strong> {{ stream['oracle_address'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> {{ stream['total_vote'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> {{ stream['tags'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> {{ stream['vote'] }}</p>
+                        <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="{{ stream['url'] }}" target="_blank">{{ stream['url'] }}</a></p>
+                        <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> {{ stream['description'] }}</p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+
+  const darkmode = {{ 'true' if darkmode else 'false' }};
+  let storedStreams = {{ allStreams|tojson }};
+  let displayStreams = storedStreams.slice(0, 100);
+  let sortOrder = {
+    popularity: 'desc',
+    date: 'asc',
+    votedfor: 'desc'
+  };
+  let timeout = null;
+  let sortTimeout = null;
+  let filterTimeout = null;
+
+  function showNotification(message, showError = false) {
+    const notification = document.getElementById(showError ? 'notification_error' : 'notification');
+    notification.innerHTML = message;
+    notification.style.display = 'block';
+
+    // Hide the notification after 2 seconds
+    setTimeout(() => {
+      notification.style.display = 'none';
+    }, 1000*2);
+  }
+
+  // Increment Vote
+  function incrementVote(streamId, event) {
+    event.stopPropagation();
+    fetch(
+      '/vote_on/sanction/incremental', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({streamId: streamId})})
+    .then(async (response) => {
+        if (response.ok) {
+            const responseData = await response.json();
+            console.log("responseData", responseData.message);
+            //const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(3) div[id="stream_${streamId}"]`);
+            const voteActionElement = document.getElementById(`stream_increment_${streamId}`);
+            voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Approved">thumb_up</i>';
+            voteActionElement.onclick = (e) => decrementVote(streamId, e);
+            voteActionElement.id = `stream_decrement_${streamId}`; // Update the id to match remove vote action
+            showNotification("Vote added");
+        }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Something went wrong!", true);
+    });
+  }
+
+  // Remove Vote
+  function decrementVote(streamId, event) {
+    event.stopPropagation();
+    fetch(
+      '/clear_vote_on/sanction/incremental', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({streamId: streamId})})
+    .then(async (response) => {
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log("responseData", responseData.message);
+          //const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(3) div[id="stream_decrement_${streamId}"]`);
+          const voteActionElement = document.getElementById(`stream_decrement_${streamId}`);
+          voteActionElement.innerHTML = '<i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>';
+          voteActionElement.onclick = (e) => incrementVote(streamId, e);
+          voteActionElement.id = `stream_increment_${streamId}`;
+          showNotification("Vote removed");
+        }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Something went wrong!", true);
+    });
+  }
+
+  function toggleStreamDetails(row, streamId) {
+    const detailsRow = row.nextElementSibling;
+    if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+      detailsRow.style.display = 'table-row';
+    } else {
+      detailsRow.style.display = 'none';
+    }
+  }
+
+  function toggleSort(type) {
+    if(sortTimeout) {
+      clearTimeout(sortTimeout);
+    }
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = '';
+    const noDataRow = document.createElement('tr');
+    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
+    tableBody.appendChild(noDataRow);
+
+    sortTimeout = setTimeout(() => {
+      sortOrder[type] = sortOrder[type] === 'asc' ? 'desc' : 'asc';
+      const iconElement = document.getElementById(`${type}Icon`);
+      if (sortOrder[type] === 'asc') {
+        iconElement.innerHTML = '↑';
+      } else {
+        iconElement.innerHTML = '↓';
+      }
+
+      sortBy(type, sortOrder[type]);
+    }, 200);
+  }
+
+  function sortBy(type, order) {
+    let sortedStreams = [...displayStreams];
+
+    if (type === 'popularity') {
+      sortedStreams.sort((a, b) => {
+        const voteA = a.total_vote || 0;
+        const voteB = b.total_vote || 0;
+        return order === 'asc' ? voteA - voteB : voteB - voteA;
+      });
+    } else if (type === 'date') {
+      sortedStreams.sort((a, b) => {
+        const dateA = new Date(a.stream_created_ts);
+        const dateB = new Date(b.stream_created_ts);
+        return order === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+    } else if (type === "votedfor") {
+      sortedStreams.sort((a, b) => {
+        const voteA = a.total_vote || 0;
+        const voteB = b.total_vote || 0;
+        return order === 'asc' ? voteA - voteB : voteB - voteA;
+      });
+    }
+
+    updateStreamDisplay(sortedStreams, darkmode);
+  }
+
+  function filterByCategory() {
+    if(filterTimeout) {
+      clearTimeout(filterTimeout);
+    }
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = '';
+    const noDataRow = document.createElement('tr');
+    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
+    tableBody.appendChild(noDataRow);
+
+    filterTimeout = setTimeout(() => {
+      const category = document.getElementById('categorySelect').value;
+      if (category === 'all') {
+        filteredStreams = [...storedStreams];
+      } else {
+        filteredStreams = storedStreams.filter(stream => stream.category === category);
+      }
+      displayStreams = filteredStreams.slice(0, 100);
+      updateStreamDisplay(displayStreams, darkmode);
+    }, 200);
+  }
+
+  function debounceSearch() {
+    console.log("debounceSearch called")
+    if(timeout) {
+      clearTimeout(timeout);
+    }
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = '';
+    const noDataRow = document.createElement('tr');
+    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
+    tableBody.appendChild(noDataRow);
+    /// instead of fetching from the server, we're going to filter the existing ones.
+    //timeout = setTimeout(() => {
+    //  const searchText = document.getElementById('searchInput').value;
+    //  fetchStreams(searchText);
+    //}, 200);
+    timeout = setTimeout(() => {
+      const searchText = document.getElementById('searchInput').value;
+      if (searchText.trim() === '') {
+        filteredStreams = [...storedStreams];
+      } else {
+        filteredStreams = storedStreams.filter(stream => ['stream', 'description', 'oracle_alias', 'oracle_address', 'tags', 'target', 'url']
+          .some(field => stream[field] && stream[field].toLowerCase().includes(searchText.toLowerCase())));
+      }
+      displayStreams = filteredStreams.slice(0, 100);
+      updateStreamDisplay(displayStreams, darkmode);
+    }, 200);
+  }
+
+  /// unused
+  function fetchStreams(searchText) {
+    console.log("searchText", searchText);
+    console.log("storedStreams", storedStreams);
+
+    const filteredStreams = storedStreams.filter(stream =>
+        stream.stream.toLowerCase().includes(searchText.toLowerCase()) ||
+        stream.target.toLowerCase().includes(searchText.toLowerCase())
+    );
+
+    const popularityIconElement = document.getElementById(`popularityIcon`);
+    const dateIconElement = document.getElementById(`dateIcon`);
+    const votedforIconElement = document.getElementById(`votedforIcon`);
+    document.getElementById('categorySelect').value = "";
+
+    popularityIconElement.innerHTML = '↓';
+    dateIconElement.innerHTML = '';
+    votedforIconElement.innerHTML = '↓';
+
+    displayStreams = filteredStreams.slice(0,100);
+    updateStreamDisplay(displayStreams, darkmode)
+
+    {/* fetch(`/streams?search=${encodeURIComponent(searchText)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network response was not ok, status: ${response.status}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                throw new Error('Response was not in JSON format');
+            }
+        })
+        .then(data => {
+          console.log("Data", data.streams)
+          updateStreamDisplay(data.streams, darkmode)
+        })
+        .catch(error => console.error('Error fetching streams:', error)); */}
+  }
+
+  function updateStreamDisplay(streams, darkmode) {
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = '';
+
+    // Check if there are any streams to display
+    if (streams.length === 0) {
+        const noDataRow = document.createElement('tr');
+        noDataRow.innerHTML = '<td style="text-align:center" colspan="3">No streams found.</td>'; // Adjust colspan based on your table structure
+        tableBody.appendChild(noDataRow);
+        return;
+    }
+
+    streams.forEach(stream => {
+      console.log(stream);
+      const row = document.createElement('tr');
+      row.style.cursor = "pointer";
+      row.onclick = () => toggleStreamDetails(row, stream.stream_id);
+      row.id = `stream_${stream.stream_id}`;
+      let rowClass = darkmode ? 'yellow-dark-hover' : 'yellow-hover';
+      row.className = rowClass;
+      const voteActionHtml = `
+        <td>
+          <div class="d-flex gap-2">
+            ${stream.vote === 0 ?
+                `<div id="stream_increment_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
+                    <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
+                </div>` :
+                `<div id="stream_decrement_${stream.stream_id}" onclick="decrementVote(${stream.stream_id}, event);">
+                    <i class="material-icons opacity-10" title="Approved">thumb_up</i>
+                </div>`
+            }
+          </div>
+        </td>
+        `;
+
+      row.innerHTML = `
+          <td>
+              <div class="d-flex px-3 py-1">
+                  <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" title="${stream.oracle_address}">${stream.oracle_alias || stream.oracle_address}</h6>
+              </div>
+          </td>
+          <td>
+              <div class="d-flex px-3 py-1">
+                  <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.stream}</h6>
+              </div>
+          </td>
+          ${voteActionHtml}
+      `;
+      tableBody.appendChild(row);
+
+      // Stream Details
+      const streamDetailRow = document.createElement('tr')
+      streamDetailRow.class = `stream-details`;
+      streamDetailRow.style.display = "none";
+      streamDetailRow.innerHTML = `
+        <td colspan="5">
+          <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
+            <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author Address:</strong> ${stream.oracle_address}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> ${stream.total_vote}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> ${stream.vote}</p>
+              <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
+              <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> ${stream.description}</p>
+            </div>
+          </div>
+        </td>
+      `
+      tableBody.appendChild(streamDetailRow);
+    });
+  }
+</script>
+{% endblock %}

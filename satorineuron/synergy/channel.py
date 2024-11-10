@@ -1,12 +1,12 @@
 '''
 once connected, the publisher will begin sending data to the subscriber starting
-with the hash request. it will not wait for a response. it will merely continue 
-to send the data to the subscriber until interrupted, at which time it will 
+with the hash request. it will not wait for a response. it will merely continue
+to send the data to the subscriber until interrupted, at which time it will
 restart the process from the hash requested (in the interruption message).
 
-the subscriber will accept data, checking that the new hash and data match the 
+the subscriber will accept data, checking that the new hash and data match the
 running hash and if it doesn't the subscriber will send a message to the server
-with the lastest good hash received. it will ignore incoming data until it 
+with the lastest good hash received. it will ignore incoming data until it
 receives that hash.
 '''
 from typing import Union
@@ -35,7 +35,7 @@ class Axon(Cached):
         ''' sends data to the peer '''
         # logging.debug('sending synapse message:', data.toDict, color='yellow')
         from satorineuron.init.start import getStart
-        getStart().udpQueue.put(Envelope(ip=self.ip, vesicle=data))
+        getStart().udpQueue.put(Envelope(ip=self.ip, vesicle=data)) # TODO: remove
 
     def receive(self, message: bytes) -> Union[Vesicle, None]:
         '''Handle incoming messages. Must be implemented by subclasses.'''
@@ -50,8 +50,8 @@ class Axon(Cached):
 
 
 class SynapseSubscriber(Axon):
-    ''' 
-    get messages from the peer and send messages to them, takes messages and 
+    '''
+    get messages from the peer and send messages to them, takes messages and
     saves the data to disk using Cached, if there's a problem it sends a message
     back to the peer asking for it to start over at the last known good hash.
     '''
@@ -162,8 +162,8 @@ class SynapseSubscriber(Axon):
 
 
 class SynapsePublisher(Axon):
-    ''' 
-    get messages from the peer and send messages to them. the message will 
+    '''
+    get messages from the peer and send messages to them. the message will
     contain the last known good data. this publisher will then take that as a
     starting point and send all the data after that to the subscriber. that is
     until it gets interrupted.
@@ -218,7 +218,7 @@ class SynapsePublisher(Axon):
 
         def coolDown():
             '''
-            mainly so that we don't get too far ahead of the subscriber, as 
+            mainly so that we don't get too far ahead of the subscriber, as
             they must validate and save the data sequentially
             '''
             time.sleep(.375)
@@ -227,7 +227,7 @@ class SynapsePublisher(Axon):
             ''' get the next observation after the time '''
             def isLatest(index):
                 '''
-                updates the last index if we've reached what we thought 
+                updates the last index if we've reached what we thought
                 might be the last index
                 '''
                 if index == self.last:

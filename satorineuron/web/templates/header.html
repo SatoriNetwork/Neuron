@@ -59,13 +59,48 @@
             <i id="connectionP2p" class="fa fa-circle" style="color: maroon;"></i>
           </a>-->
         </li>
-        <li class="nav-item pe-2 d-flex align-items-center">
-          <a href="{{ url_for('restart') }}" class="nav-link text-body p-0">
+        <li class="nav-item dropdown pe-2 d-flex align-items-center">
+          <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonPower" data-bs-toggle="dropdown" aria-expanded="false">
+            <!--<i class="fa fa-play cursor-pointer"></i>-->
             <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">power_settings_new</i>
-            <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Restart</span>
+            <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Power</span>
           </a>
+          <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButtonPower">
+            <li class="mb-2">
+              <a class="dropdown-item border-radius-md" href="{{ url_for('refresh') }}">
+              <div class="d-flex py-1">
+                <div class="d-flex flex-column justify-content-center">
+                <h6 class="text-sm font-weight-normal mb-1">
+                  <span class="font-weight-bold">Refresh</span>
+                </h6>
+                </div>
+              </div>
+              </a>
+            </li>
+            <li class="mb-2">
+              <a class="dropdown-item border-radius-md" href="{{ url_for('restart') }}">
+              <div class="d-flex py-1">
+                <div class="d-flex flex-column justify-content-center">
+                <h6 class="text-sm font-weight-normal mb-1">
+                  <span class="font-weight-bold">Restart</span>
+                </h6>
+                </div>
+              </div>
+              </a>
+            </li>
+            <li class="mb-2">
+              <a class="dropdown-item border-radius-md" href="{{ url_for('shutdown') }}">
+              <div class="d-flex py-1">
+                <div class="d-flex flex-column justify-content-center">
+                <h6 class="text-sm font-weight-normal mb-1">
+                  <span class="font-weight-bold">Shutdown</span>
+                </h6>
+                </div>
+              </div>
+              </a>
+            </li>
+          </ul>
         </li>
-
         {% if paused %} <!-- server should tell us if we're paused or not... hit endpoint, refresh page. -->
         <li class="nav-item pe-2 d-flex align-items-center">
           <a href="{{ url_for('unpause') }}" class="nav-link text-body p-0">
@@ -271,19 +306,19 @@
 <script>
   function importWallet(files) {
     const walletFolder = Array.from(files).find(file => file.webkitRelativePath.split('/')[0] === 'wallet');
-    
+
     if (!walletFolder) {
       alert('Please select a folder named "wallet".');
       return;
     }
-  
+
     const formData = new FormData();
     Array.from(files).forEach(file => {
       if (file.webkitRelativePath.startsWith('wallet/')) {
         formData.append('files', file, file.webkitRelativePath);
       }
     });
-  
+
     fetch('/import_wallet', {
       method: 'POST',
       body: formData
@@ -350,11 +385,11 @@
       } else {
         document.getElementById("connectionPubsub").style.color = 'maroon';
       }
-      if (conns.synergy) {
-        document.getElementById("connectionSynergy").style.color = '#548c2f';
-      } else {
-        document.getElementById("connectionSynergy").style.color = 'maroon';
-      }
+      //if (conns.synergy) {
+      //  document.getElementById("connectionSynergy").style.color = '#548c2f';
+      //} else {
+      //  document.getElementById("connectionSynergy").style.color = 'maroon';
+      //}
       //if (conns.p2p) {
       //  document.getElementById("connectionP2p").style.color = '#548c2f';
       //} else {
