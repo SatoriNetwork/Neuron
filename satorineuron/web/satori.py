@@ -1147,7 +1147,6 @@ def dashboard():
 
 
 @app.route('/fetch/wallet/stats/daily', methods=['GET'])
-@userInteracted
 @authRequired
 def fetchWalletStatsDaily():
     stats = start.server.fetchWalletStatsDaily()
