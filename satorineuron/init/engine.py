@@ -9,22 +9,35 @@ from satorineuron import config
 import copy
 
 
-def establishConnection(pubkey: str, key: str, url: str = None, onConnect: callable = None, onDisconnect: callable = None, emergencyRestart: callable = None, subscription: bool = True):
-    ''' establishes a connection to the satori server, returns connection object '''
+def establishConnection(
+    pubkey: str,
+    key: str,
+    url: str = None,
+    onConnect: callable = None,
+    onDisconnect: callable = None,
+    emergencyRestart: callable = None,
+    subscription: bool = True,
+):
+    """establishes a connection to the satori server, returns connection object"""
     from satorineuron.init.start import getStart
 
     def router(response: str):
-        ''' TODO: may need to conform response to the observation format first. '''
+        """TODO: may need to conform response to the observation format first."""
         # couldn't we move the new data into this function itself? why route the
         # data to the data manager, just to route it to the models only? data
         # manager seems like a extra thread that isn't necessary, a middle man.
 
         # response:
         # {"topic": "{\"source\": \"satori\", \"author\": \"021bd7999774a59b6d0e40d650c2ed24a49a54bdb0b46c922fd13afe8a4f3e4aeb\", \"stream\": \"coinbaseALGO-USD\", \"target\": \"data.rates.ALGO\"}", "data": "0.23114999999999997"}
-        if response != 'failure: error, a minimum 10 seconds between publications per topic.':
+        if (
+            response
+            != "failure: error, a minimum 10 seconds between publications per topic."
+        ):
             if response.startswith('{"topic":') or response.startswith('{"data":'):
-                logging.info('received message:', response, print=True)
-                getStart().engine.data.newData.on_next(Observation.parse(response))
+                logging.info("received message:", response, print=True)
+                obs = Observation.parse(response)
+                getStart().engine.data.newData.on_next(obs)
+                getStart().aiengine.new_observation.on_next(obs)
 
         # furthermore, shouldn't we do more than route it to the correct models?
         # like, shouldn't we save it to disk, compress if necessary, pin, and
@@ -51,7 +64,8 @@ def establishConnection(pubkey: str, key: str, url: str = None, onConnect: calla
         url=url,
         emergencyRestart=emergencyRestart,
         onConnect=onConnect,
-        onDisconnect=onDisconnect)
+        onDisconnect=onDisconnect,
+    )
     # payload={
     #    'publisher': ['stream-a'],
     #    'subscriptions': ['stream-b', 'stream-c', 'stream-d']})
@@ -64,11 +78,11 @@ def getEngine(
     subscriptions: list[Stream],
     publications: list[Stream],
 ) -> Engine:
-    ''' starts the Engine. returns Engine. '''
+    """starts the Engine. returns Engine."""
     from satorineuron.init.start import getStart
 
     def generateModelManager():
-        ''' generate a set of Model(s) for Engine '''
+        """generate a set of Model(s) for Engine"""
 
         # # unused
         # def generateCombinedFeature(
@@ -92,47 +106,52 @@ def getEngine(
 
         # these will be sensible defaults based upon the patterns in the data
         kwargs = {
-            'hyperParameters': [
+            "hyperParameters": [
                 HyperParameter(
-                    name='lookback_len',
+                    name="lookback_len",
                     value=1,
                     kind=int,
                     limit=1,
                     minimum=1,
-                    maximum=64),
+                    maximum=64,
+                ),
                 HyperParameter(
-                    name='n_estimators',
+                    name="n_estimators",
                     value=300,
                     kind=int,
                     limit=100,
                     minimum=200,
-                    maximum=5000),
+                    maximum=5000,
+                ),
                 HyperParameter(
-                    name='learning_rate',
+                    name="learning_rate",
                     value=0.3,
                     kind=float,
-                    limit=.05,
-                    minimum=.01,
-                    maximum=.1),
+                    limit=0.05,
+                    minimum=0.01,
+                    maximum=0.1,
+                ),
                 HyperParameter(
-                    name='max_depth',
-                    value=6,
-                    kind=int,
-                    limit=1,
-                    minimum=10,
-                    maximum=2),
+                    name="max_depth", value=6, kind=int, limit=1, minimum=10, maximum=2
+                ),
                 HyperParameter(
-                    name='early_stopping_rounds',
+                    name="early_stopping_rounds",
                     value=200,
                     kind=int,
                     limit=1,
                     minimum=100,
-                    maximum=400),
+                    maximum=400,
+                ),
             ],
-            'xgbParams': ['n_estimators', 'learning_rate', 'max_depth', 'early_stopping_rounds'],
-            'metrics':  {
+            "xgbParams": [
+                "n_estimators",
+                "learning_rate",
+                "max_depth",
+                "early_stopping_rounds",
+            ],
+            "metrics": {
                 # raw data features
-                'Raw': metrics.rawDataMetric,
+                "Raw": metrics.rawDataMetric,
                 # daily percentage change, 1 day ago, 2 days ago, 3 days ago...
                 # **{f'Daily{i}': partial(metrics.dailyPercentChangeMetric, yesterday=i) for i in list(range(1, 31))},
                 # rolling period transformation percentage change, max of the last 7 days, etc...
@@ -160,37 +179,44 @@ def getEngine(
                     # will be unique by publication, no need to enforce
                     for subscription in subscriptions
                     if (
-                        subscription.reason is not None and
-                        subscription.reason.source == publication.id.source and
-                        subscription.reason.author == publication.id.author and
-                        subscription.reason.stream == publication.id.stream and
-                        subscription.reason.target == publication.id.target
-                    )],
-                chosenFeatures=[(
-                    subscription.id.source,
-                    subscription.id.author,
-                    subscription.id.stream,
-                    subscription.id.target)
+                        subscription.reason is not None
+                        and subscription.reason.source == publication.id.source
+                        and subscription.reason.author == publication.id.author
+                        and subscription.reason.stream == publication.id.stream
+                        and subscription.reason.target == publication.id.target
+                    )
+                ],
+                chosenFeatures=[
+                    (
+                        subscription.id.source,
+                        subscription.id.author,
+                        subscription.id.stream,
+                        subscription.id.target,
+                    )
                     # will be unique by publication, no need to enforce
                     for subscription in subscriptions
                     if (
-                        subscription.reason is not None and
-                        subscription.reason.source == publication.id.source and
-                        subscription.reason.author == publication.id.author and
-                        subscription.reason.stream == publication.id.stream and
-                        subscription.reason.target == publication.id.target
-                )],
+                        subscription.reason is not None
+                        and subscription.reason.source == publication.id.source
+                        and subscription.reason.author == publication.id.author
+                        and subscription.reason.stream == publication.id.stream
+                        and subscription.reason.target == publication.id.target
+                    )
+                ],
                 memory=memory.Memory,
-                **copy.deepcopy(kwargs))
+                **copy.deepcopy(kwargs)
+            )
             # if publication.id in getStart().caches.keys()
             for publication in publications
         }
 
     ModelManager.setConfig(config)
     # DataManager.setConfig(config)
-    modelManager = generateModelManager()
+    # modelManager = generateModelManager()
     dataMananger = DataManager(getStart=getStart)
     return Engine(
         getStart=getStart,
         data=dataMananger,
-        models=modelManager)
+        # models=modelManager)
+        models=set(),
+    )
