@@ -453,7 +453,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 }
 
 .yellow-hover:hover {
-  background: linear-gradient(90deg, rgb(246, 176, 66, .2) 0%, rgb(249, 237, 78, .2) 100%);
+  background: linear-gradient(90deg, rgb(246, 176, 66, .2) 0%, rgb(249, 237, 78, .2) 100%) !important;
 }
 .yellow-selected {
   background: linear-gradient(90deg, rgb(246, 176, 66, .5) 0%, rgb(249, 237, 78, .5) 100%);
@@ -947,4 +947,14 @@ input:checked + .slider:before {
 .toggle-options div {
   display: flex;
   align-items: center;
+}
+
+.stream-details {
+  transition: max-height 0.3s ease-out;
+  overflow: hidden;
+  max-height: 0;
+}
+
+.stream-details.show {
+  max-height: 500px;
 }
