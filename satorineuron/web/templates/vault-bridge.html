@@ -1,6 +1,6 @@
 {% block content %}
-<div class="row mb-0">
-  <div class="col-xl-6 col-sm-6">
+<div class="row mb-0" style="margin-top:2rem;">
+  <div class="col-xl-12 col-sm-12">
     <div class="card {% if darkmode %}dark-colors{% endif %}" style="min-height:760.5px;display: flex;flex-direction: column;">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}" style='flex: 1;'>
         <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl mt-n4 position-absolute">
@@ -10,10 +10,10 @@
           <!--<h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Send</h4>-->
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="padding-bottom: 2rem !important;">Bridge Satori {%if wallet.isTestnet %} (testnet) {%endif%}</h4>
         </div>
-        <div class="text-center pt-1" style="padding-top: 3rem !important;">
+        <div class="pt-1" style="padding-top: 3rem !important;">
           <p class="test-sm">Use this to bridge Satori from the Evrmore blockchain to Ethereum. How the bridge works:
             <br> • The SATORI that is bridged gets burned and can never be retrieved by anyone.
-            <br> • Burning the Evrmore SATORI triggers a smart contract on Ethereum to mint SATORI of the same amount (minus the gas fees) to the Ethereum address provided.
+            <br> • Burning the Evrmore SATORI triggers a smart contract on Ethereum to mint SATORI of the same amount (minus the gas fees) directly to the Ethereum address provided.
             <br> • The bridging process can take up to 2 hours to ensure there are no double spends.
             <br>Please send small amounts. THIS ACTION WILL BURN SATORI. Use at your own risk.</p>
             <div style="padding: 1.25rem;">

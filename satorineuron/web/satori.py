@@ -767,6 +767,8 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
 @authRequired
 def bridgeSatoriTransactionFromVault():
     # only support main network for this
+    print('bridge_satori_transaction_from_vault')
+    print()
     result = bridgeSatoriTransactionUsing(start.vault)
     if isinstance(result, str) and len(result) == 64:
         flash(str(result))
@@ -930,15 +932,16 @@ def bridgeSatoriTransactionUsing(
         refreshWallet()
         return result
 
-    sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
+    bridgeSatoriForm = forms.BridgeSatoriTransaction(formdata=request.form)
     sendForm = {}
     override = override or {}
-    sendForm['sweep'] = override.get('sweep', sendSatoriForm.sweep.data)
-    sendForm['amount'] = override.get(
-        'amount', sendSatoriForm.amount.data or 0)
-    sendForm['address'] = override.get(
-        'address', sendSatoriForm.address.data or '')
-    return accept_submittion(sendForm)
+    sendForm['bridgeAmount'] = override.get(
+        'bridgeAmount', bridgeSatoriForm.bridgeAmount.data or 0)
+    sendForm['ethAddress'] = override.get(
+        'ethAddress', bridgeSatoriForm.ethAddress.data or '')
+    print(bridgeSatoriForm, bridgeSatoriForm.bridgeAmount,
+          bridgeSatoriForm.ethAddress)
+    # return accept_submittion(sendForm)
 
 
 @app.route('/register_stream', methods=['POST'])
@@ -1606,8 +1609,8 @@ def presentBridgeSatoriTransactionform(formData):
     import importlib
     forms = importlib.reload(forms)
     bridgeSatoriTransaction = forms.BridgeSatoriTransaction(formdata=formData)
-    bridgeSatoriTransaction.address.data = ''
-    bridgeSatoriTransaction.amount.data = 0
+    bridgeSatoriTransaction.ethAddress.data = ''
+    bridgeSatoriTransaction.bridgeAmount.data = 0
     return bridgeSatoriTransaction
 
 
