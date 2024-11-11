@@ -105,12 +105,12 @@ class BridgeSatoriTransaction(FlaskForm):
         'Ethereum Address',
         validators=[InputRequired(), Length(min=42, max=42)])
     # number of seconds between api hits, not None
-    amount = DecimalField(
+    bridgeAmount = DecimalField(
         'Amount',
         places=8,
         rounding=None,
         validators=[NumberRange(min=Decimal('0.00000001'), max=None, message='You must send at least 1 Satoshi')])
-    submit = SubmitField('Burn')
+    bridgeSubmit = SubmitField('Burn')
 
 
 class VaultPassword(FlaskForm):

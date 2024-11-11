@@ -35,14 +35,14 @@
                 <div class="row" style="padding: 1px !important; margin-bottom: 2rem;">
                   <div class="col-xl-12 col-sm-12">
                     <div class="tight text-format-table-header" style="text-align: left;">
-                      {% if darkmode %}{{ bridgeSatoriTransaction.amount.label(class="dark-colors tight-label") }}
-                      {% else %}{{ bridgeSatoriTransaction.amount.label(class="tight-label") }}
+                      {% if darkmode %}{{ bridgeSatoriTransaction.bridgeAmount.label(class="dark-colors tight-label") }}
+                      {% else %}{{ bridgeSatoriTransaction.bridgeAmount.label(class="tight-label") }}
                       {% endif %}
                     </div>
                     <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                       <div class="input-group input-group-outline">
-                        {% if darkmode %}{{ bridgeSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
-                        {% else %}{{ bridgeSatoriTransaction.amount(size=32, class_="tight form-control", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
+                        {% if darkmode %}{{ bridgeSatoriTransaction.bridgeAmount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
+                        {% else %}{{ bridgeSatoriTransaction.bridgeAmount(size=32, class_="tight form-control", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
                         {% endif %}
                       </div>
                     </div>
@@ -50,8 +50,8 @@
                 </div>
                 <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
                   <div class="input-group input-group-outline" onclick="">
-                    {% if darkmode %}{{ bridgeSatoriTransaction.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateJs()) showWorking();") }}
-                    {% else %}{{ bridgeSatoriTransaction.submit(size=32, class_="tight form-control", onclick="if(validateJs()) showWorking();") }}
+                    {% if darkmode %}{{ bridgeSatoriTransaction.bridgeSubmit(size=32, class_="tight form-control dark-colors", onclick="if(validateJs()) showWorking();") }}
+                    {% else %}{{ bridgeSatoriTransaction.bridgeSubmit(size=32, class_="tight form-control", onclick="if(validateJs()) showWorking();") }}
                     {% endif %}
                   </div>
                 </div>
@@ -71,23 +71,13 @@
 <script>
 	function validateJs() {
 		return (
-			document.getElementById("address").value != "" &&
-      document.getElementById("address").value.startsWith(document.getElementById("walletAddress").innerHTML[0]) &&
-      document.getElementById("address").value.length == document.getElementById("walletAddress").innerHTML.length &&
-			(document.getElementById("sweep").checked || document.getElementById("amount").value > 0));
-	}
-  function sweepEverything() {
-    if (document.getElementById('sweep').checked) {
-      //document.getElementById('amount').style.display = 'none';
-      document.getElementById('amount').readOnly = true;
-    } else {
-      //document.getElementById('amount').style.display = '';
-      document.getElementById('amount').readOnly = false;
-    }
+			document.getElementById("ethAddress").value != "" &&
+      document.getElementById("ethAddress").value.startsWith("0x") &&
+			document.getElementById("bridgeAmount").value > 0);
 	}
   function enforceDivisibility() {
-    const inputElement = document.getElementById("amount");
-    const divisibility = Number(document.getElementById("walletDivisibility").innerHTML);
+    const inputElement = document.getElementById("bridgeAmount");
+    const divisibility = Number(8);
     if (divisibility > 0 && inputElement.value.indexOf('.') > -1){
       inputElement.value = truncateNumber(inputElement.value, divisibility);
       var newCursorPosition = inputElement.value.length;
@@ -108,6 +98,6 @@
     const truncationIndex = pointIndex + 1 + decimalPlaces;
     const truncatedValue = valueAsString.slice(0, truncationIndex);
     return Number(truncatedValue);
- }
+  }
 </script>
 {% endblock %}
