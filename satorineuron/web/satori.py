@@ -1597,6 +1597,20 @@ def presentSendSatoriTransactionform(formData):
     return sendSatoriTransaction
 
 
+def presentBridgeSatoriTransactionform(formData):
+    '''
+    this function could be used to fill a form with the current
+    configuration for a stream in order to edit it.
+    '''
+    global forms
+    import importlib
+    forms = importlib.reload(forms)
+    bridgeSatoriTransaction = forms.BridgeSatoriTransaction(formdata=formData)
+    bridgeSatoriTransaction.address.data = ''
+    bridgeSatoriTransaction.amount.data = 0
+    return bridgeSatoriTransaction
+
+
 @app.route('/wallet_lock/enable', methods=['GET'])
 @userInteracted
 @authRequired
@@ -1696,7 +1710,8 @@ def vault():
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
-            'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+            'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
+            'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
     # start.workingUpdates.put('loading...')
     # race condition:
     while os.path.exists(config.walletPath('vault.yaml')) and start.vault is None:
@@ -1712,7 +1727,8 @@ def vault():
         'stakeRequired': constants.stakeRequired,
         'wallet': start.vault,
         'poolOpen': start.poolIsAccepting,
-        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
+        'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
 
 
 @app.route('/vault/report', methods=['GET'])

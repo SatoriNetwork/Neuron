@@ -21,19 +21,19 @@
                 {{ bridgeSatoriTransaction.hidden_tag() }}
                 {{ bridgeSatoriTransaction.csrf_token }}
                 <div class="tight text-format-table-header" style="text-align: left;">
-                  {% if darkmode %}{{ bridgeSatoriTransaction.address.label(class="dark-colors tight-label") }}
-                  {% else %}{{ bridgeSatoriTransaction.address.label(class="tight-label") }}
+                  {% if darkmode %}{{ bridgeSatoriTransaction.ethAddress.label(class="dark-colors tight-label") }}
+                  {% else %}{{ bridgeSatoriTransaction.ethAddress.label(class="tight-label") }}
                   {% endif %}
                 </div>
                 <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
                   <div class="input-group input-group-outline">
-                    {% if darkmode %}{{ bridgeSatoriTransaction.address(size=32, class_="tight form-control dark-colors", placeholder=wallet.address) }}
-                    {% else %}{{ bridgeSatoriTransaction.address(size=32, class_="tight form-control", placeholder=wallet.address) }}
+                    {% if darkmode %}{{ bridgeSatoriTransaction.ethAddress(size=32, class_="tight form-control dark-colors", placeholder=ethAddress, value=ethAddress) }}
+                    {% else %}{{ bridgeSatoriTransaction.ethAddress(size=32, class_="tight form-control", placeholder=ethAddress, value=ethAddress) }}
                     {% endif %}
                   </div>
                 </div>
                 <div class="row" style="padding: 1px !important; margin-bottom: 2rem;">
-                  <div class="col-xl-6 col-sm-6">
+                  <div class="col-xl-12 col-sm-12">
                     <div class="tight text-format-table-header" style="text-align: left;">
                       {% if darkmode %}{{ bridgeSatoriTransaction.amount.label(class="dark-colors tight-label") }}
                       {% else %}{{ bridgeSatoriTransaction.amount.label(class="tight-label") }}
@@ -43,20 +43,6 @@
                       <div class="input-group input-group-outline">
                         {% if darkmode %}{{ bridgeSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
                         {% else %}{{ bridgeSatoriTransaction.amount(size=32, class_="tight form-control", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
-                        {% endif %}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-xl-6 col-sm-6 ">
-                    <div class="tight text-format-table-header" style="text-align: left;">
-                      {% if darkmode %}{{ bridgeSatoriTransaction.sweep.label(class="dark-colors tight-label") }}
-                      {% else %}{{ bridgeSatoriTransaction.sweep.label(class="tight-label") }}
-                      {% endif %}
-                    </div>
-                    <div class="d-flex px-3 py-1" style="padding: 1px !important;">
-                      <div class="input-group input-group-outline">
-                        {% if darkmode %}{{ bridgeSatoriTransaction.sweep(size=32, class_="tight dark-colors", style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;", onClick="sweepEverything();") }}
-                        {% else %}{{ bridgeSatoriTransaction.sweep(size=32, class_="tight", style="height: 36px;width: 36px;opacity: .4;margin-left: 6px;", onClick="sweepEverything();") }}
                         {% endif %}
                       </div>
                     </div>
@@ -76,6 +62,7 @@
       <hr class="dark horizontal my-0">
       <div class="card-footer p-1">
         <center><p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
+          The Bridge Fee must cover ethereum gas fees and is {{ '%.8f' | format(wallet.bridgeFee) }} SATORI.<br><br>
           Transaction fees will be added during the send process. If {% if network=='main' %}Evrmore{% else %}Ravencoin{% endif %} is available the transaction fee will be no more than the required reserves of 0.25 {% if network=='main' %}EVR{% else %}RVN{% endif %}, often much less. If there is not more than .25 EVR in the wallet the transaction fee will be {{ '%.8f' | format(wallet.mundoFee) }} SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://moontree.com/'>Moontree</a> or <a href='https://github.com/EvrmoreOrg/electrum-evrmore/releases'>the Electrum-Evrmore wallet</a>.</p></center>
       </div>
     </div>

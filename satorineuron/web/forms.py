@@ -90,13 +90,27 @@ class SendSatoriTransaction(FlaskForm):
         'Amount',
         places=8,
         rounding=None,
-        validators=[NumberRange(min=Decimal('0.00000001'), max=None, message='You must send at least 1')])
+        validators=[NumberRange(min=Decimal('0.00000001'), max=None, message='You must send at least 1 Satoshi')])
     sweep = BooleanField(
         'Send Everything',
         description='Sends everything in the wallet (including SATORI tokens and currency) to the address specified.',
         default=False,
         validators=[])
     submit = SubmitField('Send')
+
+
+class BridgeSatoriTransaction(FlaskForm):
+    # str
+    ethAddress = StringField(
+        'Ethereum Address',
+        validators=[InputRequired(), Length(min=42, max=42)])
+    # number of seconds between api hits, not None
+    amount = DecimalField(
+        'Amount',
+        places=8,
+        rounding=None,
+        validators=[NumberRange(min=Decimal('0.00000001'), max=None, message='You must send at least 1 Satoshi')])
+    submit = SubmitField('Burn')
 
 
 class VaultPassword(FlaskForm):
@@ -113,6 +127,6 @@ class ChatPrompt(FlaskForm):
     submit = SubmitField('Ask')
 
 
-#class CreateProposal(FlaskForm):
+# class CreateProposal(FlaskForm):
     # str
-    #...
+    # ...
