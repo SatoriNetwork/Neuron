@@ -2211,41 +2211,6 @@ def proposalVote():
         return jsonify({'status': 'error', 'message': error_message}), 500
     
 
-@app.route('/create-proposal', methods=['GET', 'POST'])
-def create_proposal():
-    if request.method == 'GET':
-        return render_template('create-proposal.html', title='Create New Proposal')
-    elif request.method == 'POST':
-        try:
-            data = request.json
-            print(f"Received proposal data in create_proposal: {json.dumps(data, indent=2)}")
-            
-            success, result = start.server.submitProposal(data)
-            
-            print(f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
-            
-            if success:
-                return jsonify({
-                    'status': 'success',
-                    'message': 'Proposal created successfully',
-                    'proposal': result
-                }), 200
-            else:
-                error_message = result.get('error', 'Failed to create proposal')
-                print(f"Failed to create proposal: {error_message}")
-                return jsonify({
-                    'status': 'error',
-                    'message': error_message
-                }), 400
-        except Exception as e:
-            error_message = f"Error in create_proposal route: {str(e)}"
-            print(error_message)
-            print(traceback.format_exc())
-            return jsonify({
-                'status': 'error',
-                'message': 'Server error occurred'
-            }), 500
-        
 
 @app.route('/api/user/can-approve', methods=['GET'])
 def get_approval_rights():
