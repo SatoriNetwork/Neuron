@@ -762,16 +762,15 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
     return redirect(f'/vault/{network}')
 
 
-@app.route('/bridge_satori_transaction_from_vault', methods=['POST'])
+@app.route('/bridge_satori_transaction_from_vault/<network>', methods=['POST'])
 @userInteracted
 @authRequired
-def bridgeSatoriTransactionFromVault():
+def bridgeSatoriTransactionFromVault(network: str = 'main'):
     # only support main network for this
-    print('bridge_satori_transaction_from_vault')
-    print()
     result = bridgeSatoriTransactionUsing(start.vault)
     if isinstance(result, str) and len(result) == 64:
         flash(str(result))
+        flash('Please wait. The bridge process can take up to 2 hours to complete.')
     return redirect('/vault/main')
 
 
@@ -874,7 +873,7 @@ def bridgeSatoriTransactionUsing(
     global badForm
     forms = importlib.reload(forms)
 
-    def accept_submittion(sendSatoriForm):
+    def accept_submittion(bridgeForm: dict):
         def refreshWallet():
             time.sleep(4)
             # doesn't respect the cooldown
@@ -885,20 +884,19 @@ def bridgeSatoriTransactionUsing(
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
         try:
-            # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
+            # logging.debug('sweep', bridgeForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronBridgeTransaction(
-                amount=sendSatoriForm['amount'] or 0,
-                address=sendSatoriForm['address'] or '')
+                amount=bridgeForm['bridgeAmount'] or 0,
+                ethAddress=bridgeForm['ethAddress'] or '')
             if result.msg == 'creating partial, need feeSatsReserved.':
-                responseJson = start.server.requestSimpleBridgePartial(
+                responseJson = start.server.requestSimplePartial(
                     network='main')
                 result = myWallet.typicalNeuronBridgeTransaction(
-                    amount=sendSatoriForm['amount'] or 0,
-                    address=sendSatoriForm['address'] or '',
+                    amount=bridgeForm['bridgeAmount'] or 0,
+                    address=bridgeForm['ethAddress'] or '',
                     completerAddress=responseJson.get('completerAddress'),
                     feeSatsReserved=responseJson.get('feeSatsReserved'),
-                    changeAddress=responseJson.get('changeAddress'),
-                )
+                    changeAddress=responseJson.get('changeAddress'))
             if result is None:
                 flash('Send Failed: wait 10 minutes, refresh, and try again.')
             elif result.success:
@@ -908,7 +906,7 @@ def bridgeSatoriTransactionUsing(
                     result.reportedFeeSats > 0 and
                     result.msg == 'send transaction requires fee.'
                 ):
-                    r = start.server.broadcastSimpleBridgePartial(
+                    r = start.server.broadcastBridgeSimplePartial(
                         tx=result.tx,
                         reportedFeeSats=result.reportedFeeSats,
                         feeSatsReserved=responseJson.get('feeSatsReserved'),
@@ -933,15 +931,15 @@ def bridgeSatoriTransactionUsing(
         return result
 
     bridgeSatoriForm = forms.BridgeSatoriTransaction(formdata=request.form)
-    sendForm = {}
+    bridgeForm = {}
     override = override or {}
-    sendForm['bridgeAmount'] = override.get(
+    bridgeForm['bridgeAmount'] = override.get(
         'bridgeAmount', bridgeSatoriForm.bridgeAmount.data or 0)
-    sendForm['ethAddress'] = override.get(
+    bridgeForm['ethAddress'] = override.get(
         'ethAddress', bridgeSatoriForm.ethAddress.data or '')
     print(bridgeSatoriForm, bridgeSatoriForm.bridgeAmount,
           bridgeSatoriForm.ethAddress)
-    # return accept_submittion(sendForm)
+    # return accept_submittion(bridgeForm)
 
 
 @app.route('/register_stream', methods=['POST'])
