@@ -1956,6 +1956,7 @@ def removeVote():
   
 @app.route('/proposals', methods=['GET'])
 @userInteracted
+@vaultRequired
 @authRequired
 def proposals():
     return render_template('proposals.html', **getResp({'title': 'Proposals'}))
