@@ -142,7 +142,6 @@ class PeerEngine(metaclass=SingletonMeta):
                             self.request_connection(peer_id)
                     elif peer_id not in self.connected_peers:
                         self.request_connection(peer_id)
-
         except Exception as e:
             logging.error(f"Error in connect_to_peers: {str(e)}")
 
@@ -158,8 +157,7 @@ class PeerEngine(metaclass=SingletonMeta):
             new_allowed_ips = new_config.get('allowed_ips')
 
             # Compare with existing configuration
-            if (existing_peer.get('endpoint') != new_endpoint or 
-                existing_peer.get('allowed_ips') != new_allowed_ips):
+            if ( existing_peer.get('allowed_ips') != new_allowed_ips):
                 return True
 
             return False
@@ -318,7 +316,8 @@ class PeerEngine(metaclass=SingletonMeta):
         result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
                             capture_output=True, text=True)
         if result.returncode == 0:
-            logging.info(f"Ping to {ip} successful after interface restart", color="green")
+            logging.info(f"Ping to {ip} successful", color="blue")
+            return
         # else:
         #     logging.error(f"Ping to {ip} still failing after interface restart", color="red")
         # except Exception as e:
