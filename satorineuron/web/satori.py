@@ -2223,7 +2223,24 @@ def proposalVote():
         logging.warning(traceback.format_exc())
         return jsonify({'status': 'error', 'message': error_message}), 500
     
+@app.route('/api/proposals', methods=['GET'])
+@userInteracted
+def getProposals():
+    try:
+        proposals_data = start.server.getProposals()
+        return jsonify({
+            'status': 'success',
+            'proposals': proposals_data,
+        })
 
+    except Exception as e:
+        error_message = f"Failed to fetch proposals: {str(e)}"
+        logging.error(error_message)
+        logging.error(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'message': error_message
+        }), 500
 
 @app.route('/api/user/can-approve', methods=['GET'])
 @userInteracted
