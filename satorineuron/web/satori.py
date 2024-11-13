@@ -2051,10 +2051,10 @@ def proposalCreate():
     elif request.method == 'POST':
         try:
             data = request.json
-            print(
+            logging.debug(
                 f"Received proposal data in proposalCreate: {json.dumps(data, indent=2)}")
             success, result = start.server.submitProposal(data)
-            print(
+            logging.debug(
                 f"Result of submitProposal: success={success}, result={json.dumps(result, indent=2)}")
             if success:
                 return jsonify({
@@ -2065,15 +2065,15 @@ def proposalCreate():
             else:
                 error_message = result.get(
                     'error', 'Failed to create proposal')
-                print(f"Failed to create proposal: {error_message}")
+                logging.warning(f"Failed to create proposal: {error_message}")
                 return jsonify({
                     'status': 'error',
                     'message': error_message
                 }), 400
         except Exception as e:
             error_message = f"Error in proposalCreate route: {str(e)}"
-            print(error_message)
-            print(traceback.format_exc())
+            logging.warning(error_message)
+            logging.warning(traceback.format_exc())
             return jsonify({
                 'status': 'error',
                 'message': 'Server error occurred'
@@ -2102,8 +2102,8 @@ def get_test_data():
         })
     except Exception as e:
         error_message = f"Failed to fetch test data: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
         return jsonify({
             'status': 'error',
             'message': error_message
@@ -2115,7 +2115,7 @@ def get_test_data():
 def proposalVote():
     try:
         # Log incoming request data
-        print("Received vote request:", request.json)
+        logging.debug("Received vote request:", request.json)
         
         data = request.json
         proposal_id = data.get('proposal_id')
@@ -2129,7 +2129,7 @@ def proposalVote():
         
         # Fetch active proposals
         active_proposals_response = start.server.getActiveProposals()
-        print("Active proposals response:", active_proposals_response)  # Debug log
+        logging.warning("Active proposals response:", active_proposals_response)  # Debug log
         
         # Check if getActiveProposals returned successfully
         if active_proposals_response.get('status') != 'success':
@@ -2140,7 +2140,7 @@ def proposalVote():
             
         # Get the proposals list from the response
         proposals = active_proposals_response.get('proposals', [])
-        print("Available proposals:", proposals)  # Debug log
+        logging.debug("Available proposals:", proposals)  # Debug log
         
         # Find the specific proposal
         proposal = next(
@@ -2148,7 +2148,7 @@ def proposalVote():
             None
         )
         
-        print("Found proposal:", proposal)  # Debug log
+        logging.debug("Found proposal:", proposal)  # Debug log
         
         if not proposal:
             return jsonify({
@@ -2175,10 +2175,10 @@ def proposalVote():
             if not isinstance(options, list):
                 options = ["For", "Against"]
                 
-            print("Parsed options:", options)  # Debug log
+            logging.debug("Parsed options:", options)  # Debug log
             
         except Exception as e:
-            print(f"Error parsing options: {str(e)}")
+            logging.warning(f"Error parsing options: {str(e)}")
             options = ["For", "Against"]
             
         # Validate the vote
@@ -2191,7 +2191,7 @@ def proposalVote():
         # Submit the vote
         success, result = start.server.submitProposalVote(proposal_id, vote)
         
-        print("Vote submission result:", success, result)  # Debug log
+        logging.debug("Vote submission result:", success, result)  # Debug log
         
         if success:
             return jsonify({
@@ -2206,8 +2206,8 @@ def proposalVote():
             
     except Exception as e:
         error_message = f"Error in proposalVote: {str(e)}"
-        print(error_message)
-        print(traceback.format_exc())
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
         return jsonify({'status': 'error', 'message': error_message}), 500
     
 
