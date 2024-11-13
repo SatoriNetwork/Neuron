@@ -1955,7 +1955,7 @@ def removeVote():
     return jsonify({'message': message}), 200
   
 @app.route('/proposals', methods=['GET'])
-
+@userInteracted
 @authRequired
 def proposals():
     return render_template('proposals.html', **getResp({'title': 'Proposals'}))
@@ -1964,6 +1964,7 @@ def proposals():
 
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])
 @userInteracted
+@authRequired
 def getProposalVotes(id):
     try:
         format_type = request.args.get('format')
@@ -2011,6 +2012,8 @@ def getProposalVotes(id):
         }), 500
 
 @app.route('/api/proposals/active', methods=['GET'])
+@userInteracted
+@authRequired
 def get_active_proposals():
     """
     Fetch active proposals.
@@ -2026,6 +2029,8 @@ def get_active_proposals():
         return jsonify({'status': 'error', 'message': error_message}), 500
 
 @app.route('/api/proposals/expired', methods=['GET'])
+@userInteracted
+@authRequired
 def get_expired_proposals():
     """
     Fetch expired proposals.
@@ -2043,6 +2048,8 @@ def get_expired_proposals():
 
 
 @app.route('/proposal/create', methods=['GET', 'POST'])
+@userInteracted
+@authRequired
 def proposalCreate():
     if request.method == 'GET':
         return render_template(
@@ -2081,6 +2088,8 @@ def proposalCreate():
         
 
 @app.route('/test', methods=['GET'])
+@userInteracted
+@authRequired
 def testConnection():
     try:
         success, result = start.server.testConnection()
@@ -2093,6 +2102,8 @@ def testConnection():
 
 
 @app.route('/api/test', methods=['GET'])
+@userInteracted
+@authRequired
 def get_test_data():
     try:
         # Log the test data
@@ -2112,6 +2123,7 @@ def get_test_data():
 
 @app.route('/proposals/vote', methods=['POST'])
 @userInteracted
+@authRequired
 def proposalVote():
     try:
         # Log incoming request data
@@ -2213,6 +2225,8 @@ def proposalVote():
 
 
 @app.route('/api/user/can-approve', methods=['GET'])
+@userInteracted
+@authRequired
 def get_approval_rights():
     try:
         wallet_address = start.wallet.address if start.wallet else None
@@ -2229,6 +2243,8 @@ def get_approval_rights():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/proposals/unapproved', methods=['GET'])
+@userInteracted
+@authRequired
 def get_unapproved_proposals():
     try:
         wallet_address = start.wallet.address if start.wallet else None
@@ -2243,6 +2259,8 @@ def get_unapproved_proposals():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/proposals/approve/<int:proposal_id>', methods=['POST'])
+@userInteracted
+@authRequired
 def approve_proposal(proposal_id: int):
     try:
         wallet_address = start.wallet.address if start.wallet else None
@@ -2260,6 +2278,8 @@ def approve_proposal(proposal_id: int):
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/proposals/disapprove/<int:proposal_id>', methods=['POST'])
+@userInteracted
+@authRequired
 def disapprove_proposal(proposal_id: int):
     try:
         wallet_address = start.wallet.address if start.wallet else None
