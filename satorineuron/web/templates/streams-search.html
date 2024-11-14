@@ -13,18 +13,17 @@
           <div class="col-lg-6 col-7">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
             <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
-              Data streams published by Satori Neurons.
-              <br>
-              Please vote on which data streams should be predicted.
+              Real-world data streams published by Satori Neurons
             </p>
           </div>
         </div>
       </div>
-      <div style="margin-left:24px;margin-top:15px" class="d-flex flex-row gap-2">
-        <input style="width:30%;border-radius:5px;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
-        <button id="popularitySortBtn" onclick="toggleSort('votedfor')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Voted For <div style="margin-top:-3px" id="votedforIcon">↓</div></button>
-        <button id="popularitySortBtn" onclick="toggleSort('popularity')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Popularity <div style="margin-top:-3px" id="popularityIcon">↓</div></button>
-        <button id="dateSortBtn" onclick="toggleSort('date')" class="d-flex flex-row gap-2" style="align-items:center;justify-content:center">Sort by Date <div style="margin-top:-3px" id="dateIcon"></div></button>
+      <div style="margin-left:24px;margin-top:15px;padding-right:26px;" class="d-flex flex-row gap-2">
+        <input style="width: -webkit-fill-available;height:51.82px;border-radius:0.5rem;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
+        <!--<button id="popularitySortBtn" class="d-flex flex-row gap-2 btn btn-outline-dark" style="align-items:center;justify-content:center" onclick="toggleSort('votedfor')">Sort by Voted For <div style="margin-top:-3px" id="votedforIcon">↓</div></button>-->
+        <button id="popularitySortBtn" class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center" onclick="toggleSort('popularity')">Sort by Popularity <div style="margin-top:-3px" id="popularityIcon">↓</div></button>
+        <!--<button id="dateSortBtn"       class="d-flex flex-row gap-2 btn btn-outline-dark" style="align-items:center;justify-content:center" onclick="toggleSort('date')">Sort by Date <div style="margin-top:-3px" id="dateIcon"></div></button>-->
+        <!-- not categorized yet
         <select style="padding:5px" id="categorySelect" onchange="filterByCategory()">
           <option value="" disabled selected>Select Category</option>
           <option value="all">All Categories</option>
@@ -32,336 +31,198 @@
           <option value="crypto">Crypto</option>
           <option value="stocks">Stocks</option>
           <option value="government">Government Entities</option>
-        </select>
+        </select>-->
       </div>
       <div class="card-body px-0 pb-2">
         <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
-          <table class="table align-items-center mb-0">
+          <table class="table align-items-center mb-0" style="table-layout: fixed;max-width: 100%;">
             <thead ondblclick='toggleVotingDetails();'>
               <tr>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Oracle</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Stream</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Actions</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:40%;">Oracle</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:40%;">Stream</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:20%;">Actions</th>
               </tr>
             </thead>
             <tbody id="updating_table">
-              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" id='totalsRow' style='display:none;'>
-                <td colspan="3">
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 id='streamsWalletVoteTotal' class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
-                  </div>
-                </td>
-                {%if vault.isDecrypted %}
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 id='streamsVaultVoteTotal' class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}"></h6>
-                  </div>
-                </td>
-                {% endif %}
-              </tr> 
               {% for stream in streams %}
-              <!-- <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %} {% if stream['wallet_vote'] != 0 or (vault.isDecrypted and stream['vault_vote'] != 0) %}{% if darkmode %}yellow-dark-selected{% else %}yellow-selected{% endif %}{% endif %}" onclick="clickVote(this, '{{vault.isDecrypted}}' === 'True');"> -->
-              <tr style="cursor:pointer" onclick="toggleStreamDetails(this);" id="stream_{{stream['stream_id']}}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
+              <tr
+                id="stream_{{stream['stream_id']}}"
+                class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}"
+                style="cursor:pointer"
+                onclick="toggleStreamDetails(this, {{ stream['stream_id'] }});">
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['stream'] }}</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ stream['target'] }}</h6>
+                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ stream['stream'] }}</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex gap-2">
                     {% if stream.vote == 0 %}
-                      <div id="stream_{{stream['stream_id']}}" onclick="incrementVote({{ stream['stream_id'] }}, event);">
-                        <i class="material-icons opacity-10">thumb_up</i>
+                      <div id="stream_increment_{{stream['stream_id']}}" onclick="incrementVote({{ stream['stream_id'] }}, event);">
+                        <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
                       </div>
                     {% else %}
-                      <div id="stream_remove_{{stream['stream_id']}}" onclick="removeVote({{ stream['stream_id'] }}, event);">
-                        <i class="material-icons opacity-10">thumb_down</i>
+                      <div id="stream_decrement_{{stream['stream_id']}}" onclick="decrementVote({{ stream['stream_id'] }}, event);">
+                        <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                       </div>
                     {% endif %}
+                    <div id="observations">
+                      <i class="material-icons opacity-10" title="List" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }});">visibility</i>
+                    </div>
                   </div>
                 </td>
-                <td style='display:none;'>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">{{ ((stream['sanctioned']) | round | int) if stream['sanctioned'] > 0 else 0 }}</h6>
-                  </div>
-                </td>
-                <td class='walletValueCellIdentifier' style='display:none;'>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
-                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
-                        <div class="input-group input-group-outline">
-                          <input id="streamIdWallet_{{stream['stream_id']}}" name="streamIdWallet_{{stream['stream_id']}}" placeholder="{{ stream['wallet_vote'] if stream['wallet_vote'] != 0 else '' }}" value="{{ stream['wallet_vote'] if stream['wallet_vote'] != 0 else '' }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamWalletVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateWalletStreamsVotes();saveStreamVotesWallet();">
-                        </div>
-                      </div>
-                    </h6>
-                  </div>
-                </td>
-                {%if vault.isDecrypted %}
-                <td class='vaultValueCellIdentifier' style='display:none;'>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
-                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
-                        <div class="input-group input-group-outline">
-                          <input id="streamIdVault_{{stream['stream_id']}}" name="streamIdVault_{{stream['stream_id']}}" placeholder="{{ stream['vault_vote'] if stream['vault_vote'] != 0 else '' }}" value="{{ stream['vault_vote'] if stream['vault_vote'] != 0 else '' }}" class="tight form-control {% if darkmode %}dark-colors{% endif %} streamVaultVoteIdentifier" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateVaultStreamsVotes();saveStreamVotesVault();">
-                        </div>
-                      </div>
-                    </h6>
-                  </div>
-                </td>
-                {% endif %}
                  <!-- Additional details row -->
                 <tr class="stream-details" style="display: none;">
-                    <td colspan="5">
-                        <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px">
-                            <h3 style="font-weight:bold">STREAM DETAILS</h3>
-                            <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> {{ stream['stream'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> {{ stream['target'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> {{ stream['cadence'] }} seconds</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> {{ stream['stream_id'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>URL:</strong> <a href="{{ stream['url'] }}" target="_blank">{{ stream['url'] }}</a></p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> {{ stream['author'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> {{ stream['source'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> {{ stream['tags'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> {{ stream['oracle_address'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Description:</strong> {{ stream['description'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Alias:</strong> {{ stream['oracle_alias'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> {{ stream['oracle_pubkey'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> {{ stream['stream_created_ts'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Total Vote:</strong> {{ stream['total_vote'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Wallet Vote:</strong> {{ stream['wallet_vote'] }}</p>
-                                <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vault Vote:</strong> {{ stream['vault_vote'] }}</p>
-                            </div>
-                        </div>
-                    </td>
+                  <td colspan="3">
+                    <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
+                      <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> {{ stream['stream'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> {{ stream['target'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> {{ stream['cadence'] }} seconds</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created:</strong> {{ stream['stream_created_ts'] }}</p>
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> {{ stream['stream_id'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> {{ stream['author'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> {{ stream['source'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> {{ stream['oracle_pubkey'] }}</p>-->
+                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author Alias:</strong> {{ stream['oracle_alias'] }}</p>-->
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cracle Address:</strong> {{ stream['oracle_address'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> {{ stream['total_vote'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> {{ stream['tags'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> {{ stream['vote'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> {{ stream['latest_observation_value'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Time:</strong> {{ stream['latest_observation_time'] }}</p>
+                        <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="{{ stream['url'] }}" target="_blank">{{ stream['url'] }}</a></p>
+                        <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> {{ stream['description'] }}</p>
+                      </div>
+                    </div>
+                  </td>
                 </tr>
-              </tr> 
+              </tr>
               {% endfor %}
             </tbody>
           </table>
+          <div style="display: flex; justify-content: center; padding: 1rem; align-items:center">
+            <button class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="prevPageBtn" onclick="previousPage()" disabled>Previous</button>
+            <span id="pageInfo" style="margin: 0 1rem;">Page 1</span>
+            <button class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="nextPageBtn" onclick="nextPage()">Next</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
+  <!-- Modal for Observations -->
+  <div id="observationsModal" class="modal" style="display: none;">
+    <div id="modal-content" class="modal-content" style="position: relative; max-width: 800px; margin: auto; padding: 20px; border-radius: 8px; background-color: #fff;margin-top:20px;height:600px;">
+      <div class="d-flex" style="align-items:center; justify-content:space-between">
+        <h4>Observations</h4>
+        <i class="material-icons opacity-10" class="close" onclick="closeModal()" style="cursor:pointer">cancel</i>
+      </div>
+
+      <!-- Graph Section -->
+      <div id="observationsGraphContainer" style="display: none; height: 300px; margin-bottom: 20px;">
+        <canvas id="observationsGraph"></canvas>
+      </div>
+
+      <div id="observation-table" style="overflow-y: scroll; height: calc(100% - 350px);">
+        <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+          <thead>
+            <tr>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px;">Value</th>
+            </tr>
+          </thead>
+          <tbody id="observationsBody">
+            <!-- Observations will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="text/javascript">
-  function getWalletStreamsCount() {
-    let count = 0;
-    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
-      if (parseFloat(element.value) > 0){
-        count += 1;
-      }
-    }
-    return count;
+  const darkmode = {{ 'true' if darkmode else 'false' }};
+  let storedStreams = {{ allStreams|tojson }};
+  let filteredStreams = storedStreams;
+  let displayStreams = storedStreams.slice(0, 100);
+  let sortOrder = {
+    popularity: 'desc',
+    date: 'asc',
+    votedfor: 'desc'
+  };
+  let timeout = null;
+  let sortTimeout = null;
+  let filterTimeout = null;
+
+  let currentPage = 1;
+  const itemsPerPage = 100;
+  const totalStreams = {{ totalStreams }}; // Total number of streams passed from the backend
+
+  function updatePaginationButtons(totalStreamsCount) {
+    document.getElementById('prevPageBtn').disabled = currentPage === 1;
+    document.getElementById('nextPageBtn').disabled = currentPage * itemsPerPage >= totalStreamsCount;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage}`;
   }
 
-  function updateWalletStreamsByCount(value) {
-    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
-      if (parseFloat(element.value) > 0){
-        element.value = value;
+  // Next Page Function
+  function nextPage() {
+      if (currentPage * itemsPerPage < totalStreams) {
+          currentPage++;
+          displayStreams = filteredStreams.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+          updateStreamDisplay(displayStreams, darkmode);
+          updatePaginationButtons(filteredStreams.length);
       }
-    }
   }
 
-  function updateVaultStreamsByCount(value) {
-    for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
-      if (parseFloat(element.value) > 0) {
-        element.value = value;
+  // Previous Page Function
+  function previousPage() {
+      if (currentPage > 1) {
+          currentPage--;
+          displayStreams = filteredStreams.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+          updateStreamDisplay(displayStreams, darkmode);
+          updatePaginationButtons(filteredStreams.length);
       }
-    }
   }
 
-  function updateWalletStreamsTotal() {
-    try {
-      let total = getWalletStreamsTotal();
-      document.getElementById('streamsWalletVoteTotal').innerHTML = total + ' %';
-    } catch (error) {
-      document.getElementById('streamsWalletVoteTotal').innerHTML = 0 + ' %';
-    }
-  }
-
-  function validateWalletStreamsVotes() {
-    updateWalletStreamsTotal();
-    let total = parseFloat(document.getElementById('streamsWalletVoteTotal').innerHTML.split(' ')[0]);
-    if (total > 100.0) {
-      for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
-        element.value = parseInt(parseInt(element.value) / total * 100);
-      }
-      updateWalletStreamsTotal();
-    } 
-    return true;
-  }
-
-  function validateVaultStreamsVotes() {
-    updateVaultStreamsTotal();
-    let total = parseFloat(document.getElementById('streamsVaultVoteTotal').innerHTML.split(' ')[0]);
-    if (total > 100.0) {
-      for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
-        element.value = parseInt(parseInt(element.value) / total * 100);
-      }
-      updateVaultStreamsTotal();
-    } 
-    return true;
-  }
-
-  function saveStreamVotesWallet() {
-    let walletStreamIds = [];
-    let walletVotes = [];
-    for (const element of document.getElementsByClassName('streamWalletVoteIdentifier')) {
-      const voteValue = parseInt(element.value) || 0;
-      if (voteValue > 0) {
-        walletStreamIds.push(parseInt(element.name.split('_')[1]));
-        walletVotes.push(voteValue);
-      }
-    }
-    console.log("Payload", {
-      walletStreamIds: walletStreamIds,
-      walletVotes: walletVotes,
-    });
-    
-    fetch(
-      '/vote/submit/sanction/wallet', { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          walletStreamIds: walletStreamIds,
-          walletVotes: walletVotes,
-        })})
-    .then(response => {
-        if (response.ok) {
-            console.log("stream votes submitted");
-        }
-    })
-    .catch(error => console.error('Error:', error));
-  }
-  
-  function saveStreamVotesVault() {
-    let vaultStreamIds = [];
-    let vaultVotes = [];
-    for (const element of document.getElementsByClassName('streamVaultVoteIdentifier')) {
-      const voteValue = parseInt(element.value) || 0;
-      if (voteValue > 0) {
-        vaultStreamIds.push(parseInt(element.name.split('_')[1]));
-        vaultVotes.push(voteValue);
-      }
-    }
-    fetch(
-      '/vote/submit/sanction/vault', { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          vaultStreamIds: vaultStreamIds,
-          vaultVotes: vaultVotes,
-        })})
-    .then(response => {
-        if (response.ok) {
-            console.log("stream votes submitted");
-        }
-    })
-    .catch(error => console.error('Error:', error));
-  }
-
-  function clickVote(obj, includeVault, event) {
-    event.stopPropagation();
-    let walletInput = document.getElementById('streamIdWallet_' + obj.id.split('_')[1]);
-    if (walletInput.value === '0' || walletInput.value === '') {
-      console.log("Inside Wallet Input")
-      let count = getWalletStreamsCount() + 1;
-      console.log("count", count)
-      if (count > 100) {
-        alert('Limit reached: you can vote for no more than 100 streams.');
-        return;
-      }
-      if (obj.classList.contains('yellow-hover')) {
-        obj.classList.add('yellow-selected');
-      } else {
-        obj.classList.add('yellow-dark-selected');
-      }
-      walletInput.value = 100/count;
-      updateWalletStreamsByCount(100/count);
-    } else {
-      console.log("Not Inside Wallet Input")
-      if (obj.classList.contains('yellow-selected')) {
-        obj.classList.remove('yellow-selected');
-      } else {
-        obj.classList.remove('yellow-dark-selected');
-      }
-      let count = getWalletStreamsCount() - 1;
-      console.log("count", count)
-      walletInput.value = 0;
-      updateWalletStreamsByCount(100/count);
-    }
-    validateWalletStreamsVotes();
-    saveStreamVotesWallet();
-    if (includeVault) {
-      console.log("Inside vault");
-      let vaultInput = document.getElementById('streamIdVault_' + obj.id.split('_')[1]);
-      if (vaultInput.value === '0') {
-        console.log("Inside Vault Input")
-        let count = getVaultStreamsCount() + 1;
-        console.log("count", count)
-        vaultInput.value = 100;
-        updateVaultStreamsByCount(100/count);
-      } else {
-        console.log("Not Inside Vault Input")
-        let count = getVaultStreamsCount() - 1;
-        console.log("count", count)
-        vaultInput.value = 0;
-        updateVaultStreamsByCount(100/count);
-      }
-      validateVaultStreamsVotes();
-      saveStreamVotesVault();
-    } 
-  }
+  // Initialize display with the first page
+  displayStreams = filteredStreams.slice(0, itemsPerPage);
+  updateStreamDisplay(displayStreams, darkmode);
+  updatePaginationButtons(filteredStreams.length);
 
   function showNotification(message, showError = false) {
     const notification = document.getElementById(showError ? 'notification_error' : 'notification');
     notification.innerHTML = message;
     notification.style.display = 'block';
-    
-    // Hide the notification after 3 seconds
+
+    // Hide the notification after 2 seconds
     setTimeout(() => {
       notification.style.display = 'none';
-    }, 1000);
+    }, 1000*2);
   }
 
   // Increment Vote
   function incrementVote(streamId, event) {
     event.stopPropagation();
     fetch(
-      '/vote_on/sanction/incremental', { 
-        method: 'POST', 
+      '/vote_on/sanction/incremental', {
+        method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          streamId: streamId,
-        })})
+        body: JSON.stringify({streamId: streamId})})
     .then(async (response) => {
         if (response.ok) {
             const responseData = await response.json();
             console.log("responseData", responseData.message);
-            const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(4) div[id="stream_${streamId}"]`);
-            voteActionElement.innerHTML = '<i class="material-icons opacity-10">thumb_down</i>';
-            voteActionElement.onclick = (e) => removeVote(streamId, e);
-            voteActionElement.id = `stream_remove_${streamId}`; // Update the id to match remove vote action
-            showNotification("Vote incremented successfully!");
+            //const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(3) div[id="stream_${streamId}"]`);
+            const voteActionElement = document.getElementById(`stream_increment_${streamId}`);
+            voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Approved">thumb_up</i>';
+            voteActionElement.onclick = (e) => decrementVote(streamId, e);
+            voteActionElement.id = `stream_decrement_${streamId}`; // Update the id to match remove vote action
+            showNotification("Vote added");
         }
     })
     .catch(error => {
@@ -371,24 +232,23 @@
   }
 
   // Remove Vote
-  function removeVote(streamId, event) {
+  function decrementVote(streamId, event) {
     event.stopPropagation();
     fetch(
-      '/clear_vote_on/sanction/incremental', { 
-        method: 'POST', 
+      '/clear_vote_on/sanction/incremental', {
+        method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          streamId: streamId,
-        })})
+        body: JSON.stringify({streamId: streamId})})
     .then(async (response) => {
         if (response.ok) {
           const responseData = await response.json();
           console.log("responseData", responseData.message);
-          const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(4) div[id="stream_remove_${streamId}"]`);
-          voteActionElement.innerHTML = '<i class="material-icons opacity-10">thumb_up</i>';
+          //const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(3) div[id="stream_decrement_${streamId}"]`);
+          const voteActionElement = document.getElementById(`stream_decrement_${streamId}`);
+          voteActionElement.innerHTML = '<i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>';
           voteActionElement.onclick = (e) => incrementVote(streamId, e);
-          voteActionElement.id = `stream_${streamId}`;
-          showNotification("Vote removed successfully!");
+          voteActionElement.id = `stream_increment_${streamId}`;
+          showNotification("Vote removed");
         }
     })
     .catch(error => {
@@ -397,27 +257,14 @@
     });
   }
 
-  const darkmode = {{ 'true' if darkmode else 'false' }};  
-  const vault = { isDecrypted: {{ 'true' if vault.isDecrypted else 'false' }} };
-  let storedStreams = {{ streams|tojson }};
-  let sortOrder = {
-    popularity: 'desc',
-    date: 'asc',
-    votedfor: 'desc'
-  };
-
-  function toggleStreamDetails(row) {
-      const detailsRow = row.nextElementSibling;
-      if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-          detailsRow.style.display = 'table-row';
-      } else {
-          detailsRow.style.display = 'none';
-      }
+  function toggleStreamDetails(row, streamId) {
+    const detailsRow = row.nextElementSibling;
+    if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+      detailsRow.style.display = 'table-row';
+    } else {
+      detailsRow.style.display = 'none';
+    }
   }
-
-  let timeout = null;
-  let sortTimeout = null;
-  let filteTimeout = null;
 
   function toggleSort(type) {
     if(sortTimeout) {
@@ -437,13 +284,12 @@
       } else {
         iconElement.innerHTML = '↓';
       }
-      
       sortBy(type, sortOrder[type]);
     }, 200);
   }
 
   function sortBy(type, order) {
-    let sortedStreams = [...storedStreams];
+    let sortedStreams = [...filteredStreams];
 
     if (type === 'popularity') {
       sortedStreams.sort((a, b) => {
@@ -465,12 +311,15 @@
       });
     }
 
-    updateStreamDisplay(sortedStreams, darkmode, vault);
+    filteredStreams = sortedStreams;
+    displayStreams = sortedStreams.slice(0, 100);
+    updateStreamDisplay(displayStreams, darkmode);
+    updatePaginationButtons(filteredStreams.length);
   }
 
   function filterByCategory() {
-    if(filteTimeout) {
-      clearTimeout(filteTimeout);
+    if(filterTimeout) {
+      clearTimeout(filterTimeout);
     }
     const tableBody = document.getElementById('updating_table');
     tableBody.innerHTML = '';
@@ -478,16 +327,16 @@
     noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
     tableBody.appendChild(noDataRow);
 
-    filteTimeout = setTimeout(() => {
+    filterTimeout = setTimeout(() => {
       const category = document.getElementById('categorySelect').value;
       if (category === 'all') {
         filteredStreams = [...storedStreams];
       } else {
-        filteredStreams = [...storedStreams];
         filteredStreams = storedStreams.filter(stream => stream.category === category);
       }
-
-      updateStreamDisplay(filteredStreams, darkmode, vault);
+      displayStreams = filteredStreams.slice(0, 100);
+      updateStreamDisplay(displayStreams, darkmode);
+      updatePaginationButtons(filteredStreams.length);
     }, 200);
   }
 
@@ -501,18 +350,31 @@
     const noDataRow = document.createElement('tr');
     noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
     tableBody.appendChild(noDataRow);
-
+    /// instead of fetching from the server, we're going to filter the existing ones.
+    //timeout = setTimeout(() => {
+    //  const searchText = document.getElementById('searchInput').value;
+    //  fetchStreams(searchText);
+    //}, 200);
     timeout = setTimeout(() => {
-        const searchText = document.getElementById('searchInput').value;
-        fetchStreams(searchText);
+      const searchText = document.getElementById('searchInput').value;
+      if (searchText.trim() === '') {
+        filteredStreams = [...storedStreams];
+      } else {
+        filteredStreams = storedStreams.filter(stream => ['stream', 'description', 'oracle_alias', 'oracle_address', 'tags', 'target', 'url']
+          .some(field => stream[field] && stream[field].toLowerCase().includes(searchText.toLowerCase())));
+      }
+      displayStreams = filteredStreams.slice(0, 100);
+      updateStreamDisplay(displayStreams, darkmode);
+      updatePaginationButtons(filteredStreams.length);
     }, 200);
   }
 
+  /// unused
   function fetchStreams(searchText) {
     console.log("searchText", searchText);
     console.log("storedStreams", storedStreams);
 
-    const filteredStreams = storedStreams.filter(stream => 
+    const filteredStreams = storedStreams.filter(stream =>
         stream.stream.toLowerCase().includes(searchText.toLowerCase()) ||
         stream.target.toLowerCase().includes(searchText.toLowerCase())
     );
@@ -526,7 +388,8 @@
     dateIconElement.innerHTML = '';
     votedforIconElement.innerHTML = '↓';
 
-    updateStreamDisplay(filteredStreams, darkmode, vault)
+    displayStreams = filteredStreams.slice(0,100);
+    updateStreamDisplay(displayStreams, darkmode)
 
     {/* fetch(`/streams?search=${encodeURIComponent(searchText)}`)
         .then(response => {
@@ -543,12 +406,12 @@
         })
         .then(data => {
           console.log("Data", data.streams)
-          updateStreamDisplay(data.streams, darkmode, vault)
+          updateStreamDisplay(data.streams, darkmode)
         })
         .catch(error => console.error('Error fetching streams:', error)); */}
   }
 
-  function updateStreamDisplay(streams, darkmode, vault) {
+  function updateStreamDisplay(streams, darkmode) {
     const tableBody = document.getElementById('updating_table');
     tableBody.innerHTML = '';
 
@@ -561,28 +424,31 @@
     }
 
     streams.forEach(stream => {
+      // Calculate last observation is within 24 hours or not
+      const now = new Date();
+      const latestObservationTime = new Date(stream.latest_observation_time);
+      const isActive = (now - latestObservationTime) <= 24 * 60 * 60 * 1000;
+  
       const row = document.createElement('tr');
       row.style.cursor = "pointer";
-      row.onclick = () => toggleStreamDetails(row);
+      row.onclick = () => toggleStreamDetails(row, stream.stream_id);
       row.id = `stream_${stream.stream_id}`;
-
       let rowClass = darkmode ? 'yellow-dark-hover' : 'yellow-hover';
-      // if (stream.wallet_vote != 0 || (vault.isDecrypted && stream.vault_vote != 0)) {
-      //    rowClass += darkmode ? ' yellow-dark-selected' : ' yellow-selected';
-      // }
       row.className = rowClass;
-
       const voteActionHtml = `
         <td>
           <div class="d-flex gap-2">
-            ${stream.vote === 0 ? 
-                `<div id="stream_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
-                    <i class="material-icons opacity-10">thumb_up</i>
-                </div>` : 
-                `<div id="stream_remove_${stream.stream_id}" onclick="removeVote(${stream.stream_id}, event);">
-                    <i class="material-icons opacity-10">thumb_down</i>
+            ${stream.vote === 0 ?
+                `<div id="stream_increment_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
+                    <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
+                </div>` :
+                `<div id="stream_decrement_${stream.stream_id}" onclick="decrementVote(${stream.stream_id}, event);">
+                    <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                 </div>`
             }
+            <div id="observations">
+              <i class="material-icons opacity-10" title="List" onclick="event.stopPropagation(); showObservations(${stream.stream_id});">visibility</i>
+            </div>
           </div>
         </td>
         `;
@@ -598,11 +464,6 @@
                   <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.stream}</h6>
               </div>
           </td>
-          <td>
-              <div class="d-flex px-3 py-1">
-                  <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.target}</h6>
-              </div>
-          </td>
           ${voteActionHtml}
       `;
       tableBody.appendChild(row);
@@ -612,32 +473,224 @@
       streamDetailRow.class = `stream-details`;
       streamDetailRow.style.display = "none";
       streamDetailRow.innerHTML = `
-          <td colspan="5">
-              <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px">
-                  <h3 style="font-weight:bold">STREAM DETAILS</h3>
-                  <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> ${stream.stream_id}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> ${stream.author}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> ${stream.source}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> ${stream.oracle_address}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Description:</strong> ${stream.description}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Alias:</strong> ${stream.oracle_alias}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> ${stream.oracle_pubkey}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Total Vote:</strong> ${stream.total_vote}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Wallet Vote:</strong> ${stream.wallet_vote}</p>
-                      <p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vault Vote:</strong> ${stream.vault_vote}</p>
-                  </div>
-              </div>
-          </td>
+        <td colspan="5">
+          <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
+            <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author Address:</strong> ${stream.oracle_address}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> ${stream.total_vote}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> ${stream.vote}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> ${stream.latest_observation_value}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Time:</strong> ${stream.latest_observation_time}</p>
+              <p class="text-sm" style="width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <strong>Status:</strong> 
+                <span style="color: ${isActive ? 'green' : 'red'};">
+                  ${isActive ? 'Active' : 'Inactive'}
+                </span>
+              </p>
+              <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
+              <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> ${stream.description}</p>
+            </div>
+          </div>
+        </td>
       `
       tableBody.appendChild(streamDetailRow);
     });
   }
+
+  let observationsChart;
+  // Formate date to shoerter format
+  function formatDateToShort(dateString) {
+    const date = new Date(dateString);
+    return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}, ${date.getFullYear()}`;
+  }
+
+  // Show Observations Modal with observations list and graph for value vs time
+  function showObservations(streamId) {
+    fetch('/get_observations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ streamId: streamId })
+    })
+    .then(async (response) => {
+      if (response.ok) {
+        const data = await response.json();
+        // const parsedObservations = JSON.parse(data.observations);
+        const parsedObservations = [
+          {
+              "stream_id": 4827600,
+              "time": "Fri, 01 Jan 2024 05:20:04 GMT",
+              "ts": "Fri, 01 Jan 2024 05:21:14 GMT",
+              "value": "47.4"
+          },
+          {
+              "stream_id": 4827600,
+              "time": "Tue, 01 Feb 2024 06:20:04 GMT",
+              "ts": "Tue, 01 Feb 2024 06:21:14 GMT",
+              "value": "49.1"
+          },
+          {
+              "stream_id": 4827600,
+              "time": "Fri, 01 Mar 2024 07:20:04 GMT",
+              "ts": "Fri, 01 Mar 2024 07:21:14 GMT",
+              "value": "46.8"
+          },
+          {
+              "stream_id": 4827600,
+              "time": "Mon, 01 Apr 2024 08:20:04 GMT",
+              "ts": "Mon, 01 Apr 2024 08:21:14 GMT",
+              "value": "48.6"
+          },
+          {
+              "stream_id": 4827600,
+              "time": "Wed, 01 May 2024 09:20:04 GMT",
+              "ts": "Wed, 01 May 2024 09:21:14 GMT",
+              "value": "50.2"
+          },
+          {
+              "stream_id": 4827600,
+              "time": "Sat, 01 Jun 2024 10:20:04 GMT",
+              "ts": "Sat, 01 Jun 2024 10:21:14 GMT",
+              "value": "51.7"
+          },
+          {
+              "stream_id": 4827600,
+              "time": "Mon, 01 Jul 2024 11:20:04 GMT",
+              "ts": "Mon, 01 Jul 2024 11:21:14 GMT",
+              "value": "52.4"
+          },
+          {
+              "stream_id": 4827600,
+              "time": "Thu, 01 Aug 2024 12:20:04 GMT",
+              "ts": "Thu, 01 Aug 2024 12:21:14 GMT",
+              "value": "53.6"
+          },
+          {
+              "stream_id": 4827600,
+              "time": "Sun, 01 Sep 2024 13:20:04 GMT",
+              "ts": "Sun, 01 Sep 2024 13:21:14 GMT",
+              "value": "55.1"
+          },
+          {
+              "stream_id": 4827600,
+              "time": "Tue, 01 Oct 2024 14:20:04 GMT",
+              "ts": "Tue, 01 Oct 2024 14:21:14 GMT",
+              "value": "54.8"
+          }
+        ]
+        const formattedData = parsedObservations.map(obs => ({
+          ...obs,
+          formattedTime: formatDateToShort(obs.time) // Add formatted time for x-axis
+        }));
+        const observationsBody = document.getElementById('observationsBody');
+        const graphContainer = document.getElementById('observationsGraphContainer');
+        const graphCanvas = document.getElementById('observationsGraph');
+        const modelContent = document.getElementById('modal-content');
+        const observationTable = document.getElementById('observation-table');
+
+        observationsBody.innerHTML = '';
+
+        if (parsedObservations.length === 0) {
+          // modal container css changes
+          modelContent.style.height = "300px"
+          // Graph container css changes
+          graphContainer.style.display = 'none';
+          // Table style css changes
+          observationTable.style.height = "300px";
+          observationTable.style.overflowY = "hidden";
+          const noDataRow = document.createElement('tr');
+          noDataRow.innerHTML = '<td colspan="2" style="text-align: center; padding: 8px;">No data found</td>';
+          observationsBody.appendChild(noDataRow);
+        } else {
+          // Graph container css changes
+          graphContainer.style.display = 'block';
+          const times = formattedData.map((obs) => obs.formattedTime);
+          const values = formattedData.map((obs) => parseFloat(obs.value));
+          // Render the graph
+          if (observationsChart) {
+            observationsChart.destroy(); // Destroy the previous chart instance
+          }
+          observationsChart = new Chart(graphCanvas, {
+            type: 'line',
+            data: {
+              labels: times,
+              datasets: [
+                {
+                  label: '',
+                  data: values,
+                  borderColor: 'rgba(75, 192, 192, 1)',
+                  borderWidth: 2,
+                  pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                  fill: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: { title: { display: true, text: 'Time' }, grid: { display: false }, ticks: {
+                    callback: function (value, index, ticks) {
+                      // Show only the first and last labels
+                      if (index === 0 || index === ticks.length - 1) {
+                        return this.getLabelForValue(value);
+                      }
+                      return '';
+                    },
+                  }, 
+                },
+                y: { title: { display: true, text: 'Value' }, grid: { display: false } },
+              },
+              plugins: {
+                // Tooltip when user hover on the point
+                tooltip: {
+                  callbacks: {
+                    label: function (context) {
+                      return `Time: ${context.label}, Value: ${context.raw}`;
+                    },
+                  },
+                },
+                legend: { display: false }, // Hide the legend
+              },
+            },
+          });
+
+          parsedObservations.forEach(observation => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.value}</td>
+            `;
+            observationsBody.appendChild(row);
+          });
+        }
+        // Show the modal
+        document.getElementById('observationsModal').style.display = 'block';
+        document.body.classList.add('no-scroll');  // Disable scroll on main content
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching observations:', error);
+      showNotification("Failed to load observations", true);
+    });
+  }
+
+  // Close Modal
+  function closeModal() {
+    document.getElementById('observationsModal').style.display = 'none';
+    document.body.classList.remove('no-scroll');  // Re-enable scroll on main content
+  }
+
+  // Close modal on outside click
+  window.onclick = function(event) {
+    const modal = document.getElementById('observationsModal');
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  };
 </script>
 {% endblock %}
