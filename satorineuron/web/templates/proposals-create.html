@@ -35,7 +35,13 @@
                 <label for="description">Description</label>
               </div>
               <div class="input-group input-group-outline">
-                <textarea class="tight form-control {% if darkmode %}dark-colors{% endif %}" id="description" name="description" rows="3" required></textarea>
+                <textarea class="tight form-control {% if darkmode %}dark-colors{% endif %}" 
+                          id="description" 
+                          name="description" 
+                          rows="5" 
+                          required
+                          style="white-space: pre-wrap;"
+                ></textarea>
               </div>
             </div>
             <div class="form-group mb-4">
@@ -101,42 +107,63 @@
   </div>
 </div>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('create-proposal-form');
-    //const addOptionBtn = document.getElementById('add-option');
-    const optionsContainer = document.getElementById('options-container');
-
-    form.addEventListener('submit', submitProposal);
-    //addOptionBtn.addEventListener('click', addOption);
-    //optionsContainer.addEventListener('click', removeOption);
-
+    const descriptionTextarea = document.getElementById('description');
+    
     // Set minimum date for expiration to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('expires').min = today;
-  });
 
-  function submitProposal(event) {
+    // Enhanced textarea handling
+    descriptionTextarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            // Don't submit the form on Enter
+            e.stopPropagation();
+        }
+    });
+
+    // Auto-resize as you type
+    descriptionTextarea.addEventListener('input', function() {
+        autoResizeTextarea(this);
+    });
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        submitProposal(event);
+    });
+});
+
+function autoResizeTextarea(textarea) {
+    // Reset height to allow shrinking
+    textarea.style.height = 'auto';
+    // Set new height based on scrollHeight
+    textarea.style.height = (textarea.scrollHeight + 2) + 'px';
+}
+
+function submitProposal(event) {
     event.preventDefault();
-
+    
     const form = event.target;
     const options = Array.from(form.querySelectorAll('.option-input')).map(input => input.value);
-
+    
     if (options.length < 2) {
         alert('Please provide at least two options for the proposal.');
         return;
     }
-
+    
+    // Keep the raw newlines in the description
+    const description = form.description.value;
+    
     const proposalData = {
         title: form.title.value,
-        description: form.description.value,
+        description: description,
         image_url: form.image_url.value,
         cost: form.cost.value,
         options: options,
         expires: form.expires.value
     };
-
-    console.log('Submitting proposal:', proposalData);
-
+    
     fetch('/proposal/create', {
         method: 'POST',
         headers: {
@@ -146,47 +173,40 @@
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Server response:', data);
         if (data.status === 'success') {
-            console.log('Proposal created successfully:', data);
             alert('Proposal created successfully!');
-            window.location.href = '/proposals';  // Redirect to proposals list
+            window.location.href = '/proposals';
         } else {
-            console.error('Error creating proposal:', data);
             alert('Failed to create proposal: ' + (data.message || 'Unknown error'));
         }
     })
     .catch((error) => {
         console.error('Error:', error);
-        alert('An error occurred while creating the proposal. Please check the console for more details.');
+        alert('An error occurred while creating the proposal.');
     });
 }
-
-  function addOption() {
+// Helper function to add options
+function addOption() {
     const newOption = document.createElement('div');
     newOption.id = 'option-' + document.getElementById('options-container').children.length;
     newOption.className = 'col-xl-2 col-sm-6';
     newOption.innerHTML = `
-          <div class="input-group input-group-outline" style="padding-bottom: .25rem;">
+        <div class="input-group input-group-outline" style="padding-bottom: .25rem;">
             <input type="text" class="tight form-control {% if darkmode %}dark-colors{% endif %} option-input" placeholder="Option" value="Other" required>
-          </div>
-          <div class="input-group-append">
+        </div>
+        <div class="input-group-append">
             <button type="button" class="btn btn-secondary" onClick="removeOption('${newOption.id}');">Remove</button>
-          </div>
+        </div>
     `;
     document.getElementById('options-container').appendChild(newOption);
-  }
+}
 
-  function removeOption(optionId) {
+function removeOption(optionId) {
     if (document.getElementById('options-container').children.length > 2) {
-      document.getElementById(optionId).remove();
+        document.getElementById(optionId).remove();
     } else {
-      alert('You must have at least two options.');
+        alert('You must have at least two options.');
     }
-    // also remove it from the form input stuff.
-  }
-
-
-</script>
-
+}
+  </script>
 {% endblock %}
