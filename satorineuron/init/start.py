@@ -58,7 +58,8 @@ class SingletonMeta(type):
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super(
+                SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -135,6 +136,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             )
             self.walletTimeoutThread.start()
         self.lastBlockTime = time.time()
+        self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
         if not config.get().get("disable restart", False):
             self.restartThread = threading.Thread(
@@ -143,7 +145,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.restartThread.start()
         self.restartQueue: Queue = Queue()
         self.restartQueueThread = threading.Thread(
-            target=self.restartWithQueue, args=(self.restartQueue,), daemon=True
+            target=self.restartWithQueue, args=(
+                self.restartQueue,), daemon=True
         )
         self.restartQueueThread.start()
         self.checkinCheckThread = threading.Thread(
@@ -207,7 +210,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if latestTag.mustUpdate():
                     terminatePid(getPidByName("satori.py"))
 
-        self.watchVersionThread = threading.Thread(target=watchForever, daemon=True)
+        self.watchVersionThread = threading.Thread(
+            target=watchForever, daemon=True)
         self.watchVersionThread.start()
 
     def performMigrationBackup(self, name: str = "wallet"):
@@ -422,7 +426,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             logging.info(f"initialized {network.title()} vault", color="green")
             return vault
         except Exception as e:
-            logging.error(f"failed to open {network} vault: {str(e)}", color="red")
+            logging.error(
+                f"failed to open {network} vault: {str(e)}", color="red")
             raise e
 
     @property
@@ -516,10 +521,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def electrumxCheck(self) -> bool:
         """returns connection status to electrumx"""
         if self.electrumx is None or not self.electrumx.connected():
-            self.updateConnectionStatus(connTo=ConnectionTo.electrumx, status=False)
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.electrumx, status=False)
             return False
         else:
-            self.updateConnectionStatus(connTo=ConnectionTo.electrumx, status=True)
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.electrumx, status=True)
             return True
 
     def closeVault(self) -> Union[RavencoinWallet, EvrmoreWallet, None]:
@@ -530,7 +537,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 try:
                     vault.close()
                 except Exception as e:
-                    logging.error(f"Error closing vault: {str(e)}", color="red")
+                    logging.error(
+                        f"Error closing vault: {str(e)}", color="red")
 
     def openVault(
         self,
@@ -723,7 +731,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def checkin(self):
         try:
             referrer = (
-                open(config.root("config", "referral.txt"), mode="r").read().strip()
+                open(config.root("config", "referral.txt"),
+                     mode="r").read().strip()
             )
         except Exception as _:
             referrer = None
@@ -732,11 +741,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         while True:
             attempt += 1
             try:
-                self.details = CheckinDetails(self.server.checkin(referrer=referrer))
-                self.updateConnectionStatus(connTo=ConnectionTo.central, status=True)
+                self.details = CheckinDetails(
+                    self.server.checkin(referrer=referrer))
+                self.updateConnectionStatus(
+                    connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
-                self.poolIsAccepting = bool(self.details.wallet.get("accepting", False))
+                self.poolIsAccepting = bool(
+                    self.details.wallet.get("accepting", False))
                 self.oracleKey = self.details.oracleKey
                 self.idKey = self.details.idKey
                 self.subscriptionKeys = self.details.subscriptionKeys
@@ -749,12 +761,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 ):
                     time.sleep(30)
                     continue
-                logging.info("subscriptions:", len(self.subscriptions), print=True)
+                logging.info("subscriptions:", len(
+                    self.subscriptions), print=True)
                 # logging.info('subscriptions:', self.subscriptions, print=True)
                 self.publications = [
                     Stream.fromMap(x) for x in json.loads(self.details.publications)
                 ]
-                logging.info("publications:", len(self.publications), print=True)
+                logging.info("publications:", len(
+                    self.publications), print=True)
                 # logging.info('publications:', self.publications, print=True)
                 self.caches = {
                     x.streamId: disk.Cache(id=x.streamId)
@@ -791,7 +805,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 logging.info("checked in with Satori", color="green")
                 break
             except Exception as e:
-                self.updateConnectionStatus(connTo=ConnectionTo.central, status=False)
+                self.updateConnectionStatus(
+                    connTo=ConnectionTo.central, status=False)
                 logging.warning(f"connecting to central err: {e}")
             x = x * 1.5 if x < 60 * 60 * 6 else 60 * 60 * 6
             logging.warning(f"trying again in {x}")
@@ -850,7 +865,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             )
 
         def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
-            logging.debug("topic=", streamForecast.streamId.topic(), color="magenta")
+            logging.debug(
+                "topic=", streamForecast.streamId.topic(), color="magenta")
             logging.debug(
                 "data=", streamForecast.forecast["pred"].iloc[0], color="magenta"
             )
@@ -863,7 +879,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             logging.debug(
                 "useAuthorizedCall=", self.version >= Version("0.2.6"), color="magenta"
             )
-            logging.debug("predictionStream=", streamForecast.predictionStreamId, color="red")
+            logging.debug("predictionStream=",
+                          streamForecast.predictionStreamId, color="red")
             logging.debug(
                 "predictionStreamtopic=", streamForecast.predictionStreamId.topic(), color="red"
             )
@@ -925,7 +942,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """establish a random pubsub connection used only for subscribing"""
         if self.sub is not None:
             self.sub.disconnect()
-            self.updateConnectionStatus(connTo=ConnectionTo.pubsub, status=False)
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.pubsub, status=False)
             self.sub = None
         if self.key:
             signature = self.wallet.sign(self.key)
@@ -1027,11 +1045,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def syncDatasets(self):
         """establish a synergy connection"""
         if self.synergy and self.synergy.isConnected:
-            self.updateConnectionStatus(connTo=ConnectionTo.synergy, status=True)
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.synergy, status=True)
             for stream in self.subscriptions:
                 self.synergy.connectToPeer(stream.streamId)
         else:
-            self.updateConnectionStatus(connTo=ConnectionTo.synergy, status=False)
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.synergy, status=False)
         # else:
         #    raise Exception('synergy not created or not connected.')
 
@@ -1039,7 +1059,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """pause the engine."""
         self.paused = True
         # self.engine.pause()
-        self.pauseThread = self.asyncThread.delayedRun(task=self.unpause, delay=timeout)
+        self.pauseThread = self.asyncThread.delayedRun(
+            task=self.unpause, delay=timeout)
         logging.info("AI engine paused", color="green")
 
     def unpause(self):
@@ -1076,7 +1097,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def triggerRestart(self, return_code=1):
         from satorisynapse import Envelope, Signal
 
-        self.udpQueue.put(Envelope(ip="", vesicle=Signal(restart=True)))  # TODO: remove
+        self.udpQueue.put(
+            Envelope(ip="", vesicle=Signal(restart=True)))  # TODO: remove
         import time
 
         time.sleep(5)
@@ -1162,7 +1184,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         vault = self.getVault(network=network)
         mineToAddress = vault.address
         success, result = self.server.enableMineToVault(
-            walletSignature=self.getWallet(network=network).sign(mineToAddress),
+            walletSignature=self.getWallet(
+                network=network).sign(mineToAddress),
             vaultSignature=vault.sign(mineToAddress),
             vaultPubkey=vault.publicKey,
             address=mineToAddress,
@@ -1197,3 +1220,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.allOracleStreams = self.server.getSearchStreams(
                 searchText=searchText)
         return self.allOracleStreams
+
+    def ableToBridge(self):
+        if self.lastBridgeTime < time.time() + 60*60*1:
+            return True, ''
+        return False, 'Please wait at least an hour before Bridging Satori'

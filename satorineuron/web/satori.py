@@ -95,10 +95,10 @@ while True:
                 'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
-            # 'prod': 'https://central.satorinet.io'}[ENV],
-            # 'prod': 'http://24.199.113.168'}[ENV], # c
-            # 'prod': 'http://137.184.38.160'}[ENV],  # n
+                # 'prod': 'https://stage.satorinet.io'}[ENV],
+                # 'prod': 'https://central.satorinet.io'}[ENV],
+                # 'prod': 'http://24.199.113.168'}[ENV], # c
+                'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
                 'local': 'https://mundo.satorinet.io',
@@ -767,7 +767,12 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
 @authRequired
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
     # only support main network for this
-    result = bridgeSatoriTransactionUsing(start.vault)
+    greenlight, explain = start.ableToBridge()
+    if greenlight:
+        result = bridgeSatoriTransactionUsing(start.vault)
+    else:
+        flash(explain)
+        return redirect('/vault/main')
     if isinstance(result, str) and len(result) == 64:
         flash(str(result))
         flash('Please wait. The bridge process can take up to 2 hours to complete.')
@@ -1632,6 +1637,18 @@ def disableWalletLock():
     return 'OK', 200
 
 
+@app.route('/decrypt/vault', methods=['POST'])
+@authRequired
+def decryptVault():
+    password = request.json.get('password', '')
+    if len(password) >= 8:
+        start.openVault(password=password, create=start.vault is None)
+        if start.vault.isEncrypted:
+            return 'unable to decrypt vault with that password', 400
+        return 'decrypted', 200
+    return 'password must be at least 8 characters', 400
+
+
 @app.route('/vault/<network>', methods=['GET', 'POST'])
 @userInteracted
 @authRequired
@@ -1665,7 +1682,7 @@ def vault():
         # logging.debug(passwordForm.password.data, color='yellow')
         _vault = start.openVault(
             password=passwordForm.password.data,
-            create=True)
+            create=start.vault is None)
         if not config.get().get('neuron lock hash', False):
             config.add(data={'neuron lock hash': hashSaltIt(
                 passwordForm.password.data)})
@@ -1782,16 +1799,15 @@ def mineToAddress(address: str):
 
 
 @app.route('/stake/for/address/<address>', methods=['GET'])
-@userInteracted
 @authRequired
 def stakeForAddress(address: str):
     if start.vault is None:
-        return '', 200
+        return 'no vault, unable to stake', 400
     # the network portion should be whatever network I'm on.
     network = 'main'
     vault = start.getVault(network=network)
     if vault.isEncrypted:
-        return redirect('/vault')
+        return redirect('/vault', code=302)
     success, result = start.server.stakeForAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
@@ -1908,7 +1924,6 @@ def proxyParentStatus():
 
 
 @app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
-@userInteracted
 @authRequired
 def charityProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyCharity(address, childId=id)
@@ -1918,7 +1933,6 @@ def charityProxyChild(address: str, id: int):
 
 
 @app.route('/proxy/child/no_charity/<address>/<id>', methods=['GET'])
-@userInteracted
 @authRequired
 def charityNotProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyCharityNot(address, childId=id)
