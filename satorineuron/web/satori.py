@@ -1640,12 +1640,14 @@ def disableWalletLock():
 @app.route('/decrypt/vault', methods=['POST'])
 @authRequired
 def decryptVault():
+    if start.vault.isDecrypted:
+        return 'decrypted', 200
     password = request.json.get('password', '')
     if len(password) >= 8:
         start.openVault(password=password, create=start.vault is None)
-        if start.vault.isEncrypted:
-            return 'unable to decrypt vault with that password', 400
-        return 'decrypted', 200
+        if start.vault.isDecrypted:
+            return 'decrypted', 200
+        return 'unable to decrypt vault with that password', 400
     return 'password must be at least 8 characters', 400
 
 
