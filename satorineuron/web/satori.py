@@ -1641,7 +1641,7 @@ def disableWalletLock():
 @authRequired
 def decryptVault():
     if start.vault.isDecrypted:
-        return 'decrypted', 200
+        return 'already decrypted', 200
     password = request.json.get('password', '')
     if len(password) >= 8:
         start.openVault(password=password, create=start.vault is None)
