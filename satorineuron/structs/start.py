@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Union
 import threading
 from queue import Queue
@@ -10,13 +11,43 @@ from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
 
 
+class RunMode(Enum):
+    normal = 1
+    worker = 2
+    walletOnly = 3
+
+    @classmethod
+    def choose(cls, runMode):
+        # Convert runMode to lowercase if it's a string
+        if isinstance(runMode, str):
+            runMode = runMode.lower()
+        # Define a mapping of possible inputs to Enum values
+        mapping = {
+            1: cls.normal,
+            '1': cls.normal,
+            '': cls.normal,
+            None: cls.normal,
+            'none': cls.normal,
+            'normal': cls.normal,
+            2: cls.worker,
+            '2': cls.worker,
+            'worker': cls.worker,
+            3: cls.walletOnly,
+            '3': cls.walletOnly,
+            'wallet': cls.walletOnly,
+            'walletonly': cls.walletOnly,
+        }
+        # Return the corresponding Enum value
+        return mapping.get(runMode, cls.normal)
+
+
 class StartupDagStruct(object):
     ''' a DAG of startup tasks. '''
 
     def __init__(
         self,
         env: str = None,
-        walletOnlyMode: bool = False,
+        runMode: RunMode = False,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -24,7 +55,7 @@ class StartupDagStruct(object):
         *args
     ):
         self.env = env
-        self.walletOnlyMode = walletOnlyMode
+        self.runMode = None
         self.workingUpdates: Queue = None
         self.chatUpdates: Queue = None
         self.connectionsStatusQueue: Queue = None
@@ -63,6 +94,10 @@ class StartupDagStruct(object):
 
     def cacheOf(self, streamId: StreamId):
         ''' returns the reference to the cache of a stream '''
+
+    @property
+    def walletOnlyMode(self) -> bool:
+        ''' get wallet '''
 
     @property
     def network(self) -> str:
