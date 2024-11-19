@@ -1634,6 +1634,7 @@ def vault():
 
 
 @app.route('/vault/report', methods=['GET'])
+@app.route('/register/vault', methods=['GET'])
 @userInteracted
 @authRequired
 def reportVault(network: str = 'main'):
@@ -1644,7 +1645,7 @@ def reportVault(network: str = 'main'):
     if vault.isEncrypted:
         return redirect('/vault')
     vaultAddress = vault.address
-    success, result = start.server.reportVault(
+    success, result = start.server.registerVault(
         walletSignature=start.getWallet(network=network).sign(vaultAddress),
         vaultSignature=vault.sign(vaultAddress),
         vaultPubkey=vault.publicKey,
