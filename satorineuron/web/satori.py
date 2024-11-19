@@ -1526,7 +1526,7 @@ def disableWalletLock():
 @app.route('/decrypt/vault', methods=['POST'])
 @authRequired
 def decryptVault():
-    if start.vault.isDecrypted:
+    if start.vault is not None and start.vault.isDecrypted:
         return 'already decrypted', 200
     password = request.json.get('password', '')
     if len(password) >= 8:
