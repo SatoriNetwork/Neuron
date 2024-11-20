@@ -843,8 +843,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         '''
         #signature = self.wallet.sign(self.key)
         self.peerEngine = PeerEngine(
-            #subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
-            #publications=[pub.streamId.topic() for pub in self.publications],
+            # subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
+            # publications=[pub.streamId.topic() for pub in self.publications],
             subscriptions=['A', 'B', 'C'],
             publications=['X', 'Y', 'Z'],
             #key=signature.decode() + '|' + self.key,

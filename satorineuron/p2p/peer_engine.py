@@ -116,6 +116,10 @@ class PeerEngine(metaclass=SingletonMeta):
                 peer_id = peer['peer_id']
                 if peer_id == self.client_id:
                     continue
+                peer_endpoint = peer['wireguard_config'].get('endpoint')
+                
+                if not peer_endpoint:
+                    continue
 
                 should_connect = False
                 
@@ -142,6 +146,11 @@ class PeerEngine(metaclass=SingletonMeta):
                             self.request_connection(peer_id)
                     elif peer_id not in self.connected_peers:
                         self.request_connection(peer_id)
+                # if should_connect:
+                    # Request historical data
+                    for sub in self.subscriptions:
+                        if sub in peer.get('publications', []):
+                            self.request_history(peer_endpoint, sub)
         except Exception as e:
             logging.error(f"Error in connect_to_peers: {str(e)}")
 
@@ -218,35 +227,6 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.error(f"Checkin failed: {str(e)}")
             return None
 
-    def add_publication(self, stream_name: str):
-        """Add a publication stream and connect to relevant subscribers"""
-        if stream_name not in self.publications:
-            self.publications.append(stream_name)
-            self.checkin()
-            self.connect_to_peers()
-            logging.info(f"Added publication stream: {stream_name}", color="green")
-
-    def add_subscription(self, stream_name: str):
-        """Add a subscription stream and connect to relevant publishers"""
-        if stream_name not in self.subscriptions:
-            self.subscriptions.append(stream_name)
-            self.checkin()
-            self.connect_to_peers()
-            logging.info(f"Added subscription stream: {stream_name}", color="green")
-
-    def remove_publication(self, stream_name: str):
-        """Remove a publication stream"""
-        if stream_name in self.publications:
-            self.publications.remove(stream_name)
-            self.checkin()
-            logging.info(f"Removed publication stream: {stream_name}", color="green")
-
-    def remove_subscription(self, stream_name: str):
-        """Remove a subscription stream"""
-        if stream_name in self.subscriptions:
-            self.subscriptions.remove(stream_name)
-            self.checkin()
-            logging.info(f"Removed subscription stream: {stream_name}", color="green")
 
     def start_background_tasks(self):
         """Start background tasks for maintenance and updates"""
@@ -322,6 +302,28 @@ class PeerEngine(metaclass=SingletonMeta):
         #     logging.error(f"Ping to {ip} still failing after interface restart", color="red")
         # except Exception as e:
         #     logging.error(f"Error during ping operation: {str(e)}", color="red")
+
+    def request_history(self, peer_endpoint: str, stream_id: str):
+        """Request historical data for a specific stream from a peer."""
+        endpoint=peer_endpoint.split(":")[0]
+        try:
+            url = f"http://{peer_endpoint}/get_history"
+            payload = {
+                "stream_id": stream_id,
+                "kwargs": {"limit": 1000}  # Example of additional parameters
+            }
+            response = requests.post(url, json=payload)
+            if response.status_code == 200:
+                history = response.json()
+                logging.info(f"Received history for stream {stream_id} from {peer_endpoint}")
+                return history
+            else:
+                logging.warning(f"Failed to fetch history from {peer_endpoint}: {response.status_code}")
+                return None
+        except Exception as e:
+            logging.error(f"Error requesting history from {peer_endpoint}: {str(e)}")
+            return None
+
             
     def stop(self):
         """Stop the PeerEngine and cleanup"""

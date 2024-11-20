@@ -77,6 +77,15 @@ class PeerServer:
                 FOREIGN KEY (to_peer) REFERENCES peers (peer_id)
             )
         ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS stream_history (
+                stream_id TEXT,
+                data TEXT,
+                timestamp REAL
+            )
+        ''')
+        
         try:
             # Check if publications table needs updating
             cursor.execute("PRAGMA table_info(publications)")
@@ -213,6 +222,7 @@ class PeerServer:
         self.app.route('/list_connections', methods=['GET'])(self.list_connections)
         self.app.route('/connect_datastream', methods=['POST'])(self.connect_datastream)
         self.app.route('/disconnect', methods=['POST'])(self.disconnect_peer)
+        self.app.route('/get_history', methods=['POST'])(self.get_history)
 
     def get_unique_ip(self):
         """Generate a unique IP address for a peer"""
@@ -579,6 +589,35 @@ class PeerServer:
             "connections": connection_list,
             "total_connections": len(connection_list)
         })
+    
+    def get_history(self):
+        """Serve historical data for a requested stream."""
+        try:
+            data = request.get_json()
+            stream_id = data.get("stream_id")
+            kwargs = data.get("kwargs", {})
+
+            conn = sqlite3.connect('peers.db')
+            cursor = conn.cursor()
+
+            # Example: Fetch historical data from a database (implement the actual query as needed)
+            cursor.execute("""
+                SELECT * FROM stream_history 
+                WHERE stream_id = ? 
+                ORDER BY timestamp DESC 
+                LIMIT ?
+            """, (stream_id, kwargs.get("limit", 1000)))
+            
+            history = cursor.fetchall()
+            conn.close()
+
+            return jsonify({
+                "status": "success",
+                "stream_id": stream_id,
+                "history": history
+            })
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
 
     def run(self, host='0.0.0.0', port=51820):
         self.app.run(host=host, port=port, debug=True)
