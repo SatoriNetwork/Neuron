@@ -95,10 +95,10 @@ while True:
                 'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
-            # 'prod': 'https://central.satorinet.io'}[ENV],
-            # 'prod': 'http://24.199.113.168'}[ENV], # c
-            # 'prod': 'http://137.184.38.160'}[ENV],  # n
+                # 'prod': 'https://stage.satorinet.io'}[ENV],
+                # 'prod': 'https://central.satorinet.io'}[ENV],
+                # 'prod': 'http://24.199.113.168'}[ENV], # c
+                'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
                 'local': 'https://mundo.satorinet.io',
@@ -762,6 +762,23 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
     return redirect(f'/vault/{network}')
 
 
+@app.route('/bridge_satori_transaction_from_vault/<network>', methods=['POST'])
+@userInteracted
+@authRequired
+def bridgeSatoriTransactionFromVault(network: str = 'main'):
+    # only support main network for this
+    greenlight, explain = start.ableToBridge()
+    if greenlight:
+        result = bridgeSatoriTransactionUsing(start.vault)
+    else:
+        flash(explain)
+        return redirect('/vault/main')
+    if isinstance(result, str) and len(result) == 64:
+        flash(str(result))
+        flash('Please wait. The bridge process can take up to 2 hours to complete.')
+    return redirect('/vault/main')
+
+
 def sendSatoriTransactionUsing(
     myWallet: Union[RavencoinWallet, EvrmoreWallet],
     network: str,
@@ -846,6 +863,88 @@ def sendSatoriTransactionUsing(
     sendForm['address'] = override.get(
         'address', sendSatoriForm.address.data or '')
     return accept_submittion(sendForm)
+
+
+def bridgeSatoriTransactionUsing(
+    myWallet: Union[RavencoinWallet, EvrmoreWallet],
+    override: Union[dict[str, str], None] = None
+):
+    if myWallet is None:
+        flash(f'Send Failed: {e}')
+        return redirect('/vault/main')
+
+    import importlib
+    global forms
+    global badForm
+    forms = importlib.reload(forms)
+
+    def accept_submittion(bridgeForm: dict):
+        def refreshWallet():
+            time.sleep(4)
+            # doesn't respect the cooldown
+            myWallet.get(allWalletInfo=False)
+
+        # doesn't respect the cooldown
+        myWallet.getUnspentSignatures(force=True)
+        if myWallet.isEncrypted:
+            return 'Vault is encrypted, please unlock it and try again.'
+        try:
+            # logging.debug('sweep', bridgeForm['sweep'], color='magenta')
+            result = myWallet.typicalNeuronBridgeTransaction(
+                amount=bridgeForm['bridgeAmount'] or 0,
+                ethAddress=bridgeForm['ethAddress'] or '')
+            if result.msg == 'creating partial, need feeSatsReserved.':
+                responseJson = start.server.requestSimplePartial(
+                    network='main')
+                result = myWallet.typicalNeuronBridgeTransaction(
+                    amount=bridgeForm['bridgeAmount'] or 0,
+                    address=bridgeForm['ethAddress'] or '',
+                    completerAddress=responseJson.get('completerAddress'),
+                    feeSatsReserved=responseJson.get('feeSatsReserved'),
+                    changeAddress=responseJson.get('changeAddress'))
+            if result is None:
+                flash('Send Failed: wait 10 minutes, refresh, and try again.')
+            elif result.success:
+                if (  # checking any on of these should suffice in theory...
+                    result.tx is not None and
+                    result.reportedFeeSats is not None and
+                    result.reportedFeeSats > 0 and
+                    result.msg == 'send transaction requires fee.'
+                ):
+                    r = start.server.broadcastBridgeSimplePartial(
+                        tx=result.tx,
+                        reportedFeeSats=result.reportedFeeSats,
+                        feeSatsReserved=responseJson.get('feeSatsReserved'),
+                        walletId=responseJson.get('partialId'),
+                        network=(
+                            'ravencoin' if start.networkIsTest('main')
+                            else 'evrmore'))
+                    if r.text.startswith('{"code":1,"message":'):
+                        flash(f'Send Failed: {r.json().get("message")}')
+                    elif r.text != '':
+                        return r.text
+                    else:
+                        flash(
+                            'Send Failed: wait 10 minutes, refresh, and try again.')
+                else:
+                    return result.result
+            else:
+                flash(f'Send Failed: {result.msg}')
+        except TransactionFailure as e:
+            flash(f'Send Failed: {e}')
+        refreshWallet()
+        return result
+
+    bridgeSatoriForm = forms.BridgeSatoriTransaction(formdata=request.form)
+    bridgeForm = {}
+    override = override or {}
+    bridgeForm['bridgeAmount'] = override.get(
+        'bridgeAmount', bridgeSatoriForm.bridgeAmount.data or 0)
+    bridgeForm['ethAddress'] = override.get(
+        'ethAddress', bridgeSatoriForm.ethAddress.data or '')
+    print(bridgeSatoriForm, bridgeSatoriForm.bridgeAmount,
+          bridgeSatoriForm.ethAddress)
+    # return accept_submittion(bridgeForm)
 
 
 @app.route('/register_stream', methods=['POST'])
@@ -1066,7 +1165,7 @@ def dashboard():
     # streamOverviews = (
     #     [model.miniOverview() for model in start.engine.models]
     #     if start.engine is not None else [])  # StreamOverviews.demo()
-    streamOverviews = [ stream for stream in start.streamDisplay ]
+    streamOverviews = [stream for stream in start.streamDisplay]
     start.electrumxCheck()
     holdingBalance = start.holdingBalance
     stakeStatus = holdingBalance >= 5 or (
@@ -1505,6 +1604,20 @@ def presentSendSatoriTransactionform(formData):
     return sendSatoriTransaction
 
 
+def presentBridgeSatoriTransactionform(formData):
+    '''
+    this function could be used to fill a form with the current
+    configuration for a stream in order to edit it.
+    '''
+    global forms
+    import importlib
+    forms = importlib.reload(forms)
+    bridgeSatoriTransaction = forms.BridgeSatoriTransaction(formdata=formData)
+    bridgeSatoriTransaction.ethAddress.data = ''
+    bridgeSatoriTransaction.bridgeAmount.data = 0
+    return bridgeSatoriTransaction
+
+
 @app.route('/wallet_lock/enable', methods=['GET'])
 @userInteracted
 @authRequired
@@ -1523,6 +1636,20 @@ def disableWalletLock():
         return redirect('/dashboard')
     config.add(data={'wallet lock': False})
     return 'OK', 200
+
+
+@app.route('/decrypt/vault', methods=['POST'])
+@authRequired
+def decryptVault():
+    if start.vault is not None and start.vault.isDecrypted:
+        return 'already decrypted', 200
+    password = request.json.get('password', '')
+    if len(password) >= 8:
+        start.openVault(password=password, create=start.vault is None)
+        if start.vault.isDecrypted:
+            return 'decrypted', 200
+        return 'unable to decrypt vault with that password', 400
+    return 'password must be at least 8 characters', 400
 
 
 @app.route('/vault/<network>', methods=['GET', 'POST'])
@@ -1558,7 +1685,7 @@ def vault():
         # logging.debug(passwordForm.password.data, color='yellow')
         _vault = start.openVault(
             password=passwordForm.password.data,
-            create=True)
+            create=start.vault is None)
         if not config.get().get('neuron lock hash', False):
             config.add(data={'neuron lock hash': hashSaltIt(
                 passwordForm.password.data)})
@@ -1599,11 +1726,13 @@ def vault():
             'minedtovault': start.mineToVault,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
+            'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
-            'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+            'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
+            'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
     # start.workingUpdates.put('loading...')
     # race condition:
     while os.path.exists(config.walletPath('vault.yaml')) and start.vault is None:
@@ -1616,12 +1745,15 @@ def vault():
         'minedtovault': start.mineToVault,  # start.server.minedToVault(),
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
+        'stakeRequired': constants.stakeRequired,
         'wallet': start.vault,
         'poolOpen': start.poolIsAccepting,
-        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
+        'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
 
 
 @app.route('/vault/report', methods=['GET'])
+@app.route('/register/vault', methods=['GET'])
 @userInteracted
 @authRequired
 def reportVault(network: str = 'main'):
@@ -1632,7 +1764,7 @@ def reportVault(network: str = 'main'):
     if vault.isEncrypted:
         return redirect('/vault')
     vaultAddress = vault.address
-    success, result = start.server.reportVault(
+    success, result = start.server.registerVault(
         walletSignature=start.getWallet(network=network).sign(vaultAddress),
         vaultSignature=vault.sign(vaultAddress),
         vaultPubkey=vault.publicKey,
@@ -1671,16 +1803,15 @@ def mineToAddress(address: str):
 
 
 @app.route('/stake/for/address/<address>', methods=['GET'])
-@userInteracted
 @authRequired
 def stakeForAddress(address: str):
     if start.vault is None:
-        return '', 200
+        return 'no vault, unable to stake', 400
     # the network portion should be whatever network I'm on.
     network = 'main'
     vault = start.getVault(network=network)
     if vault.isEncrypted:
-        return redirect('/vault')
+        return redirect('/vault', code=302)
     success, result = start.server.stakeForAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
@@ -1797,7 +1928,6 @@ def proxyParentStatus():
 
 
 @app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
-@userInteracted
 @authRequired
 def charityProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyCharity(address, childId=id)
@@ -1807,7 +1937,6 @@ def charityProxyChild(address: str, id: int):
 
 
 @app.route('/proxy/child/no_charity/<address>/<id>', methods=['GET'])
-@userInteracted
 @authRequired
 def charityNotProxyChild(address: str, id: int):
     success, result = start.server.stakeProxyCharityNot(address, childId=id)
@@ -1964,17 +2093,16 @@ def proposals():
     return render_template('proposals.html', **getResp({'title': 'Proposals'}))
 
 
-
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])
 @userInteracted
 @authRequired
 def getProposalVotes(id):
     try:
         format_type = request.args.get('format')
-        
+
         # Get votes data from server
         votes_data = start.server.getProposalVotes(str(id), format_type)
-        
+
         if votes_data.get('status') == 'success' and 'votes' in votes_data:
             current_user_address = start.wallet.address if start.wallet else None
             user_has_voted = False
@@ -1997,7 +2125,7 @@ def getProposalVotes(id):
                 'user_has_voted': user_has_voted,
                 'user_voted': user_voted
             }
-            
+
             return jsonify(response_data), 200
         else:
             return jsonify({
@@ -2013,6 +2141,42 @@ def getProposalVotes(id):
             'status': 'error',
             'message': error_message
         }), 500
+
+
+@app.route('/api/proposals/active', methods=['GET'])
+@userInteracted
+@authRequired
+def get_active_proposals():
+    """
+    Fetch active proposals.
+    """
+    try:
+        result = start.server.getActiveProposals()
+        if result['status'] == 'success':
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        error_message = f"Error in get_active_proposals: {str(e)}"
+        return jsonify({'status': 'error', 'message': error_message}), 500
+
+
+@app.route('/api/proposals/expired', methods=['GET'])
+@userInteracted
+@authRequired
+def get_expired_proposals():
+    """
+    Fetch expired proposals.
+    """
+    try:
+        result = start.server.getExpiredProposals()
+        if result['status'] == 'success':
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        error_message = f"Error in get_expired_proposals: {str(e)}"
+        return jsonify({'status': 'error', 'message': error_message}), 500
 
 @app.route('/api/proposals/active', methods=['GET'])
 @userInteracted
@@ -2122,7 +2286,6 @@ def get_test_data():
             'status': 'error',
             'message': error_message
         }), 500
-    
 
 @app.route('/proposals/vote', methods=['POST'])
 @userInteracted
@@ -2131,51 +2294,50 @@ def proposalVote():
     try:
         # Log incoming request data
         logging.debug("Received vote request:", request.json)
-        
         data = request.json
         proposal_id = data.get('proposal_id')
         vote = data.get('vote')
-        
+
         if not proposal_id or vote is None:
             return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
-            
+
         # Ensure proposal_id is a string
         proposal_id = str(proposal_id)
-        
+
         # Fetch active proposals
         active_proposals_response = start.server.getActiveProposals()
-        logging.warning("Active proposals response:", active_proposals_response)  # Debug log
-        
+        logging.warning("Active proposals response:",
+                        active_proposals_response)  # Debug log
+
         # Check if getActiveProposals returned successfully
         if active_proposals_response.get('status') != 'success':
             return jsonify({
-                'status': 'error', 
+                'status': 'error',
                 'message': 'Failed to fetch active proposals'
             }), 500
-            
+
         # Get the proposals list from the response
         proposals = active_proposals_response.get('proposals', [])
         logging.debug("Available proposals:", proposals)  # Debug log
-        
+
         # Find the specific proposal
         proposal = next(
-            (p for p in proposals if str(p.get('id')) == proposal_id), 
+            (p for p in proposals if str(p.get('id')) == proposal_id),
             None
         )
-        
+
         logging.debug("Found proposal:", proposal)  # Debug log
-        
+
         if not proposal:
             return jsonify({
-                'status': 'error', 
+                'status': 'error',
                 'message': f'Proposal {proposal_id} not found in active proposals'
             }), 404
-            
+
         # Parse the options
         try:
             # Get options from proposal
             options = proposal.get('options', '["For", "Against"]')
-            
             # Handle different option formats
             if isinstance(options, str):
                 try:
@@ -2185,29 +2347,29 @@ def proposalVote():
                         options = json.loads(options)
                 except json.JSONDecodeError:
                     options = ["For", "Against"]
-            
+
             # Ensure options is a list
             if not isinstance(options, list):
                 options = ["For", "Against"]
-                
+
             logging.debug("Parsed options:", options)  # Debug log
-            
+
         except Exception as e:
             logging.warning(f"Error parsing options: {str(e)}")
             options = ["For", "Against"]
-            
+
         # Validate the vote
         if vote not in options:
             return jsonify({
                 'status': 'error',
                 'message': f'Invalid vote. Valid options are: {options}'
             }), 400
-            
+
         # Submit the vote
         success, result = start.server.submitProposalVote(proposal_id, vote)
-        
+
         logging.debug("Vote submission result:", success, result)  # Debug log
-        
+
         if success:
             return jsonify({
                 'status': 'success',
@@ -2218,13 +2380,13 @@ def proposalVote():
                 'status': 'error',
                 'message': result.get('error', 'Failed to submit vote')
             }), 400
-            
     except Exception as e:
         error_message = f"Error in proposalVote: {str(e)}"
         logging.warning(error_message)
         logging.warning(traceback.format_exc())
         return jsonify({'status': 'error', 'message': error_message}), 500
-    
+
+
 @app.route('/api/proposals', methods=['GET'])
 @userInteracted
 def getProposals():
@@ -2286,16 +2448,17 @@ def approve_proposal(proposal_id: int):
         wallet_address = start.wallet.address if start.wallet else None
         if not wallet_address:
             return jsonify({'status': 'error', 'message': 'No wallet address available'}), 401
-
-        success, result = start.server.approveProposal(wallet_address, proposal_id)
+        success, result = start.server.approveProposal(
+            wallet_address, proposal_id)
         if not success and 'Unauthorized' in result.get('error', ''):
             return jsonify({'status': 'error', 'message': result['error']}), 403
         return jsonify(
-            {'status': 'success', 'message': 'Proposal approved successfully'} if success 
+            {'status': 'success', 'message': 'Proposal approved successfully'} if success
             else {'status': 'error', 'message': result.get('error')}
         ), 200 if success else 400
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 @app.route('/api/proposals/disapprove/<int:proposal_id>', methods=['POST'])
 @userInteracted
@@ -2305,17 +2468,17 @@ def disapprove_proposal(proposal_id: int):
         wallet_address = start.wallet.address if start.wallet else None
         if not wallet_address:
             return jsonify({'status': 'error', 'message': 'No wallet address available'}), 401
-
-        success, result = start.server.disapproveProposal(wallet_address, proposal_id)
+        success, result = start.server.disapproveProposal(
+            wallet_address, proposal_id)
         if not success and 'Unauthorized' in result.get('error', ''):
             return jsonify({'status': 'error', 'message': result['error']}), 403
         return jsonify(
-            {'status': 'success', 'message': 'Proposal disapproved successfully'} if success 
+            {'status': 'success', 'message': 'Proposal disapproved successfully'} if success
+
             else {'status': 'error', 'message': result.get('error')}
         ), 200 if success else 400
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
-    
 
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
 @userInteracted
