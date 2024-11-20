@@ -1124,6 +1124,7 @@ def dashboard():
     global forms
     global badForm
     forms = importlib.reload(forms)
+        
 
     def present_stream_form():
         '''
@@ -2044,6 +2045,7 @@ def vote():
         **getVotes(myWallet)}))
 
 
+
 @app.route('/streams', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
@@ -2082,8 +2084,7 @@ def removeVote():
     streamId = request.json.get('streamId', "")
     message = start.server.removeVote(streamId=streamId)
     return jsonify({'message': message}), 200
-
-
+  
 @app.route('/proposals', methods=['GET'])
 @userInteracted
 @vaultRequired
@@ -2177,6 +2178,41 @@ def get_expired_proposals():
         error_message = f"Error in get_expired_proposals: {str(e)}"
         return jsonify({'status': 'error', 'message': error_message}), 500
 
+@app.route('/api/proposals/active', methods=['GET'])
+@userInteracted
+@authRequired
+def get_active_proposals():
+    """
+    Fetch active proposals.
+    """
+    try:
+        result = start.server.getActiveProposals()
+        if result['status'] == 'success':
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        error_message = f"Error in get_active_proposals: {str(e)}"
+        return jsonify({'status': 'error', 'message': error_message}), 500
+
+@app.route('/api/proposals/expired', methods=['GET'])
+@userInteracted
+@authRequired
+def get_expired_proposals():
+    """
+    Fetch expired proposals.
+    """
+    try:
+        result = start.server.getExpiredProposals()
+        if result['status'] == 'success':
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        error_message = f"Error in get_expired_proposals: {str(e)}"
+        return jsonify({'status': 'error', 'message': error_message}), 500
+
+
 
 @app.route('/proposal/create', methods=['GET', 'POST'])
 @userInteracted
@@ -2216,7 +2252,7 @@ def proposalCreate():
                 'status': 'error',
                 'message': 'Server error occurred'
             }), 500
-
+        
 
 @app.route('/test', methods=['GET'])
 @userInteracted
@@ -2251,7 +2287,6 @@ def get_test_data():
             'message': error_message
         }), 500
 
-
 @app.route('/proposals/vote', methods=['POST'])
 @userInteracted
 @authRequired
@@ -2259,7 +2294,6 @@ def proposalVote():
     try:
         # Log incoming request data
         logging.debug("Received vote request:", request.json)
-
         data = request.json
         proposal_id = data.get('proposal_id')
         vote = data.get('vote')
@@ -2372,7 +2406,6 @@ def getProposals():
             'message': error_message
         }), 500
 
-
 @app.route('/api/user/can-approve', methods=['GET'])
 @userInteracted
 @authRequired
@@ -2391,7 +2424,6 @@ def get_approval_rights():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
-
 @app.route('/api/proposals/unapproved', methods=['GET'])
 @userInteracted
 @authRequired
@@ -2407,7 +2439,6 @@ def get_unapproved_proposals():
         return jsonify(result), 200 if result['status'] == 'success' else 400
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
-
 
 @app.route('/api/proposals/approve/<int:proposal_id>', methods=['POST'])
 @userInteracted
@@ -2443,11 +2474,11 @@ def disapprove_proposal(proposal_id: int):
             return jsonify({'status': 'error', 'message': result['error']}), 403
         return jsonify(
             {'status': 'success', 'message': 'Proposal disapproved successfully'} if success
+
             else {'status': 'error', 'message': result.get('error')}
         ), 200 if success else 400
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
-
 
 @app.route('/vote/submit/manifest/wallet', methods=['POST'])
 @userInteracted

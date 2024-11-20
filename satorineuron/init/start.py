@@ -58,8 +58,7 @@ class SingletonMeta(type):
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(
-                SingletonMeta, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -1096,25 +1095,21 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def triggerRestart(self, return_code=1):
         from satorisynapse import Envelope, Signal
-
         self.udpQueue.put(
             Envelope(ip="", vesicle=Signal(restart=True)))  # TODO: remove
         import time
-
         time.sleep(5)
         # 0 = shutdown, 1 = restart container, 2 = restart app
         os._exit(return_code)
 
     def emergencyRestart(self):
         import time
-
         logging.warning("restarting in 10 minutes", print=True)
         time.sleep(60 * 10)
         self.triggerRestart()
 
     def restartEverythingPeriodic(self):
         import random
-
         restartTime = time.time() + config.get().get(
             "restartTime", random.randint(60 * 60 * 21, 60 * 60 * 24)
         )
@@ -1184,8 +1179,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         vault = self.getVault(network=network)
         mineToAddress = vault.address
         success, result = self.server.enableMineToVault(
-            walletSignature=self.getWallet(
-                network=network).sign(mineToAddress),
+            walletSignature=self.getWallet(network=network).sign(mineToAddress),
             vaultSignature=vault.sign(mineToAddress),
             vaultPubkey=vault.publicKey,
             address=mineToAddress,
