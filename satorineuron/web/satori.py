@@ -1124,7 +1124,7 @@ def dashboard():
     global forms
     global badForm
     forms = importlib.reload(forms)
-        
+
 
     def present_stream_form():
         '''
@@ -1838,7 +1838,7 @@ def lendToAddress(address: str):
         address=address)
     if success:
         return 'OK', 200
-    return f'Failed lend to address: {result}', 400
+    return f'Failed join pool: {result}', 400
 
 
 @app.route('/lend/remove', methods=['GET'])
@@ -2084,7 +2084,8 @@ def removeVote():
     streamId = request.json.get('streamId', "")
     message = start.server.removeVote(streamId=streamId)
     return jsonify({'message': message}), 200
-  
+
+
 @app.route('/proposals', methods=['GET'])
 @userInteracted
 @vaultRequired
@@ -2252,7 +2253,7 @@ def proposalCreate():
                 'status': 'error',
                 'message': 'Server error occurred'
             }), 500
-        
+
 
 @app.route('/test', methods=['GET'])
 @userInteracted
