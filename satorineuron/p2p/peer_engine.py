@@ -45,6 +45,7 @@ class PeerEngine(metaclass=SingletonMeta):
         port=51820, 
         publications: list[str] = None,
         subscriptions: list[str] = None,
+        caches:dict[str]= None,
     ):
         self.interface = interface
         self.config_file = config_file
@@ -58,10 +59,10 @@ class PeerEngine(metaclass=SingletonMeta):
         self.peerManager = PeerManager(self.interface, self.config_file, self.port)
         self.publications = publications or []
         self.subscriptions = subscriptions or []
+        self.history = caches or {}
         self.connected_peers = set()
         self.running = False
         self.ping_interval = 10
-        self.history = {}  # New attribute to store historical data for streams
 
     def _get_unique_ip(self):
         """Get a unique IP address from the PeerServer"""
@@ -81,7 +82,8 @@ class PeerEngine(metaclass=SingletonMeta):
         self.start_listening()
         # self.start_ping_loop()
         self.start_peer_check_loop()
-        self.start_ping_loop(self.ping_interval) 
+        self.start_ping_loop(self.ping_interval)
+        # print(self.history)
 
     def start_listening(self):
         """Listen for and process new peer connection requests"""
@@ -117,10 +119,6 @@ class PeerEngine(metaclass=SingletonMeta):
                 peer_id = peer['peer_id']
                 if peer_id == self.client_id:
                     continue
-                peer_endpoint = peer['wireguard_config'].get('endpoint')
-                
-                if not peer_endpoint:
-                    continue
 
                 should_connect = False
                 
@@ -134,12 +132,7 @@ class PeerEngine(metaclass=SingletonMeta):
                 for sub in self.subscriptions:
                     if sub in peer.get('publications', []):
                         should_connect = True
-                        # break
-                        # Fetch and store history for the subscription
-                        history_data = self.request_history(peer_endpoint, sub)
-                        if history_data:
-                            self.history.setdefault("subscriptions", {})[sub] = history_data
-
+                        break
 
                 if should_connect:
                     # Check if peer exists and if its configuration has changed
@@ -152,11 +145,6 @@ class PeerEngine(metaclass=SingletonMeta):
                             self.request_connection(peer_id)
                     elif peer_id not in self.connected_peers:
                         self.request_connection(peer_id)
-                # if should_connect:
-                    # Request historical data
-                    for sub in self.subscriptions:
-                        if sub in peer.get('publications', []):
-                            self.request_history(peer_endpoint, sub)
         except Exception as e:
             logging.error(f"Error in connect_to_peers: {str(e)}")
 
@@ -214,146 +202,24 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.error(f"Error requesting connection to peer {peer_id}: {str(e)}")
             return False
 
-    # def checkin(self):
-    #     """Perform check-in with server, including datastream information"""
-    #     wg_info = self.my_info.get_wireguard_info()
-    #     self.wireguard_config["wireguard_config"] = wg_info
-    #     try:
-    #         response = requests.post(
-    #             f"{self.server_url}/checkin",
-    #             json={
-    #                 "peer_id": self.client_id,
-    #                 "wireguard_config": self.wireguard_config["wireguard_config"],
-    #                 "publications": self.publications,
-    #                 "subscriptions": self.subscriptions
-    #             }
-    #         )
-    #         # return response.json()
-            
-    #     # except Exception as e:
-    #     #     logging.error(f"Checkin failed: {str(e)}")
-    #     #     return None
-            
-    #         if response.status_code == 200:
-    #             checkin_data = response.json()
-    #             logging.debug(f"Checkin response: {checkin_data}")
-                
-    #             publications = checkin_data.get("publications", [])
-    #             subscriptions = checkin_data.get("subscriptions", [])
-                
-    #             for publication in publications:
-    #                 stream = publication.get("stream")
-    #                 if stream:
-    #                     self._update_history([{"stream": stream}], "publications")
-    #                     self.get_history("publications", stream)
-                
-    #             for subscription in subscriptions:
-    #                 stream = subscription.get("stream")
-    #                 if stream:
-    #                     self._update_history([{"stream": stream}], "subscriptions")
-    #                     self.get_history("subscriptions", stream)
-                        
-    #             return checkin_data
-    #         else:
-    #             logging.error(f"Checkin failed with status code {response.status_code}")
-    #             return None
-    #     except requests.exceptions.RequestException as e:
-    #         logging.error(f"Network error during checkin: {str(e)}")
-    #         return None
-    #     except Exception as e:
-    #         logging.error(f"Unexpected error during checkin: {str(e)}")
-    #         return None
     def checkin(self):
         """Perform check-in with server, including datastream information"""
+        wg_info = self.my_info.get_wireguard_info()
+        self.wireguard_config["wireguard_config"] = wg_info
         try:
-            wg_info = self.my_info.get_wireguard_info()
-            if not isinstance(wg_info, dict):
-                logging.error(f"Invalid WireGuard info format: expected dict, got {type(wg_info)}")
-                return None
-
-            payload = {
-                "peer_id": self.client_id,
-                "wireguard_config": wg_info,
-                "publications": self.publications,
-                "subscriptions": self.subscriptions
-            }
-            
             response = requests.post(
                 f"{self.server_url}/checkin",
-                json=payload,
-                timeout=30
+                json={
+                    "peer_id": self.client_id,
+                    "wireguard_config": self.wireguard_config["wireguard_config"],
+                    "publications": self.publications,
+                    "subscriptions": self.subscriptions
+                }
             )
-            
-            if response.status_code == 200:
-                try:
-                    checkin_data = response.json()
-                    logging.debug(f"Checkin response: {checkin_data}")
-                    
-                    # Only process publications and subscriptions if they exist in the response
-                    if isinstance(checkin_data, dict):
-                        publications = checkin_data.get("publications", [])
-                        subscriptions = checkin_data.get("subscriptions", [])
-                        
-                        if isinstance(publications, list):
-                            for publication in publications:
-                                if isinstance(publication, dict):
-                                    stream = publication.get("stream")
-                                    if stream:
-                                        self._update_history([{"stream": stream}], "publications")
-                                        self.get_history("publications", stream)
-                        
-                        if isinstance(subscriptions, list):
-                            for subscription in subscriptions:
-                                if isinstance(subscription, dict):
-                                    stream = subscription.get("stream")
-                                    if stream:
-                                        self._update_history([{"stream": stream}], "subscriptions")
-                                        self.get_history("subscriptions", stream)
-                        
-                        return checkin_data
-                    else:
-                        logging.error(f"Invalid checkin response format: expected dict, got {type(checkin_data)}")
-                        return None
-                        
-                except json.JSONDecodeError as e:
-                    logging.error(f"Failed to parse checkin response: {str(e)}")
-                    return None
-            else:
-                logging.error(f"Checkin failed with status code {response.status_code}")
-                return None
-                
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Network error during checkin: {str(e)}")
-            return None
+            return response.json()
         except Exception as e:
-            logging.error(f"Unexpected error during checkin: {str(e)}")
+            logging.error(f"Checkin failed: {str(e)}")
             return None
-
-        
-    def _update_history(self, streams: list, stream_type: str):
-        if not isinstance(streams, list):
-            logging.error(f"Invalid streams format for {stream_type}: expected list, got {type(streams)}")
-            return
-            
-        for stream_data in streams:
-            if not isinstance(stream_data, dict):
-                logging.error(f"Invalid stream format: expected dict, got {type(stream_data)}")
-                continue
-                
-            stream_id = stream_data.get("stream")
-            peer_endpoint = stream_data.get("endpoint")
-            
-            if not stream_id:
-                logging.error("Missing stream ID in stream data")
-                continue
-                
-            if peer_endpoint:
-                history_data = self.request_history(peer_endpoint, stream_id)
-                if history_data:
-                    if stream_type not in self.history:
-                        self.history[stream_type] = {}
-                    self.history[stream_type][stream_id] = history_data
-                    logging.info(f"Updated history for {stream_type} stream {stream_id}")
 
 
     def start_background_tasks(self):
@@ -364,7 +230,10 @@ class PeerEngine(metaclass=SingletonMeta):
             while self.running:
                 self.checkin()
                 self.connect_to_peers()
-                time.sleep(1800)  # 30 minutes interval
+                if hasattr(self, 'history') and self.history:
+                    for stream_id, cache in self.history.items():
+                        print(f"Stream ID: {stream_id}, Cache: {cache}")
+                time.sleep(1800)  # 30 minutes interval 
 
         self.background_thread = threading.Thread(target=background_loop)
         self.background_thread.daemon = True
@@ -416,7 +285,6 @@ class PeerEngine(metaclass=SingletonMeta):
         if result.returncode == 0:
             logging.debug(f"Ping to {ip} successful", color="blue")
             return
-        
         subprocess.run(f"wg-quick down {self.interface}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(f"wg-quick up {self.interface}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
@@ -424,32 +292,7 @@ class PeerEngine(metaclass=SingletonMeta):
         if result.returncode == 0:
             logging.info(f"Ping to {ip} successful", color="blue")
             return
-
-    def request_history(self, peer_endpoint: str, stream_id: str):
-        """Request historical data for a specific stream from a peer."""
-        try:
-            url = f"http://{peer_endpoint}/get_history"
-            payload = {
-                "stream_id": stream_id,
-                "kwargs": {"limit": 1000}  # Example of additional parameters
-            }
-            response = requests.post(url, json=payload)
-            if response.status_code == 200:
-                history = response.json()
-                logging.info(f"Received history for stream {stream_id} from {peer_endpoint}")
-                return history
-            else:
-                logging.warning(f"Failed to fetch history from {peer_endpoint}: {response.status_code}")
-                return None
-        except Exception as e:
-            logging.error(f"Error requesting history from {peer_endpoint}: {str(e)}")
-            return None
-
-    def get_history(self, stream_type: str, stream_id: str):
-        """Retrieve historical data for a specific stream."""
-        print(self.history.get(stream_type, {}).get(stream_id, None))
-        return self.history.get(stream_type, {}).get(stream_id, None)
-            
+    
     def stop(self):
         """Stop the PeerEngine and cleanup"""
         self.running = False

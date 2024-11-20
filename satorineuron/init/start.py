@@ -847,6 +847,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             # publications=[pub.streamId.topic() for pub in self.publications],
             subscriptions=['A', 'B', 'C'],
             publications=['X', 'Y', 'Z'],
+            caches=self.caches,
             #key=signature.decode() + '|' + self.key,
         )
         self.peerEngine.start()
