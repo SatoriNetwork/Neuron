@@ -2179,40 +2179,6 @@ def get_expired_proposals():
         error_message = f"Error in get_expired_proposals: {str(e)}"
         return jsonify({'status': 'error', 'message': error_message}), 500
 
-@app.route('/api/proposals/active', methods=['GET'])
-@userInteracted
-@authRequired
-def get_active_proposals():
-    """
-    Fetch active proposals.
-    """
-    try:
-        result = start.server.getActiveProposals()
-        if result['status'] == 'success':
-            return jsonify(result), 200
-        else:
-            return jsonify(result), 400
-    except Exception as e:
-        error_message = f"Error in get_active_proposals: {str(e)}"
-        return jsonify({'status': 'error', 'message': error_message}), 500
-
-@app.route('/api/proposals/expired', methods=['GET'])
-@userInteracted
-@authRequired
-def get_expired_proposals():
-    """
-    Fetch expired proposals.
-    """
-    try:
-        result = start.server.getExpiredProposals()
-        if result['status'] == 'success':
-            return jsonify(result), 200
-        else:
-            return jsonify(result), 400
-    except Exception as e:
-        error_message = f"Error in get_expired_proposals: {str(e)}"
-        return jsonify({'status': 'error', 'message': error_message}), 500
-
 
 
 @app.route('/proposal/create', methods=['GET', 'POST'])
