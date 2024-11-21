@@ -1523,6 +1523,20 @@ def disableWalletLock():
     return 'OK', 200
 
 
+@app.route('/decrypt/vault', methods=['POST'])
+@authRequired
+def decryptVault():
+    if start.vault is not None and start.vault.isDecrypted:
+        return 'already decrypted', 200
+    password = request.json.get('password', '')
+    if len(password) >= 8:
+        start.openVault(password=password, create=start.vault is None)
+        if start.vault.isDecrypted:
+            return 'decrypted', 200
+        return 'unable to decrypt vault with that password', 400
+    return 'password must be at least 8 characters', 400
+
+
 @app.route('/vault/<network>', methods=['GET', 'POST'])
 @userInteracted
 @authRequired
@@ -1583,7 +1597,6 @@ def vault():
         #        claimResult.get('description'))
         # threading.Thread(target=defaultMineToVault, daemon=True).start()
         myWallet = start.getWallet(network='main')
-
         try:
             alias = myWallet.alias or start.server.getWalletAlias()
         except Exception as e:
@@ -1621,6 +1634,7 @@ def vault():
 
 
 @app.route('/vault/report', methods=['GET'])
+@app.route('/register/vault', methods=['GET'])
 @userInteracted
 @authRequired
 def reportVault(network: str = 'main'):
@@ -1631,7 +1645,7 @@ def reportVault(network: str = 'main'):
     if vault.isEncrypted:
         return redirect('/vault')
     vaultAddress = vault.address
-    success, result = start.server.reportVault(
+    success, result = start.server.registerVault(
         walletSignature=start.getWallet(network=network).sign(vaultAddress),
         vaultSignature=vault.sign(vaultAddress),
         vaultPubkey=vault.publicKey,
@@ -1963,97 +1977,46 @@ def proposals():
     return render_template('proposals.html', **getResp({'title': 'Proposals'}))
 
 
-@app.route('/api/proposals', methods=['GET'])
-@userInteracted
-def getProposals():
-    try:
-        proposals_data = start.server.getProposals()
-        return jsonify({
-            'status': 'success',
-            'proposals': proposals_data,
-        })
-
-    except Exception as e:
-        error_message = f"Failed to fetch proposals: {str(e)}"
-        logging.error(error_message)
-        logging.error(traceback.format_exc())
-        return jsonify({
-            'status': 'error',
-            'message': error_message
-        }), 500
-
-
-@app.route('/proposals/vote', methods=['POST'])
-@userInteracted
-def proposalVote():
-    try:
-        data = request.json
-        proposal_id = data.get('proposal_id')
-        vote = data.get('vote')
-        if not proposal_id or vote is None:
-            return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
-        # Ensure proposal_id is a string
-        proposal_id = str(proposal_id)
-        # Fetch all proposals
-        proposals = start.server.getProposals()
-        # Find the specific proposal
-        proposal = next(
-            (p for p in proposals if str(p['id']) == proposal_id), None)
-        if not proposal:
-            return jsonify({'status': 'error', 'message': 'Proposal not found'}), 404
-        # Parse the options
-        try:
-            options = json.loads(json.loads(proposal['options']))
-        except json.JSONDecodeError:
-            return jsonify({'status': 'error', 'message': 'Invalid options format in proposal'}), 500
-        # Validate the vote
-        if vote not in options:
-            return jsonify({'status': 'error', 'message': f'Invalid vote. Valid options are: {", ".join(options)}'}), 400
-        # Call server function with prepared data
-        success, result = start.server.submitProposalVote(proposal_id, vote)
-        if success:
-            return jsonify({'status': 'success', 'message': 'Vote submitted successfully'}), 200
-        else:
-            return jsonify({'status': 'error', 'message': result.get('error', 'Unknown error')}), 400
-    except Exception as e:
-        error_message = f"Error in proposalVote: {str(e)}"
-        logging.warning(error_message)
-        logging.warning(traceback.format_exc())
-        return jsonify({'status': 'error', 'message': error_message}), 500
-
-
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])
 @userInteracted
+@authRequired
 def getProposalVotes(id):
     try:
-        votes = start.server.getProposalVotes(str(id))
-        proposal = next(
-            (p for p in start.server.getProposals() if p['id'] == id), None)
-        if proposal and votes is not None:
-            user_wallet_address = start.wallet.address
-            user_has_voted = any(
-                vote['address'] == user_wallet_address for vote in votes)
+        format_type = request.args.get('format')
+
+        # Get votes data from server
+        votes_data = start.server.getProposalVotes(str(id), format_type)
+
+        if votes_data.get('status') == 'success' and 'votes' in votes_data:
+            current_user_address = start.wallet.address if start.wallet else None
+            user_has_voted = False
             user_voted = None
-            if user_has_voted:
-                user_voted = next(
-                    vote['vote'] for vote in votes if vote['address'] == user_wallet_address)
-            voting_started = bool(votes)
-            can_vote = str(proposal['wallet_id']) != user_wallet_address
-            disable_voting = not can_vote or user_has_voted
-            return jsonify({
+
+            # Check if current user has voted
+            if current_user_address:
+                for vote in votes_data['votes']:
+                    if vote['address'] == current_user_address:
+                        user_has_voted = True
+                        user_voted = vote['vote']
+                        break
+
+            # Construct response with user vote info
+            response_data = {
                 'status': 'success',
-                'votes': votes,
+                'votes': votes_data['votes'],
+                'total_satori': votes_data.get('total_satori', 0.0),
+                'disable_voting': votes_data.get('disable_voting', False),
                 'user_has_voted': user_has_voted,
-                'user_voted': user_voted,
-                'voting_started': voting_started,
-                'can_vote': can_vote,
-                'disable_voting': disable_voting
-            }), 200
+                'user_voted': user_voted
+            }
+
+            return jsonify(response_data), 200
         else:
             return jsonify({
                 'status': 'error',
-                'message': 'Failed to fetch vote counts or proposal not found'
-            }), 404
+                'message': votes_data.get('message', 'Failed to fetch vote data')
+            }), 400
+
     except Exception as e:
         error_message = f"Error fetching votes: {str(e)}"
         logging.warning(error_message)
@@ -2064,8 +2027,45 @@ def getProposalVotes(id):
         }), 500
 
 
+@app.route('/api/proposals/active', methods=['GET'])
+@userInteracted
+@authRequired
+def get_active_proposals():
+    """
+    Fetch active proposals.
+    """
+    try:
+        result = start.server.getActiveProposals()
+        if result['status'] == 'success':
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        error_message = f"Error in get_active_proposals: {str(e)}"
+        return jsonify({'status': 'error', 'message': error_message}), 500
+
+
+@app.route('/api/proposals/expired', methods=['GET'])
+@userInteracted
+@authRequired
+def get_expired_proposals():
+    """
+    Fetch expired proposals.
+    """
+    try:
+        result = start.server.getExpiredProposals()
+        if result['status'] == 'success':
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        error_message = f"Error in get_expired_proposals: {str(e)}"
+        return jsonify({'status': 'error', 'message': error_message}), 500
+
+
 @app.route('/proposal/create', methods=['GET', 'POST'])
 @userInteracted
+@authRequired
 def proposalCreate():
     if request.method == 'GET':
         return render_template(
@@ -2088,7 +2088,7 @@ def proposalCreate():
             else:
                 error_message = result.get(
                     'error', 'Failed to create proposal')
-                logging.debug(f"Failed to create proposal: {error_message}")
+                logging.warning(f"Failed to create proposal: {error_message}")
                 return jsonify({
                     'status': 'error',
                     'message': error_message
@@ -2105,6 +2105,7 @@ def proposalCreate():
 
 @app.route('/test', methods=['GET'])
 @userInteracted
+@authRequired
 def testConnection():
     try:
         success, result = start.server.testConnection()
@@ -2112,6 +2113,227 @@ def testConnection():
             return jsonify({'status': 'success', 'message': 'API is working correctly', 'details': result}), 200
         else:
             return jsonify({'status': 'error', 'message': 'API test failed', 'details': result}), 500
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/test', methods=['GET'])
+@userInteracted
+@authRequired
+def get_test_data():
+    try:
+        # Log the test data
+        return jsonify({
+            'status': 'success',
+            'data': start.wallet.address
+        })
+    except Exception as e:
+        error_message = f"Failed to fetch test data: {str(e)}"
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'message': error_message
+        }), 500
+
+
+@app.route('/proposals/vote', methods=['POST'])
+@userInteracted
+@authRequired
+def proposalVote():
+    try:
+        # Log incoming request data
+        logging.debug("Received vote request:", request.json)
+
+        data = request.json
+        proposal_id = data.get('proposal_id')
+        vote = data.get('vote')
+
+        if not proposal_id or vote is None:
+            return jsonify({'status': 'error', 'message': 'Missing proposal_id or vote'}), 400
+
+        # Ensure proposal_id is a string
+        proposal_id = str(proposal_id)
+
+        # Fetch active proposals
+        active_proposals_response = start.server.getActiveProposals()
+        logging.warning("Active proposals response:",
+                        active_proposals_response)  # Debug log
+
+        # Check if getActiveProposals returned successfully
+        if active_proposals_response.get('status') != 'success':
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to fetch active proposals'
+            }), 500
+
+        # Get the proposals list from the response
+        proposals = active_proposals_response.get('proposals', [])
+        logging.debug("Available proposals:", proposals)  # Debug log
+
+        # Find the specific proposal
+        proposal = next(
+            (p for p in proposals if str(p.get('id')) == proposal_id),
+            None
+        )
+
+        logging.debug("Found proposal:", proposal)  # Debug log
+
+        if not proposal:
+            return jsonify({
+                'status': 'error',
+                'message': f'Proposal {proposal_id} not found in active proposals'
+            }), 404
+
+        # Parse the options
+        try:
+            # Get options from proposal
+            options = proposal.get('options', '["For", "Against"]')
+
+            # Handle different option formats
+            if isinstance(options, str):
+                try:
+                    options = json.loads(options)
+                    # Handle double-encoded JSON
+                    if isinstance(options, str):
+                        options = json.loads(options)
+                except json.JSONDecodeError:
+                    options = ["For", "Against"]
+
+            # Ensure options is a list
+            if not isinstance(options, list):
+                options = ["For", "Against"]
+
+            logging.debug("Parsed options:", options)  # Debug log
+
+        except Exception as e:
+            logging.warning(f"Error parsing options: {str(e)}")
+            options = ["For", "Against"]
+
+        # Validate the vote
+        if vote not in options:
+            return jsonify({
+                'status': 'error',
+                'message': f'Invalid vote. Valid options are: {options}'
+            }), 400
+
+        # Submit the vote
+        success, result = start.server.submitProposalVote(proposal_id, vote)
+
+        logging.debug("Vote submission result:", success, result)  # Debug log
+
+        if success:
+            return jsonify({
+                'status': 'success',
+                'message': 'Vote submitted successfully'
+            }), 200
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': result.get('error', 'Failed to submit vote')
+            }), 400
+
+    except Exception as e:
+        error_message = f"Error in proposalVote: {str(e)}"
+        logging.warning(error_message)
+        logging.warning(traceback.format_exc())
+        return jsonify({'status': 'error', 'message': error_message}), 500
+
+
+@app.route('/api/proposals', methods=['GET'])
+@userInteracted
+def getProposals():
+    try:
+        proposals_data = start.server.getProposals()
+        return jsonify({
+            'status': 'success',
+            'proposals': proposals_data,
+        })
+
+    except Exception as e:
+        error_message = f"Failed to fetch proposals: {str(e)}"
+        logging.error(error_message)
+        logging.error(traceback.format_exc())
+        return jsonify({
+            'status': 'error',
+            'message': error_message
+        }), 500
+
+
+@app.route('/api/user/can-approve', methods=['GET'])
+@userInteracted
+@authRequired
+def get_approval_rights():
+    try:
+        wallet_address = start.wallet.address if start.wallet else None
+        if not wallet_address:
+            return jsonify({'status': 'error', 'message': 'No wallet address available'}), 401
+
+        can_approve = start.server.isApprovedAdmin(wallet_address)
+        return jsonify({
+            'status': 'success',
+            'canApprove': can_approve,
+            'userWalletAddress': wallet_address
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/proposals/unapproved', methods=['GET'])
+@userInteracted
+@authRequired
+def get_unapproved_proposals():
+    try:
+        wallet_address = start.wallet.address if start.wallet else None
+        if not wallet_address:
+            return jsonify({'status': 'error', 'message': 'No wallet address available'}), 401
+
+        result = start.server.getUnapprovedProposals(wallet_address)
+        if result['status'] == 'error' and 'Unauthorized' in result.get('message', ''):
+            return jsonify(result), 403
+        return jsonify(result), 200 if result['status'] == 'success' else 400
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/proposals/approve/<int:proposal_id>', methods=['POST'])
+@userInteracted
+@authRequired
+def approve_proposal(proposal_id: int):
+    try:
+        wallet_address = start.wallet.address if start.wallet else None
+        if not wallet_address:
+            return jsonify({'status': 'error', 'message': 'No wallet address available'}), 401
+
+        success, result = start.server.approveProposal(
+            wallet_address, proposal_id)
+        if not success and 'Unauthorized' in result.get('error', ''):
+            return jsonify({'status': 'error', 'message': result['error']}), 403
+        return jsonify(
+            {'status': 'success', 'message': 'Proposal approved successfully'} if success
+            else {'status': 'error', 'message': result.get('error')}
+        ), 200 if success else 400
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/proposals/disapprove/<int:proposal_id>', methods=['POST'])
+@userInteracted
+@authRequired
+def disapprove_proposal(proposal_id: int):
+    try:
+        wallet_address = start.wallet.address if start.wallet else None
+        if not wallet_address:
+            return jsonify({'status': 'error', 'message': 'No wallet address available'}), 401
+
+        success, result = start.server.disapproveProposal(
+            wallet_address, proposal_id)
+        if not success and 'Unauthorized' in result.get('error', ''):
+            return jsonify({'status': 'error', 'message': result['error']}), 403
+        return jsonify(
+            {'status': 'success', 'message': 'Proposal disapproved successfully'} if success
+            else {'status': 'error', 'message': result.get('error')}
+        ), 200 if success else 400
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 

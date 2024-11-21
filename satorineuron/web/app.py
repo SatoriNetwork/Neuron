@@ -27,11 +27,29 @@ def isProdMode() -> bool:
     return os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev')) == 'prod'
 
 
+def allowedToPull() -> bool:
+    '''
+    open /Satori/Neuron/config/config.yaml if it exists,
+    check if the value of 'pull code updates' is true
+    '''
+    config_path = '/Satori/Neuron/config/config.yaml'
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.startswith('pull code updates'):
+                    return line.split(':')[1].strip().lower() == 'true'
+    return True
+
+
 def monitorAndRestartSatori():
     while True:
         print("Starting Satori...")
-        if time.time() - lastPull > 60*60:
-            pullSatori()
+        if allowedToPull() and time.time() - lastPull > 60*60:
+            # pullSatori()
+            pass
+        else:
+            print("skipped pull...")
         process = startSatori()
         while True:
             try:
