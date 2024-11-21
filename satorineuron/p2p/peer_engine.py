@@ -220,7 +220,25 @@ class PeerEngine(metaclass=SingletonMeta):
         except Exception as e:
             logging.error(f"Checkin failed: {str(e)}")
             return None
+        
 
+    def sync_history_with_server(self):
+        """Sync local history with server periodically"""
+        try:
+            for stream_id, cache in self.history.items():
+                stream_id_str = str(stream_id) if not isinstance(stream_id, str) else stream_id
+                cache_data = cache if isinstance(cache, (dict, list, str)) else str(cache)
+                # cache_data = cache 
+                # print(f"Stream ID: {stream_id_str}, Cache: {cache_data}")
+                # print(cache_data)
+                response = requests.post(f"{self.server_url}/checkin", json={
+                    "peer_id": self.client_id,
+                    "stream_id": stream_id_str,  # Ensure it's a string
+                    "cache": cache_data
+                })
+                # print(response)
+        except Exception as e:
+            logging.error(f"History sync failed: {str(e)}")
 
     def start_background_tasks(self):
         """Start background tasks for maintenance and updates"""
@@ -229,10 +247,8 @@ class PeerEngine(metaclass=SingletonMeta):
         def background_loop():
             while self.running:
                 self.checkin()
+                self.sync_history_with_server()
                 self.connect_to_peers()
-                if hasattr(self, 'history') and self.history:
-                    for stream_id, cache in self.history.items():
-                        print(f"Stream ID: {stream_id}, Cache: {cache}")
                 time.sleep(1800)  # 30 minutes interval 
 
         self.background_thread = threading.Thread(target=background_loop)
