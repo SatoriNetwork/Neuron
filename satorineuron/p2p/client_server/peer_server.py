@@ -1,18 +1,3 @@
-'''
-todo:
-    # provide unique ip address that a peer can use as it's id as a separate endpoint
-    #     peer logic:
-    #         always ask for unique ip on startup before checking in with PeerServer
-    # remove stale peers (last_seen > 1 hour) (30 minute thread, purging peers by last_seen > 1 hour + 1 minute)
-    #     remove stale connections too
-    #     remove stale publications and subscriptions too
-    # accept a list of subscription and publication datastreams, save to a table by peer_id
-    #     add endpoint for updating subscriptions and publications (reuse checkin endpoint?)
-    # connect peers together based on requests for datastreams (connect peer to publisher peer first, subscriber of desired datastream second)
-    #     - if peer is already connected to publisher, connect to one of the publisher subscribers they are not already connected to
-    #     - if the publisher already has too many direct connections, connect to a subscriber of the publisher 
-    #     - (don't want to overload any one peer 200 max)
-'''
 from flask import Flask, request, jsonify
 import time
 import sqlite3
@@ -77,6 +62,15 @@ class PeerServer:
                 FOREIGN KEY (to_peer) REFERENCES peers (peer_id)
             )
         ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS stream_history (
+                stream_id TEXT,
+                data TEXT,
+                timestamp REAL
+            )
+        ''')
+        
         try:
             # Check if publications table needs updating
             cursor.execute("PRAGMA table_info(publications)")
@@ -213,6 +207,7 @@ class PeerServer:
         self.app.route('/list_connections', methods=['GET'])(self.list_connections)
         self.app.route('/connect_datastream', methods=['POST'])(self.connect_datastream)
         self.app.route('/disconnect', methods=['POST'])(self.disconnect_peer)
+        self.app.route('/get_history', methods=['POST'])(self.get_history)
 
     def get_unique_ip(self):
         """Generate a unique IP address for a peer"""
@@ -242,7 +237,7 @@ class PeerServer:
             wireguard_config = data.get('wireguard_config')
             publications = data.get('publications', [])
             subscriptions = data.get('subscriptions', [])
-            
+            cache = data.get('cache', {})
            
             
             conn = sqlite3.connect('peers.db')
@@ -271,7 +266,80 @@ class PeerServer:
                         'INSERT INTO subscriptions (peer_id, stream, created_at) VALUES (?, ?, ?)',
                         (peer_id, stream, timestamp)
                     )
-                
+                if 'cache' in data:
+                    try:
+                        # Convert cache to a dictionary if it's a complex object
+                        if hasattr(data['cache'], 'to_dict'):
+                            cache = data['cache'].to_dict()
+                        else:
+                            cache = data['cache']
+                        
+                        # Ensure we're working with a dictionary
+                        if not isinstance(cache, dict):
+                            cache = {}
+                        
+                        # Process cache entries
+                        for stream_id, stream_data in cache.items():
+                            # Convert stream data to a list of records if needed
+                            if not isinstance(stream_data, list):
+                                stream_data = [stream_data]
+                            
+                            for record in stream_data:
+                                # Convert record to a dictionary if it's not already
+                                if not isinstance(record, dict):
+                                    record = {'value': record}
+                                
+                                cursor.execute(
+                                    '''
+                                    INSERT INTO stream_history (stream_id, data, timestamp)
+                                    VALUES (?, ?, ?)
+                                    ON CONFLICT(stream_id, timestamp) DO NOTHING
+                                    ''',
+                                    (str(stream_id), json.dumps(record), timestamp)
+                                )
+                    
+                    except Exception as cache_error:
+                        print(f"Error processing cache: {cache_error}")
+                # Update stream history
+                # Handle different cache formats
+                if isinstance(cache, dict):
+                    for stream_id, history_data in cache.items():
+                        # If history_data is a DataFrame or similar
+                        if hasattr(history_data, 'to_dict'):
+                            history_data = history_data.to_dict(orient='records')
+                        
+                        if not isinstance(history_data, list):
+                            history_data = [history_data]
+                        
+                        for record in history_data:
+                            cursor.execute(
+                                '''
+                                INSERT INTO stream_history (stream_id, data, timestamp)
+                                VALUES (?, ?, ?)
+                                ON CONFLICT(stream_id, timestamp) DO NOTHING
+                                ''',
+                                (str(stream_id), json.dumps(record), timestamp)
+                            )
+                elif isinstance(cache, str):
+                    # If it's a string representation, try to parse it
+                    try:
+                        parsed_cache = eval(cache)
+                        if isinstance(parsed_cache, dict):
+                            for stream_id, history_data in parsed_cache.items():
+                                if not isinstance(history_data, list):
+                                    history_data = [history_data]
+                                for record in history_data:
+                                    cursor.execute(
+                                        '''
+                                        INSERT INTO stream_history (stream_id, data, timestamp)
+                                        VALUES (?, ?, ?)
+                                        ON CONFLICT(stream_id, timestamp) DO NOTHING
+                                        ''',
+                                        (str(stream_id), json.dumps(record), timestamp)
+                                    )
+                    except Exception as parse_error:
+                        print(f"Could not parse cache string: {parse_error}")
+
                 conn.commit()
                 
                 return jsonify({
@@ -279,7 +347,8 @@ class PeerServer:
                     "peer_id": peer_id,
                     "timestamp": timestamp,
                     "publications": publications,
-                    "subscriptions": subscriptions
+                    "subscriptions": subscriptions,
+                    "cache_processed": True,
                 })
                 
             except Exception as e:
@@ -579,6 +648,61 @@ class PeerServer:
             "connections": connection_list,
             "total_connections": len(connection_list)
         })
+    
+    def get_history(self):
+        """Advanced historical data retrieval for a requested stream."""
+        try:
+            data = request.get_json()
+            stream_id = data.get("stream_id")
+            
+            # Enhanced query parameters
+            kwargs = data.get("kwargs", {})
+            limit = kwargs.get("limit", 1000)  # Default limit
+            offset = kwargs.get("offset", 0)   # Pagination offset
+            start_time = kwargs.get("start_time", 0)  # Filter by start time
+            end_time = kwargs.get("end_time", float('inf'))  # Filter by end time
+            filter_conditions = kwargs.get("filters", {})  # Additional data filtering
+
+            conn = sqlite3.connect('peers.db')
+            cursor = conn.cursor()
+
+            # Build dynamic query with flexible filtering
+            query = """
+                SELECT * FROM stream_history 
+                WHERE stream_id = ? 
+                AND timestamp BETWEEN ? AND ?
+            """
+            query_params = [stream_id, start_time, end_time]
+
+            # Add additional filter conditions
+            for key, value in filter_conditions.items():
+                query += f" AND json_extract(data, '$.{key}') = ?"
+                query_params.append(value)
+
+            query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?"
+            query_params.extend([limit, offset])
+
+            cursor.execute(query, query_params)
+            history = cursor.fetchall()
+            
+            # Count total matching records for pagination
+            count_query = query.replace("*", "COUNT(*)")
+            count_query = count_query.split(" ORDER BY")[0]
+            cursor.execute(count_query, query_params[:-2])
+            total_count = cursor.fetchone()[0]
+
+            conn.close()
+
+            return jsonify({
+                "status": "success",
+                "stream_id": stream_id,
+                "history": history,
+                "total_count": total_count,
+                "limit": limit,
+                "offset": offset
+            })
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
 
     def run(self, host='0.0.0.0', port=51820):
         self.app.run(host=host, port=port, debug=True)

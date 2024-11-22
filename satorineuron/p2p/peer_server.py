@@ -648,61 +648,6 @@ class PeerServer:
             "connections": connection_list,
             "total_connections": len(connection_list)
         })
-    
-    def get_history(self):
-        """Advanced historical data retrieval for a requested stream."""
-        try:
-            data = request.get_json()
-            stream_id = data.get("stream_id")
-            
-            # Enhanced query parameters
-            kwargs = data.get("kwargs", {})
-            limit = kwargs.get("limit", 1000)  # Default limit
-            offset = kwargs.get("offset", 0)   # Pagination offset
-            start_time = kwargs.get("start_time", 0)  # Filter by start time
-            end_time = kwargs.get("end_time", float('inf'))  # Filter by end time
-            filter_conditions = kwargs.get("filters", {})  # Additional data filtering
-
-            conn = sqlite3.connect('peers.db')
-            cursor = conn.cursor()
-
-            # Build dynamic query with flexible filtering
-            query = """
-                SELECT * FROM stream_history 
-                WHERE stream_id = ? 
-                AND timestamp BETWEEN ? AND ?
-            """
-            query_params = [stream_id, start_time, end_time]
-
-            # Add additional filter conditions
-            for key, value in filter_conditions.items():
-                query += f" AND json_extract(data, '$.{key}') = ?"
-                query_params.append(value)
-
-            query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?"
-            query_params.extend([limit, offset])
-
-            cursor.execute(query, query_params)
-            history = cursor.fetchall()
-            
-            # Count total matching records for pagination
-            count_query = query.replace("*", "COUNT(*)")
-            count_query = count_query.split(" ORDER BY")[0]
-            cursor.execute(count_query, query_params[:-2])
-            total_count = cursor.fetchone()[0]
-
-            conn.close()
-
-            return jsonify({
-                "status": "success",
-                "stream_id": stream_id,
-                "history": history,
-                "total_count": total_count,
-                "limit": limit,
-                "offset": offset
-            })
-        except Exception as e:
-            return jsonify({"status": "error", "message": str(e)}), 500
 
     def run(self, host='0.0.0.0', port=51820):
         self.app.run(host=host, port=port, debug=True)

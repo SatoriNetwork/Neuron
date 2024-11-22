@@ -16,6 +16,8 @@ goal: from the neuron we can ask the p2p server for specific datastream connecti
 '''
 
 import json
+import socket
+import struct
 import subprocess
 import threading
 import time
@@ -63,6 +65,7 @@ class PeerEngine(metaclass=SingletonMeta):
         self.connected_peers = set()
         self.running = False
         self.ping_interval = 10
+        self.cache_data = None
 
     def _get_unique_ip(self):
         """Get a unique IP address from the PeerServer"""
@@ -80,10 +83,9 @@ class PeerEngine(metaclass=SingletonMeta):
         self.client_id = wg_info['public_key']
         self.start_background_tasks()
         self.start_listening()
-        # self.start_ping_loop()
         self.start_peer_check_loop()
         self.start_ping_loop(self.ping_interval)
-        # print(self.history)
+        
 
     def start_listening(self):
         """Listen for and process new peer connection requests"""
@@ -213,7 +215,8 @@ class PeerEngine(metaclass=SingletonMeta):
                     "peer_id": self.client_id,
                     "wireguard_config": self.wireguard_config["wireguard_config"],
                     "publications": self.publications,
-                    "subscriptions": self.subscriptions
+                    "subscriptions": self.subscriptions,
+                    "caches": self.cache_data
                 }
             )
             return response.json()
@@ -227,15 +230,15 @@ class PeerEngine(metaclass=SingletonMeta):
         try:
             for stream_id, cache in self.history.items():
                 stream_id_str = str(stream_id) if not isinstance(stream_id, str) else stream_id
-                cache_data = cache if isinstance(cache, (dict, list, str)) else str(cache)
+                self.cache_data = cache if isinstance(cache, (dict, list, str)) else str(cache)
                 # cache_data = cache 
                 # print(f"Stream ID: {stream_id_str}, Cache: {cache_data}")
                 # print(cache_data)
-                response = requests.post(f"{self.server_url}/checkin", json={
-                    "peer_id": self.client_id,
-                    "stream_id": stream_id_str,  # Ensure it's a string
-                    "cache": cache_data
-                })
+                # response = requests.post(f"{self.server_url}/checkin", json={
+                #     "peer_id": self.client_id,
+                #     "stream_id": stream_id_str,  # Ensure it's a string
+                #     "cache": cache_data
+                # })
                 # print(response)
         except Exception as e:
             logging.error(f"History sync failed: {str(e)}")
@@ -246,8 +249,8 @@ class PeerEngine(metaclass=SingletonMeta):
 
         def background_loop():
             while self.running:
-                self.checkin()
                 self.sync_history_with_server()
+                self.checkin()
                 self.connect_to_peers()
                 time.sleep(1800)  # 30 minutes interval 
 
