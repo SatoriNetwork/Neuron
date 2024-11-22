@@ -145,6 +145,7 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <script type="text/javascript">
   const darkmode = {{ 'true' if darkmode else 'false' }};
   let storedStreams = {{ allStreams|tojson }};
@@ -486,12 +487,13 @@
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> ${stream.vote}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> ${stream.latest_observation_value}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Time:</strong> ${stream.latest_observation_time}</p>
-              <p class="text-sm" style="width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 <strong>Status:</strong> 
                 <span style="color: ${isActive ? 'green' : 'red'};">
                   ${isActive ? 'Active' : 'Inactive'}
                 </span>
               </p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Predictions Count:</strong> ${stream.predictors_count}</p>
               <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
               <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> ${stream.description}</p>
             </div>
@@ -509,8 +511,107 @@
     return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}, ${date.getFullYear()}`;
   }
 
+  function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, chunkSize = 1000) {
+    console.log("renderGraphChunked called", combinedTimes, observationValues, predictionValues)
+    const totalPoints = combinedTimes.length;
+    let currentIndex = 0;
+  
+    const ctx = graphCanvas.getContext('2d');
+    const chartData = {
+      labels: [],
+      datasets: [
+        {
+          label: 'Observations',
+          data: [],
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+          fill: false,
+        },
+        {
+          label: 'Predictions',
+          data: [],
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+          fill: false,
+        },
+      ],
+    };
+  
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { 
+          // type: 'time',          
+          // time: {
+          //  unit: 'day',
+          //  displayFormats: {
+          //    day: 'MMM D',
+          //  },
+          // }, 
+          title: { display: true, text: 'Time' }, 
+          grid: { display: false }, 
+          ticks: {
+            callback: function (value, index, ticks) {
+              // Show only the first and last labels
+              if (index === 0 || index === ticks.length - 1) {
+                return this.getLabelForValue(value);
+              }
+              return '';
+            },
+          }, 
+        },
+        y: { title: { display: true, text: 'Value' }, grid: { display: false } },
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `Time: ${context.label}, Value: ${context.raw}`;
+            },
+          },
+        },
+        legend: { display: false },
+      },
+    };
+
+    if (observationsChart) {
+      observationsChart.destroy(); // Destroy the previous chart instance
+    }
+  
+    observationsChart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: chartOptions,
+    });
+  
+    function addChunk() {
+      const endIndex = Math.min(currentIndex + chunkSize, totalPoints);
+      observationsChart.data.labels.push(...combinedTimes.slice(currentIndex, endIndex));
+      observationsChart.data.datasets[0].data.push(...observationValues.slice(currentIndex, endIndex));
+      observationsChart.data.datasets[1].data.push(...predictionValues.slice(currentIndex, endIndex));
+      observationsChart.update();
+  
+      currentIndex += chunkSize;
+  
+      if (currentIndex < totalPoints) {
+        requestAnimationFrame(addChunk); // Schedule the next chunk
+      }
+    }
+  
+    addChunk();
+  }
+
   // Show Observations Modal with observations list and graph for value vs time
   function showObservations(streamId) {
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = '';
+    const noDataRow = document.createElement('tr');
+    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
+    tableBody.appendChild(noDataRow);
+    
     fetch('/get_observations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -520,99 +621,173 @@
       if (response.ok) {
         const data = await response.json();
         const parsedObservations = JSON.parse(data.observations);
-        const formattedData = parsedObservations.map(obs => ({
-          ...obs,
-          formattedTime: formatDateToShort(obs.time) // Add formatted time for x-axis
-        }));
-        const observationsBody = document.getElementById('observationsBody');
-        const graphContainer = document.getElementById('observationsGraphContainer');
-        const graphCanvas = document.getElementById('observationsGraph');
-        const modelContent = document.getElementById('modal-content');
-        const observationTable = document.getElementById('observation-table');
+        fetch('/get_predictions_observations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ streamId: streamId })
+        }).then(async (responsePredictions) => {
+          if(responsePredictions.ok) {
+            const predictionData = await responsePredictions.json();
+            let parsedPredictionObservations = JSON.parse(predictionData.observations);
+            // parsedPredictionObservations = parsedPredictionObservations.splice(0, 30)
+            console.log("predictionData", parsedPredictionObservations)
+            {
+              /** 
+                const formattedPredictionData = parsedPredictionObservations.map(obs => ({
+                  ...obs,
+                  formattedTime: formatDateToShort(obs.time)
+                }));
+                const formattedData = parsedObservations.map(obs => ({
+                  ...obs,
+                  formattedTime: formatDateToShort(obs.time)
+                }));
+              */
+            }
+            const formattedPredictionData = parsedPredictionObservations.map(obs => ({
+              ...obs,
+              formattedTime: formatDateToShort(obs.time)
+            }));
+            const formattedData = parsedObservations.map(obs => ({
+              ...obs,
+              formattedTime: formatDateToShort(obs.time)
+            }));
 
-        observationsBody.innerHTML = '';
+            const observationsBody = document.getElementById('observationsBody');
+            const graphContainer = document.getElementById('observationsGraphContainer');
+            const graphCanvas = document.getElementById('observationsGraph');
+            const modelContent = document.getElementById('modal-content');
+            const observationTable = document.getElementById('observation-table');
 
-        if (parsedObservations.length === 0) {
-          // modal container css changes
-          modelContent.style.height = "300px"
-          // Graph container css changes
-          graphContainer.style.display = 'none';
-          // Table style css changes
-          observationTable.style.height = "300px";
-          observationTable.style.overflowY = "hidden";
-          const noDataRow = document.createElement('tr');
-          noDataRow.innerHTML = '<td colspan="2" style="text-align: center; padding: 8px;">No data found</td>';
-          observationsBody.appendChild(noDataRow);
-        } else {
-          // Graph container css changes
-          graphContainer.style.display = 'block';
-          const times = formattedData.map((obs) => obs.formattedTime);
-          const values = formattedData.map((obs) => parseFloat(obs.value));
-          // Render the graph
-          if (observationsChart) {
-            observationsChart.destroy(); // Destroy the previous chart instance
-          }
-          observationsChart = new Chart(graphCanvas, {
-            type: 'line',
-            data: {
-              labels: times,
-              datasets: [
-                {
-                  label: '',
-                  data: values,
-                  borderColor: 'rgba(75, 192, 192, 1)',
-                  borderWidth: 2,
-                  pointBackgroundColor: 'rgba(75, 192, 192, 1)',
-                  fill: false,
-                },
-              ],
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: { title: { display: true, text: 'Time' }, grid: { display: false }, ticks: {
-                    callback: function (value, index, ticks) {
-                      // Show only the first and last labels
-                      if (index === 0 || index === ticks.length - 1) {
-                        return this.getLabelForValue(value);
-                      }
-                      return '';
+            observationsBody.innerHTML = '';
+
+            if (parsedObservations.length === 0) {
+              // modal container css changes
+              modelContent.style.height = "300px"
+              // Graph container css changes
+              graphContainer.style.display = 'none';
+              // Table style css changes
+              observationTable.style.height = "300px";
+              observationTable.style.overflowY = "hidden";
+              const noDataRow = document.createElement('tr');
+              noDataRow.innerHTML = '<td colspan="2" style="text-align: center; padding: 8px;">No data found</td>';
+              observationsBody.appendChild(noDataRow);
+            } else {
+              // Graph container css changes
+              graphContainer.style.display = 'block';
+              
+              console.log("Making datasets")
+              // Ensure both datasets use the same x-axis labels
+              const combinedTimes = Array.from(
+                new Set([...formattedData.map(obs => obs.formattedTime), ...formattedPredictionData.map(obs => obs.formattedTime)])
+              );
+              // Map values from each dataset to the combined x-axis labels
+              const observationValues = combinedTimes.map(time => {
+                const obs = formattedData.find(obs => obs.formattedTime === time);
+                return obs ? parseFloat(obs.value) : null;
+              });
+              const predictionValues = combinedTimes.map(time => {
+                const pred = formattedPredictionData.find(pred => pred.formattedTime === time);
+                return pred ? parseFloat(pred.value) : null;
+              });
+              console.log("Making datasets completed")
+
+              // const times = formattedData.map((obs) => obs.formattedTime);
+              // const values = formattedData.map((obs) => parseFloat(obs.value));
+              
+              // Render the graph
+             
+              // Sort combinedTimes from low date to high dates 
+              const sortedCombinedTimes = combinedTimes.sort((date1, date2) => new Date(date1) - new Date(date2));
+              renderGraphChunked(graphCanvas, sortedCombinedTimes, observationValues, predictionValues);
+              {/** 
+
+                if (observationsChart) {
+                  observationsChart.destroy(); // Destroy the previous chart instance
+                }
+
+              observationsChart = new Chart(graphCanvas, {
+                type: 'line',
+                data: {
+                  labels: combinedTimes,
+                  datasets: [
+                    {
+                      // label: 'Observations',
+                      label: '',
+                      data: observationValues,
+                      borderColor: 'rgba(75, 192, 192, 1)',
+                      borderWidth: 2,
+                      pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                      fill: false,
                     },
-                  }, 
-                },
-                y: { title: { display: true, text: 'Value' }, grid: { display: false } },
-              },
-              plugins: {
-                // Tooltip when user hover on the point
-                tooltip: {
-                  callbacks: {
-                    label: function (context) {
-                      return `Time: ${context.label}, Value: ${context.raw}`;
+                    {
+                      // label: 'Predictions',
+                      label: '',
+                      data: predictionValues,
+                      borderColor: 'rgba(255, 99, 132, 1)',
+                      borderWidth: 2,
+                      pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                      fill: false,
                     },
+                  ],
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    x: { title: { display: true, text: 'Time' }, grid: { display: false }, ticks: {
+                        callback: function (value, index, ticks) {
+                          // Show only the first and last labels
+                          if (index === 0 || index === ticks.length - 1) {
+                            return this.getLabelForValue(value);
+                          }
+                          return '';
+                        },
+                      }, 
+                    },
+                    y: { title: { display: true, text: 'Value' }, grid: { display: false } },
+                  },
+                  plugins: {
+                    // Tooltip when user hover on the point
+                    tooltip: {
+                      callbacks: {
+                        label: function (context) {
+                          return `Time: ${context.label}, Value: ${context.raw}`;
+                        },
+                      },
+                    },
+                    legend: { display: false }, // Hide the legend
                   },
                 },
-                legend: { display: false }, // Hide the legend
-              },
-            },
-          });
+              }); 
+              */}
 
-          parsedObservations.forEach(observation => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.value}</td>
-            `;
-            observationsBody.appendChild(row);
-          });
-        }
-        // Show the modal
-        document.getElementById('observationsModal').style.display = 'block';
-        document.body.classList.add('no-scroll');  // Disable scroll on main content
+              parsedObservations.forEach(observation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                  <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
+                  <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.value}</td>
+                `;
+                observationsBody.appendChild(row);
+              });
+            }
+            // Show the modal
+            document.getElementById('observationsModal').style.display = 'block';
+            updateStreamDisplay(displayStreams, darkmode);
+            updatePaginationButtons(filteredStreams.length);
+            document.body.classList.add('no-scroll');  // Disable scroll on main content
+          }
+        }).catch(error => {
+          console.error('Error fetching observations:', error);
+          updateStreamDisplay(displayStreams, darkmode);
+          updatePaginationButtons(filteredStreams.length);
+          showNotification("Failed to load observations", true);
+        });
       }
     })
     .catch(error => {
       console.error('Error fetching observations:', error);
+      updateStreamDisplay(displayStreams, darkmode);
+      updatePaginationButtons(filteredStreams.length);
       showNotification("Failed to load observations", true);
     });
   }

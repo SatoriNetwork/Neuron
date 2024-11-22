@@ -1960,6 +1960,13 @@ def getObservations():
     observations = start.server.getObservations(streamId=streamId)  # Fetch observations from your data source
     return jsonify({'observations': observations}), 200
 
+@app.route('/get_predictions_observations', methods=['POST'])
+@userInteracted
+@authRequired
+def getPredictionsObservations():
+    observations = start.server.getPredictionsObservations()  # Fetch all predictions observations from your data source
+    return jsonify({'observations': observations}), 200
+
 @app.route('/proposals', methods=['GET'])
 @userInteracted
 @vaultRequired
