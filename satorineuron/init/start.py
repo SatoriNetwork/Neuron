@@ -864,28 +864,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             )
 
         def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
-            logging.debug(
-                "topic=", streamForecast.streamId.topic(), color="magenta")
-            logging.debug(
-                "data=", streamForecast.forecast["pred"].iloc[0], color="magenta"
-            )
-            logging.debug(
-                "observationTime=", streamForecast.observationTime, color="magenta"
-            )
-            logging.debug(
-                "observationHash=", streamForecast.observationHash, color="magenta"
-            )
-            logging.debug(
-                "useAuthorizedCall=", self.version >= Version("0.2.6"), color="magenta"
-            )
-            logging.debug("predictionStream=",
-                          streamForecast.predictionStreamId, color="red")
-            logging.debug(
-                "predictionStreamtopic=", streamForecast.predictionStreamId.topic(), color="red"
-            )
-            logging.debug(
-                "predictionHistory=", streamForecast.predictionHistory, color="blue"
-            )
+            # logging.debug("topic=", streamForecast.streamId.topic())
+            # logging.debug("data=", streamForecast.forecast["pred"].iloc[0])
+            # logging.debug("observationTime=", streamForecast.observationTime)
+            # logging.debug("observationHash=", streamForecast.observationHash)
+            # logging.debug("useAuthorizedCall=", self.version >= Version("0.2.6"))
+            # logging.debug("predictionStream=",streamForecast.predictionStreamId)
+            # logging.debug("predictionStreamtopic=", streamForecast.predictionStreamId.topic())
+            logging.debug("predictionHistory=", streamForecast.predictionHistory, print=True)
             for stream_display in self.streamDisplay:
                 if stream_display.streamId == streamForecast.streamId:
                     stream_display.value = streamForecast.currentValue["value"].iloc[-1]
