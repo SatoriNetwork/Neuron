@@ -207,7 +207,6 @@ class PeerServer:
         self.app.route('/list_connections', methods=['GET'])(self.list_connections)
         self.app.route('/connect_datastream', methods=['POST'])(self.connect_datastream)
         self.app.route('/disconnect', methods=['POST'])(self.disconnect_peer)
-        self.app.route('/get_history', methods=['POST'])(self.get_history)
 
     def get_unique_ip(self):
         """Generate a unique IP address for a peer"""
@@ -266,79 +265,19 @@ class PeerServer:
                         'INSERT INTO subscriptions (peer_id, stream, created_at) VALUES (?, ?, ?)',
                         (peer_id, stream, timestamp)
                     )
-                if 'cache' in data:
-                    try:
-                        # Convert cache to a dictionary if it's a complex object
-                        if hasattr(data['cache'], 'to_dict'):
-                            cache = data['cache'].to_dict()
-                        else:
-                            cache = data['cache']
-                        
-                        # Ensure we're working with a dictionary
-                        if not isinstance(cache, dict):
-                            cache = {}
-                        
-                        # Process cache entries
-                        for stream_id, stream_data in cache.items():
-                            # Convert stream data to a list of records if needed
-                            if not isinstance(stream_data, list):
-                                stream_data = [stream_data]
-                            
-                            for record in stream_data:
-                                # Convert record to a dictionary if it's not already
-                                if not isinstance(record, dict):
-                                    record = {'value': record}
-                                
-                                cursor.execute(
-                                    '''
-                                    INSERT INTO stream_history (stream_id, data, timestamp)
-                                    VALUES (?, ?, ?)
-                                    ON CONFLICT(stream_id, timestamp) DO NOTHING
-                                    ''',
-                                    (str(stream_id), json.dumps(record), timestamp)
-                                )
+                for stream_id, stream_data in cache.items():
+                    if not isinstance(stream_data, list):
+                        stream_data = [stream_data]
                     
-                    except Exception as cache_error:
-                        print(f"Error processing cache: {cache_error}")
-                # Update stream history
-                # Handle different cache formats
-                if isinstance(cache, dict):
-                    for stream_id, history_data in cache.items():
-                        # If history_data is a DataFrame or similar
-                        if hasattr(history_data, 'to_dict'):
-                            history_data = history_data.to_dict(orient='records')
-                        
-                        if not isinstance(history_data, list):
-                            history_data = [history_data]
-                        
-                        for record in history_data:
-                            cursor.execute(
-                                '''
-                                INSERT INTO stream_history (stream_id, data, timestamp)
-                                VALUES (?, ?, ?)
-                                ON CONFLICT(stream_id, timestamp) DO NOTHING
-                                ''',
-                                (str(stream_id), json.dumps(record), timestamp)
-                            )
-                elif isinstance(cache, str):
-                    # If it's a string representation, try to parse it
-                    try:
-                        parsed_cache = eval(cache)
-                        if isinstance(parsed_cache, dict):
-                            for stream_id, history_data in parsed_cache.items():
-                                if not isinstance(history_data, list):
-                                    history_data = [history_data]
-                                for record in history_data:
-                                    cursor.execute(
-                                        '''
-                                        INSERT INTO stream_history (stream_id, data, timestamp)
-                                        VALUES (?, ?, ?)
-                                        ON CONFLICT(stream_id, timestamp) DO NOTHING
-                                        ''',
-                                        (str(stream_id), json.dumps(record), timestamp)
-                                    )
-                    except Exception as parse_error:
-                        print(f"Could not parse cache string: {parse_error}")
+                    for record in stream_data:
+                        cursor.execute(
+                            '''
+                            INSERT INTO stream_history (stream_id, data, timestamp)
+                            VALUES (?, ?, ?)
+                            ON CONFLICT(stream_id, timestamp) DO NOTHING
+                            ''',
+                            (str(stream_id), json.dumps(record), timestamp)
+                        )
 
                 conn.commit()
                 

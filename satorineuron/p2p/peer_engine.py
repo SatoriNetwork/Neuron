@@ -4,7 +4,7 @@ Neuron functionality - (need to integrate p2p with this layer)
 p2p functionality - connects to server and manages peers
 p2p server - (need upgrade to handle peers keys)
 
-current:
+current:complete
 start.py -> checkin() -> get key from server -> pass the key to pubsub -> pubsub interprets the key and knows what datastreams we publish and subscribe to
 
 want:
