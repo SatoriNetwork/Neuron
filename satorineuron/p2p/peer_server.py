@@ -20,6 +20,20 @@ class PeerServer:
         conn = sqlite3.connect('peers.db')
         cursor = conn.cursor()
         
+        # Modified stream_history table to better handle JSON stream IDs
+        cursor.execute('''
+            DROP TABLE IF EXISTS stream_history
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS stream_history (
+                peer_id TEXT,
+                stream_id TEXT,
+                cache_data TEXT,
+                timestamp REAL,
+                PRIMARY KEY (peer_id, stream_id)
+            )
+        ''')
          # Peers table for storing peer information
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS peers (
@@ -63,13 +77,6 @@ class PeerServer:
             )
         ''')
 
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS stream_history (
-                stream_id TEXT,
-                data TEXT,
-                timestamp REAL
-            )
-        ''')
         
         try:
             # Check if publications table needs updating
@@ -208,35 +215,77 @@ class PeerServer:
         self.app.route('/connect_datastream', methods=['POST'])(self.connect_datastream)
         self.app.route('/disconnect', methods=['POST'])(self.disconnect_peer)
         self.app.route('/get_cache', methods=['GET'])(self.get_cache)
+        self.app.route('/update_cache', methods=['GET'])(self.update_cache)
 
-    def get_cache(self):
-        """Retrieve cache data for a specific stream ID"""
-        stream_id = request.args.get('stream_id')
-        if not stream_id:
-            return jsonify({"status": "error", "message": "Missing stream_id parameter"}), 400
 
-        conn = sqlite3.connect('peers.db')
-        cursor = conn.cursor()
-
+    def update_cache(self):
+        """Update the cache data for a given peer and stream"""
         try:
-            cursor.execute(
-                "SELECT data, timestamp FROM stream_history WHERE stream_id = ? ORDER BY timestamp DESC",
-                (stream_id,)
-            )
-            records = cursor.fetchall()
-            if not records:
-                return jsonify({"status": "error", "message": "No cache data found for the given stream_id"}), 404
-
-            # Format the response
-            cache_data = [
-                {"data": json.loads(record[0]), "timestamp": record[1]} for record in records
-            ]
-            return jsonify({"status": "success", "stream_id": stream_id, "cache": cache_data})
-
+            data = request.get_json()
+            peer_id = data.get('peer_id')
+            stream_id = data.get('stream_id')
+            cache = data.get('cache')
+            
+            conn = sqlite3.connect('peers.db')
+            cursor = conn.cursor()
+            
+            try:
+                # Update the stream_history table
+                cursor.execute("""
+                    INSERT OR REPLACE INTO stream_history 
+                    (peer_id, stream_id, cache_data, timestamp)
+                    VALUES (?, ?, ?, ?)
+                """, (peer_id, stream_id, json.dumps(cache), time.time()))
+                
+                conn.commit()
+                return jsonify({"status": "success"})
+                
+            except Exception as e:
+                conn.rollback()
+                return jsonify({"status": "error", "message": str(e)}), 500
+            finally:
+                conn.close()
+                
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
-        finally:
-            conn.close()
+
+    def get_cache(self):
+        """Retrieve the cache data for a given stream"""
+        try:
+            stream_id = request.args.get('stream_id')
+            
+            conn = sqlite3.connect('peers.db')
+            cursor = conn.cursor()
+            
+            try:
+                # Fetch from stream_history table
+                cursor.execute("""
+                    SELECT cache_data 
+                    FROM stream_history 
+                    WHERE stream_id = ? 
+                    ORDER BY timestamp DESC 
+                    LIMIT 1
+                """, (stream_id,))
+                
+                result = cursor.fetchone()
+                
+                if result:
+                    return jsonify({
+                        "status": "success",
+                        "cache": json.loads(result[0])
+                    })
+                return jsonify({
+                    "status": "success",
+                    "cache": []
+                })
+                
+            except Exception as e:
+                return jsonify({"status": "error", "message": str(e)}), 500
+            finally:
+                conn.close()
+                
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
 
     def get_unique_ip(self):
         """Generate a unique IP address for a peer"""
@@ -271,7 +320,7 @@ class PeerServer:
             
             conn = sqlite3.connect('peers.db')
             cursor = conn.cursor()
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            # cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
             try:
                 # print("Updating peer info in database...")
                 cursor.execute(
@@ -296,19 +345,26 @@ class PeerServer:
                         (peer_id, stream, timestamp)
                     )
                 for stream_id, stream_data in cache.items():
-                    if not isinstance(stream_data, list):
-                        stream_data = [stream_data]
+                    # if not isinstance(stream_data, list):
+                    #     stream_data = [stream_data]
                     
-                    for record in stream_data:
-                        cursor.execute(
-                            '''
-                            INSERT INTO stream_history (stream_id, data, timestamp)
-                            VALUES (?, ?, ?)
-                            ON CONFLICT(stream_id, timestamp) DO NOTHING
-                            ''',
-                            (str(stream_id), json.dumps(record), timestamp)
-                        )
-
+                    # for record in stream_data:
+                    #     cursor.execute(
+                    #         '''
+                    #         INSERT INTO stream_history (stream_id, data, timestamp)
+                    #         VALUES (?, ?, ?)
+                    #         ON CONFLICT(stream_id, timestamp) DO NOTHING
+                    #         ''',
+                    #         (str(stream_id), json.dumps(record), timestamp)
+                    #     )
+                    # Store the entire cache entry as a JSON string
+                    cursor.execute(
+                        '''
+                        INSERT OR REPLACE INTO stream_history (stream_id, data, timestamp)
+                        VALUES (?, ?, ?)
+                        ''',
+                        (stream_id, json.dumps(stream_data), timestamp)
+                    )
                 conn.commit()
                 
                 return jsonify({
