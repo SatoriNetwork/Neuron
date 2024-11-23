@@ -76,7 +76,7 @@
     }
   }
   function reportVault() {
-    fetch('/vault/report', { method: 'GET' })
+    fetch('/register/vault', { method: 'GET' })
       .then(response => {
         if (response.ok) {
           return response.text();
