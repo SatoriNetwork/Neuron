@@ -311,7 +311,20 @@ class PeerEngine(metaclass=SingletonMeta):
         if result.returncode == 0:
             logging.info(f"Ping to {ip} successful", color="blue")
             return
-    
+        
+    def get_cache(self, stream_id):
+        """Fetch cached data from the server for a specific stream ID"""
+        try:
+            response = requests.get(f"{self.server_url}/get_cache", params={"stream_id": stream_id})
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logging.error(f"Failed to get cache for stream {stream_id}: {response.text}")
+                return None
+        except Exception as e:
+            logging.error(f"Error fetching cache for stream {stream_id}: {str(e)}")
+            return None
+        
     def stop(self):
         """Stop the PeerEngine and cleanup"""
         self.running = False

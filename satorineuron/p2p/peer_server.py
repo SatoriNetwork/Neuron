@@ -207,6 +207,36 @@ class PeerServer:
         self.app.route('/list_connections', methods=['GET'])(self.list_connections)
         self.app.route('/connect_datastream', methods=['POST'])(self.connect_datastream)
         self.app.route('/disconnect', methods=['POST'])(self.disconnect_peer)
+        self.app.route('/get_cache', methods=['GET'])(self.get_cache)
+
+    def get_cache(self):
+        """Retrieve cache data for a specific stream ID"""
+        stream_id = request.args.get('stream_id')
+        if not stream_id:
+            return jsonify({"status": "error", "message": "Missing stream_id parameter"}), 400
+
+        conn = sqlite3.connect('peers.db')
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                "SELECT data, timestamp FROM stream_history WHERE stream_id = ? ORDER BY timestamp DESC",
+                (stream_id,)
+            )
+            records = cursor.fetchall()
+            if not records:
+                return jsonify({"status": "error", "message": "No cache data found for the given stream_id"}), 404
+
+            # Format the response
+            cache_data = [
+                {"data": json.loads(record[0]), "timestamp": record[1]} for record in records
+            ]
+            return jsonify({"status": "success", "stream_id": stream_id, "cache": cache_data})
+
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+        finally:
+            conn.close()
 
     def get_unique_ip(self):
         """Generate a unique IP address for a peer"""
