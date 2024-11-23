@@ -133,7 +133,7 @@ class PeerEngine(metaclass=SingletonMeta):
         self.peerManager.start(self.ip_address)
         wg_info = self.my_info.get_wireguard_info()
         self.client_id = wg_info['public_key']
-        print(self.cache_objects)
+        # print(self.cache_objects)
         self.start_background_tasks()
         self.start_listening()
         self.start_peer_check_loop()
@@ -285,14 +285,18 @@ class PeerEngine(metaclass=SingletonMeta):
                 for stream_id, cache_obj in self.cache_objects.items()
             }
             
+            # Log the cache payload for debugging
+            print("Cache payload being sent to the server:")
+            # print(json.dumps(cache_payload, indent=2, cls=StreamIdEncoder))  # Use custom encoder
+            
             # Serialize data with custom encoder
-            json_data = self._serialize_stream_data({
+            json_data = json.dumps({
                 "peer_id": self.client_id,
                 "wireguard_config": self.wireguard_config["wireguard_config"],
                 "publications": [self._encode_stream_id(pub) for pub in self.publications],
                 "subscriptions": [self._encode_stream_id(sub) for sub in self.subscriptions],
                 "caches": cache_payload
-            })
+            }, cls=StreamIdEncoder)  # Apply the custom encoder here
             
             response = requests.post(
                 f"{self.server_url}/checkin",
@@ -310,6 +314,7 @@ class PeerEngine(metaclass=SingletonMeta):
         except Exception as e:
             logging.error(f"Checkin failed: {str(e)}")
             return None
+
         
     def handle_new_data(self, stream_id: str, data: any):
         """Handle new data received for a stream"""
