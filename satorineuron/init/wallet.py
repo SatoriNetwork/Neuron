@@ -93,12 +93,12 @@ class WalletVaultManager():
             # self.electrumx.api.subscribeToHeaders() # for testing
             if isinstance(self._wallet, EvrmoreWallet):
                 self._wallet.subscribeToScripthashActivity()
-                self._wallet.subscribe()
-                self._wallet.callTransactionHistory()
+                #self._wallet.subscribe()
+                #self._wallet.callTransactionHistory()
             if isinstance(self._vault, EvrmoreWallet):
                 self._vault.subscribeToScripthashActivity()
-                self._vault.subscribe()
-                self._vault.callTransactionHistory()
+                #self._vault.subscribe()
+                #self._vault.callTransactionHistory()
 
     def _initializeWallet(self, force: bool = False) -> EvrmoreWallet:
         if not force and self._wallet is not None:
