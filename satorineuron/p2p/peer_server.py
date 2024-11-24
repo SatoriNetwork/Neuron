@@ -213,18 +213,16 @@ class PeerServer:
         self.app.route('/list_peers', methods=['GET'])(self.list_peers)
         self.app.route('/list_connections', methods=['GET'])(self.list_connections)
         self.app.route('/connect_datastream', methods=['POST'])(self.connect_datastream)
-        self.app.route('/disconnect', methods=['POST'])(self.disconnect_peer)
         self.app.route('/update_peer', methods=['POST'])(self.update_peer)
-        self.app.route('/get_peer_data', methods=['POST'])(self.get_peer_data)
+        self.app.route('/get_peer_data', methods=['GET'])(self.get_peer_data)
 
     def get_peer_data(self):
-        """Handle requests for peer cache data based on stream IDs"""
+        """Handle requests to get peer cache data"""
         try:
-            data = request.get_json()
-            requesting_peer_id = data.get('peer_id')
-            stream_ids = data.get('stream_ids', [])  # List of stream ID dictionaries to fetch
-
-            if not requesting_peer_id:
+            # Get peer_id from query parameters
+            peer_id = request.args.get('peer_id')
+            
+            if not peer_id:
                 return jsonify({
                     "status": "error",
                     "message": "peer_id is required"
@@ -234,48 +232,39 @@ class PeerServer:
             cursor = conn.cursor()
 
             try:
-                # Verify the requesting peer exists
-                cursor.execute('SELECT 1 FROM peers WHERE peer_id = ?', (requesting_peer_id,))
-                if not cursor.fetchone():
+                # Get all stream history entries for the peer
+                cursor.execute('''
+                    SELECT stream_id, cache_data, timestamp
+                    FROM stream_history
+                    WHERE peer_id = ?
+                    ORDER BY timestamp DESC
+                ''', (peer_id,))
+                
+                results = cursor.fetchall()
+                
+                if not results:
                     return jsonify({
-                        "status": "error",
-                        "message": "Requesting peer not found"
-                    }), 404
+                        "status": "success",
+                        "message": "No cache data found for peer",
+                        "peer_id": peer_id,
+                        "cache_data": {}
+                    })
 
-                # Get cache data for all requested stream IDs
+                # Build cache data dictionary
                 cache_data = {}
-                for stream_id in stream_ids:
-                    # Convert stream_id dictionary to string for database lookup
-                    stream_id_str = str(stream_id)
-                    
-                    cursor.execute('''
-                        SELECT sh.cache_data, sh.timestamp 
-                        FROM stream_history sh
-                        WHERE sh.stream_id = ?
-                        ORDER BY sh.timestamp DESC 
-                        LIMIT 1
-                    ''', (stream_id_str,))
-                    
-                    result = cursor.fetchone()
-                    if result:
-                        try:
-                            cached_data = json.loads(result[0])
-                            cache_data[stream_id_str] = {
-                                "data": cached_data,
-                                "timestamp": result[1],
-                                "timestamp_readable": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(result[1]))
-                            }
-                        except json.JSONDecodeError:
-                            print(f"Error decoding cache data for stream {stream_id_str}")
-                            continue
+                for stream_id, cache_json, timestamp in results:
+                    try:
+                        cache_obj = json.loads(cache_json)
+                        cache_data[stream_id] = cache_obj
+                    except json.JSONDecodeError as e:
+                        print(f"Error decoding cache data for stream {stream_id}: {e}")
+                        continue
 
                 return jsonify({
                     "status": "success",
-                    "peer_id": requesting_peer_id,
+                    "peer_id": peer_id,
                     "cache_data": cache_data,
-                    "streams_found": len(cache_data),
-                    "request_timestamp": time.time(),
-                    "message": f"Found cache data for {len(cache_data)} out of {len(stream_ids)} requested streams"
+                    "timestamp": time.time()
                 })
 
             except sqlite3.Error as e:
@@ -289,10 +278,10 @@ class PeerServer:
 
         except Exception as e:
             return jsonify({
-                "status": "error",
+                "status": "error", 
                 "message": f"Request processing error: {str(e)}"
             }), 500
-
+        
     def update_peer(self):
         """Handle peer data updates"""
         try:
@@ -624,34 +613,6 @@ class PeerServer:
         finally:
             conn.close()
     
-    def disconnect_peer(self):
-        """Handle peer disconnection requests"""
-        data = request.get_json()
-        from_peer = data['from_peer']
-        to_peer = data['to_peer']
-
-        conn = sqlite3.connect('peers.db')
-        cursor = conn.cursor()
-        
-        # Mark connections as inactive
-        cursor.execute('''
-            UPDATE connections 
-            SET active = 0 
-            WHERE (from_peer = ? AND to_peer = ?) OR (from_peer = ? AND to_peer = ?)
-        ''', (from_peer, to_peer, to_peer, from_peer))
-        
-        conn.commit()
-        conn.close()
-
-        # Update in-memory connections
-        self.peer_connections[from_peer].discard(to_peer)
-        self.peer_connections[to_peer].discard(from_peer)
-
-        return jsonify({
-            "status": "disconnected",
-            "from_peer": from_peer,
-            "to_peer": to_peer
-        })
 
     def list_peers(self):
         """Get list of all peers with their publications and subscriptions"""

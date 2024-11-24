@@ -40,6 +40,24 @@ class StreamIdDecoder(json.JSONDecoder):
                 return pickle.loads(bytes.fromhex(dct['data']))
         return dct
 
+def dict_to_stream_key(stream_dict: dict) -> str:
+    """Convert a stream dictionary to a unique string key"""
+    if not isinstance(stream_dict, dict):
+        return str(stream_dict)
+    return f"{stream_dict.get('source', '')}.{stream_dict.get('author', '')}.{stream_dict.get('stream', '')}.{stream_dict.get('target', '')}"
+
+def stream_key_to_dict(key: str) -> dict:
+    """Convert a stream key string back to a dictionary"""
+    parts = key.split('.')
+    if len(parts) == 4:
+        return {
+            'source': parts[0],
+            'author': parts[1],
+            'stream': parts[2],
+            'target': parts[3]
+        }
+    return key
+
 class SingletonMeta(type):
     _instances = {}
 
@@ -230,48 +248,93 @@ class PeerEngine(metaclass=SingletonMeta):
         except Exception as e:
             logging.error(f"Error requesting connection to peer {peer_id}: {str(e)}")
             return False
-        
+    
+    @staticmethod
+    def get_peer_data(server_url: str, client_id: str):
+        """
+        Retrieve cache data from the server for a specific peer and print it
+        """
+        try:
+            payload = {"peer_id": client_id}
+            
+            response = requests.get(
+                f"{server_url}/get_peer_data",
+                params=payload
+            )
+            
+            if response.status_code == 200:
+                cache_data = json.loads(response.text, cls=StreamIdDecoder)
+                
+                if isinstance(cache_data, dict) and 'cache_data' in cache_data:
+                    formatted_data = {}
+                    
+                    logging.info("\n=== Retrieved Peer Data ===", color="cyan")
+                    
+                    for key, value in cache_data['cache_data'].items():
+                        try:
+                            # Convert the string key back to a dictionary if it matches the format
+                            stream_id = stream_key_to_dict(key)
+                            formatted_key = dict_to_stream_key(stream_id)
+                            formatted_data[formatted_key] = value
+                            
+                            # Print the data immediately
+                            logging.info("\nStream Key:", color="cyan")
+                            logging.info(f"  {formatted_key}", color="white")
+                            
+                            logging.info("Cache Data:", color="cyan")
+                            if hasattr(value, 'data'):
+                                if isinstance(value.data, dict):
+                                    for k, v in value.data.items():
+                                        logging.info(f"  {k}: {v}", color="white")
+                                else:
+                                    logging.info(f"  {value.data}", color="white")
+                            else:
+                                logging.info(f"  {value}", color="white")
+                            
+                            # Print additional cache object attributes if they exist
+                            if hasattr(value, 'last_updated'):
+                                logging.info(f"Last Updated: {value.last_updated}", color="white")
+                            if hasattr(value, 'version'):
+                                logging.info(f"Version: {value.version}", color="white")
+                            
+                            logging.info("-" * 50, color="blue")
+                            
+                        except Exception as e:
+                            logging.error(f"Error processing cache entry {key}: {str(e)}")
+                            continue
+                    
+                    logging.info("Successfully retrieved peer data", color="green")
+                    return formatted_data
+                else:
+                    logging.error("Invalid response format from server")
+                    return None
+            else:
+                logging.error(f"Failed to retrieve peer data. Status code: {response.status_code}")
+                return None
+                
+        except Exception as e:
+            logging.error(f"Unexpected error retrieving peer data: {str(e)}")
+            return None
+
     @staticmethod
     def update_peer_data(server_url: str, client_id: str, cache_data: dict):
         """
         Upload cache data to the server using the update_peer endpoint
-        
-        Args:
-            server_url (str): The base URL of the peer server
-            client_id (str): The public key of the client
-            cache_data (dict): Dictionary mapping stream IDs to Cache objects
         """
         try:
-            # Convert the stream IDs and cache objects into a format suitable for transmission
             formatted_data = {}
             for stream_id, cache_obj in cache_data.items():
-                # Convert stream_id dict to a string key
-                if isinstance(stream_id, dict):
-                    key = f"{stream_id['source']}.{stream_id['author']}.{stream_id['stream']}.{stream_id['target']}"
-                else:
-                    key = str(stream_id)
-                
+                # Ensure consistent key format whether stream_id is dict or string
+                key = dict_to_stream_key(stream_id)
                 formatted_data[key] = cache_obj
 
-            # Prepare the payload
             payload = {
                 "peer_id": client_id,
                 "cache_data": formatted_data
             }
 
-            # # Print the data being uploaded
-            # logging.info("Uploading the following data to server:", color="cyan")
-            # for key, value in formatted_data.items():
-            #     logging.info(f"Stream ID: {key}", color="cyan")
-            #     if hasattr(value, 'data'):
-            #         logging.info(f"Cache Data: {value.data}", color="cyan")
-            #     else:
-            #         logging.info(f"Cache Data: {value}", color="cyan")
-
-            # Serialize the payload using the custom encoder
             json_data = json.dumps(payload, cls=StreamIdEncoder)
 
-            # Send the request
             response = requests.post(
                 f"{server_url}/update_peer",
                 headers={'Content-Type': 'application/json'},
@@ -289,120 +352,6 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.error(f"Error updating peer data: {str(e)}")
             return None
         
-    def get_peer_data(self):
-        """
-        Retrieve cache data from the server based on publications.
-        
-        Returns:
-            dict: Dictionary mapping stream IDs (as dictionaries) to Cache objects
-                Returns None if the request fails
-        """
-        try:
-            # Prepare the request payload with publications
-            payload = {
-                "peer_id": self.client_id,
-                "publications": [self._encode_stream_id(pub) for pub in self.publications]
-            }
-
-            # Serialize the payload using the custom encoder
-            json_data = json.dumps(payload, cls=StreamIdEncoder)
-
-            # Send the request to get peer data
-            response = requests.post(
-                f"{self.server_url}/get_peer_data",
-                headers={'Content-Type': 'application/json'},
-                data=json_data
-            )
-
-            if response.status_code == 200:
-                # Deserialize the response using the custom decoder
-                raw_data = self._deserialize_stream_data(response.text)
-                
-                if not isinstance(raw_data, dict):
-                    logging.error("Invalid data format received from server")
-                    return None
-
-                # Process and validate the received data
-                processed_data = {}
-                
-                # Filter out system-level keys that shouldn't be treated as stream IDs
-                system_keys = {'cache_data', 'message', 'peer_id', 'request_timestamp', 'status', 'streams_found'}
-                
-                for stream_id_str, cache_data in raw_data.items():
-                    try:
-                        # Skip system-level keys
-                        if stream_id_str in system_keys:
-                            continue
-                            
-                        # Parse the string stream ID back into a dictionary
-                        if isinstance(stream_id_str, str) and '.' in stream_id_str:
-                            parts = stream_id_str.split('.')
-                            if len(parts) == 4:  # Ensure we have all required parts
-                                source, author, stream, target = parts
-                                stream_id = {
-                                    'source': source,
-                                    'author': author,
-                                    'stream': stream,
-                                    'target': target
-                                }
-                            else:
-                                logging.warning(f"Skipping malformed stream ID: {stream_id_str}")
-                                continue
-                        elif isinstance(stream_id_str, dict):
-                            stream_id = stream_id_str
-                        else:
-                            logging.warning(f"Skipping invalid stream ID format: {stream_id_str}")
-                            continue
-
-                        # Validate cache data
-                        if isinstance(cache_data, Cache):
-                            processed_data[json.dumps(stream_id)] = cache_data
-                        elif isinstance(cache_data, dict) and '_type' in cache_data and cache_data['_type'] == 'Cache':
-                            try:
-                                cache_obj = pickle.loads(bytes.fromhex(cache_data['data']))
-                                if isinstance(cache_obj, Cache):
-                                    processed_data[json.dumps(stream_id)] = cache_obj
-                                else:
-                                    logging.warning(f"Invalid cache object for stream {stream_id}")
-                            except Exception as e:
-                                logging.warning(f"Error deserializing cache data for stream {stream_id}: {str(e)}")
-                        else:
-                            logging.warning(f"Skipping invalid cache data format for stream {stream_id}")
-
-                    except Exception as e:
-                        logging.error(f"Error processing stream ID {stream_id_str}: {str(e)}")
-                        continue
-
-                # Log only valid processed data
-                if processed_data:
-                    logging.info("Retrieved the following data from server:", color="cyan")
-                    for stream_id, cache_obj in processed_data.items():
-                        logging.info(f"Stream ID: {stream_id}", color="cyan")
-                        if hasattr(cache_obj, 'data'):
-                            logging.info(f"Cache Data: {cache_obj.data}", color="cyan")
-                        else:
-                            logging.info(f"Cache Data: {cache_obj}", color="cyan")
-
-                    logging.info("Successfully retrieved peer data", color="green")
-                else:
-                    logging.warning("No valid cache data found in server response")
-
-                return processed_data
-
-            else:
-                logging.error(f"Failed to retrieve peer data. Status code: {response.status_code}")
-                return None
-
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Network error retrieving peer data: {str(e)}")
-            return None
-        except json.JSONDecodeError as e:
-            logging.error(f"Error decoding server response: {str(e)}")
-            return None
-        except Exception as e:
-            logging.error(f"Unexpected error retrieving peer data: {str(e)}")
-            return None
-    
     def checkin(self):
         """Perform check-in with server and update peer data"""
         try:
@@ -433,24 +382,17 @@ class PeerEngine(metaclass=SingletonMeta):
                     )
                     if update_result:
                         logging.info("Successfully updated peer cache data after checkin", color="green")
-                        
-                        # After successful update, get peer data
-                        peer_data = self.get_peer_data()
-                        if peer_data is not None:
-                            logging.info("Successfully retrieved updated peer data", color="green")
-                            return peer_data
+                        # Retrieve the updated data to verify
+                        retrieved_data = self.get_peer_data(self.server_url, self.client_id)
+                        if retrieved_data:
+                            logging.info("Successfully retrieved updated peer cache data", color="green")
+                            self.cache_objects = retrieved_data  # Update local cache with retrieved data
                         else:
-                            logging.warning("Failed to retrieve peer data after update", color="yellow")
+                            logging.warning("Failed to retrieve updated peer cache data", color="yellow")
                     else:
                         logging.warning("Failed to update peer cache data after checkin", color="yellow")
-                else:
-                    # If there are no cache objects to update, still get peer data
-                    peer_data = self.get_peer_data()
-                    if peer_data is not None:
-                        logging.info("Successfully retrieved peer data", color="green")
-                        return peer_data
                 
-                # If we reach here, return the original checkin response
+                # Return the original checkin response
                 return self._deserialize_stream_data(response.text)
             
             logging.error(f"Checkin failed with status code: {response.status_code}")
