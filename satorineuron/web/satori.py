@@ -1793,9 +1793,10 @@ def mineToAddress(address: str):
     vault = start.getVault(network=network)
     if vault.isEncrypted:
         return redirect('/vault')
-    success, result = start.server.mineToAddress(
-        vaultSignature=vault.sign(address),
-        vaultPubkey=vault.publicKey,
+    success, result = start.server.setRewardAddress(
+        usingVault=True,
+        signature=vault.sign(address),
+        pubkey=vault.publicKey,
         address=address)
     if success:
         return 'OK', 200
@@ -1856,32 +1857,6 @@ def lendRemove():
 @authRequired
 def lendAddress():
     return str(start.server.lendAddress()), 200
-
-
-@app.route('/mine_to_vault/enable/<network>', methods=['GET'])
-@userInteracted
-@authRequired
-def enableMineToVault(network: str = 'main'):
-    if start.vault is None:
-        flash('Must unlock your vault to enable minetovault.')
-        return redirect('/dashboard')
-    success, result = start.enableMineToVault()
-    if success:
-        return 'OK', 200
-    return f'Failed to enable minetovault: {result}', 400
-
-
-@app.route('/mine_to_vault/disable/<network>', methods=['GET'])
-@userInteracted
-@authRequired
-def disableMineToVault(network: str = 'main'):
-    if start.vault is None:
-        flash('Must unlock your vault to disable minetovault.')
-        return redirect('/dashboard')
-    success, result = start.disableMineToVault()
-    if success:
-        return 'OK', 200
-    return f'Failed to disable minetovault: {result}', 400
 
 
 @app.route('/pool/lend/enable', methods=['GET'])

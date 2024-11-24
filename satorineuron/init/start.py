@@ -106,11 +106,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
         self.miningMode: bool = False
-        self.mineToVault: bool = False
         self.stopAllSubscriptions = threading.Event()
         self.lastBlockTime = time.time()
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
+        self.setupWallets()
         if not config.get().get("disable restart", False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic,
@@ -184,8 +184,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def setupWallets(self):
         self.walletVaultManager = WalletVaultManager(
-            runMode=self.runMode,
-            updateConnectionStatus=self.updateConnectionStatus)
+            updateConnectionStatus=self.updateConnectionStatus,
+            persistent=self.runMode == RunMode.walletOnly)
+        self.walletVaultManager.setup()
 
     def watchForVersionUpdates(self):
         """
@@ -212,7 +213,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
         def terminatePid(pid: int):
             import signal
-
             os.kill(pid, signal.SIGTERM)  # Send SIGTERM to the process
 
         def watchForever():
@@ -223,11 +223,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     terminatePid(getPidByName("satori.py"))
 
         self.watchVersionThread = threading.Thread(
-            target=watchForever, daemon=True)
+            target=watchForever,
+            daemon=True)
         self.watchVersionThread.start()
 
     def userInteracted(self):
         self.userInteraction = time.time()
+        # tell engines or managers the user interacted, incase they care:
         self.walletVaultManager.userInteracted()
 
     def delayedEngine(self):
@@ -264,13 +266,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.ranOnce = True
 
         if self.runMode == RunMode.walletOnly:
-            self.walletVaultManager.openWallet()
-            self.walletVaultManager.openVault()
-            self.walletVaultManager.initializeWalletAndVault()
+            self.walletVaultManager.setupWalletAndVault()
             self.createServerConn()
             logging.info("in WALLETONLYMODE")
             return
-        self.walletVaultManager.initializeWalletAndVault()
+        self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
@@ -292,13 +292,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60 * 60)
         self.ranOnce = True
         if self.walletOnlyMode:
-            self.getWallet()
-            self.getVault()
+            self.walletVaultManager.setupWalletAndVault()
             self.createServerConn()
             return
         # self.setMiningMode()
         # self.createRelayValidation()
-        self.getWallet()
+        self.walletVaultManager.setupWalletAndVault()
         # self.getVault()
         self.createServerConn()
         self.checkin()
@@ -320,8 +319,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.ranOnce:
             time.sleep(60 * 60)
         self.ranOnce = True
-        self.createElectrumxConnection()
-        self.walletVaultManager.initializeWalletAndVault()
+        self.walletVaultManager.setupWalletAndVault()
         self.createServerConn()
 
     def startWorker(self):
@@ -331,8 +329,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.ranOnce:
             time.sleep(60 * 60)
         self.ranOnce = True
-        self.createElectrumxConnection(hostPort="0.0.0.0:50002")
-        self.walletVaultManager.initializeWalletAndVault()
+        self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
@@ -815,32 +812,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.miningMode = miningMode
         config.add(data={"mining mode": self.miningMode})
         return self.miningMode
-
-    def enableMineToVault(self, network: str = "main"):
-        vault = self.getVault(network=network)
-        mineToAddress = vault.address
-        success, result = self.server.enableMineToVault(
-            walletSignature=self.getWallet(network=network).sign(mineToAddress),
-            vaultSignature=vault.sign(mineToAddress),
-            vaultPubkey=vault.publicKey,
-            address=mineToAddress)
-        if success:
-            self.mineToVault = True
-        return success, result
-
-    def disableMineToVault(self, network: str = "main"):
-        vault = self.getVault(network=network)
-        wallet = self.getWallet(network=network)
-        # logging.debug('wallet:', wallet, color="magenta")
-        mineToAddress = wallet.address
-        success, result = self.server.disableMineToVault(
-            walletSignature=wallet.sign(mineToAddress),
-            vaultSignature=vault.sign(mineToAddress),
-            vaultPubkey=vault.publicKey,
-            address=mineToAddress)
-        if success:
-            self.mineToVault = False
-        return success, result
 
     def poolAccepting(self, status: bool):
         success, result = self.server.poolAccepting(status)
