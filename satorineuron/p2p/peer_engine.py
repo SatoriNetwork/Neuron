@@ -1,20 +1,3 @@
-'''
-Installer functionality - (need to integrate p2p wireguard with this layer)
-Neuron functionality - (need to integrate p2p with this layer)
-p2p functionality - connects to server and manages peers
-p2p server - (need upgrade to handle peers keys)
-
-current:complete
-start.py -> checkin() -> get key from server -> pass the key to pubsub -> pubsub interprets the key and knows what datastreams we publish and subscribe to
-
-want:
-start.py -> checkin() -> get key from server -> pass the key to p2p server -> p2p server interprets the key and knows what datastreams we publish and subscribe to (provide peers)
-
-goal: from the neuron we can ask the p2p server for specific datastream connections rather than specific peers
-
-
-'''
-
 import json
 import socket
 import struct
@@ -93,7 +76,6 @@ class PeerEngine(metaclass=SingletonMeta):
         self.connected_peers = set()
         self.running = False
         self.ping_interval = 10
-        self.last_cache_update = {}
     
     def _serialize_stream_data(self, data):
         """Serialize data with custom encoder for StreamId and Cache objects"""
@@ -138,20 +120,6 @@ class PeerEngine(metaclass=SingletonMeta):
         self.start_listening()
         self.start_peer_check_loop()
         self.start_ping_loop(self.ping_interval)
-        self._initialize_caches()
-        cache_data=self.get_cache_for_all_publications()
-        print(json.dumps(cache_data, indent=2))
-
-    def _initialize_caches(self):
-        """Initialize caches for all publications during startup"""
-        try:
-            for publication in self.publications:
-                # Get initial cache data from server
-                response = self.get_cache(publication)
-                if response and response.get("status") == "success":
-                    self.update_cache(publication, response.get("cache", []))
-        except Exception as e:
-            logging.error(f"Error initializing caches: {str(e)}")    
 
     def start_listening(self):
         """Listen for and process new peer connection requests"""
@@ -175,7 +143,6 @@ class PeerEngine(metaclass=SingletonMeta):
     def connect_to_peers(self):
         """Connect to relevant peers based on complementary pub/sub relationships"""
         try:
-            # Get all peers and their stream information
             response = requests.get(f"{self.server_url}/list_peers")
             if response.status_code != 200:
                 raise Exception(f"Failed to get peers: {response.status_code}")
@@ -190,20 +157,17 @@ class PeerEngine(metaclass=SingletonMeta):
 
                 should_connect = False
                 
-                # Check if this peer subscribes to any of our publications
                 for pub in self.publications:
                     if pub in peer.get('subscriptions', []):
                         should_connect = True
                         break
 
-                # Check if this peer publishes any of our subscriptions
                 for sub in self.subscriptions:
                     if sub in peer.get('publications', []):
                         should_connect = True
                         break
 
                 if should_connect:
-                    # Check if peer exists and if its configuration has changed
                     if peer_id in current_peers:
                         existing_peer = current_peers[peer_id]
                         if self._peer_config_changed(existing_peer, peer):
@@ -222,13 +186,10 @@ class PeerEngine(metaclass=SingletonMeta):
         Returns True if there are relevant changes that require reconnection
         """
         try:
-            # Extract relevant configuration from new_peer
             new_config = new_peer.get('wireguard_config', {})
-            # new_endpoint = new_config.get('endpoint')
             new_allowed_ips = new_config.get('allowed_ips')
 
-            # Compare with existing configuration
-            if ( existing_peer.get('allowed_ips') != new_allowed_ips):
+            if existing_peer.get('allowed_ips') != new_allowed_ips:
                 return True
 
             return False
@@ -269,25 +230,184 @@ class PeerEngine(metaclass=SingletonMeta):
         except Exception as e:
             logging.error(f"Error requesting connection to peer {peer_id}: {str(e)}")
             return False
+        
+    @staticmethod
+    def update_peer_data(server_url: str, client_id: str, cache_data: dict):
+        """
+        Upload cache data to the server using the update_peer endpoint
+        
+        Args:
+            server_url (str): The base URL of the peer server
+            client_id (str): The public key of the client
+            cache_data (dict): Dictionary mapping stream IDs to Cache objects
+        """
+        try:
+            # Convert the stream IDs and cache objects into a format suitable for transmission
+            formatted_data = {}
+            for stream_id, cache_obj in cache_data.items():
+                # Convert stream_id dict to a string key
+                if isinstance(stream_id, dict):
+                    key = f"{stream_id['source']}.{stream_id['author']}.{stream_id['stream']}.{stream_id['target']}"
+                else:
+                    key = str(stream_id)
+                
+                formatted_data[key] = cache_obj
+
+            # Prepare the payload
+            payload = {
+                "peer_id": client_id,
+                "cache_data": formatted_data
+            }
+
+            # # Print the data being uploaded
+            # logging.info("Uploading the following data to server:", color="cyan")
+            # for key, value in formatted_data.items():
+            #     logging.info(f"Stream ID: {key}", color="cyan")
+            #     if hasattr(value, 'data'):
+            #         logging.info(f"Cache Data: {value.data}", color="cyan")
+            #     else:
+            #         logging.info(f"Cache Data: {value}", color="cyan")
+
+            # Serialize the payload using the custom encoder
+            json_data = json.dumps(payload, cls=StreamIdEncoder)
+
+            # Send the request
+            response = requests.post(
+                f"{server_url}/update_peer",
+                headers={'Content-Type': 'application/json'},
+                data=json_data
+            )
+
+            if response.status_code == 200:
+                logging.info("Successfully updated peer data", color="green")
+                return response.json()
+            else:
+                logging.error(f"Failed to update peer data. Status code: {response.status_code}")
+                return None
+
+        except Exception as e:
+            logging.error(f"Error updating peer data: {str(e)}")
+            return None
+        
+    def get_peer_data(self):
+        """
+        Retrieve cache data from the server based on publications.
+        
+        Returns:
+            dict: Dictionary mapping stream IDs (as dictionaries) to Cache objects
+                Returns None if the request fails
+        """
+        try:
+            # Prepare the request payload with publications
+            payload = {
+                "peer_id": self.client_id,
+                "publications": [self._encode_stream_id(pub) for pub in self.publications]
+            }
+
+            # Serialize the payload using the custom encoder
+            json_data = json.dumps(payload, cls=StreamIdEncoder)
+
+            # Send the request to get peer data
+            response = requests.post(
+                f"{self.server_url}/get_peer_data",
+                headers={'Content-Type': 'application/json'},
+                data=json_data
+            )
+
+            if response.status_code == 200:
+                # Deserialize the response using the custom decoder
+                raw_data = self._deserialize_stream_data(response.text)
+                
+                if not isinstance(raw_data, dict):
+                    logging.error("Invalid data format received from server")
+                    return None
+
+                # Process and validate the received data
+                processed_data = {}
+                
+                # Filter out system-level keys that shouldn't be treated as stream IDs
+                system_keys = {'cache_data', 'message', 'peer_id', 'request_timestamp', 'status', 'streams_found'}
+                
+                for stream_id_str, cache_data in raw_data.items():
+                    try:
+                        # Skip system-level keys
+                        if stream_id_str in system_keys:
+                            continue
+                            
+                        # Parse the string stream ID back into a dictionary
+                        if isinstance(stream_id_str, str) and '.' in stream_id_str:
+                            parts = stream_id_str.split('.')
+                            if len(parts) == 4:  # Ensure we have all required parts
+                                source, author, stream, target = parts
+                                stream_id = {
+                                    'source': source,
+                                    'author': author,
+                                    'stream': stream,
+                                    'target': target
+                                }
+                            else:
+                                logging.warning(f"Skipping malformed stream ID: {stream_id_str}")
+                                continue
+                        elif isinstance(stream_id_str, dict):
+                            stream_id = stream_id_str
+                        else:
+                            logging.warning(f"Skipping invalid stream ID format: {stream_id_str}")
+                            continue
+
+                        # Validate cache data
+                        if isinstance(cache_data, Cache):
+                            processed_data[json.dumps(stream_id)] = cache_data
+                        elif isinstance(cache_data, dict) and '_type' in cache_data and cache_data['_type'] == 'Cache':
+                            try:
+                                cache_obj = pickle.loads(bytes.fromhex(cache_data['data']))
+                                if isinstance(cache_obj, Cache):
+                                    processed_data[json.dumps(stream_id)] = cache_obj
+                                else:
+                                    logging.warning(f"Invalid cache object for stream {stream_id}")
+                            except Exception as e:
+                                logging.warning(f"Error deserializing cache data for stream {stream_id}: {str(e)}")
+                        else:
+                            logging.warning(f"Skipping invalid cache data format for stream {stream_id}")
+
+                    except Exception as e:
+                        logging.error(f"Error processing stream ID {stream_id_str}: {str(e)}")
+                        continue
+
+                # Log only valid processed data
+                if processed_data:
+                    logging.info("Retrieved the following data from server:", color="cyan")
+                    for stream_id, cache_obj in processed_data.items():
+                        logging.info(f"Stream ID: {stream_id}", color="cyan")
+                        if hasattr(cache_obj, 'data'):
+                            logging.info(f"Cache Data: {cache_obj.data}", color="cyan")
+                        else:
+                            logging.info(f"Cache Data: {cache_obj}", color="cyan")
+
+                    logging.info("Successfully retrieved peer data", color="green")
+                else:
+                    logging.warning("No valid cache data found in server response")
+
+                return processed_data
+
+            else:
+                logging.error(f"Failed to retrieve peer data. Status code: {response.status_code}")
+                return None
+
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Network error retrieving peer data: {str(e)}")
+            return None
+        except json.JSONDecodeError as e:
+            logging.error(f"Error decoding server response: {str(e)}")
+            return None
+        except Exception as e:
+            logging.error(f"Unexpected error retrieving peer data: {str(e)}")
+            return None
     
     def checkin(self):
-        """Perform check-in with server, including Cache objects"""
+        """Perform check-in with server and update peer data"""
         try:
             wg_info = self.my_info.get_wireguard_info()
             self.wireguard_config["wireguard_config"] = wg_info
-            
-            # Prepare cache payload using proper serialization
-            cache_payload = {
-                self._encode_stream_id(stream_id): {
-                    'cache_object': cache_obj,
-                    'timestamp': self.last_cache_update.get(stream_id, time.time())
-                }
-                for stream_id, cache_obj in self.cache_objects.items()
-            }
-            
-            # Log the cache payload for debugging
-            print("Cache payload being sent to the server:")
-            # print(json.dumps(cache_payload, indent=2, cls=StreamIdEncoder))  # Use custom encoder
             
             # Serialize data with custom encoder
             json_data = json.dumps({
@@ -295,8 +415,7 @@ class PeerEngine(metaclass=SingletonMeta):
                 "wireguard_config": self.wireguard_config["wireguard_config"],
                 "publications": [self._encode_stream_id(pub) for pub in self.publications],
                 "subscriptions": [self._encode_stream_id(sub) for sub in self.subscriptions],
-                "caches": cache_payload
-            }, cls=StreamIdEncoder)  # Apply the custom encoder here
+            }, cls=StreamIdEncoder)
             
             response = requests.post(
                 f"{self.server_url}/checkin",
@@ -305,7 +424,33 @@ class PeerEngine(metaclass=SingletonMeta):
             )
             
             if response.status_code == 200:
-                # Deserialize response with custom decoder
+                # After successful checkin, update peer data
+                if self.cache_objects:
+                    update_result = self.update_peer_data(
+                        self.server_url,
+                        self.client_id,
+                        self.cache_objects
+                    )
+                    if update_result:
+                        logging.info("Successfully updated peer cache data after checkin", color="green")
+                        
+                        # After successful update, get peer data
+                        peer_data = self.get_peer_data()
+                        if peer_data is not None:
+                            logging.info("Successfully retrieved updated peer data", color="green")
+                            return peer_data
+                        else:
+                            logging.warning("Failed to retrieve peer data after update", color="yellow")
+                    else:
+                        logging.warning("Failed to update peer cache data after checkin", color="yellow")
+                else:
+                    # If there are no cache objects to update, still get peer data
+                    peer_data = self.get_peer_data()
+                    if peer_data is not None:
+                        logging.info("Successfully retrieved peer data", color="green")
+                        return peer_data
+                
+                # If we reach here, return the original checkin response
                 return self._deserialize_stream_data(response.text)
             
             logging.error(f"Checkin failed with status code: {response.status_code}")
@@ -316,102 +461,12 @@ class PeerEngine(metaclass=SingletonMeta):
             return None
 
         
-    def handle_new_data(self, stream_id: str, data: any):
-        """Handle new data received for a stream"""
-        try:
-            # Update cache with new data
-            self.update_cache(stream_id, data)
-            
-            # Additional data handling logic here...
-            
-        except Exception as e:
-            logging.error(f"Error handling new data for stream {stream_id}: {str(e)}") 
-
-    def sync_history_with_server(self):
-        """Sync local history with server periodically"""
-        try:
-            current_time = time.time()
-            
-            # Only sync caches that have been updated recently
-            for stream_id in self.publications:
-                last_update = self.last_cache_update.get(stream_id, 0)
-                if current_time - last_update < 1800:  # 30 minutes
-                    cache_data = self.local_cache.get(stream_id, [])
-                    self._sync_cache_with_server(stream_id, cache_data)
-                    
-        except Exception as e:
-            logging.error(f"History sync failed: {str(e)}")
-
-    def update_cache(self, stream_id: str, cache_obj: Cache):
-        """Update cache with a Cache object for a specific stream"""
-        try:
-            encoded_stream_id = self._encode_stream_id(stream_id)
-            current_time = time.time()
-            
-            self.cache_objects[encoded_stream_id] = cache_obj
-            self.last_cache_update[encoded_stream_id] = current_time
-            
-            # Sync with server using proper serialization
-            json_data = self._serialize_stream_data({
-                "peer_id": self.client_id,
-                "stream_id": stream_id,
-                "cache": cache_obj
-            })
-            
-            response = requests.post(
-                f"{self.server_url}/update_cache",
-                headers={'Content-Type': 'application/json'},
-                data=json_data
-            )
-            
-            if response.status_code != 200:
-                logging.error(f"Failed to sync cache with server: {response.status_code}")
-                
-        except Exception as e:
-            logging.error(f"Error updating cache for stream {stream_id}: {str(e)}")
-            raise
-    
-    def _sync_cache_with_server(self, stream_id: str, cache_obj: Cache):
-        """
-        Sync Cache object with server
-        
-        Args:
-            stream_id (str): The stream identifier (can be StreamId object or string)
-            cache_obj (Cache): The Cache object to sync
-        """
-        try:
-            # Use the new serialization helper which handles both StreamId and Cache objects
-            json_data = self._serialize_stream_data({
-                "peer_id": self.client_id,
-                "stream_id": stream_id,  # Will be properly encoded by StreamIdEncoder
-                "cache": cache_obj       # Will be properly encoded by StreamIdEncoder
-            })
-            
-            response = requests.post(
-                f"{self.server_url}/update_cache",
-                headers={'Content-Type': 'application/json'},
-                data=json_data
-            )
-            
-            if response.status_code == 200:
-                encoded_stream_id = self._encode_stream_id(stream_id)
-                logging.debug(f"Successfully synced cache object for stream {encoded_stream_id}")
-            else:
-                logging.error(f"Failed to sync cache with server: {response.status_code}")
-                if response.text:
-                    logging.error(f"Server response: {response.text}")
-                    
-        except Exception as e:
-            logging.error(f"Error syncing cache with server: {str(e)}")
-            raise  # Propagate the error to be handled by the caller
-    
     def start_background_tasks(self):
         """Start background tasks for maintenance and updates"""
         self.running = True
 
         def background_loop():
             while self.running:
-                self.sync_history_with_server()
                 self.checkin()
                 self.connect_to_peers()
                 time.sleep(1800)  # 30 minutes interval 
@@ -459,8 +514,6 @@ class PeerEngine(metaclass=SingletonMeta):
 
     def run_ping_command(self, ip: str):
         """Execute ping command to check peer connectivity"""
-        # try:
-            # Initial ping attempt
         result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
                             capture_output=True, text=True)
         if result.returncode == 0:
@@ -473,89 +526,6 @@ class PeerEngine(metaclass=SingletonMeta):
         if result.returncode == 0:
             logging.info(f"Ping to {ip} successful", color="blue")
             return
-        
-    def _encode_stream_id(self, stream_id):
-        """
-        Safely encode stream ID for URL transmission without double encoding.
-        Returns the JSON string directly for requests params to handle.
-        """
-        try:
-            if isinstance(stream_id, dict):
-                return json.dumps(stream_id)
-            return str(stream_id)
-        except Exception as e:
-            logging.error(f"Error encoding stream ID: {str(e)}")
-            raise
-
-    def get_cache(self, stream_id: str):
-        """Retrieve Cache object for a specific stream"""
-        try:
-            encoded_stream_id = self._encode_stream_id(stream_id)
-            
-            if encoded_stream_id in self.cache_objects:
-                last_update = self.last_cache_update.get(encoded_stream_id, 0)
-                if time.time() - last_update < 1800:  # 30 minutes
-                    return self.cache_objects[encoded_stream_id]
-            
-            try:
-                response = requests.get(
-                    f"{self.server_url}/get_cache",
-                    params={"stream_id": encoded_stream_id},
-                    timeout=10
-                )
-                
-                if response.status_code == 200:
-                    data = self._deserialize_stream_data(response.text)
-                    if isinstance(data, dict) and 'cache' in data:
-                        cache_obj = data['cache']
-                        if isinstance(cache_obj, Cache):
-                            self.update_cache(stream_id, cache_obj)
-                            return cache_obj
-                
-            except requests.exceptions.RequestException as e:
-                logging.error(f"Server request failed for stream {encoded_stream_id}: {str(e)}")
-                if encoded_stream_id in self.cache_objects:
-                    return self.cache_objects[encoded_stream_id]
-                
-        except Exception as e:
-            logging.error(f"Error in get_cache for stream {stream_id}: {str(e)}")
-        
-        return None
-
-    def get_cache_for_all_publications(self) -> Dict[str, Cache]:
-        """
-        Fetch Cache objects from the server for all publications.
-        
-        Returns:
-            Dict[str, Cache]: Dictionary mapping publication IDs to their Cache objects
-        """
-        if not self.publications:
-            logging.info("No publications available to fetch cache for.")
-            return {}
-
-        all_cache_objects = {}
-        failed_publications = []
-
-        for publication in self.publications:
-            try:
-                logging.debug(f"Attempting to fetch cache for publication: {publication}")
-                cache_obj = self.get_cache(publication)
-                
-                if cache_obj is not None:
-                    all_cache_objects[publication] = cache_obj
-                    logging.debug(f"Successfully fetched cache for {publication}")
-                else:
-                    logging.info(f"No cache data available for {publication}")
-                    
-            except Exception as e:
-                failed_publications.append(publication)
-                logging.error(f"Error processing publication {publication}: {str(e)}")
-
-        if failed_publications:
-            logging.warning(f"Failed publications: {', '.join(str(p) for p in failed_publications)}")
-        
-        logging.info(f"Successfully fetched cache for {len(all_cache_objects)} publications")
-        return all_cache_objects
         
     def stop(self):
         """Stop the PeerEngine and cleanup"""

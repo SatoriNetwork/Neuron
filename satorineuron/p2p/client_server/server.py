@@ -1,5 +1,5 @@
 # list peer
-# curl http://188.166.4.120:51820/peers
+# curl http://188.166.4.120:51820/list_peers
 
 # checkin
 # curl -X POST http://188.166.4.120:51820/checkin -H "Content-Type: application/json" -d '{"peer_id": "peer1"}'
