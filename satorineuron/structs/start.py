@@ -153,12 +153,6 @@ class StartupDagStruct(object):
     ) -> Union[EvrmoreWallet, RavencoinWallet]:
         ''' get the ravencoin vault '''
 
-    def openWallet(self, network: Union[str, None] = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        ''' get the ravencoin vault '''
-
-    def openWallet(self, network: str = None):
-        ''' opens the local wallet. '''
-
     def checkin(self):
         ''' checks in with the Satori Server '''
 
