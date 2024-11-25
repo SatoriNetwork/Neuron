@@ -133,6 +133,7 @@ class PeerEngine(metaclass=SingletonMeta):
         self.peerManager.start(self.ip_address)
         wg_info = self.my_info.get_wireguard_info()
         self.client_id = wg_info['public_key']
+        self.start_cache_server()
         # print(self.cache_objects)
         self.start_background_tasks()
         self.start_listening()
@@ -454,19 +455,144 @@ class PeerEngine(metaclass=SingletonMeta):
 
         threading.Thread(target=check_peers, daemon=True).start()
 
+    # def run_ping_command(self, ip: str):
+    #     """Execute ping command to check peer connectivity"""
+    #     result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
+    #                         capture_output=True, text=True)
+    #     if result.returncode == 0:
+    #         logging.debug(f"Ping to {ip} successful", color="blue")
+    #         return
+    #     subprocess.run(f"wg-quick down {self.interface}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    #     subprocess.run(f"wg-quick up {self.interface}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    #     result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
+    #                         capture_output=True, text=True)
+    #     if result.returncode == 0:
+    #         logging.info(f"Ping to {ip} successful", color="blue")
+    #         return
+    def send_cache_to_peer(self, peer_ip: str, cache_data: dict):
+        """Send cache data to a connected peer over TCP"""
+        try:
+            # Use a high port number that's unlikely to be in use
+            PORT = 51821
+            
+            # Create a TCP socket
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(5)  # Set timeout for connection attempts
+                
+                try:
+                    sock.connect((peer_ip, PORT))
+                    
+                    # Serialize the cache data
+                    serialized_data = self._serialize_stream_data(cache_data)
+                    
+                    # Send data size first (as 4 bytes)
+                    data_size = len(serialized_data)
+                    sock.sendall(struct.pack('!I', data_size))
+                    
+                    # Send the actual data
+                    sock.sendall(serialized_data.encode())
+                    
+                    # Wait for acknowledgment
+                    ack = sock.recv(2)
+                    if ack == b'OK':
+                        logging.info(f"Successfully sent cache data to peer {peer_ip}", color="green")
+                        return True
+                    else:
+                        logging.error(f"Failed to get acknowledgment from peer {peer_ip}")
+                        return False
+                        
+                except ConnectionRefusedError:
+                    logging.error(f"Connection refused by peer {peer_ip}")
+                    return False
+                except socket.timeout:
+                    logging.error(f"Connection timeout to peer {peer_ip}")
+                    return False
+                    
+        except Exception as e:
+            logging.error(f"Error sending cache to peer {peer_ip}: {str(e)}")
+            return False
+
+    def start_cache_server(self):
+        """Start a server to receive cache data from peers"""
+        def handle_client(client_socket, client_address):
+            try:
+                # Receive data size first
+                size_data = client_socket.recv(4)
+                if not size_data:
+                    return
+                
+                data_size = struct.unpack('!I', size_data)[0]
+                
+                # Receive the actual data
+                received_data = b''
+                while len(received_data) < data_size:
+                    chunk = client_socket.recv(min(4096, data_size - len(received_data)))
+                    if not chunk:
+                        break
+                    received_data += chunk
+                
+                if len(received_data) == data_size:
+                    # Deserialize and process the received data
+                    received_cache = self._deserialize_stream_data(received_data.decode())
+                    
+                    # Update local cache with received data
+                    self.cache_objects.update(received_cache)
+                    
+                    # Send acknowledgment
+                    client_socket.sendall(b'OK')
+                    logging.info(f"Received and processed cache data from {client_address[0]}", color="green")
+                
+            except Exception as e:
+                logging.error(f"Error handling client {client_address}: {str(e)}")
+            finally:
+                client_socket.close()
+
+        def server_loop():
+            server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            PORT = 51821
+            
+            try:
+                server.bind(('0.0.0.0', PORT))
+                server.listen(5)
+                logging.info(f"Cache server listening on port {PORT}", color="green")
+                
+                while self.running:
+                    try:
+                        client_socket, client_address = server.accept()
+                        threading.Thread(target=handle_client, 
+                                    args=(client_socket, client_address),
+                                    daemon=True).start()
+                    except socket.timeout:
+                        continue
+                    
+            except Exception as e:
+                logging.error(f"Server error: {str(e)}")
+            finally:
+                server.close()
+        
+        threading.Thread(target=server_loop, daemon=True).start()
+
     def run_ping_command(self, ip: str):
-        """Execute ping command to check peer connectivity"""
+        """Execute ping command to check peer connectivity and send cache data if successful"""
         result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
                             capture_output=True, text=True)
         if result.returncode == 0:
             logging.debug(f"Ping to {ip} successful", color="blue")
+            # Send cache data after successful ping
+            if self.cache_objects:
+                self.send_cache_to_peer(ip, self.cache_objects)
             return
+            
         subprocess.run(f"wg-quick down {self.interface}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(f"wg-quick up {self.interface}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
                             capture_output=True, text=True)
         if result.returncode == 0:
             logging.info(f"Ping to {ip} successful", color="blue")
+            # Send cache data after successful ping
+            if self.cache_objects:
+                self.send_cache_to_peer(ip, self.cache_objects)
             return
         
     def stop(self):
