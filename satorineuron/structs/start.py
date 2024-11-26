@@ -14,7 +14,7 @@ from satorilib.asynchronous import AsyncThread
 class RunMode(Enum):
     normal = 1
     worker = 2
-    walletOnly = 3
+    wallet = 3
 
     @classmethod
     def choose(cls, runMode):
@@ -32,10 +32,9 @@ class RunMode(Enum):
             2: cls.worker,
             '2': cls.worker,
             'worker': cls.worker,
-            3: cls.walletOnly,
-            '3': cls.walletOnly,
-            'wallet': cls.walletOnly,
-            'walletonly': cls.walletOnly,
+            3: cls.wallet,
+            '3': cls.wallet,
+            'wallet': cls.wallet,
         }
         # Return the corresponding Enum value
         return mapping.get(runMode, cls.normal)
@@ -96,7 +95,7 @@ class StartupDagStruct(object):
         ''' returns the reference to the cache of a stream '''
 
     @property
-    def walletOnlyMode(self) -> bool:
+    def walletMode(self) -> bool:
         ''' get wallet '''
 
     @property

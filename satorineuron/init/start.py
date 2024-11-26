@@ -143,7 +143,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             startFunction = self.start
         elif self.runMode == RunMode.worker:
             startFunction = self.startWorker
-        elif self.runMode == RunMode.walletOnly:
+        elif self.runMode == RunMode.wallet:
             startFunction = self.startWalletOnly
         while True:
             if self.asyncThread.loop is not None:
@@ -248,7 +248,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def walletOnlyMode(self) -> bool:
-        return self.runMode == RunMode.walletOnly
+        return self.runMode == RunMode.wallet
 
     @property
     def rewardAddress(self) -> str:
@@ -526,7 +526,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60*60)
         self.ranOnce = True
         self.setupElectrumxConnection()
-        if self.runMode == RunMode.walletOnly:
+        if self.runMode == RunMode.wallet:
             self.initializeWalletAndVault()
             self.createServerConn()
             logging.info('in WALLETONLYMODE')
