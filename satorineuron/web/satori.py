@@ -98,7 +98,7 @@ while True:
                 'prod': 'https://stage.satorinet.io'}[ENV],
             # 'prod': 'https://central.satorinet.io'}[ENV],
             # 'prod': 'http://24.199.113.168'}[ENV], # c
-            # 'prod': 'http://137.184.38.160'}[ENV],  # n
+            #'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
                 'local': 'https://mundo.satorinet.io',
@@ -1860,7 +1860,6 @@ def vote():
             return 0
         else:
             return data
-
     def getVotes(wallet):
         # def valuesAsNumbers(map: dict):
         #    return {k: int(v) for k, v in map.items()}
@@ -1928,7 +1927,6 @@ def vote():
         'streams': getStreams(myWallet),
         **getVotes(myWallet)}))
 
-
 @app.route('/streams', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
@@ -1948,6 +1946,7 @@ def streams():
         'vault': start.vault,
         'darkmode': darkmode,
         'streams': oracleStreams[0:100],
+        'totalStreams': len(oracleStreams),
         'allStreams': oracleStreams}))
 
 
@@ -1968,6 +1967,20 @@ def removeVote():
     message = start.server.removeVote(streamId=streamId)
     return jsonify({'message': message}), 200
 
+@app.route('/get_observations', methods=['POST'])
+@userInteracted
+@authRequired
+def getObservations():
+    streamId = request.json.get('streamId', "")
+    observations = start.server.getObservations(streamId=streamId)  # Fetch observations from your data source
+    return jsonify({'observations': observations}), 200
+
+@app.route('/get_predictions_observations', methods=['POST'])
+@userInteracted
+@authRequired
+def getPredictionsObservations():
+    observations = start.server.getPredictionsObservations()  # Fetch all predictions observations from your data source
+    return jsonify({'observations': observations}), 200
 
 @app.route('/proposals', methods=['GET'])
 @userInteracted
