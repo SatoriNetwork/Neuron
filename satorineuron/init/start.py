@@ -845,9 +845,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.peerEngine = PeerEngine(
             # subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
             # publications=[pub.streamId.topic() for pub in self.publications],
-            subscriptions=['A', 'B', 'C'],
-            publications=['X', 'Y', 'Z'],
-            caches=self.caches,
+            # subscriptions=['A', 'B', 'C'],
+            # publications=['X', 'Y', 'Z'],
+            subscriptions=["{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}"],
+            publications=["{'source': 'satori', 'author': '03c651078d3f07b18b2ab2a776c9d2914f89b1a4ce6159cba017792f5638bcc67e', 'stream': 'ETNX-LTCPrice10Minutes', 'target': 'price'}"],
+            # caches=self.caches,
+            caches ={"{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}": "<satorilib.api.disk.cache.Cache object at 0x7f9790516f80>", "{'source': 'satori', 'author': '0335786467a222b619103295d9bf25a203092e997801b1c08892bc1fa616cd9f0d', 'stream': 'COINBASE.USD.ABT', 'target': 'data.rates.ABT'}": "<satorilib.api.disk.cache.Cache object at 0x7f97905165f0>"
+                     }
             #key=signature.decode() + '|' + self.key,
         )
         self.peerEngine.start()

@@ -215,6 +215,49 @@ class PeerServer:
         self.app.route('/connect_datastream', methods=['POST'])(self.connect_datastream)
         self.app.route('/update_peer', methods=['POST'])(self.update_peer)
         self.app.route('/get_peer_data', methods=['GET'])(self.get_peer_data)
+        self.app.route('/peer_subscriptions', methods=['GET'])(self.get_peer_subscriptions)
+
+    def get_peer_subscriptions(self):
+        """Retrieve subscriptions for a specific peer."""
+        try:
+            peer_id = request.args.get('peer_id')
+            if not peer_id:
+                return jsonify({
+                    "status": "error",
+                    "message": "peer_id is required"
+                }), 400
+
+            conn = sqlite3.connect('peers.db')
+            cursor = conn.cursor()
+            try:
+                # Query subscriptions for the peer
+                cursor.execute('''
+                    SELECT stream
+                    FROM subscriptions
+                    WHERE peer_id = ?
+                ''', (peer_id,))
+                subscriptions = [row[0] for row in cursor.fetchall()]
+
+                return jsonify({
+                    "status": "success",
+                    "peer_id": peer_id,
+                    "subscriptions": subscriptions
+                })
+
+            except sqlite3.Error as e:
+                return jsonify({
+                    "status": "error",
+                    "message": f"Database error: {str(e)}"
+                }), 500
+            finally:
+                conn.close()
+
+        except Exception as e:
+            return jsonify({
+                "status": "error",
+                "message": f"Request processing error: {str(e)}"
+            }), 500
+
 
     def get_peer_data(self):
         """Handle requests to get peer cache data"""
