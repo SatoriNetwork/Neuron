@@ -137,8 +137,8 @@
           <thead>
             <tr>
               <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #800080">Real-World Value</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #8B8000">Avg Prediction</th>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
             </tr>
           </thead>
           <tbody id="observationsBody">
@@ -529,18 +529,22 @@
         {
           label: 'Real World Data',
           data: [],
-          borderColor: '#800080',
-          borderWidth: 2,
-          pointBackgroundColor: '#800080',
+          borderColor: '#533549',
+          borderWidth: 1,
+          pointBackgroundColor: '#533549',
+          pointRadius: 1.2,
           fill: false,
+          tension: .5,
         },
         {
           label: 'Predictions Data',
           data: [],
-          borderColor: '#8B8000',
-          borderWidth: 2,
-          pointBackgroundColor: '#8B8000',
+          borderColor: '#f6b042',
+          borderWidth: 1,
+          pointBackgroundColor: '#f6b042',
+          pointRadius: 1.2,
           fill: false,
+          tension: .5,
         },
       ],
     };
@@ -609,7 +613,13 @@
       const endIndex = Math.min(currentIndex + chunkSize, totalPoints);
       observationsChart.data.labels.push(...combinedTimes.slice(currentIndex, endIndex));
       observationsChart.data.datasets[0].data.push(...observationValues.slice(currentIndex, endIndex));
-      observationsChart.data.datasets[1].data.push(...predictionValues.slice(currentIndex, endIndex));
+      const realLow = Math.min(observationValues)*.8;
+      const realHigh = Math.max(observationValues)*1.25;
+      observationsChart.data.datasets[1].data.push(
+        ...predictionValues.slice(currentIndex, endIndex).map(value =>
+          value === 0 || value < realLow || value > realHigh ? null : value
+        )
+      );
       observationsChart.update();
 
       currentIndex += chunkSize;
