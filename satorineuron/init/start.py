@@ -188,6 +188,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             persistent=self.runMode == RunMode.walletOnly)
         self.walletVaultManager.setup()
 
+    def closeVault(self):
+        self.walletVaultManager.closeVault()
+
+    def electrumxCheck(self):
+        self.walletVaultManager.electrumxCheck()
+
     def watchForVersionUpdates(self):
         """
         if we notice the code version has updated, download code restart
@@ -272,6 +278,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
+        self.setEngineVersion()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
@@ -296,6 +303,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.createServerConn()
             return
         # self.setMiningMode()
+        # self.setEngineVersion()
         # self.createRelayValidation()
         self.walletVaultManager.setupWalletAndVault()
         # self.getVault()
@@ -331,6 +339,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.ranOnce = True
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
+        self.setEngineVersion()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
@@ -564,21 +573,21 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             streamDisplayer(subscription)
             for subscription in self.subscriptions]
 
+
         self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
+            run=self.engineVersion == 'v1',
             subscriptions=self.subscriptions,
             publications=self.publications)
         self.engine.run()
         # else:
         #    logging.warning('Running in Local Mode.', color='green')
-
-        #self.aiengine: satoriengine.framework.engine.Engine = (
-        #    satoriengine.framework.engine.Engine(
-        #        streams=self.subscriptions, pubstreams=self.publications
-        #    )
-        #)
-        #self.aiengine.prediction_produced.subscribe(
-        #    lambda x: handleNewPrediction(x) if x is not None else None
-        #)
+        if self.engineVersion == 'v2':
+            self.aiengine: satoriengine.framework.engine.Engine = (
+                satoriengine.framework.engine.Engine(
+                    streams=self.subscriptions, pubstreams=self.publications)
+            )
+            self.aiengine.prediction_produced.subscribe(
+                lambda x: handleNewPrediction(x) if x is not None else None)
 
     def subConnect(self):
         """establish a random pubsub connection used only for subscribing"""
@@ -808,10 +817,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         miningMode = (
             miningMode
             if isinstance(miningMode, bool)
-            else config.get().get("mining mode", True))
+            else config.get().get('mining mode', True))
         self.miningMode = miningMode
-        config.add(data={"mining mode": self.miningMode})
+        config.add(data={'mining mode': self.miningMode})
         return self.miningMode
+
+    def setEngineVersion(self, version: Union[str, None] = None) -> str:
+        version = (
+            version
+            if version in ['v1', 'v2']
+            else config.get().get('engine version', 'v1'))
+        self.engineVersion = version if version in ['v1', 'v2'] else 'v1'
+        config.add(data={'engine version': self.engineVersion})
+        return self.engineVersion
 
     def poolAccepting(self, status: bool):
         success, result = self.server.poolAccepting(status)

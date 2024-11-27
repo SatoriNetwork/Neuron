@@ -712,6 +712,13 @@ def miningModeOff():
     return str(start.setMiningMode(False)), 200
 
 
+@app.route('/engine/version/<version>', methods=['GET'])
+@userInteracted
+@authRequired
+def engineVersion(version: str = 'v1'):
+    return str(start.setEngineVersion(version)), 200
+
+
 @app.route('/delegate/get', methods=['GET'])
 @userInteracted
 @authRequired
@@ -1186,6 +1193,7 @@ def dashboard():
         'stakeRequired': constants.stakeRequired,
         'holdingBalance': holdingBalance,
         'streamOverviews': streamOverviews,
+        'engineVersion': start.engineVersion,
         'configOverrides': config.get(),
         'paused': start.paused,
         'newRelayStream': present_stream_form(),
