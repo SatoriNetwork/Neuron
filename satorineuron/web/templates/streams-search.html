@@ -540,9 +540,9 @@
           label: 'Predictions Data',
           data: [],
           borderColor: '#f6b042',
-          borderWidth: 1,
+          borderWidth: 1.8,
           pointBackgroundColor: '#f6b042',
-          pointRadius: 1.2,
+          pointRadius: 2,
           fill: false,
           tension: .5,
         },
@@ -732,7 +732,7 @@
           parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
           showLineBarGraph(graphCanvas, parsedObservations);
 
-          parsedObservations.forEach(observation => {
+          parsedObservations.reverse().forEach(observation => {
             const row = document.createElement('tr');
             row.innerHTML = `
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
