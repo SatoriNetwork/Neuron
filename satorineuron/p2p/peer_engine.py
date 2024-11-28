@@ -88,8 +88,6 @@ class PeerEngine(metaclass=SingletonMeta):
         self.ip_address = self._get_unique_ip()
         self.connection_queue = Queue()
         self.peerManager = PeerManager(self.interface, self.config_file, self.port)
-        # self.publications = publications or []
-        # self.subscriptions = subscriptions or []
         self.publications = [dict_to_stream_key(pub) for pub in (publications or [])]
         self.subscriptions = [dict_to_stream_key(sub) for sub in (subscriptions or [])]
         self.cache_objects: Dict[str, Cache] = caches or {}  # Store Cache objects
@@ -136,7 +134,9 @@ class PeerEngine(metaclass=SingletonMeta):
         wg_info = self.my_info.get_wireguard_info()
         self.client_id = wg_info['public_key']
         self.start_cache_server()
-        # print(self.cache_objects)
+        # print(type(self.publications))
+        # print(type(self.subscriptions))
+        # print(type(self.cache_objects))
         self.start_background_tasks()
         self.start_listening()
         self.start_peer_check_loop()
@@ -161,45 +161,6 @@ class PeerEngine(metaclass=SingletonMeta):
 
         threading.Thread(target=listen_loop, daemon=True).start()
 
-    # def connect_to_peers(self):
-    #     """Connect to relevant peers based on complementary pub/sub relationships"""
-    #     try:
-    #         response = requests.get(f"{self.server_url}/list_peers")
-    #         if response.status_code != 200:
-    #             raise Exception(f"Failed to get peers: {response.status_code}")
-            
-    #         peers = response.json()['peers']
-    #         current_peers = {peer['public_key']: peer for peer in self.peerManager.list_peers()}
-            
-    #         for peer in peers:
-    #             peer_id = peer['peer_id']
-    #             if peer_id == self.client_id:
-    #                 continue
-
-    #             should_connect = False
-                
-    #             for pub in self.publications:
-    #                 if pub in peer.get('subscriptions', []):
-    #                     should_connect = True
-    #                     break
-
-    #             for sub in self.subscriptions:
-    #                 if sub in peer.get('publications', []):
-    #                     should_connect = True
-    #                     break
-
-    #             if should_connect:
-    #                 if peer_id in current_peers:
-    #                     existing_peer = current_peers[peer_id]
-    #                     if self._peer_config_changed(existing_peer, peer):
-    #                         logging.info(f"Peer {peer_id} configuration changed, updating...", color="yellow")
-    #                         self.peerManager.remove_peer(peer_id)
-    #                         self.connected_peers.discard(peer_id)
-    #                         self.request_connection(peer_id)
-    #                 elif peer_id not in self.connected_peers:
-    #                     self.request_connection(peer_id)
-    #     except Exception as e:
-    #         logging.error(f"Error in connect_to_peers: {str(e)}")
     # def connect_to_peers(self):
     #     """Connect to relevant peers based on complementary pub/sub relationships."""
     #     try:
@@ -243,6 +204,7 @@ class PeerEngine(metaclass=SingletonMeta):
     #                                             self.cache_objects, peer_subscriptions)
     #     except Exception as e:
     #         logging.error(f"Error in connect_to_peers: {str(e)}")
+
     def connect_to_peers(self):
         """Connect to relevant peers based on complementary pub/sub relationships."""
         try:
@@ -575,37 +537,33 @@ class PeerEngine(metaclass=SingletonMeta):
 
     def send_cache_to_peer(self, peer_ip: str, cache_data: dict, peer_subscriptions: list[str]):
         """Send filtered cache data to a connected peer over TCP."""
-        try:
-            formatted_subscriptions = [dict_to_stream_key(sub) for sub in peer_subscriptions]
-
-            # Filter cache
-            filtered_cache = {
-                key: value for key, value in cache_data.items()
-                if dict_to_stream_key(stream_key_to_dict(key)) in formatted_subscriptions
-            }
-
-            if not filtered_cache:
-                logging.info(f"No matching cache data for peer {peer_ip}. Subscriptions: {formatted_subscriptions}")
-                return False
-
-            # Transmit over TCP
-            PORT = 51821
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.settimeout(5)
-                sock.connect((peer_ip, PORT))
-
-                serialized_data = self._serialize_stream_data(filtered_cache)
-                data_size = len(serialized_data)
-                sock.sendall(struct.pack('!I', data_size))
-                sock.sendall(serialized_data.encode())
-                ack = sock.recv(2)
-                if ack == b'OK':
-                    logging.info(f"Successfully sent filtered cache data to peer {peer_ip}", color="green")
-                    return True
-                else:
-                    logging.error(f"Failed to get acknowledgment from peer {peer_ip}")
-        except Exception as e:
-            logging.error(f"Error sending cache to peer {peer_ip}: {str(e)}")
+        # try:
+        formatted_subscriptions = [dict_to_stream_key(sub) for sub in peer_subscriptions]
+        # Filter cache
+        filtered_cache = {
+            key: value for key, value in cache_data.items()
+            if dict_to_stream_key(stream_key_to_dict(key)) in formatted_subscriptions
+        }
+        if not filtered_cache:
+            logging.info(f"No matching cache data for peer {peer_ip}. Subscriptions: {formatted_subscriptions}")
+            return False
+        # Transmit over TCP
+        PORT = 51821
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(5)
+            sock.connect((peer_ip, PORT))
+            serialized_data = self._serialize_stream_data(filtered_cache)
+            data_size = len(serialized_data)
+            sock.sendall(struct.pack('!I', data_size))
+            sock.sendall(serialized_data.encode())
+            ack = sock.recv(2)
+            if ack == b'OK':
+                logging.info(f"Successfully sent filtered cache data to peer {peer_ip}", color="green")
+                return True
+            else:
+                logging.error(f"Failed to get acknowledgment from peer {peer_ip}")
+        # except Exception as e:
+        #     logging.error(f"Error sending cache to peer {peer_ip}: {str(e)}")
 
 
 
@@ -632,11 +590,11 @@ class PeerEngine(metaclass=SingletonMeta):
                     # Deserialize and process the received data
                     received_cache = self._deserialize_stream_data(received_data.decode())
                     # Print received data
-                    # print("Received Cache Data:")
-                    # for key, value in received_cache.items():
-                    #     print(f"Stream Key: {key}")
-                    #     print(f"Cache Value: {value}")
-                    #     print("-" * 50)
+                    print("Received Cache Data:")
+                    for key, value in received_cache.items():
+                        print(f"Stream Key: {key}")
+                        print(f"Cache Value: {value}")
+                        print("-" * 50)
                     # Update local cache with received data
                     # self.cache_objects.update(received_cache)
                     

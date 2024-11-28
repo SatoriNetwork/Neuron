@@ -838,25 +838,22 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     key=signature.decode() + '|' + self.oracleKey))
 
     def peerConnect(self):
-        # '''
-        # connects to peers for the purpose of syncing datasets
-        # '''
-        # #signature = self.wallet.sign(self.key)
-        # self.peerEngine = PeerEngine(
-        #     # subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
-        #     # publications=[pub.streamId.topic() for pub in self.publications],
-        #     # subscriptions=['A', 'B', 'C'],
-        #     # publications=['X', 'Y', 'Z'],
-        #     publications=["{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}"],
-        #     subscriptions=["{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'DBGI.USD.10mins_p', 'target': 'results.p'}"],
-        #     # caches=self.caches,
-        #     # caches={'X':"HI",'Y':'TO','Z':'ALL','A':'HELLO','B':'GOOD',"C":'FRIEND'}
-        #     caches ={"{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}": "<satorilib.api.disk.cache.Cache object at 0x7f9790516f80>", "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'DBGI.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x76e61d109cf0>"
-        #              }
-        #     #key=signature.decode() + '|' + self.key,
-        # )
+    #     '''
+    #     connects to peers for the purpose of syncing datasets
+    #     '''
+    #     #signature = self.wallet.sign(self.key)
+    #     self.peerEngine = PeerEngine(
+    #         subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
+    #         publications=[pub.streamId.topic() for pub in self.publications],
+    #         # subscriptions=['A', 'B', 'C'],
+    #         # publications=['X', 'Y', 'Z'],
+    #         caches=self.caches,
+    #         # caches={'X':"HI",'Y':'TO','Z':'ALL','A':'HELLO','B':'GOOD',"C":'FRIEND'}
+    #         
+    #         #key=signature.decode() + '|' + self.key,
+    #     )
         
-        # self.peerEngine.start()
+    #     self.peerEngine.start()
         '''
         connects to peers for the purpose of syncing datasets
         '''
