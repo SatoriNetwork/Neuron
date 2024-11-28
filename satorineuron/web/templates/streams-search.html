@@ -634,7 +634,7 @@
     // Process observations to group by 10-minute intervals
     const intervalsMap = new Map();
     parsedObservations.forEach((obs) => {
-        const roundedTime = roundToTenMinutes(obs.time).toISOString();
+        const roundedTime = roundToTenMinutes(obs.ts).toISOString();
         if (!intervalsMap.has(roundedTime)) {
             intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
         }
@@ -681,18 +681,20 @@
       if (response.ok) {
         const data = await response.json();
         let parsedObservations = JSON.parse(data.observations);
-        // console.log("parsedObservations", parsedObservations)
-        const formattedPredictionData = parsedObservations.map(obs => ({
-          formattedTime: formatDateToShort(obs.ts_start),
-          value: parseFloat(obs.avg),
-          stream_id: obs.stream_id
-        }));
-        const formattedData = parsedObservations.map(obs => ({
-          formattedTime: formatDateToShort(obs.time),
-          value: parseFloat(obs.value),
-          stream_id: obs.stream_id
-        }));
-        console.log("formatted data completed")
+        console.log("parsedObservations", parsedObservations)
+        {/** 
+          const formattedPredictionData = parsedObservations.map(obs => ({
+            formattedTime: formatDateToShort(obs.ts_start),
+            value: parseFloat(obs.avg),
+            stream_id: obs.stream_id
+          }));
+          const formattedData = parsedObservations.map(obs => ({
+            formattedTime: formatDateToShort(obs.ts),
+            value: parseFloat(obs.value),
+            stream_id: obs.stream_id
+          })); 
+          console.log("formatted data completed")
+        */}
 
         observationsBody.innerHTML = '';
 
@@ -719,7 +721,7 @@
           observationTable.style.overflowY = "scroll";
           
           // Render a graph
-          parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
+          parsedObservations.sort((a, b) => new Date(a.ts) - new Date(b.ts));
           showLineBarGraph(graphCanvas, parsedObservations);
 
           parsedObservations.forEach(observation => {
