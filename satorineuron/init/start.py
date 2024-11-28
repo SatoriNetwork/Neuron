@@ -838,21 +838,73 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     key=signature.decode() + '|' + self.oracleKey))
 
     def peerConnect(self):
+        # '''
+        # connects to peers for the purpose of syncing datasets
+        # '''
+        # #signature = self.wallet.sign(self.key)
+        # self.peerEngine = PeerEngine(
+        #     # subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
+        #     # publications=[pub.streamId.topic() for pub in self.publications],
+        #     # subscriptions=['A', 'B', 'C'],
+        #     # publications=['X', 'Y', 'Z'],
+        #     publications=["{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}"],
+        #     subscriptions=["{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'DBGI.USD.10mins_p', 'target': 'results.p'}"],
+        #     # caches=self.caches,
+        #     # caches={'X':"HI",'Y':'TO','Z':'ALL','A':'HELLO','B':'GOOD',"C":'FRIEND'}
+        #     caches ={"{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}": "<satorilib.api.disk.cache.Cache object at 0x7f9790516f80>", "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'DBGI.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x76e61d109cf0>"
+        #              }
+        #     #key=signature.decode() + '|' + self.key,
+        # )
+        
+        # self.peerEngine.start()
         '''
         connects to peers for the purpose of syncing datasets
         '''
-        #signature = self.wallet.sign(self.key)
+        import ast  # Add this at the top of your file
+
+        def parse_stream_dict(stream_str):
+            """Convert string representation of dict to proper format"""
+            try:
+                if isinstance(stream_str, str) and stream_str.startswith('{'):
+                    return ast.literal_eval(stream_str)
+                return stream_str
+            except:
+                return stream_str
+
+        # Format the publications and subscriptions properly
+        publications = [
+            {
+                'source': 'satori',
+                'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8',
+                'stream': 'LNS-BTCPrice10Minutes_p',
+                'target': 'price'
+            }
+        ]
+        
+        subscriptions = [
+            {
+                'source': 'satori',
+                'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+                'stream': 'DBGI.USD.10mins_p',
+                'target': 'results.p'
+            }
+        ]
+
+        # Format the caches properly
+        caches = {}
+        for stream_str, cache_obj in {
+            "{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}": "<satorilib.api.disk.cache.Cache object at 0x7f9790516f80>",
+            "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'DBGI.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x76e61d109cf0>"
+        }.items():
+            stream_dict = parse_stream_dict(stream_str)
+            if isinstance(stream_dict, dict):
+                key = f"{stream_dict['source']}.{stream_dict['author']}.{stream_dict['stream']}.{stream_dict['target']}"
+                caches[key] = cache_obj
+
         self.peerEngine = PeerEngine(
-            # subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
-            # publications=[pub.streamId.topic() for pub in self.publications],
-            # subscriptions=['A', 'B', 'C'],
-            # publications=['X', 'Y', 'Z'],
-            subscriptions=["{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}"],
-            publications=["{'source': 'satori', 'author': '03c651078d3f07b18b2ab2a776c9d2914f89b1a4ce6159cba017792f5638bcc67e', 'stream': 'ETNX-LTCPrice10Minutes', 'target': 'price'}"],
-            # caches=self.caches,
-            caches ={"{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}": "<satorilib.api.disk.cache.Cache object at 0x7f9790516f80>", "{'source': 'satori', 'author': '0335786467a222b619103295d9bf25a203092e997801b1c08892bc1fa616cd9f0d', 'stream': 'COINBASE.USD.ABT', 'target': 'data.rates.ABT'}": "<satorilib.api.disk.cache.Cache object at 0x7f97905165f0>"
-                     }
-            #key=signature.decode() + '|' + self.key,
+            publications=publications,
+            subscriptions=subscriptions,
+            caches=caches
         )
         self.peerEngine.start()
 
