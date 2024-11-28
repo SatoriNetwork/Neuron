@@ -13,7 +13,7 @@
           <div class="col-lg-6 col-7">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
             <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
-              Real-world data streams published by Satori Neurons
+              Real-World data streams, published by Satori Neurons
             </p>
           </div>
         </div>
@@ -117,9 +117,9 @@
   </div>
   <!-- Modal for Observations -->
   <div id="observationsModal" class="modal" style="display: none;">
-    <div id="modal-content" class="modal-content" style="position: relative; max-width: 800px; margin: auto; padding: 20px; border-radius: 8px; background-color: #fff;margin-top:20px;height:600px;">
+    <div id="modal-content" class="modal-content" style="position: relative;padding: 1rem;border-radius: 8px;background-color: #fff;max-height: 90vh;margin-top: 3rem;max-width: 150vh;margin-left: auto;margin-right: auto;">
       <div class="d-flex" style="align-items:center; justify-content:space-between">
-        <h4>Real world data vs Prediction Data</h4>
+        <h4>Real-World vs Average Predictions</h4>
         <i class="material-icons opacity-10" class="close" onclick="closeModal()" style="cursor:pointer">cancel</i>
       </div>
 
@@ -137,8 +137,8 @@
           <thead>
             <tr>
               <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #800080">Value</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #8B8000">Avg Prediction</th>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
             </tr>
           </thead>
           <tbody id="observationsBody">
@@ -434,7 +434,6 @@
       const now = new Date();
       const latestObservationTime = new Date(stream.latest_observation_time);
       const isActive = (now - latestObservationTime) <= 24 * 60 * 60 * 1000;
-  
       const row = document.createElement('tr');
       row.style.cursor = "pointer";
       row.onclick = () => toggleStreamDetails(row, stream.stream_id);
@@ -493,7 +492,7 @@
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> ${stream.latest_observation_value}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Time:</strong> ${stream.latest_observation_time}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                <strong>Status:</strong> 
+                <strong>Status:</strong>
                 <span style="color: ${isActive ? 'green' : 'red'};">
                   ${isActive ? 'Active' : 'Inactive'}
                 </span>
@@ -510,7 +509,6 @@
   }
 
   let observationsChart;
-  
   // Formate date to shorter format
   function formatDateToShort(dateString) {
     const date = new Date(dateString);
@@ -520,7 +518,6 @@
   function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, chunkSize = 100) {
     const totalPoints = combinedTimes.length;
     let currentIndex = 0;
-  
     const ctx = graphCanvas.getContext('2d');
 
     const chartData = {
@@ -529,31 +526,35 @@
         {
           label: 'Real World Data',
           data: [],
-          borderColor: '#800080',
-          borderWidth: 2,
-          pointBackgroundColor: '#800080',
+          borderColor: '#533549',
+          borderWidth: 1,
+          pointBackgroundColor: '#533549',
+          pointRadius: 1.2,
           fill: false,
+          tension: .5,
         },
         {
           label: 'Predictions Data',
           data: [],
-          borderColor: '#8B8000',
-          borderWidth: 2,
-          pointBackgroundColor: '#8B8000',
+          borderColor: '#f6b042',
+          borderWidth: 1.8,
+          pointBackgroundColor: '#f6b042',
+          pointRadius: 2,
           fill: false,
+          tension: .5,
         },
       ],
     };
-  
+
     const chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
-        x: { 
-          title: { display: false, text: 'Time' }, 
-          grid: { display: false }, 
+        x: {
+          title: { display: false, text: 'Time' },
+          grid: { display: false },
           ticks: { display: false },
-          /** 
+          /**
             ticks: {
               callback: function (value, index, ticks) {
                 // Show only the first and last labels
@@ -562,7 +563,7 @@
                 }
                 return '';
               },
-            }, 
+            },
           */
         },
         y: { title: { display: true, text: 'Value' }, grid: { display: false } },
@@ -576,7 +577,7 @@
           },
         },
         legend: {
-          display: true,
+          display: false,
           labels: {
             font: { size: 12 },
             boxWidth: 12,
@@ -598,27 +599,30 @@
     if (observationsChart) {
       observationsChart.destroy(); // Destroy the previous chart instance
     }
-  
     observationsChart = new Chart(ctx, {
       type: 'line',
       data: chartData,
       options: chartOptions,
     });
-  
     function addChunk() {
       const endIndex = Math.min(currentIndex + chunkSize, totalPoints);
       observationsChart.data.labels.push(...combinedTimes.slice(currentIndex, endIndex));
       observationsChart.data.datasets[0].data.push(...observationValues.slice(currentIndex, endIndex));
-      observationsChart.data.datasets[1].data.push(...predictionValues.slice(currentIndex, endIndex));
+      const realLow = Math.min(observationValues)*.8;
+      const realHigh = Math.max(observationValues)*1.25;
+      observationsChart.data.datasets[1].data.push(
+        ...predictionValues.slice(currentIndex, endIndex).map(value =>
+          value === 0 || value < realLow || value > realHigh ? null : value
+        )
+      );
       observationsChart.update();
-  
+
       currentIndex += chunkSize;
-  
+
       if (currentIndex < totalPoints) {
         requestAnimationFrame(addChunk); // Schedule the next chunk
       }
     }
-  
     addChunk();
   }
 
@@ -681,20 +685,18 @@
       if (response.ok) {
         const data = await response.json();
         let parsedObservations = JSON.parse(data.observations);
-        console.log("parsedObservations", parsedObservations)
-        {/** 
-          const formattedPredictionData = parsedObservations.map(obs => ({
-            formattedTime: formatDateToShort(obs.ts_start),
-            value: parseFloat(obs.avg),
-            stream_id: obs.stream_id
-          }));
-          const formattedData = parsedObservations.map(obs => ({
-            formattedTime: formatDateToShort(obs.ts),
-            value: parseFloat(obs.value),
-            stream_id: obs.stream_id
-          })); 
-          console.log("formatted data completed")
-        */}
+        // console.log("parsedObservations", parsedObservations)
+        const formattedPredictionData = parsedObservations.map(obs => ({
+          formattedTime: formatDateToShort(obs.ts_start),
+          value: parseFloat(obs.avg),
+          stream_id: obs.stream_id
+        }));
+        const formattedData = parsedObservations.map(obs => ({
+          formattedTime: formatDateToShort(obs.time),
+          value: parseFloat(obs.value),
+          stream_id: obs.stream_id
+        }));
+        console.log("formatted data completed")
 
         observationsBody.innerHTML = '';
 
@@ -719,12 +721,12 @@
           observationTable.style.display = 'block';
           observationTable.style.height = "calc(100% - 350px)";
           observationTable.style.overflowY = "scroll";
-          
+
           // Render a graph
-          parsedObservations.sort((a, b) => new Date(a.ts) - new Date(b.ts));
+          parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
           showLineBarGraph(graphCanvas, parsedObservations);
 
-          parsedObservations.forEach(observation => {
+          parsedObservations.reverse().forEach(observation => {
             const row = document.createElement('tr');
             row.innerHTML = `
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
