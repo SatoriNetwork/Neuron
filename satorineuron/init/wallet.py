@@ -5,7 +5,7 @@ import shutil
 import threading
 from queue import Queue
 from satorilib.electrumx import Electrumx
-from satorilib.api.wallet import EvrmoreWallet
+from satorilib.wallet import EvrmoreWallet
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.common.structs import ConnectionTo

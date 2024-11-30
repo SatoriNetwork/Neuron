@@ -4,8 +4,8 @@ import threading
 from queue import Queue
 from reactivex.subject import BehaviorSubject
 from satorilib.concepts.structs import StreamId, Stream
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
-# from satorilib.api.ipfs import Ipfs
+from satorilib.wallet import RavencoinWallet, EvrmoreWallet
+# from satorilib.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread

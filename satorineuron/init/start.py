@@ -11,8 +11,8 @@ from satorilib.concepts.structs import (
     Stream,
     StreamPairs,
     StreamOverview)
-from satorilib.api import disk
-from satorilib.api.wallet import EvrmoreWallet
+from satorilib import disk
+from satorilib.wallet import EvrmoreWallet
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn

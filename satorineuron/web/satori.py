@@ -5,7 +5,7 @@
 # run with:
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
 import datetime as dt
-from satorilib.api.time import timestampToSeconds, secondsToTimestamp
+from satorilib.utils.time import timestampToSeconds, secondsToTimestamp
 from flask_cors import CORS
 from typing import Union
 from functools import wraps, partial
@@ -26,9 +26,9 @@ from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
 from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
 from satorilib.concepts import constants
-from satorilib.api.wallet.wallet import TransactionFailure
-from satorilib.api.time import timeToSeconds, nowStr
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.wallet.wallet import TransactionFailure
+from satorilib.utils.time import timeToSeconds, nowStr
+from satorilib.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
 from satorisynapse import Envelope, Signal
 from satorineuron import VERSION, MOTTO, config
@@ -431,13 +431,13 @@ def backup(target: str = 'satori'):
     if start.vault is not None and not start.vault.isEncrypted:
         outputPath = '/Satori/Neuron/satorineuron/web/static/download'
         if target == 'satori':
-            from satorilib.api.disk.zip.zip import zipSelected
+            from satorilib.disk.zip.zip import zipSelected
             zipSelected(
                 folderPath=f'/Satori/Neuron/{target}',
                 outputPath=f'{outputPath}/{target}.zip',
                 selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
         else:
-            from satorilib.api.disk.zip.zip import zipFolder
+            from satorilib.disk.zip.zip import zipFolder
             zipFolder(
                 folderPath=f'/Satori/Neuron/{target}',
                 outputPath=f'{outputPath}/{target}')
@@ -1711,7 +1711,7 @@ def vault():
         if theFirstRun:
             return redirect('/dashboard')
         # start.workingUpdates.put('downloading balance...')
-        from satorilib.api.wallet.eth import EthereumWallet
+        from satorilib.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
         # if start.server.betaStatus()[1].get('value') == 1:
         #    claimResult = start.server.betaClaim(account.address)[1]
@@ -2455,7 +2455,7 @@ def voteSubmitManifestWallet():
 
 @app.route('/system_metrics', methods=['GET'])
 def systemMetrics():
-    from satorilib.api import system
+    from satorilib.utils import system
     return jsonify({
         'hostname': os.uname().nodename,
         'cpu': system.getProcessor(),

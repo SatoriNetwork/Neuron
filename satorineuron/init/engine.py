@@ -1,5 +1,5 @@
 from satorilib import logging
-from satorilib.api import memory
+from satorilib.utils import memory
 from satorilib.concepts import Observation, Stream
 from satorilib.pubsub import SatoriPubSubConn
 from satoriengine.concepts import HyperParameter
