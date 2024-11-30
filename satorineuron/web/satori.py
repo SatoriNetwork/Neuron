@@ -1611,6 +1611,7 @@ def vault():
             'minedtovault': start.mineToVault,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
+            'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
