@@ -64,7 +64,8 @@ class PeerManager():
         new_peer = {
             "public_key": public_key,
             "allowed_ips": allowed_ips,
-            "endpoint": endpoint
+            "endpoint": endpoint,
+            "PersistentKeepalive" : 25
         }
         self.peers.append(new_peer)
         logging.info(add_peer(self.interface, public_key,

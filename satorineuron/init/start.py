@@ -32,7 +32,7 @@ from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.structs.pubsub import SignedStreamId
 from satorineuron.synergy.engine import SynergyManager
 
-from satorineuron.p2p.peer_engine import PeerEngine
+from satorineuron.p2p import PeerEngine
 from typing import List, Dict
 
 
@@ -111,7 +111,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.synergy: Union[SynergyManager, None] = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
-        self.peerEngine: PeerEngine
+        self.peerEngine: PeerEngine = PeerEngine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()  # TODO: remove
@@ -820,7 +820,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def pubsConnect(self):
         '''
-        oracle nodes publish to every pubsub machine. therefore, they have
+        oracle nodes publish to every pu
+    #         # publications=['X', 'Y', 'Z'],bsub machine. therefore, they have
         an additional set of connections that they mush push to.
         '''
         self.pubs = []
@@ -838,22 +839,21 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     key=signature.decode() + '|' + self.oracleKey))
 
     def peerConnect(self):
-    #     '''
-    #     connects to peers for the purpose of syncing datasets
-    #     '''
-    #     #signature = self.wallet.sign(self.key)
-    #     self.peerEngine = PeerEngine(
-    #         subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
-    #         publications=[pub.streamId.topic() for pub in self.publications],
-    #         # subscriptions=['A', 'B', 'C'],
-    #         # publications=['X', 'Y', 'Z'],
-    #         caches=self.caches,
-    #         # caches={'X':"HI",'Y':'TO','Z':'ALL','A':'HELLO','B':'GOOD',"C":'FRIEND'}
-    #         
-    #         #key=signature.decode() + '|' + self.key,
-    #     )
+        # '''
+        # connects to peers for the purpose of syncing datasets
+        # '''
+        # #signature = self.wallet.sign(self.key)
+        # self.peerEngine = PeerEngine(
+        #     subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
+        #     publications=[pub.streamId.topic() for pub in self.publications],
+        #     # subscriptions=['A', 'B', 'C'],
+        #     caches=self.caches,
+        #     # caches={'X':"HI",'Y':'TO','Z':'ALL','A':'HELLO','B':'GOOD',"C":'FRIEND'}
+            
+        #     #key=signature.decode() + '|' + self.key,
+        # )
         
-    #     self.peerEngine.start()
+        # self.peerEngine.start()
         '''
         connects to peers for the purpose of syncing datasets
         '''
