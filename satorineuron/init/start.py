@@ -582,8 +582,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # else:
         #    logging.warning('Running in Local Mode.', color='green')
         if self.engineVersion == 'v2':
-            self.aiengine: satoriengine.framework.engine.Engine = (
-                satoriengine.framework.engine.Engine(
+            self.aiengine: satoriengine.veda.engine.Engine = (
+                satoriengine.veda.engine.Engine(
                     streams=self.subscriptions, pubstreams=self.publications)
             )
             self.aiengine.prediction_produced.subscribe(

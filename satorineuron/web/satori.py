@@ -431,13 +431,13 @@ def backup(target: str = 'satori'):
     if start.vault is not None and not start.vault.isEncrypted:
         outputPath = '/Satori/Neuron/satorineuron/web/static/download'
         if target == 'satori':
-            from satorilib.disk.zip.zip import zipSelected
+            from satorilib.api.disk.zip.zip import zipSelected
             zipSelected(
                 folderPath=f'/Satori/Neuron/{target}',
                 outputPath=f'{outputPath}/{target}.zip',
                 selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
         else:
-            from satorilib.disk.zip.zip import zipFolder
+            from satorilib.api.disk.zip.zip import zipFolder
             zipFolder(
                 folderPath=f'/Satori/Neuron/{target}',
                 outputPath=f'{outputPath}/{target}')
@@ -1682,12 +1682,6 @@ def presentVaultPasswordForm():
 @authRequired
 def vault():
 
-    def defaultMineToVault():
-        try:
-            enableMineToVault
-        except Exception as _:
-            pass
-
     def accept_submittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
         # logging.debug(passwordForm.password.data, color='yellow')
@@ -1718,7 +1712,6 @@ def vault():
         #    logging.info(
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
-        # threading.Thread(target=defaultMineToVault, daemon=True).start()
         myWallet = start.getWallet(network='main')
         try:
             alias = myWallet.alias or start.server.getWalletAlias()
@@ -1730,8 +1723,7 @@ def vault():
             'alias': alias,
             'exampleAlias': getRandomName(),
             'image': getQRCode(start.vault.address),
-            'network': start.network,  # change to main when ready
-            'minedtovault': start.mineToVault,  # start.server.minedToVault(),
+            'network': start.network,
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
@@ -1749,8 +1741,7 @@ def vault():
         'title': 'Vault',
         'walletIcon': 'lock',
         'image': '',
-        'network': start.network,  # change to main when ready
-        'minedtovault': start.mineToVault,  # start.server.minedToVault(),
+        'network': start.network,
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'stakeRequired': constants.stakeRequired,
