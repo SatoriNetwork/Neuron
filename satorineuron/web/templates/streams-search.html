@@ -13,7 +13,7 @@
           <div class="col-lg-6 col-7">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
             <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
-              Real-world data streams published by Satori Neurons
+              Real-World data streams, published by Satori Neurons
             </p>
           </div>
         </div>
@@ -71,6 +71,9 @@
                         <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                       </div>
                     {% endif %}
+                    <div id="observations">
+                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }});">stacked_line_chart</i>
+                    </div>
                   </div>
                 </td>
                  <!-- Additional details row -->
@@ -91,6 +94,8 @@
                         <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> {{ stream['total_vote'] }}</p>
                         <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> {{ stream['tags'] }}</p>
                         <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> {{ stream['vote'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> {{ stream['latest_observation_value'] }}</p>
+                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Time:</strong> {{ stream['latest_observation_time'] }}</p>
                         <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="{{ stream['url'] }}" target="_blank">{{ stream['url'] }}</a></p>
                         <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> {{ stream['description'] }}</p>
                       </div>
@@ -101,15 +106,55 @@
               {% endfor %}
             </tbody>
           </table>
+          <div style="display: flex; justify-content: center; padding: 1rem; align-items:center">
+            <button class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="prevPageBtn" onclick="previousPage()" disabled>Previous</button>
+            <span id="pageInfo" style="margin: 0 1rem;">Page 1</span>
+            <button class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="nextPageBtn" onclick="nextPage()">Next</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-<script type="text/javascript">
+  <!-- Modal for Observations -->
+  <div id="observationsModal" class="modal" style="display: none;">
+    <div id="modal-content" class="modal-content" style="position: relative;padding: 1rem;border-radius: 8px;background-color: #fff;max-height: 90vh;margin-top: 3rem;max-width: 150vh;margin-left: auto;margin-right: auto;">
+      <div class="d-flex" style="align-items:center; justify-content:space-between">
+        <h4>Real-World vs Average Predictions</h4>
+        <i class="material-icons opacity-10" class="close" onclick="closeModal()" style="cursor:pointer">cancel</i>
+      </div>
 
+      <div id="modalLoading" style="display: flex; height: 100%; justify-content: center; align-items: center">
+        Loading.....
+      </div>
+
+      <!-- Graph Section -->
+      <div id="observationsGraphContainer" style="display: none; height: 300px; margin-bottom: 20px;">
+        <canvas id="observationsGraph"></canvas>
+      </div>
+
+      <div id="observation-table" style="display: none; overflow-y: scroll; height: calc(100% - 350px);">
+        <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+          <thead>
+            <tr>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
+            </tr>
+          </thead>
+          <tbody id="observationsBody">
+            <!-- Observations will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script type="text/javascript">
   const darkmode = {{ 'true' if darkmode else 'false' }};
   let storedStreams = {{ allStreams|tojson }};
+  let filteredStreams = storedStreams;
   let displayStreams = storedStreams.slice(0, 100);
   let sortOrder = {
     popularity: 'desc',
@@ -119,6 +164,41 @@
   let timeout = null;
   let sortTimeout = null;
   let filterTimeout = null;
+
+  let currentPage = 1;
+  const itemsPerPage = 100;
+  const totalStreams = {{ totalStreams }}; // Total number of streams passed from the backend
+
+  function updatePaginationButtons(totalStreamsCount) {
+    document.getElementById('prevPageBtn').disabled = currentPage === 1;
+    document.getElementById('nextPageBtn').disabled = currentPage * itemsPerPage >= totalStreamsCount;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage}`;
+  }
+
+  // Next Page Function
+  function nextPage() {
+      if (currentPage * itemsPerPage < totalStreams) {
+          currentPage++;
+          displayStreams = filteredStreams.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+          updateStreamDisplay(displayStreams, darkmode);
+          updatePaginationButtons(filteredStreams.length);
+      }
+  }
+
+  // Previous Page Function
+  function previousPage() {
+      if (currentPage > 1) {
+          currentPage--;
+          displayStreams = filteredStreams.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+          updateStreamDisplay(displayStreams, darkmode);
+          updatePaginationButtons(filteredStreams.length);
+      }
+  }
+
+  // Initialize display with the first page
+  displayStreams = filteredStreams.slice(0, itemsPerPage);
+  updateStreamDisplay(displayStreams, darkmode);
+  updatePaginationButtons(filteredStreams.length);
 
   function showNotification(message, showError = false) {
     const notification = document.getElementById(showError ? 'notification_error' : 'notification');
@@ -210,13 +290,12 @@
       } else {
         iconElement.innerHTML = '↓';
       }
-
       sortBy(type, sortOrder[type]);
     }, 200);
   }
 
   function sortBy(type, order) {
-    let sortedStreams = [...displayStreams];
+    let sortedStreams = [...filteredStreams];
 
     if (type === 'popularity') {
       sortedStreams.sort((a, b) => {
@@ -238,7 +317,10 @@
       });
     }
 
-    updateStreamDisplay(sortedStreams, darkmode);
+    filteredStreams = sortedStreams;
+    displayStreams = sortedStreams.slice(0, 100);
+    updateStreamDisplay(displayStreams, darkmode);
+    updatePaginationButtons(filteredStreams.length);
   }
 
   function filterByCategory() {
@@ -260,6 +342,7 @@
       }
       displayStreams = filteredStreams.slice(0, 100);
       updateStreamDisplay(displayStreams, darkmode);
+      updatePaginationButtons(filteredStreams.length);
     }, 200);
   }
 
@@ -288,6 +371,7 @@
       }
       displayStreams = filteredStreams.slice(0, 100);
       updateStreamDisplay(displayStreams, darkmode);
+      updatePaginationButtons(filteredStreams.length);
     }, 200);
   }
 
@@ -346,7 +430,11 @@
     }
 
     streams.forEach(stream => {
-      console.log(stream);
+      // Calculate last observation is within 24 hours or not
+      const now = new Date();
+      const latestObservationTime = new Date(stream.latest_observation_time);
+      const isActive = (now - latestObservationTime) <= 24 * 60 * 60 * 1000;
+
       const row = document.createElement('tr');
       row.style.cursor = "pointer";
       row.onclick = () => toggleStreamDetails(row, stream.stream_id);
@@ -364,6 +452,9 @@
                     <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                 </div>`
             }
+            <div id="observations">
+              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id});">stacked_line_chart</i>
+            </div>
           </div>
         </td>
         `;
@@ -399,6 +490,15 @@
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> ${stream.total_vote}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> ${stream.vote}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> ${stream.latest_observation_value}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Time:</strong> ${stream.latest_observation_time}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <strong>Status:</strong>
+                <span style="color: ${isActive ? 'green' : 'red'};">
+                  ${isActive ? 'Active' : 'Inactive'}
+                </span>
+              </p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Predictions Count:</strong> ${stream.predictors_count}</p>
               <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
               <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> ${stream.description}</p>
             </div>
@@ -408,5 +508,267 @@
       tableBody.appendChild(streamDetailRow);
     });
   }
+
+  let observationsChart;
+
+  // Formate date to shorter format
+  function formatDateToShort(dateString) {
+    const date = new Date(dateString);
+    return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}, ${date.getFullYear()}`;
+  }
+
+  function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, chunkSize = 100) {
+    const totalPoints = combinedTimes.length;
+    let currentIndex = 0;
+
+    const ctx = graphCanvas.getContext('2d');
+
+    const chartData = {
+      labels: [],
+      datasets: [
+        {
+          label: 'Real World Data',
+          data: [],
+          borderColor: '#533549',
+          borderWidth: 1,
+          pointBackgroundColor: '#533549',
+          pointRadius: 1.2,
+          fill: false,
+          tension: .5,
+        },
+        {
+          label: 'Predictions Data',
+          data: [],
+          borderColor: '#f6b042',
+          borderWidth: 1.8,
+          pointBackgroundColor: '#f6b042',
+          pointRadius: 2,
+          fill: false,
+          tension: .5,
+        },
+      ],
+    };
+
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: { display: false, text: 'Time' },
+          grid: { display: false },
+          ticks: { display: false },
+          /**
+            ticks: {
+              callback: function (value, index, ticks) {
+                // Show only the first and last labels
+                if (index === 0 || index === ticks.length - 1) {
+                  return this.getLabelForValue(value);
+                }
+                return '';
+              },
+            },
+          */
+        },
+        y: { title: { display: true, text: 'Value' }, grid: { display: false } },
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `Time: ${context.label}, Value: ${context.raw}`;
+            },
+          },
+        },
+        legend: {
+          display: false,
+          labels: {
+            font: { size: 12 },
+            boxWidth: 12,
+            boxHeight: 12,
+            generateLabels: function (chart) {
+              return chart.data.datasets.map((dataset, i) => ({
+                text: dataset.label,
+                fillStyle: dataset.borderColor,
+                strokeStyle: dataset.borderColor,
+                lineWidth: 2,
+                datasetIndex: i,
+              }));
+            },
+          },
+        },
+      },
+    };
+
+    if (observationsChart) {
+      observationsChart.destroy(); // Destroy the previous chart instance
+    }
+
+    observationsChart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: chartOptions,
+    });
+
+    function addChunk() {
+      const endIndex = Math.min(currentIndex + chunkSize, totalPoints);
+      observationsChart.data.labels.push(...combinedTimes.slice(currentIndex, endIndex));
+      observationsChart.data.datasets[0].data.push(...observationValues.slice(currentIndex, endIndex));
+      const realLow = Math.min(observationValues)*.8;
+      const realHigh = Math.max(observationValues)*1.25;
+      observationsChart.data.datasets[1].data.push(
+        ...predictionValues.slice(currentIndex, endIndex).map(value =>
+          value === 0 || value < realLow || value > realHigh ? null : value
+        )
+      );
+      observationsChart.update();
+
+      currentIndex += chunkSize;
+
+      if (currentIndex < totalPoints) {
+        requestAnimationFrame(addChunk); // Schedule the next chunk
+      }
+    }
+
+    addChunk();
+  }
+
+  function showLineBarGraph(graphCanvas, parsedObservations) {
+    const ctx = graphCanvas.getContext('2d');
+
+    // Helper: Round to nearest 10 minutes
+    const roundToTenMinutes = (date) => {
+        const msInTenMinutes = 10 * 60 * 1000;
+        return new Date(Math.round(new Date(date).getTime() / msInTenMinutes) * msInTenMinutes);
+    };
+
+    // Process observations to group by 10-minute intervals
+    const intervalsMap = new Map();
+    parsedObservations.forEach((obs) => {
+        const roundedTime = roundToTenMinutes(obs.time).toISOString();
+        if (!intervalsMap.has(roundedTime)) {
+            intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
+        }
+        const current = intervalsMap.get(roundedTime);
+        current.observationAvg += parseFloat(obs.value); // Use value for observations
+        current.predictionAvg += parseFloat(obs.avg);   // Use avg for predictions
+        current.count += 1;
+    });
+
+    // Prepare sorted data for the chart
+    const combinedTimes = Array.from(intervalsMap.keys()).sort((a, b) => new Date(a) - new Date(b));
+    const observationValues = combinedTimes.map((time) => {
+        const data = intervalsMap.get(time);
+        return data.observationAvg / data.count; // Average observation value
+    });
+    const predictionValues = combinedTimes.map((time) => {
+        const data = intervalsMap.get(time);
+        return data.predictionAvg / data.count; // Average prediction value
+    });
+
+    renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues);
+  }
+
+  // Show Observations Modal with observations list and graph for value vs time
+  function showObservations(streamId) {
+    const observationsBody = document.getElementById('observationsBody');
+    const graphContainer = document.getElementById('observationsGraphContainer');
+    const graphCanvas = document.getElementById('observationsGraph');
+    const modelContent = document.getElementById('modal-content');
+    const observationTable = document.getElementById('observation-table');
+
+    // Show observation modal
+    document.getElementById('observationsModal').style.display = 'block';
+    graphContainer.style.display = 'none';
+    observationTable.style.display = 'none';
+    document.getElementById('modalLoading').style.display = "flex";
+
+    fetch('/get_observations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ streamId: streamId })
+    })
+    .then(async (response) => {
+      if (response.ok) {
+        const data = await response.json();
+        let parsedObservations = JSON.parse(data.observations);
+        // console.log("parsedObservations", parsedObservations)
+        const formattedPredictionData = parsedObservations.map(obs => ({
+          formattedTime: formatDateToShort(obs.ts_start),
+          value: parseFloat(obs.avg),
+          stream_id: obs.stream_id
+        }));
+        const formattedData = parsedObservations.map(obs => ({
+          formattedTime: formatDateToShort(obs.time),
+          value: parseFloat(obs.value),
+          stream_id: obs.stream_id
+        }));
+        console.log("formatted data completed")
+
+        observationsBody.innerHTML = '';
+
+        if (parsedObservations.length === 0) {
+          // modal container css changes
+          modelContent.style.height = "300px"
+          // Graph container css changes
+          graphContainer.style.display = 'none';
+          // Table style css changes
+          observationTable.style.display = 'block';
+          observationTable.style.height = "300px";
+          observationTable.style.overflowY = "hidden";
+          const noDataRow = document.createElement('tr');
+          noDataRow.innerHTML = '<td colspan="3" style="text-align: center; padding: 8px;">No data found</td>';
+          observationsBody.appendChild(noDataRow);
+        } else {
+          // Graph container css changes
+          graphContainer.style.display = 'block';
+          // modal container css changes
+          //modelContent.style.height = "600px"
+          // Table style css changes
+          observationTable.style.display = 'block';
+          observationTable.style.height = "calc(100% - 350px)";
+          observationTable.style.overflowY = "scroll";
+
+          // Render a graph
+          parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
+          showLineBarGraph(graphCanvas, parsedObservations);
+
+          parsedObservations.reverse().forEach(observation => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.value}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.avg}</td>
+            `;
+            observationsBody.appendChild(row);
+          });
+        }
+
+        document.getElementById('modalLoading').style.display = "none"
+        updateStreamDisplay(displayStreams, darkmode);
+        updatePaginationButtons(filteredStreams.length);
+        document.body.classList.add('no-scroll');  // Disable scroll on main content
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching observations:', error);
+      updateStreamDisplay(displayStreams, darkmode);
+      updatePaginationButtons(filteredStreams.length);
+      showNotification("Failed to load observations", true);
+    });
+  }
+
+  // Close Modal
+  function closeModal() {
+    document.getElementById('observationsModal').style.display = 'none';
+    document.body.classList.remove('no-scroll');  // Re-enable scroll on main content
+  }
+
+  // Close modal on outside click
+  window.onclick = function(event) {
+    const modal = document.getElementById('observationsModal');
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  };
 </script>
 {% endblock %}

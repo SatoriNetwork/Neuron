@@ -1770,7 +1770,7 @@ def reportVault(network: str = 'main'):
         address=vaultAddress)
     if success:
         return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+    return f'Failed to register vault: {result}', 400
 
 
 @app.route('/mining/to/address', methods=['GET'])
@@ -1799,7 +1799,7 @@ def mineToAddress(address: str):
         address=address)
     if success:
         return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+    return f'Failed to set reward address: {result}', 400
 
 
 @app.route('/stake/for/address/<address>', methods=['GET'])
@@ -1818,7 +1818,7 @@ def stakeForAddress(address: str):
         address=address)
     if success:
         return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+    return f'Failed to stake for worker: {result}', 400
 
 
 @app.route('/lend/to/address/<address>', methods=['GET'])
@@ -1950,7 +1950,6 @@ def vote():
             return 0
         else:
             return data
-
     def getVotes(wallet):
         # def valuesAsNumbers(map: dict):
         #    return {k: int(v) for k, v in map.items()}
@@ -2019,7 +2018,6 @@ def vote():
         **getVotes(myWallet)}))
 
 
-
 @app.route('/streams', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
@@ -2039,6 +2037,7 @@ def streams():
         'vault': start.vault,
         'darkmode': darkmode,
         'streams': oracleStreams[0:100],
+        'totalStreams': len(oracleStreams),
         'allStreams': oracleStreams}))
 
 
@@ -2059,6 +2058,20 @@ def removeVote():
     message = start.server.removeVote(streamId=streamId)
     return jsonify({'message': message}), 200
 
+@app.route('/get_observations', methods=['POST'])
+@userInteracted
+@authRequired
+def getObservations():
+    streamId = request.json.get('streamId', "")
+    observations = start.server.getObservations(streamId=streamId)  # Fetch observations from your data source
+    return jsonify({'observations': observations}), 200
+
+@app.route('/get_predictions_observations', methods=['POST'])
+@userInteracted
+@authRequired
+def getPredictionsObservations():
+    observations = start.server.getPredictionsObservations()  # Fetch all predictions observations from your data source
+    return jsonify({'observations': observations}), 200
 
 @app.route('/proposals', methods=['GET'])
 @userInteracted

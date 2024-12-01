@@ -135,7 +135,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             startFunction = self.start
         elif self.runMode == RunMode.worker:
             startFunction = self.startWorker
-        elif self.runMode == RunMode.walletOnly:
+        elif self.runMode == RunMode.wallet:
             startFunction = self.startWalletOnly
         while True:
             if self.asyncThread.loop is not None:
@@ -270,8 +270,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.ranOnce:
             time.sleep(60 * 60)
         self.ranOnce = True
-
-        if self.runMode == RunMode.walletOnly:
+        if self.walletOnlyMode:
             self.walletVaultManager.setupWalletAndVault()
             self.createServerConn()
             logging.info("in WALLETONLYMODE")
