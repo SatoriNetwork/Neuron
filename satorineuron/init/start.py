@@ -148,7 +148,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def walletOnlyMode(self) -> bool:
-        return self.runMode == RunMode.walletOnly
+        return self.runMode == RunMode.wallet
 
     @property
     def rewardAddress(self) -> str:
@@ -185,7 +185,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def setupWallets(self):
         self.walletVaultManager = WalletVaultManager(
             updateConnectionStatus=self.updateConnectionStatus,
-            persistent=self.runMode == RunMode.walletOnly)
+            persistent=self.runMode == RunMode.wallet)
         self.walletVaultManager.setup()
 
     def closeVault(self):
