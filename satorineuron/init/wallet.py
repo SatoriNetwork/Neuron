@@ -2,14 +2,12 @@ from typing import Union
 import os
 import time
 import shutil
-import threading
 from queue import Queue
 from satorilib.electrumx import Electrumx
 from satorilib.wallet import EvrmoreWallet
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.common.structs import ConnectionTo
-from satorineuron.structs.start import RunMode
 
 
 class WalletVaultManager():
@@ -82,6 +80,7 @@ class WalletVaultManager():
             self.electrumx = EvrmoreWallet.createElectrumxConnection(
                 hostPort=hostPort,
                 persistent=self.persistent)
+            logging.info('initialized electrumx', color='green')
         except Exception as e:
             logging.warning((
                 'unable to connect to electrumx, '
@@ -141,7 +140,7 @@ class WalletVaultManager():
                 electrumx=self.electrumx,
                 type='vault')
             self._vault()
-            logging.info('Initialized Vault', color='green')
+            logging.info('initialized vault', color='green')
             return self._vault
         except Exception as e:
             logging.error(

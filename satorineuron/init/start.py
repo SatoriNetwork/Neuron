@@ -67,6 +67,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.watchForVersionUpdates()
         self.env = env
         self.runMode = RunMode.choose(runMode)
+        logging.info(f'mode: {self.runMode.name}', print=True)
         self.userInteraction = time.time()
         self.walletVaultManager: WalletVaultManager
         self.asyncThread: AsyncThread = AsyncThread()
