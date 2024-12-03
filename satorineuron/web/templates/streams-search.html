@@ -137,8 +137,8 @@
           <thead>
             <tr>
               <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #800080">Real-World Value</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #8B8000">Avg Prediction</th>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
+              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
             </tr>
           </thead>
           <tbody id="observationsBody">
@@ -517,7 +517,7 @@
     return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}, ${date.getFullYear()}`;
   }
 
-  function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, chunkSize = 100) {
+  function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue, chunkSize = 100) {
     const totalPoints = combinedTimes.length;
     let currentIndex = 0;
 
@@ -529,19 +529,23 @@
         {
           label: 'Real World Data',
           data: [],
-          borderColor: '#800080',
-          borderWidth: 2,
-          pointBackgroundColor: '#800080',
+          borderColor: '#533549',
+          borderWidth: 1,
+          pointBackgroundColor: '#533549',
+          pointRadius: 1.2,
           fill: false,
+          tension: .5,
         },
         {
           label: 'Predictions Data',
           data: [],
-          borderColor: '#8B8000',
-          borderWidth: 2,
-          pointBackgroundColor: '#8B8000',
+          borderColor: '#f6b042',
+          borderWidth: 1.8,
+          pointBackgroundColor: '#f6b042',
+          pointRadius: 2,
           fill: false,
-        },
+          tension: .5,
+        }
       ],
     };
 
@@ -609,20 +613,66 @@
       const endIndex = Math.min(currentIndex + chunkSize, totalPoints);
       observationsChart.data.labels.push(...combinedTimes.slice(currentIndex, endIndex));
       observationsChart.data.datasets[0].data.push(...observationValues.slice(currentIndex, endIndex));
-      observationsChart.data.datasets[1].data.push(...predictionValues.slice(currentIndex, endIndex));
+      const realLow = Math.min(observationValues)*.8;
+      const realHigh = Math.max(observationValues)*1.25;
+      observationsChart.data.datasets[1].data.push(
+        ...predictionValues.slice(currentIndex, endIndex).map(value =>
+          value === 0 || value < realLow || value > realHigh ? null : value
+        )
+      );
       observationsChart.update();
 
       currentIndex += chunkSize;
 
       if (currentIndex < totalPoints) {
         requestAnimationFrame(addChunk); // Schedule the next chunk
+      }  else {
+        // Add the future forecasting point as part of the predictions dataset
+        const lastTimestamp = combinedTimes[combinedTimes.length - 1];
+        const futureTimestamp = new Date(lastTimestamp);
+        futureTimestamp.setMinutes(futureTimestamp.getMinutes() + 10); // Add 10 minutes to the last timestamp
+        const formattedFutureTimestamp = futureTimestamp.toISOString();
+
+        observationsChart.data.labels.push(formattedFutureTimestamp);
+        observationsChart.data.datasets[1].data.push(futureForecastingObservationAvgValue);
+        observationsChart.update();
+
+        // Highlight the last point after rendering
+        setTimeout(() => {
+          const pointBackgroundColors = observationsChart.data.datasets[1].pointBackgroundColor;
+          const pointBorderColors = observationsChart.data.datasets[1].pointBorderColor;
+          const pointRadius = observationsChart.data.datasets[1].pointRadius;
+
+          if (Array.isArray(pointBackgroundColors)) {
+            pointBackgroundColors.push('#00bfff');
+          } else {
+            observationsChart.data.datasets[1].pointBackgroundColor = Array(observationsChart.data.datasets[1].data.length - 1).fill('#f6b042');
+            observationsChart.data.datasets[1].pointBackgroundColor.push('#00bfff');
+          }
+
+          if (Array.isArray(pointBorderColors)) {
+              pointBorderColors.push('#00bfff');
+          } else {
+              observationsChart.data.datasets[1].pointBorderColor = Array(observationsChart.data.datasets[1].data.length - 1).fill('#f6b042');
+              observationsChart.data.datasets[1].pointBorderColor.push('#00bfff');
+          }
+
+          if (Array.isArray(pointRadius)) {
+            pointRadius.push(5);
+          } else {
+            observationsChart.data.datasets[1].pointRadius = Array(observationsChart.data.datasets[1].data.length - 1).fill(2);
+            observationsChart.data.datasets[1].pointRadius.push(5);
+          }
+
+          observationsChart.update();
+        }, 0);
       }
     }
 
     addChunk();
   }
 
-  function showLineBarGraph(graphCanvas, parsedObservations) {
+  function showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue) {
     const ctx = graphCanvas.getContext('2d');
 
     // Helper: Round to nearest 10 minutes
@@ -634,7 +684,7 @@
     // Process observations to group by 10-minute intervals
     const intervalsMap = new Map();
     parsedObservations.forEach((obs) => {
-        const roundedTime = roundToTenMinutes(obs.time).toISOString();
+        const roundedTime = roundToTenMinutes(obs.ts).toISOString();
         if (!intervalsMap.has(roundedTime)) {
             intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
         }
@@ -655,7 +705,7 @@
         return data.predictionAvg / data.count; // Average prediction value
     });
 
-    renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues);
+    renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
   }
 
   // Show Observations Modal with observations list and graph for value vs time
@@ -680,19 +730,9 @@
     .then(async (response) => {
       if (response.ok) {
         const data = await response.json();
-        let parsedObservations = JSON.parse(data.observations);
-        // console.log("parsedObservations", parsedObservations)
-        const formattedPredictionData = parsedObservations.map(obs => ({
-          formattedTime: formatDateToShort(obs.ts_start),
-          value: parseFloat(obs.avg),
-          stream_id: obs.stream_id
-        }));
-        const formattedData = parsedObservations.map(obs => ({
-          formattedTime: formatDateToShort(obs.time),
-          value: parseFloat(obs.value),
-          stream_id: obs.stream_id
-        }));
-        console.log("formatted data completed")
+        let parsedObservationsAndMostRecent = JSON.parse(data.observations);
+        parsedObservations = parsedObservationsAndMostRecent[0]
+        let futureForecastingObservationAvgValue = parsedObservationsAndMostRecent[1]
 
         observationsBody.innerHTML = '';
 
@@ -712,7 +752,7 @@
           // Graph container css changes
           graphContainer.style.display = 'block';
           // modal container css changes
-          //modelContent.style.height = "600px"
+          modelContent.style.height = "600px"
           // Table style css changes
           observationTable.style.display = 'block';
           observationTable.style.height = "calc(100% - 350px)";
@@ -720,9 +760,9 @@
 
           // Render a graph
           parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
-          showLineBarGraph(graphCanvas, parsedObservations);
+          showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue);
 
-          parsedObservations.forEach(observation => {
+          parsedObservations.reverse().forEach(observation => {
             const row = document.createElement('tr');
             row.innerHTML = `
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
