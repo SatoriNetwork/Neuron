@@ -21,9 +21,9 @@ from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context
 from satorilib.concepts.structs import StreamId, StreamOverviews
-from satorilib.api.wallet.wallet import TransactionFailure
-from satorilib.api.time import timeToSeconds
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.wallet.wallet import TransactionFailure
+from satorilib.utils.time import timeToSeconds
+from satorilib.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
 from satorisynapse import Envelope, Signal
 from satorineuron import VERSION, MOTTO, config

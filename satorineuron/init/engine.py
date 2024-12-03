@@ -1,5 +1,5 @@
 from satorilib import logging
-from satorilib.api import memory
+from satorilib.utils import memory
 from satorilib.concepts import Observation, Stream
 from satorilib.pubsub import SatoriPubSubConn
 from satoriengine.concepts import HyperParameter
@@ -77,6 +77,7 @@ def establishConnection(
 def getEngine(
     subscriptions: list[Stream],
     publications: list[Stream],
+    run: bool = False,
 ) -> Engine:
     """starts the Engine. returns Engine."""
     from satorineuron.init.start import getStart
@@ -211,12 +212,13 @@ def getEngine(
         }
 
     ModelManager.setConfig(config)
-    # DataManager.setConfig(config)
-    # modelManager = generateModelManager()
+    if run:
+        # DataManager.setConfig(config)
+        modelManager = generateModelManager()
+    else:
+        modelManager = set()
     dataMananger = DataManager(getStart=getStart)
     return Engine(
         getStart=getStart,
         data=dataMananger,
-        # models=modelManager)
-        models=set(),
-    )
+        models=modelManager)

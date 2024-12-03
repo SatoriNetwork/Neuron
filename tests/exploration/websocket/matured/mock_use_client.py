@@ -1,6 +1,6 @@
 # imports changed.
 # import json
-# from satorilib.api.wallet import RavencoinWallet
+# from satorilib.wallet import RavencoinWallet
 # .client import ClientConnection
 #
 # def establishConnection(wallet: Wallet):

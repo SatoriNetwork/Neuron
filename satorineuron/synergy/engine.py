@@ -3,7 +3,7 @@ import threading
 from satorilib import logging
 from satorilib.concepts import StreamId
 from satorilib.synergy import SynergyProtocol
-from satorilib.api.wallet import Wallet
+from satorilib.wallet import Wallet
 from satorisynapse.lib.domain import SYNAPSE_PORT
 from satorineuron.synergy.client import SynergyClient
 from satorineuron.synergy.channel import Axon, SynapsePublisher, SynapseSubscriber

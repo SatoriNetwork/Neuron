@@ -5,7 +5,7 @@
 # run with:
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
 import datetime as dt
-from satorilib.api.time import timestampToSeconds, secondsToTimestamp
+from satorilib.utils.time import timestampToSeconds, secondsToTimestamp
 from flask_cors import CORS
 from typing import Union
 from functools import wraps, partial
@@ -26,9 +26,9 @@ from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
 from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
 from satorilib.concepts import constants
-from satorilib.api.wallet.wallet import TransactionFailure
-from satorilib.api.time import timeToSeconds, nowStr
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.wallet.wallet import TransactionFailure
+from satorilib.utils.time import timeToSeconds, nowStr
+from satorilib.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
 from satorisynapse import Envelope, Signal
 from satorineuron import VERSION, MOTTO, config
@@ -95,10 +95,10 @@ while True:
                 'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                #'prod': 'https://stage.satorinet.io'}[ENV],
                 # 'prod': 'https://central.satorinet.io'}[ENV],
                 # 'prod': 'http://24.199.113.168'}[ENV], # c
-                #'prod': 'http://137.184.38.160'}[ENV],  # n
+                'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
                 'local': 'https://mundo.satorinet.io',
@@ -712,6 +712,13 @@ def miningModeOff():
     return str(start.setMiningMode(False)), 200
 
 
+@app.route('/engine/version/<version>', methods=['GET'])
+@userInteracted
+@authRequired
+def engineVersion(version: str = 'v1'):
+    return str(start.setEngineVersion(version)), 200
+
+
 @app.route('/delegate/get', methods=['GET'])
 @userInteracted
 @authRequired
@@ -1186,6 +1193,7 @@ def dashboard():
         'stakeRequired': constants.stakeRequired,
         'holdingBalance': holdingBalance,
         'streamOverviews': streamOverviews,
+        'engineVersion': start.engineVersion,
         'configOverrides': config.get(),
         'paused': start.paused,
         'newRelayStream': present_stream_form(),
@@ -1674,12 +1682,6 @@ def presentVaultPasswordForm():
 @authRequired
 def vault():
 
-    def defaultMineToVault():
-        try:
-            enableMineToVault
-        except Exception as _:
-            pass
-
     def accept_submittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
         # logging.debug(passwordForm.password.data, color='yellow')
@@ -1703,14 +1705,13 @@ def vault():
         if theFirstRun:
             return redirect('/dashboard')
         # start.workingUpdates.put('downloading balance...')
-        from satorilib.api.wallet.eth import EthereumWallet
+        from satorilib.wallet.eth import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
         # if start.server.betaStatus()[1].get('value') == 1:
         #    claimResult = start.server.betaClaim(account.address)[1]
         #    logging.info(
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
-        # threading.Thread(target=defaultMineToVault, daemon=True).start()
         myWallet = start.getWallet(network='main')
         try:
             alias = myWallet.alias or start.server.getWalletAlias()
@@ -1722,8 +1723,7 @@ def vault():
             'alias': alias,
             'exampleAlias': getRandomName(),
             'image': getQRCode(start.vault.address),
-            'network': start.network,  # change to main when ready
-            'minedtovault': start.mineToVault,  # start.server.minedToVault(),
+            'network': start.network,
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
@@ -1741,8 +1741,7 @@ def vault():
         'title': 'Vault',
         'walletIcon': 'lock',
         'image': '',
-        'network': start.network,  # change to main when ready
-        'minedtovault': start.mineToVault,  # start.server.minedToVault(),
+        'network': start.network,
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'stakeRequired': constants.stakeRequired,
@@ -1771,7 +1770,7 @@ def reportVault(network: str = 'main'):
         address=vaultAddress)
     if success:
         return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+    return f'Failed to register vault: {result}', 400
 
 
 @app.route('/mining/to/address', methods=['GET'])
@@ -1793,13 +1792,14 @@ def mineToAddress(address: str):
     vault = start.getVault(network=network)
     if vault.isEncrypted:
         return redirect('/vault')
-    success, result = start.server.mineToAddress(
-        vaultSignature=vault.sign(address),
-        vaultPubkey=vault.publicKey,
+    success, result = start.server.setRewardAddress(
+        usingVault=True,
+        signature=vault.sign(address),
+        pubkey=vault.publicKey,
         address=address)
     if success:
         return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+    return f'Failed to set reward address: {result}', 400
 
 
 @app.route('/stake/for/address/<address>', methods=['GET'])
@@ -1818,7 +1818,7 @@ def stakeForAddress(address: str):
         address=address)
     if success:
         return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+    return f'Failed to stake for worker: {result}', 400
 
 
 @app.route('/lend/to/address/<address>', methods=['GET'])
@@ -1856,32 +1856,6 @@ def lendRemove():
 @authRequired
 def lendAddress():
     return str(start.server.lendAddress()), 200
-
-
-@app.route('/mine_to_vault/enable/<network>', methods=['GET'])
-@userInteracted
-@authRequired
-def enableMineToVault(network: str = 'main'):
-    if start.vault is None:
-        flash('Must unlock your vault to enable minetovault.')
-        return redirect('/dashboard')
-    success, result = start.enableMineToVault()
-    if success:
-        return 'OK', 200
-    return f'Failed to enable minetovault: {result}', 400
-
-
-@app.route('/mine_to_vault/disable/<network>', methods=['GET'])
-@userInteracted
-@authRequired
-def disableMineToVault(network: str = 'main'):
-    if start.vault is None:
-        flash('Must unlock your vault to disable minetovault.')
-        return redirect('/dashboard')
-    success, result = start.disableMineToVault()
-    if success:
-        return 'OK', 200
-    return f'Failed to disable minetovault: {result}', 400
 
 
 @app.route('/pool/lend/enable', methods=['GET'])
@@ -1976,7 +1950,6 @@ def vote():
             return 0
         else:
             return data
-
     def getVotes(wallet):
         # def valuesAsNumbers(map: dict):
         #    return {k: int(v) for k, v in map.items()}
@@ -2045,7 +2018,6 @@ def vote():
         **getVotes(myWallet)}))
 
 
-
 @app.route('/streams', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
@@ -2065,6 +2037,7 @@ def streams():
         'vault': start.vault,
         'darkmode': darkmode,
         'streams': oracleStreams[0:100],
+        'totalStreams': len(oracleStreams),
         'allStreams': oracleStreams}))
 
 
@@ -2085,6 +2058,20 @@ def removeVote():
     message = start.server.removeVote(streamId=streamId)
     return jsonify({'message': message}), 200
 
+@app.route('/get_observations', methods=['POST'])
+@userInteracted
+@authRequired
+def getObservations():
+    streamId = request.json.get('streamId', "")
+    observations = start.server.getObservations(streamId=streamId)  # Fetch observations from your data source
+    return jsonify({'observations': observations}), 200
+
+@app.route('/get_predictions_observations', methods=['POST'])
+@userInteracted
+@authRequired
+def getPredictionsObservations():
+    observations = start.server.getPredictionsObservations()  # Fetch all predictions observations from your data source
+    return jsonify({'observations': observations}), 200
 
 @app.route('/proposals', methods=['GET'])
 @userInteracted
@@ -2472,7 +2459,7 @@ def voteSubmitManifestWallet():
 
 @app.route('/system_metrics', methods=['GET'])
 def systemMetrics():
-    from satorilib.api import system
+    from satorilib.utils import system
     return jsonify({
         'hostname': os.uname().nodename,
         'cpu': system.getProcessor(),

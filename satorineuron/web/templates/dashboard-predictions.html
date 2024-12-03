@@ -1,7 +1,7 @@
 {% block content %}
 <div class="row mb-0">
-  <div class="col-lg-12 col-sm-12 mt-4 mb-3">
-    <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}">
+  <div class="col-lg-9 col-sm-9 mt-4 mb-3">
+    <div class="card z-index-2 {% if darkmode %}dark-colors{% endif %}" style="height: 270px;">
       <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2 bg-transparent">
         <div class="{% if darkmode %}bg-gradient-darkblack{%else%}bg-gradient-lightgrey shadow-dark{% endif %} border-radius-lg py-3 pe-1">
           <div class="chart">
@@ -15,6 +15,7 @@
       </div>
     </div>
   </div>
+  {% include 'dashboard-engine.html' %}
 </div>
 
 <div class="row">
@@ -25,7 +26,7 @@
           <div class="col-lg-6 col-7">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">Predictions</h6>
             <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
-              Predictions published by this Satori Neuron 
+              Predictions published by this Satori Neuron
             </p>
           </div>
         </div>
@@ -95,7 +96,7 @@
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.prediction }}</h6>
                   </div>
-                </td>                                                                
+                </td>
                 <!-- example
                 <td>{{ streamOverview.accuracy }}</td>
               <tr>
@@ -179,7 +180,7 @@
                   </div>
                 </td>
                 -->
-              </tr> 
+              </tr>
               {% endfor %}
             </tbody>
           </table>
@@ -198,8 +199,8 @@
       indicator.innerHTML = 'check_box_outline_blank'
     }
     fetch(
-      '/pin_depin', { 
-        method: 'POST', 
+      '/pin_depin', {
+        method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({source: source, author: author, stream: stream, target: target})})
     .then(response => {
@@ -307,7 +308,7 @@
       addDataChartThree('next', null, prediction, null);
     }
   }
-  
+
   //var ctx = document.getElementById("chart-bars").getContext("2d");
   //var chartOne = new Chart(ctx, {
   //  type: "bar",
@@ -670,7 +671,3 @@
     }
 </script>
 {% endblock %}
-
-
-
-

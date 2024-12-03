@@ -2,7 +2,7 @@ import pandas as pd
 import hashlib
 import base64
 from typing import Union
-from satorilib.api.disk import Cache
+from satorilib.disk import Cache
 from satorilib.concepts import StreamId
 from satorineuron import config
 Cache.setConfig(config)

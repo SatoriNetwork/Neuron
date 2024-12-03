@@ -958,3 +958,17 @@ input:checked + .slider:before {
 .stream-details.show {
   max-height: 500px;
 }
+
+#observationsTable th, #observationsTable td {
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+}
+
+#observationsTable th {
+  background-color: #f9f9f9;
+}
+
+.no-scroll {
+  overflow: hidden;
+}

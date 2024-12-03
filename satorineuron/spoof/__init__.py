@@ -5,7 +5,7 @@ import json
 import requests
 import datetime as dt
 import pandas as pd
-from satorilib.api import disk
+from satorilib import disk
 from satorilib.concepts.structs import StreamId
 from satorineuron import config
 
