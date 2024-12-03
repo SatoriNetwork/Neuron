@@ -172,7 +172,7 @@
         let pointed = item.pointed == 1 ? 'Yes' : 'No';
         let satori = item.child_satori ? parseFloat(item.child_satori) : 0;
         console.log(item.child_proxy);
-        let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= 7 ? 0: 7); // Convert proxy to float
+        let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= {{ stakeRequired }} ? 0: {{ stakeRequired }}); // Convert proxy to float
         let reward = parseFloat(item.reward); // Convert reward to float
         totalCount += 1;
         totalReward += isNaN(reward) ? 0 : reward; // Add reward, ensure NaN doesn't get added

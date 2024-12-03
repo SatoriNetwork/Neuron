@@ -1611,6 +1611,7 @@ def vault():
             'minedtovault': start.mineToVault,  # start.server.minedToVault(),
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
+            'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
@@ -1652,7 +1653,7 @@ def reportVault(network: str = 'main'):
         address=vaultAddress)
     if success:
         return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+    return f'Failed to register vault: {result}', 400
 
 
 @app.route('/mining/to/address', methods=['GET'])
@@ -1680,7 +1681,7 @@ def mineToAddress(address: str):
         address=address)
     if success:
         return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+    return f'Failed to set reward address: {result}', 400
 
 
 @app.route('/stake/for/address/<address>', methods=['GET'])
@@ -1688,7 +1689,7 @@ def mineToAddress(address: str):
 @authRequired
 def stakeForAddress(address: str):
     if start.vault is None:
-        return '', 200
+        return '', 400
     # the network portion should be whatever network I'm on.
     network = 'main'
     vault = start.getVault(network=network)
@@ -1700,7 +1701,7 @@ def stakeForAddress(address: str):
         address=address)
     if success:
         return 'OK', 200
-    return f'Failed to report vault: {result}', 400
+    return f'Failed to stake for worker: {result}', 400
 
 
 @app.route('/lend/to/address/<address>', methods=['GET'])
