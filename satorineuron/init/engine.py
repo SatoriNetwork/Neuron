@@ -2,9 +2,11 @@ from satorilib import logging
 from satorilib.utils import memory
 from satorilib.concepts import Observation, Stream
 from satorilib.pubsub import SatoriPubSubConn
-from satoriengine.concepts import HyperParameter
+from satoriengine.concepts.structs import HyperParameter
 from satoriengine.model import metrics
-from satoriengine import ModelManager, Engine, DataManager
+from satoriengine.managers.data import DataManager
+from satoriengine.managers.model import ModelManager
+from satoriengine.engine import Engine
 from satorineuron import config
 import copy
 
