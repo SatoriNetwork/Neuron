@@ -217,7 +217,7 @@ class PeerServer:
         self.app.route('/get_peer_data', methods=['GET'])(self.get_peer_data)
         self.app.route('/peer_subscriptions', methods=['GET'])(self.get_peer_subscriptions)
 
-    def get_peer_subscriptions(self):
+    def get_peer_subscriptions(self) :
         """Retrieve subscriptions for a specific peer."""
         try:
             peer_id = request.args.get('peer_id')
@@ -389,7 +389,7 @@ class PeerServer:
         unique_ip = self._generate_unique_ip()
         return jsonify({"ip_address": unique_ip})
 
-    def _generate_unique_ip(self):
+    def _generate_unique_ip(self) -> str:
         """Generate a unique IP address in the range 10.x.y.z with a /16 subnet"""
         conn = sqlite3.connect('peers.db')
         cursor = conn.cursor()
@@ -541,11 +541,11 @@ class PeerServer:
             "connected_at": timestamp
         })
     
-    def connect_datastream(self):
+    def connect_datastream(self) -> (dict[str, str] | dict[str, any]):
         data = request.get_json()
         return self.connect_peers_for_datastream(data['peer_id'], data['stream'])
     
-    def connect_peers_for_datastream(self, requesting_peer_id, desired_stream):
+    def connect_peers_for_datastream(self, requesting_peer_id, desired_stream) -> (dict[str, str] | dict[str, any]):
         """Connect peers based on datastream requirements"""
         conn = sqlite3.connect('peers.db')
         cursor = conn.cursor()
@@ -603,7 +603,7 @@ class PeerServer:
         finally:
             conn.close()
 
-    def connect_peer_internal(self, from_peer, to_peer):
+    def connect_peer_internal(self, from_peer, to_peer) -> (dict[str, str] | dict[str, any]):
         """Internal method to handle peer connection"""
         conn = sqlite3.connect('peers.db')
         cursor = conn.cursor()

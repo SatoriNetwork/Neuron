@@ -20,16 +20,16 @@ class PeerManager():
     ''' keeps track of peers and manages connections '''
 
     def __init__(self, interface="wg0", config_file="peers.json", port=51820):
-        self.interface = interface
-        self.config_file = config_file
-        self.port = port
+        self.interface: str = interface
+        self.config_file: str = config_file
+        self.port: int = port
         self.peers = self.load_peers()
         self.active_connections: Dict[str, bool] = {}
         self.connection_lock = threading.Lock()
-        self.is_running = False
-        self.connection_thread = None
-        self.listening = False
-        self.connecting = False
+        self.is_running: bool = False
+        self.connection_thread: None = None
+        self.listening: bool = False
+        self.connecting: bool = False
 
     def start(self,unique_ip):
         if not self.is_running:
@@ -49,7 +49,7 @@ class PeerManager():
         self._disconnect_all_peers()
         logging.info('PeerManager stopped', color='yellow')
 
-    def load_peers(self):
+    def load_peers(self) -> (any|list):
         try:
             with open(self.config_file, 'r') as f:
                 return json.load(f)

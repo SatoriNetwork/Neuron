@@ -1,3 +1,4 @@
+import errno
 import json
 import socket
 import struct
@@ -73,32 +74,32 @@ class PeerEngine(metaclass=SingletonMeta):
 
     def __init__(
         self, 
-        interface="wg0", 
-        config_file="peers.json", 
-        port=51820, 
+        interface: str = "wg0", 
+        config_file: str = "peers.json", 
+        port: int = 51820, 
         publications: list[str] = None,
         subscriptions: list[str] = None,
         caches: Dict[str, Cache] = None,
     ):
-        self.interface = interface
-        self.config_file = config_file
-        self.port = port
-        self.my_info = WireguardInfo()
-        self.wireguard_config = {}
-        self.client_id = ''
-        self.server_url = "http://188.166.4.120:51820"
+        self.interface: str = interface
+        self.config_file: str = config_file
+        self.port: int = port
+        self.my_info: WireguardInfo = WireguardInfo()
+        self.wireguard_config: dict = {}
+        self.client_id: str = ''
+        self.server_url: str = "http://188.166.4.120:51820"
         self.ip_address = self._get_unique_ip()
-        self.connection_queue = Queue()
-        self.peerManager = PeerManager(self.interface, self.config_file, self.port)
-        self.publications = [dict_to_stream_key(pub) for pub in (publications or [])]
-        self.subscriptions = [dict_to_stream_key(sub) for sub in (subscriptions or [])]
+        self.connection_queue: Queue = Queue()
+        self.peerManager: PeerManager = PeerManager(self.interface, self.config_file, self.port)
+        self.publications: list[str] = [dict_to_stream_key(pub) for pub in (publications or [])]
+        self.subscriptions: list[str] = [dict_to_stream_key(sub) for sub in (subscriptions or [])]
         self.cache_objects: Dict[str, Cache] = caches or {}  # Store Cache objects
-        self.connected_peers = set()
-        self.running = False
-        self.ping_interval = 10
-        self._peer_subscriptions_cache = {}
-        self._peer_subscriptions_timestamp = {}
-        self.subscription_cache_ttl = 1800
+        self.connected_peers: set = set()
+        self.running: bool = False
+        self.ping_interval: int = 10
+        self._peer_subscriptions_cache: dict = {}
+        self._peer_subscriptions_timestamp: dict = {}
+        self.subscription_cache_ttl: int = 1800
     
     def signal_handler(signum, frame):
         peer_engine = PeerEngine()
@@ -108,15 +109,15 @@ class PeerEngine(metaclass=SingletonMeta):
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
     
-    def _serialize_stream_data(self, data):
+    def _serialize_stream_data(self, data : str) -> str:
         """Serialize data with custom encoder for StreamId and Cache objects"""
         return json.dumps(data, cls=StreamIdEncoder)
 
-    def _deserialize_stream_data(self, data_str):
+    def _deserialize_stream_data(self, data_str: any) -> any:
         """Deserialize data with custom decoder for StreamId and Cache objects"""
         return json.loads(data_str, cls=StreamIdDecoder)
 
-    def _encode_stream_id(self, stream_id):
+    def _encode_stream_id(self, stream_id: any) -> any:
         """Safely encode stream ID for storage and transmission"""
         try:
             # Handle StreamId objects
@@ -132,7 +133,7 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.error(f"Error encoding stream ID: {str(e)}")
             raise
 
-    def _get_unique_ip(self):
+    def _get_unique_ip(self) -> any:
         """Get a unique IP address from the PeerServer"""
         response = requests.get(f"{self.server_url}/get_unique_ip")
         if response.status_code == 200:
@@ -140,7 +141,7 @@ class PeerEngine(metaclass=SingletonMeta):
         else:
             raise Exception(f"Failed to get unique IP address: {response.status_code}")
 
-    def start(self):
+    def start(self) -> None:
         """Start the PeerEngine and initialize connections"""
         logging.info('PeerEngine started', color='green')
         self.peerManager.start(self.ip_address)
@@ -152,7 +153,7 @@ class PeerEngine(metaclass=SingletonMeta):
         self.start_peer_check_loop()
         self.start_ping_loop(self.ping_interval)
 
-    def start_listening(self):
+    def start_listening(self) -> None:
         """Listen for and process new peer connection requests"""
         def listen_loop():
             while True:
@@ -190,7 +191,7 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.error(f"Error comparing peer configurations: {str(e)}")
             return False
 
-    def request_connection(self, peer_id: str):
+    def request_connection(self, peer_id: str) -> bool:
         """Request connection to a specific peer through the server"""
         try:
             response = requests.post(
@@ -223,7 +224,7 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.error(f"Error requesting connection to peer {peer_id}: {str(e)}")
             return False
 
-    def connect_to_peers(self):
+    def connect_to_peers(self) -> None:
         """Connect to relevant peers based on complementary pub/sub relationships."""
         try:
             response = requests.get(f"{self.server_url}/list_peers")
@@ -265,7 +266,7 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.error(f"Error in connect_to_peers: {str(e)}")
     
     @staticmethod
-    def get_peer_data(server_url: str, client_id: str):
+    def get_peer_data(server_url: str, client_id: str) -> (dict|None):
         """
         Retrieve cache data from the server for a specific peer and print it
         """
@@ -332,7 +333,7 @@ class PeerEngine(metaclass=SingletonMeta):
             return None
 
     @staticmethod
-    def update_peer_data(server_url: str, client_id: str, cache_data: dict):
+    def update_peer_data(server_url: str, client_id: str, cache_data: dict) -> (any|None):
         """
         Upload cache data to the server using the update_peer endpoint
         """
@@ -367,7 +368,7 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.error(f"Error updating peer data: {str(e)}")
             return None
         
-    def checkin(self):
+    def checkin(self) -> (any|None):
         """Perform check-in with server and update peer data"""
         try:
             wg_info = self.my_info.get_wireguard_info()
@@ -419,11 +420,11 @@ class PeerEngine(metaclass=SingletonMeta):
             return None
 
         
-    def start_background_tasks(self):
+    def start_background_tasks(self) -> None:
         """Start background tasks for maintenance and updates"""
         self.running = True
 
-        def background_loop():
+        def background_loop() -> None:
             while self.running:
                 self.checkin()
                 self.connect_to_peers()
@@ -456,7 +457,7 @@ class PeerEngine(metaclass=SingletonMeta):
             return cached_data if cached_data else []
 
 
-    def start_peer_check_loop(self, interval=15):
+    def start_peer_check_loop(self, interval: int =15) -> None:
         """Start a loop to periodically check for new peers"""
         def check_peers():
             while self.running:
@@ -465,8 +466,10 @@ class PeerEngine(metaclass=SingletonMeta):
 
         threading.Thread(target=check_peers, daemon=True).start()
 
-    def send_cache_to_peer(self, peer_ip: str, cache_data: dict, peer_subscriptions: list[str]):
+    def send_cache_to_peer(self, peer_ip: str, cache_data: dict, peer_subscriptions: list[str]) -> bool:
         """Send filtered cache data to a connected peer over TCP."""
+        MAX_RETRIES = 3
+        retry_count = 0
         if not hasattr(self, '_last_send_times'):
             self._last_send_times = {}
         
@@ -485,24 +488,37 @@ class PeerEngine(metaclass=SingletonMeta):
             return False
 
         PORT = 51821
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.settimeout(5)
-            sock.connect((peer_ip, PORT))
-            serialized_data = self._serialize_stream_data(filtered_cache)
-            data_size = len(serialized_data)
-            sock.sendall(struct.pack('!I', data_size))
-            sock.sendall(serialized_data.encode())
-            ack = sock.recv(2)
-            if ack == b'OK':
-                logging.info(f"Successfully sent filtered cache data to peer {peer_ip}", color="green")
-                self._last_send_times[peer_ip] = current_time
-                return True
-            else:
-                logging.error(f"Failed to get acknowledgment from peer {peer_ip}")
+        while retry_count < MAX_RETRIES:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.settimeout(5)
+                    sock.connect((peer_ip, PORT))
+                    serialized_data = self._serialize_stream_data(filtered_cache)
+                    data_size = len(serialized_data)
+                    sock.sendall(struct.pack('!I', data_size))
+                    sock.sendall(serialized_data.encode())
+                    ack = sock.recv(2)
+                    if ack == b'OK':
+                        logging.info(f"Successfully sent filtered cache data to peer {peer_ip}", color="green")
+                        self._last_send_times[peer_ip] = current_time
+                        return True
+                    else:
+                        logging.error(f"Failed to get acknowledgment from peer {peer_ip}")
+                        return False
+            except ConnectionRefusedError:
+                retry_count += 1
+                if retry_count < MAX_RETRIES:
+                    time.sleep(1)  # Wait before retry
+                continue
+            except Exception as e:
+                logging.error(f"Error sending cache to peer {peer_ip}: {str(e)}")
                 return False
-
-    def start_cache_server(self):
-        def handle_client(client_socket, client_address):
+        
+        logging.error(f"Failed to connect to peer {peer_ip} after {MAX_RETRIES} attempts")
+        return False
+    
+    def start_cache_server(self) -> None:
+        def handle_client(client_socket: any, client_address: any) -> any:
             try:
                 client_socket.settimeout(5)  # Add timeout
                 size_data = client_socket.recv(4)
@@ -540,7 +556,7 @@ class PeerEngine(metaclass=SingletonMeta):
                 except:
                     pass
 
-        def server_loop():
+        def server_loop() -> None:
             server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             server.settimeout(1)  # Add timeout for accept()
@@ -566,13 +582,18 @@ class PeerEngine(metaclass=SingletonMeta):
                         
             except Exception as e:
                 logging.error(f"Server error: {str(e)}")
+            except socket.error as e:
+                if e.errno == errno.EADDRINUSE:
+                    logging.error(f"Port 51821 is already in use")
+                    return
+                raise
             finally:
                 server.close()
         
         threading.Thread(target=server_loop, daemon=True).start()
 
-    def start_ping_loop(self, interval=10):
-        def ping_peers():
+    def start_ping_loop(self, interval: int =10) -> None:
+        def ping_peers() -> None:
             while self.running:
                 try:
                     peers = self.peerManager.list_peers()
@@ -601,7 +622,7 @@ class PeerEngine(metaclass=SingletonMeta):
                         name="peer-ping-monitor").start()
         logging.info(f"Started ping monitoring with {interval}s interval", color="green")
 
-    def run_ping_command(self, ip: str,peer_subscriptions):
+    def run_ping_command(self, ip: str,peer_subscriptions) -> None:
         """Execute ping command to check peer connectivity and send cache data if successful"""
         # try:
         result = subprocess.run(["ping", "-c", "1", "-W", "2", ip], 
@@ -633,7 +654,7 @@ class PeerEngine(metaclass=SingletonMeta):
     #     if hasattr(self, 'background_thread'):
     #         self.background_thread.join(timeout=1)
     #     logging.info("PeerEngine stopped", color="green")
-    def stop(self):
+    def stop(self) -> None:
         """Stop the PeerEngine and cleanup all components"""
         # Signal all threads to stop
         self.running = False

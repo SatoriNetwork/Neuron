@@ -9,7 +9,7 @@ nc_process = None
 nc_connect_process = None
 
 
-def run_command(command):
+def run_command(command) -> str:
     """Run a shell command and return its output."""
     result = subprocess.run(command, shell=True,
                             capture_output=True, text=True)
@@ -18,7 +18,7 @@ def run_command(command):
     return result.stdout.strip()
 
 
-def add_peer(interface, public_key, allowed_ips, endpoint=None):
+def add_peer(interface, public_key, allowed_ips, endpoint=None) -> str:
     """Add a new peer to the WireGuard interface."""
     command = f"wg set {interface} peer {public_key} allowed-ips {allowed_ips}"
     if endpoint:
@@ -28,14 +28,14 @@ def add_peer(interface, public_key, allowed_ips, endpoint=None):
     return f"Peer {public_key} added successfully."
 
 
-def remove_peer(interface, public_key):
+def remove_peer(interface, public_key) -> str:
     """Remove a peer from the WireGuard interface."""
     run_command(f"wg set {interface} peer {public_key} remove")
     save_config(interface)
     return f"Peer {public_key} removed successfully."
 
 
-def list_peers(interface):
+def list_peers(interface) -> list:
     """List all peers connected to the WireGuard interface."""
     output = run_command(f"wg show {interface} dump")
     lines = output.split('\n')[1:]  # Skip the first line (interface info)
@@ -55,7 +55,7 @@ def save_config(interface):
     """Save the current WireGuard configuration."""
     run_command(f"wg-quick save {interface}")
 
-def set_wireguard_ip(interface, ip_address):
+def set_wireguard_ip(interface, ip_address) -> str:
     """Set a unique IP address with a /16 subnet in the WireGuard configuration."""
     config_file_path = f"/etc/wireguard/{interface}.conf"
     try:
@@ -77,7 +77,7 @@ def set_wireguard_ip(interface, ip_address):
     except Exception as e:
         return f"Failed to set IP address for {interface}: {str(e)}"
 
-def start_wireguard_service(interface,unique_ip):
+def start_wireguard_service(interface,unique_ip) -> str:
     """Set up a unique address with /16 subnet and start the WireGuard service for the specified interface."""
     setup_result = set_wireguard_ip(interface, unique_ip)
     
