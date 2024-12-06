@@ -1684,7 +1684,7 @@ def vault():
 
     def accept_submittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
-        logging.debug(passwordForm.password.data, color='yellow')
+        #logging.debug(passwordForm.password.data, color='yellow')
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=start.vault is None)

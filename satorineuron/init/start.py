@@ -194,13 +194,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.walletVaultManager.closeVault()
 
     def openVault(self, password: Union[str, None] = None, create: bool = False):
-        self.walletVaultManager.openVault(password=password, create=create)
+        return self.walletVaultManager.openVault(password=password, create=create)
 
     def getWallet(self):
-        self.walletVaultManager.getWallet()
+        return self.walletVaultManager.getWallet()
 
     def getVault(self, password: Union[str, None] = None, create: bool = False):
-        self.walletVaultManager.getVault(password=password, create=create)
+        return self.walletVaultManager.getVault(password=password, create=create)
 
     def electrumxCheck(self):
         self.walletVaultManager.electrumxCheck()
