@@ -64,3 +64,57 @@ https://github.com/SatoriNetwork/Neuron.git
 in VSCode new window:
 (bottom left, Open Remote Window) Open Folder in Container...
 pick local Neuron repo
+
+## How to run
+
+1. Move to main route and make directory
+```bash
+cd /
+mkdir Satori
+cd Satori
+```
+
+2. Install project
+```bash
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Synapse.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Lib.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Wallet.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Engine.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Neuron.git && \
+cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
+cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
+mkdir /Satori/Neuron/models && \
+mkdir /Satori/Neuron/models/huggingface
+```
+
+3. Set Python environment and install packages
+```bash
+cd /Satori
+python3 -m venv .venv
+## in linux and macOs
+source .venv/bin/activate
+## in windows
+# .venv\Scripts\activate
+pip install --upgrade pip && \
+pip install --no-cache-dir transformers==4.44.2 && \
+pip install --no-cache-dir /Satori/granite-tsfm && \
+pip install --no-cache-dir /Satori/chronos-forecasting && \
+cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+```
+
+4. Set workspace and configuration, and run project
+```bash
+cd /Satori/Neuron/config
+echo env: prod > config.yaml
+cd /Satori/Neuron/satorineuron/web
+sh start.sh
+```
+
+5. Check project on your browser
+```bash
+http://localhost:24601/
+```
