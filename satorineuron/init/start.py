@@ -527,7 +527,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     stream_display.predictions = [
                         value
                         for value in streamForecast.predictionHistory.value]
-            logging.info(f'publishing prediction for {streamForecast.predictionStreamId}', color='blue')
+            logging.info(f'publishing prediction for {streamForecast.predictionStreamId.cleanId}', color='blue')
             self.server.publish(
                 topic=streamForecast.predictionStreamId.topic(),
                 data=streamForecast.forecast["pred"].iloc[0],

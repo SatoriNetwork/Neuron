@@ -1,3 +1,4 @@
+import json
 from satorilib import logging
 from satorilib.utils import memory
 from satorilib.concepts import Observation, Stream
@@ -36,10 +37,19 @@ def establishConnection(
             != "failure: error, a minimum 10 seconds between publications per topic."
         ):
             if response.startswith('{"topic":') or response.startswith('{"data":'):
-                logging.info("received message:", response, print=True)
-                obs = Observation.parse(response)
-                getStart().engine.data.newData.on_next(obs)
-                getStart().aiengine.new_observation.on_next(obs)
+                try:
+                    obs = Observation.parse(response)
+                    logging.info(
+                        'message received:',
+                        f'\n {obs.streamId.cleanId}',
+                        f'\n ({obs.value}, {obs.observationTime}, {obs.observationHash})',
+                        print=True)
+                    getStart().engine.data.newData.on_next(obs)
+                    getStart().aiengine.new_observation.on_next(obs)
+                except json.JSONDecodeError:
+                    logging.info('received unparsable message:', response, print=True)
+            else:
+                logging.info('strange message received:', response, print=True)
 
         # furthermore, shouldn't we do more than route it to the correct models?
         # like, shouldn't we save it to disk, compress if necessary, pin, and
