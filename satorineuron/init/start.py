@@ -517,39 +517,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 predictions=[])
 
         def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
-            print("handleNewPrediction")
-            logging.debug(
-                "topic=",
-                streamForecast.streamId.topic(),
-                color="magenta")
-            logging.debug(
-                "data=",
-                streamForecast.forecast["pred"].iloc[0],
-                color="magenta")
-            logging.debug(
-                "observationTime=",
-                streamForecast.observationTime,
-                color="magenta")
-            logging.debug(
-                "observationHash=",
-                streamForecast.observationHash,
-                color="magenta")
-            logging.debug(
-                "useAuthorizedCall=",
-                self.version >= Version("0.2.6"),
-                color="magenta")
-            logging.debug(
-                "predictionStream=",
-                streamForecast.predictionStreamId,
-                color="red")
-            logging.debug(
-                "predictionStreamtopic=",
-                streamForecast.predictionStreamId.topic(),
-                color="red")
-            logging.debug(
-                "predictionHistory=",
-                streamForecast.predictionHistory,
-                color="blue")
             for stream_display in self.streamDisplay:
                 if stream_display.streamId == streamForecast.streamId:
                     stream_display.value = streamForecast.currentValue["value"].iloc[-1]
@@ -560,7 +527,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     stream_display.predictions = [
                         value
                         for value in streamForecast.predictionHistory.value]
-            print("attempting to publish")
+            logging.info(f'publishing prediction for {streamForecast.predictionStreamId}', color='blue')
             self.server.publish(
                 topic=streamForecast.predictionStreamId.topic(),
                 data=streamForecast.forecast["pred"].iloc[0],
@@ -596,7 +563,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 satoriengine.veda.engine.Engine(
                     streams=self.subscriptions, pubstreams=self.publications)
             )
-            self.aiengine.prediction_produced.subscribe(
+            self.aiengine.predictionProduced.subscribe(
                 lambda x: handleNewPrediction(x) if x is not None else None)
 
     def subConnect(self):
