@@ -65,7 +65,56 @@ in VSCode new window:
 (bottom left, Open Remote Window) Open Folder in Container...
 pick local Neuron repo
 
-## How to run
+## How to run using Docker (recommended)
+
+1. Move to main route and make directory
+```bash
+cd /
+mkdir Satori
+cd Satori
+```
+
+2. Install project
+```bash
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Synapse.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Lib.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Wallet.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Engine.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Neuron.git && \
+mkdir /Satori/Neuron/models && \
+mkdir /Satori/Neuron/models/huggingface
+```
+
+3. Pull the docker environment
+```bash
+docker pull satorinet/satorineuron:latest
+# or for experimental: docker pull satorinet/satorineuron:test
+```
+
+4. Run docker container while mounting in local code
+```bash
+docker run --rm -it --name satorineuron -p 24601:24601 \
+  -v /Satori/Neuron:/Satori/Neuron \
+  -v /Satori/Synapse:/Satori/Synapse \
+  -v /Satori/Lib:/Satori/Lib \
+  -v /Satori/Wallet:/Satori/Wallet \
+  -v /Satori/Engine:/Satori/Engine \
+  --env ENV=prod \
+  --env RUNMODE=normal \
+  satorinet/satorineuron:latest bash
+```
+
+5. Start satori
+```bash
+python satori.py
+```
+
+6. Check project on your browser
+```bash
+http://localhost:24601/
+```
+
+## How to run without Docker
 
 1. Move to main route and make directory
 ```bash
