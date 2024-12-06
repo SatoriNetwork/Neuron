@@ -333,7 +333,7 @@ class PeerEngine(metaclass=SingletonMeta):
             return None
 
     @staticmethod
-    def update_peer_data(server_url: str, client_id: str, cache_data: dict) -> (any|None):
+    def update_peer_data(server_url: str, client_id: str, cache_data: dict) :
         """
         Upload cache data to the server using the update_peer endpoint
         """
@@ -368,7 +368,7 @@ class PeerEngine(metaclass=SingletonMeta):
             logging.error(f"Error updating peer data: {str(e)}")
             return None
         
-    def checkin(self) -> (any|None):
+    def checkin(self) :
         """Perform check-in with server and update peer data"""
         try:
             wg_info = self.my_info.get_wireguard_info()

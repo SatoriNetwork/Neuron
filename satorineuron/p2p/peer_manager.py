@@ -49,7 +49,7 @@ class PeerManager():
         self._disconnect_all_peers()
         logging.info('PeerManager stopped', color='yellow')
 
-    def load_peers(self) -> (any|list):
+    def load_peers(self) -> (list):
         try:
             with open(self.config_file, 'r') as f:
                 return json.load(f)
