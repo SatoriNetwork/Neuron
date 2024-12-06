@@ -32,6 +32,9 @@ from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.structs.pubsub import SignedStreamId
 from satorineuron.synergy.engine import SynergyManager
 
+from satorineuron.p2p import PeerEngine
+from typing import List, Dict
+
 
 def getStart():
     ''' returns StartupDag singleton '''
@@ -64,6 +67,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False
     ):
         super(StartupDag, self).__init__(*args)
+        self.version = [int(x) for x in VERSION.split('.')]
         self.version = Version(VERSION)
         # TODO: test and turn on with new installer
         # self.watchForVersionUpdates()
@@ -107,6 +111,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.synergy: Union[SynergyManager, None] = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
+        self.peerEngine: PeerEngine = PeerEngine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.udpQueue: Queue = Queue()  # TODO: remove
@@ -541,6 +546,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.startSynergyEngine()
         self.subConnect()
         self.pubsConnect()
+        self.peerConnect()
         if self.isDebug:
             return
         self.startRelay()
@@ -814,7 +820,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def pubsConnect(self):
         '''
-        oracle nodes publish to every pubsub machine. therefore, they have
+        oracle nodes publish to every pu
+    #         # publications=['X', 'Y', 'Z'],bsub machine. therefore, they have
         an additional set of connections that they mush push to.
         '''
         self.pubs = []
@@ -830,6 +837,84 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     pubkey=self.wallet.publicKey + ':publishing',
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + '|' + self.oracleKey))
+
+    def peerConnect(self):
+        # '''
+        # connects to peers for the purpose of syncing datasets
+        # '''
+        # #signature = self.wallet.sign(self.key)
+        # self.peerEngine = PeerEngine(
+        #     subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
+        #     publications=[pub.streamId.topic() for pub in self.publications],
+        #     # subscriptions=['A', 'B', 'C'],
+        #     caches=self.caches,
+        #     # caches={'X':"HI",'Y':'TO','Z':'ALL','A':'HELLO','B':'GOOD',"C":'FRIEND'}
+            
+        #     #key=signature.decode() + '|' + self.key,
+        # )
+        
+        # self.peerEngine.start()
+        '''
+        connects to peers for the purpose of syncing datasets
+        '''
+        import ast  # Add this at the top of your file
+
+        def parse_stream_dict(stream_str : str) -> str:
+            """Convert string representation of dict to proper format"""
+            try:
+                if isinstance(stream_str, str) and stream_str.startswith('{'):
+                    return ast.literal_eval(stream_str)
+                return stream_str
+            except:
+                return stream_str
+
+        # Format the publications and subscriptions properly
+        publications = [
+        #     {
+        #         'source': 'satori',
+        #         'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8',
+        #         'stream': 'LNS-BTCPrice10Minutes_p',
+        #         'target': 'price'
+        #     }
+        ]
+        
+        subscriptions = [
+    {
+        'source': 'satori',
+        'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        'stream': 'DBGI.USD.10mins_p',
+        'target': 'results.p'
+    },
+    {
+        'source': 'satori',
+        'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        'stream': 'CurrentWeather.Lviv.C_p',
+        'target': 'current.temp_c'
+    },
+    
+]
+
+
+        # Format the caches properly
+        caches = {}
+        for stream_str, cache_obj in {
+            # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'HQI.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x7fbdbd951ff0>",
+            # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'BYRN.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x7fbdbd952620>",
+            # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'CurrentWeather.Lviv.C_p', 'target': 'current.temp_c'}": "<satorilib.api.disk.cache.Cache object at 0x7fbdbd950c10>",
+            # # # "{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}": "<satorilib.api.disk.cache.Cache object at 0x7f9790516f80>",
+            # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'DBGI.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x76e61d109cf0>"
+        }.items():
+            stream_dict = parse_stream_dict(stream_str)
+            if isinstance(stream_dict, dict):
+                key = f"{stream_dict['source']}.{stream_dict['author']}.{stream_dict['stream']}.{stream_dict['target']}"
+                caches[key] = cache_obj
+
+        self.peerEngine : PeerEngine = PeerEngine(
+            publications=publications,
+            subscriptions=subscriptions,
+            caches=caches
+        )
+        self.peerEngine.start()
 
     def startRelay(self):
         def append(streams: list[Stream]):
