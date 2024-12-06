@@ -146,7 +146,6 @@ class StartupDagStruct(object):
 
     def getVault(
         self,
-        network: str = None,
         password: Union[str, None] = None,
         create: bool = False,
     ) -> Union[EvrmoreWallet, RavencoinWallet]:

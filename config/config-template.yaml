@@ -1,4 +1,5 @@
 headless: false
+disable restart: false
 neuron lock enabled: true
 neuron lock hash: fs1f3se5ffsef1sf
 mining mode: true

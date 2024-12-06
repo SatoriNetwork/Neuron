@@ -111,6 +111,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBlockTime = time.time()
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
+        self.setEngineVersion()
         self.setupWallets()
         if not config.get().get("disable restart", False):
             self.restartThread = threading.Thread(
@@ -191,6 +192,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def closeVault(self):
         self.walletVaultManager.closeVault()
+
+    def openVault(self, password: Union[str, None] = None, create: bool = False):
+        self.walletVaultManager.openVault(password=password, create=create)
+
+    def getWallet(self):
+        self.walletVaultManager.getWallet()
+
+    def getVault(self, password: Union[str, None] = None, create: bool = False):
+        self.walletVaultManager.getVault(password=password, create=create)
 
     def electrumxCheck(self):
         self.walletVaultManager.electrumxCheck()
@@ -278,7 +288,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
-        self.setEngineVersion()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
@@ -508,6 +517,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 predictions=[])
 
         def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
+            print("handleNewPrediction")
             logging.debug(
                 "topic=",
                 streamForecast.streamId.topic(),
@@ -550,7 +560,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     stream_display.predictions = [
                         value
                         for value in streamForecast.predictionHistory.value]
-
+            print("attempting to publish")
             self.server.publish(
                 topic=streamForecast.predictionStreamId.topic(),
                 data=streamForecast.forecast["pred"].iloc[0],

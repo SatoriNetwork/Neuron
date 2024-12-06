@@ -751,9 +751,9 @@ def stakeCheck():
 @userInteracted
 @authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
-    # return sendSatoriTransactionUsing(start.getWallet(network=network), network, 'wallet')
+    # return sendSatoriTransactionUsing(start.getWallet(), network, 'wallet')
     result = sendSatoriTransactionUsing(
-        start.getWallet(network=network), network, 'wallet')
+        start.getWallet(), network, 'wallet')
     if isinstance(result, str) and len(result) == 64:
         flash(str(result))
     return redirect(f'/wallet/{network}')
@@ -1684,7 +1684,7 @@ def vault():
 
     def accept_submittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
-        # logging.debug(passwordForm.password.data, color='yellow')
+        logging.debug(passwordForm.password.data, color='yellow')
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=start.vault is None)
@@ -1712,7 +1712,7 @@ def vault():
         #    logging.info(
         #        'beta NFT not yet claimed. Claiming Beta NFT:',
         #        claimResult.get('description'))
-        myWallet = start.getWallet(network='main')
+        myWallet = start.getWallet()
         try:
             alias = myWallet.alias or start.server.getWalletAlias()
         except Exception as e:
@@ -1759,12 +1759,12 @@ def reportVault(network: str = 'main'):
     if start.vault is None:
         return redirect('/dashboard')
     # the network portion should be whatever network I'm on.
-    vault = start.getVault(network=network)
+    vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
     vaultAddress = vault.address
     success, result = start.server.registerVault(
-        walletSignature=start.getWallet(network=network).sign(vaultAddress),
+        walletSignature=start.getWallet().sign(vaultAddress),
         vaultSignature=vault.sign(vaultAddress),
         vaultPubkey=vault.publicKey,
         address=vaultAddress)
@@ -2006,7 +2006,7 @@ def vote():
     if request.method == 'POST':
         accept_submittion(forms.VaultPassword(formdata=request.form))
 
-    myWallet = start.getWallet(network=start.network)
+    myWallet = start.getWallet()
     return render_template('vote.html', **getResp({
         'title': 'Vote',
         'network': start.network,
@@ -2447,7 +2447,7 @@ def voteSubmitManifestWallet():
         request.json.get('walletManagers') > 0
     ):
         start.server.submitMaifestVote(
-            wallet=start.getWallet(network=start.network),
+            wallet=start.getWallet(),
             votes={
                 'predictors': request.json.get('walletPredictors', 0),
                 'oracles': request.json.get('walletOracles', 0),
@@ -2492,7 +2492,7 @@ def voteSubmitSanctionWallet():
             'walletVotes', []))
     ):
         start.server.submitSanctionVote(
-            wallet=start.getWallet(network=start.network),
+            wallet=start.getWallet(),
             votes={
                 'streamIds': request.json.get('walletStreamIds'),
                 'votes': request.json.get('walletVotes')})
@@ -2530,7 +2530,7 @@ def voteSubmitSanctionVault():
 def voteRemoveAllSanction():
     # logging.debug(request.json, color='yellow')
     start.server.removeSanctionVote(
-        wallet=start.getWallet(network=start.network))
+        wallet=start.getWallet())
     if (start.vault is not None and start.vault.isDecrypted):
         start.server.removeSanctionVote(start.vault)
     return jsonify({'message': 'Stream votes received successfully'}), 200

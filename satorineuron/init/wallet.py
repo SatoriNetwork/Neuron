@@ -171,6 +171,18 @@ class WalletVaultManager():
             return self._vault
         return self._initializeVault(password=password, create=create)
 
+    def openVault(
+        self,
+        password: Union[str, None] = None,
+        create: bool = False,
+    ) -> EvrmoreWallet:
+        if isinstance(self._vault, EvrmoreWallet):
+            if self._vault.isDecrypted:
+                return self._vault
+            self._vault.open(password)
+            return self._vault
+        return self._initializeVault(password=password, create=create)
+
     def closeVault(self) -> Union[EvrmoreWallet, None]:
         ''' close the vault, reopen it without decrypting it. '''
         if isinstance(self._vault, EvrmoreWallet):
