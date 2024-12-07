@@ -594,11 +594,11 @@ def modeDark():
 #    return redirect(url_for('dashboard'))
 
 
-# @app.route('/test/disconnect', methods=['GET'])
-# @userInteracted
-# def testdisconnect():
-#    logging.debug(start.disconnectWallets())
-#    return redirect(url_for('dashboard'))
+@app.route('/test/disconnect', methods=['GET'])
+@userInteracted
+def testdisconnect():
+    logging.debug(start.walletVaultManager.disconnect())
+    return redirect(url_for('dashboard'))
 
 
 # @app.route('/test/connect', methods=['GET'])
@@ -1173,7 +1173,6 @@ def dashboard():
     #     [model.miniOverview() for model in start.engine.models]
     #     if start.engine is not None else [])  # StreamOverviews.demo()
     streamOverviews = [stream for stream in start.streamDisplay]
-    start.electrumxCheck()
     holdingBalance = start.holdingBalance
     stakeStatus = holdingBalance >= 5 or (
         start.details.wallet.get('rewardaddress', None) not in [

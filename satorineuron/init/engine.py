@@ -40,16 +40,16 @@ def establishConnection(
                 try:
                     obs = Observation.parse(response)
                     logging.info(
-                        'message received:',
+                        'received:',
                         f'\n {obs.streamId.cleanId}',
                         f'\n ({obs.value}, {obs.observationTime}, {obs.observationHash})',
                         print=True)
                     getStart().engine.data.newData.on_next(obs)
-                    getStart().aiengine.new_observation.on_next(obs)
+                    getStart().aiengine.newObservation.on_next(obs)
                 except json.JSONDecodeError:
                     logging.info('received unparsable message:', response, print=True)
             else:
-                logging.info('strange message received:', response, print=True)
+                logging.info('received:', response, print=True)
 
         # furthermore, shouldn't we do more than route it to the correct models?
         # like, shouldn't we save it to disk, compress if necessary, pin, and
