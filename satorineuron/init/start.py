@@ -18,6 +18,7 @@ from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
 import satoriengine
+from satoriengine.veda.data.structs import StreamForecast
 import satorineuron
 from satorineuron import VERSION
 from satorineuron import logging
@@ -28,7 +29,6 @@ from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
-
 
 def getStart():
     """returns StartupDag singleton"""
@@ -516,7 +516,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 values=[],
                 predictions=[])
 
-        def handleNewPrediction(streamForecast: "satoriengine.StreamForecast"):
+        def handleNewPrediction(streamForecast: StreamForecast):
             for stream_display in self.streamDisplay:
                 if stream_display.streamId == streamForecast.streamId:
                     stream_display.value = streamForecast.currentValue["value"].iloc[-1]
@@ -527,7 +527,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     stream_display.predictions = [
                         value
                         for value in streamForecast.predictionHistory.value]
-            logging.info(f'publishing prediction for {streamForecast.predictionStreamId.cleanId}', color='blue')
+            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId.cleanId}', color='blue')
             self.server.publish(
                 topic=streamForecast.predictionStreamId.topic(),
                 data=streamForecast.forecast["pred"].iloc[0],
