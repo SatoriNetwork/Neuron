@@ -54,7 +54,7 @@
     var engineRestartMsg = document.getElementById('engineRestartMsg');
     if (isChecked) {
         engineRestartMsg.style.display = 'block';
-        fetch('/engine/version/v1', { method: 'GET' })
+        fetch('/engine/version/v2', { method: 'GET' })
           .then((response) => {
             if (response.ok) {
               return response.text();
@@ -68,7 +68,7 @@
           .catch((error) => console.error('Error:', error));
     } else {
       engineRestartMsg.style.display = 'block';
-      fetch('/engine/version/v2', { method: 'GET' })
+      fetch('/engine/version/v1', { method: 'GET' })
         .then((response) => {
           if (response.ok) {
             return response.text();
