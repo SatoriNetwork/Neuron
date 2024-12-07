@@ -2,6 +2,7 @@ from typing import Union
 import os
 import time
 import shutil
+import threading
 from queue import Queue
 from satorilib.electrumx import Electrumx
 from satorilib.wallet import EvrmoreWallet
@@ -60,6 +61,10 @@ class WalletVaultManager():
 
     def userInteracted(self):
         self.userInteraction = time.time()
+        # thread so we don't make the user wait for the reconnect
+        threading.Thread(target=self.reconnectIfInactive).start()
+
+    def reconnectIfInactive(self):
         if not self.electrumxCheck():
             self.reconnect()
 
