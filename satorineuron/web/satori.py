@@ -431,13 +431,13 @@ def backup(target: str = 'satori'):
     if start.vault is not None and not start.vault.isEncrypted:
         outputPath = '/Satori/Neuron/satorineuron/web/static/download'
         if target == 'satori':
-            from satorilib.api.disk.zip.zip import zipSelected
+            from satorilib.disk.zip.zip import zipSelected
             zipSelected(
                 folderPath=f'/Satori/Neuron/{target}',
                 outputPath=f'{outputPath}/{target}.zip',
                 selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
         else:
-            from satorilib.api.disk.zip.zip import zipFolder
+            from satorilib.disk.zip.zip import zipFolder
             zipFolder(
                 folderPath=f'/Satori/Neuron/{target}',
                 outputPath=f'{outputPath}/{target}')
