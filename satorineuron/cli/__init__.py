@@ -2,7 +2,7 @@
 import click
 from satoriwallet import evrmore
 from satoriwallet.lib import connection
-from satorilib.api.wallet import EvrmoreWallet
+from satorilib.wallet import EvrmoreWallet
 
 
 @click.group()

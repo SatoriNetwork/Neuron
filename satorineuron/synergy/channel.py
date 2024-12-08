@@ -16,9 +16,9 @@ import pandas as pd
 from queue import Queue, Empty
 from satorilib import logging
 from satorilib.concepts import StreamId
-from satorilib.api.disk import Cached
-from satorilib.api.hash import hashRow
-from satorilib.api.time import datetimeToTimestamp, earliestDate, isValidTimestamp
+from satorilib.disk import Cached
+from satorilib.utils.hash import hashRow
+from satorilib.utils.time import datetimeToTimestamp, earliestDate, isValidTimestamp
 from satorineuron.synergy.domain.objects import Vesicle, SingleObservation, ObservationRequest
 from satorisynapse import Envelope, Ping
 

@@ -354,7 +354,7 @@ PLAN
             DONE central - test distribution
             DONE central - manually rebuild tables in database test
             DONE central - manually rebuild tables in database prod
-        Commemorative NFT on polygon
+        Commemorative NFT on
             DONE central - add columns to exiting test database
             DONE external - generate on some platform (rvn or opensea or something)
             DONE external - create artwork
