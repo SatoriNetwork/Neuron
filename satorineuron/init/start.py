@@ -179,8 +179,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     @property
     def holdingBalance(self) -> float:
         self._holdingBalance = round(
-            self.wallet.balanceAmount
-            + (self.vault.balanceAmount if self.vault is not None else 0),
+            self.wallet.balance.amount
+            + (self.vault.balance.amount if self.vault is not None else 0),
             8)
         return self._holdingBalance
 

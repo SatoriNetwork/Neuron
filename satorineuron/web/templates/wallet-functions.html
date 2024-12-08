@@ -12,13 +12,13 @@
             <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{%if wallet.isTestnet %}Test {%endif%}{{title}}</h4>
           </div>
           <div class="text-center pt-1">
-            <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.balanceAmount }}</h4>
+            <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.balance.amount }}</h4>
             <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>{%if wallet.isTestnet %}<p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">(testnet)</p>{%endif%}
           </div>
         </div>
         <hr class="dark horizontal my-0">
         <div class="card-footer p-1">
-          <p class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align:center;"><span class="font-weight-normal">{{ wallet.currencyAmount }} </span>{{ wallet.chain }}</p>
+          <p class="mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align:center;"><span class="font-weight-normal">{{ wallet.currency.amount }} </span>{{ wallet.chain }}</p>
         </div>
         <hr class="dark horizontal my-0">
         <center>
@@ -80,8 +80,8 @@
                     </div>
                     <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                       <div class="input-group input-group-outline">
-                        {% if darkmode %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
-                        {% else %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control", placeholder=wallet.balanceAmount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
+                        {% if darkmode %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balance.amount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
+                        {% else %}{{ sendSatoriTransaction.amount(size=32, class_="tight form-control", placeholder=wallet.balance.amount, onkeypress="return Number(document.getElementById('walletDivisibility').innerHTML) == 0 ? /\d/.test(event.key) : true;") }}
                         {% endif %}
                       </div>
                     </div>

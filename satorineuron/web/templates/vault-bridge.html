@@ -56,8 +56,8 @@
                   </div>
                   <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                     <div class="input-group input-group-outline">
-                      {% if darkmode %}{{ bridgeSatoriTransaction.bridgeAmount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balanceAmount) }}
-                      {% else %}{{ bridgeSatoriTransaction.bridgeAmount(size=32, class_="tight form-control", placeholder=wallet.balanceAmount) }}
+                      {% if darkmode %}{{ bridgeSatoriTransaction.bridgeAmount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balance.amount) }}
+                      {% else %}{{ bridgeSatoriTransaction.bridgeAmount(size=32, class_="tight form-control", placeholder=wallet.balance.amount) }}
                       {% endif %}
                     </div>
                   </div>
