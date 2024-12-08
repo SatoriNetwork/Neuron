@@ -808,9 +808,7 @@ def sendSatoriTransactionUsing(
             myWallet.get(allWalletInfo=False)
 
         # doesn't respect the cooldown
-        print('getting unspent sigs')
         myWallet.getUnspentSignatures(force=True)
-        print('done getting unspent sigs')
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
         try:

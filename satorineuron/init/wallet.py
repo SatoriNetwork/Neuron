@@ -69,7 +69,6 @@ class WalletVaultManager():
         if not self.electrumxCheck():
             logging.info('wallet waking up, reconnecting...', color='yellow')
             return self.reconnect()
-        logging.info('wallet already up, right...', color='yellow')
 
 
     def electrumxCheck(self) -> bool:
