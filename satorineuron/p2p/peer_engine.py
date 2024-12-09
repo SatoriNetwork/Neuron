@@ -147,6 +147,7 @@ class PeerEngine(metaclass=SingletonMeta):
         self.peerManager.start(self.ip_address)
         wg_info = self.my_info.get_wireguard_info()
         self.client_id = wg_info['public_key']
+        # print(self.cache_objects)
         self.start_cache_server()
         self.start_background_tasks()
         self.start_listening()

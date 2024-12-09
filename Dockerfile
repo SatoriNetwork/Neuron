@@ -85,6 +85,7 @@ RUN chmod 600 /etc/wireguard/wg0.conf
 # Expose ports
 EXPOSE 24601
 EXPOSE 51820/udp
+EXPOSE 51820/tcp
 
 
 # Set working directory

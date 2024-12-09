@@ -847,7 +847,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #     subscriptions=[sub.streamId.topic() for sub in self.subscriptions],
         #     publications=[pub.streamId.topic() for pub in self.publications],
         #     # subscriptions=['A', 'B', 'C'],
-        #     caches=self.caches,
+            # caches=self.caches,
         #     # caches={'X':"HI",'Y':'TO','Z':'ALL','A':'HELLO','B':'GOOD',"C":'FRIEND'}
             
         #     #key=signature.decode() + '|' + self.key,
@@ -876,9 +876,81 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #         'stream': 'LNS-BTCPrice10Minutes_p',
         #         'target': 'price'
         #     }
+    #     {
+    #     'source': 'satori',
+    #     'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #     'stream': 'DBGI.USD.10mins_p',
+    #     'target': 'results.p'
+    # },
+    # {
+    #     'source': 'satori',
+    #     'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #     'stream': 'CurrentWeather.Lviv.C_p',
+    #     'target': 'current.temp_c'
+    # },
+    # {
+    #     'source': 'satori',
+    #     'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #     'stream': 'HQI.USD.10mins_p',
+    #     'target': 'results.p'
+    # },
+    # {
+    #     'source': 'satori',
+    #     'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #     'stream': 'BYRN.USD.10mins_p',
+    #     'target': 'results.p'
+    # }
+    {
+        'source': 'satori', 
+        'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 
+        'stream': 'DCI.USD.10mins_p', 
+        'target': 'results.p'
+    },
+    {
+        'source': 'satori', 
+        'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 
+        'stream': 'coinbaseBTC-COVAL_p', 
+        'target': 'data.rates.COVAL'
+    }
         ]
         
         subscriptions = [
+    # {
+    #     'source': 'satori', 
+    #     'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 
+    #     'stream': 'DCI.USD.10mins_p', 
+    #     'target': 'results.p'
+    # },
+    # {
+    #     'source': 'satori', 
+    #     'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 
+    #     'stream': 'coinbaseBTC-COVAL_p', 
+    #     'target': 'data.rates.COVAL'
+    # },
+    # {
+    #     'source': 'satori', 
+    #     'author': '03b73a418f545709c8f805f673e380b5a3539d03cdd1bc81a4aadf01a005feca72', 
+    #     'stream': 'EP.USD.10mins_p', 
+    #     'target': 'results.p'
+    # },
+    # {
+    #     'source': 'satori', 
+    #     'author': '03b73a418f545709c8f805f673e380b5a3539d03cdd1bc81a4aadf01a005feca72', 
+    #     'stream': 'HumidityHourlyBerlin', 
+    #     'target': 'current.humidity'
+    # }
+    # {
+    #     'source': 'satori',
+    #     'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #     'stream': 'DBGI.USD.10mins_p',
+    #     'target': 'results.p'
+    # },
+    # {
+    #     'source': 'satori',
+    #     'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #     'stream': 'CurrentWeather.Lviv.C_p',
+    #     'target': 'current.temp_c'
+    # },
     {
         'source': 'satori',
         'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
@@ -888,22 +960,97 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     {
         'source': 'satori',
         'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
-        'stream': 'CurrentWeather.Lviv.C_p',
-        'target': 'current.temp_c'
-    },
+        'stream': 'BYRN.USD.10mins_p',
+        'target': 'results.p'
+    }
     
 ]
 
 
         # Format the caches properly
+        # caches = {}
+        # for stream_str, cache_obj in {
+        # #     "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'HQI.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x7fbdbd951ff0>",
+        # #     "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'BYRN.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x7fbdbd952620>",
+        # #     "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'CurrentWeather.Lviv.C_p', 'target': 'current.temp_c'}": "<satorilib.api.disk.cache.Cache object at 0x7fbdbd950c10>",
+        # #     "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'DBGI.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x76e61d109cf0>"
+        
+        # }.items():
+        
         caches = {}
         for stream_str, cache_obj in {
-            # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'HQI.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x7fbdbd951ff0>",
-            # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'BYRN.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x7fbdbd952620>",
-            # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'CurrentWeather.Lviv.C_p', 'target': 'current.temp_c'}": "<satorilib.api.disk.cache.Cache object at 0x7fbdbd950c10>",
-            # # # "{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'LNS-BTCPrice10Minutes_p', 'target': 'price'}": "<satorilib.api.disk.cache.Cache object at 0x7f9790516f80>",
-            # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'DBGI.USD.10mins_p', 'target': 'results.p'}": "<satorilib.api.disk.cache.Cache object at 0x76e61d109cf0>"
-        }.items():
+        # # StreamId(
+        # #     source='satori',
+        # #     author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        # #     stream='HQI.USD.10mins_p',
+        # #     target='results.p'
+        # # ): self.caches.get(StreamId(
+        # #     source='satori',
+        # #     author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        # #     stream='HQI.USD.10mins_p',
+        # #     target='results.p')),
+        # # StreamId(
+        # #     source='satori',
+        # #     author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        # #     stream='BYRN.USD.10mins_p',
+        # #     target='results.p'
+        # # ): self.caches.get(StreamId(
+        # #     source='satori',
+        # #     author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        # #     stream='BYRN.USD.10mins_p',
+        # #     target='results.p')),
+        # # StreamId(
+        # #     source='satori',
+        # #     author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        # #     stream='CurrentWeather.Lviv.C_p',
+        # #     target='current.temp_c'
+        # # ): self.caches.get(StreamId(
+        # #     source='satori',
+        # #     author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        # #     stream='CurrentWeather.Lviv.C_p',
+        # #     target='current.temp_c')),
+        # # StreamId(
+        # #     source='satori',
+        # #     author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        # #     stream='DBGI.USD.10mins_p',
+        # #     target='results.p'
+        # # ): self.caches.get(StreamId(
+        # #     source='satori',
+        # #     author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+        # #     stream='DBGI.USD.10mins_p',
+        # #     target='results.p'))
+    # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'HQI.USD.10mins_p', 'target': 'results.p'}": self.caches.get(StreamId(
+    #         source='satori',
+    #         author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #         stream='HQI.USD.10mins_p',
+    #         target='results.p')),
+    # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'BYRN.USD.10mins_p', 'target': 'results.p'}": self.caches.get(StreamId(
+    #         source='satori',
+    #         author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #         stream='BYRN.USD.10mins_p',
+    #         target='results.p')),
+    # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'DBGI.USD.10mins_p', 'target': 'results.p'}": self.caches.get(StreamId(
+    #         source='satori',
+    #         author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #         stream='DBGI.USD.10mins_p',
+    #         target='results.p')),
+    # "{'source': 'satori', 'author': '02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5', 'stream': 'CurrentWeather.Lviv.C_p', 'target': 'current.temp_c'}": self.caches.get(StreamId(
+    #         source='satori',
+    #         author='02bd14cb3ad93e24ef625b61977d1ea60b60a0b53fa56d7a9d0288a918f4e271d5',
+    #         stream='CurrentWeather.Lviv.C_p',
+    #         target='current.temp_c')),
+    "{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'coinbaseBTC-COVAL_p', 'target': 'data.rates.COVAL'}": self.caches.get(StreamId(
+            source='satori',
+            author='0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8',
+            stream='coinbaseBTC-COVAL_p',
+            target='data.rates.COVAL')),
+    "{'source': 'satori', 'author': '0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8', 'stream': 'DCI.USD.10mins_p', 'target': 'results.p'}": self.caches.get(StreamId(
+            source='satori',
+            author='0372536cbf7e28d9b978d19bb15a81942fa2127a4b2e17847ceff61215a8333df8',
+            stream='DCI.USD.10mins_p',
+            target='results.p'))
+        
+    }.items():
             stream_dict = parse_stream_dict(stream_str)
             if isinstance(stream_dict, dict):
                 key = f"{stream_dict['source']}.{stream_dict['author']}.{stream_dict['stream']}.{stream_dict['target']}"
