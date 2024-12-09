@@ -1788,7 +1788,7 @@ def mineToAddress(address: str):
     # the network portion should be whatever network I'm on.
     network = 'main'
     start.details.wallet['rewardaddress'] = address
-    vault = start.getVault(network=network)
+    vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
     success, result = start.server.setRewardAddress(
@@ -1808,7 +1808,7 @@ def stakeForAddress(address: str):
         return 'no vault, unable to stake', 400
     # the network portion should be whatever network I'm on.
     network = 'main'
-    vault = start.getVault(network=network)
+    vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault', code=302)
     success, result = start.server.stakeForAddress(
@@ -1828,7 +1828,7 @@ def lendToAddress(address: str):
         return '', 200
     # the network portion should be whatever network I'm on.
     network = 'main'
-    vault = start.getVault(network=network)
+    vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
     success, result = start.server.lendToAddress(
