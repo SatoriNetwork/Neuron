@@ -2,7 +2,7 @@ from typing import Union
 import json
 import pandas as pd
 import datetime as dt
-from satorilib.api.time import isValidTimestamp
+from satorilib.utils.time import isValidTimestamp
 from satorisynapse import Vesicle as SynapseVesicle
 from satorisynapse import Ping, Signal
 

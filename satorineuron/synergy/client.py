@@ -6,7 +6,7 @@ import socketio
 import threading
 from urllib.parse import quote_plus
 from satorilib import logging
-from satorilib.api.wallet import Wallet
+from satorilib.wallet import Wallet
 from satorilib.synergy import SynergyProtocol
 
 

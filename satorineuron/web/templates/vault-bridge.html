@@ -1,0 +1,124 @@
+{% block content %}
+
+<div class="row mb-0" style='padding-bottom:1rem;display:block;'><br id="bridgebr">
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-1 col-sm-1 mb-xl-0"></div>
+        <div class="col-xl-10 col-sm-10 mb-xl-0">
+          <button class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
+                  style="padding-top:1.5rem; text-transform: none;"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#bridgeContent"
+                  aria-expanded="true"
+                  aria-controls="bridgeContent">
+                  <h4 class="{% if darkmode %}dark-colors{% endif %}">Bridge To Ethereum</h4>
+          </button>
+        </div>
+        <div class="col-xl-1 col-sm-1 mb-xl-0">
+          <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl position-absolute" style="margin-top: -1rem !important;">
+            <i class="material-icons opacity-10">whatshot</i>
+          </div>
+        </div>
+      </div>
+      <div id="bridgeContent" class="collapse show">
+        <div style="padding-left: 2.5rem; padding-right:2.5rem;">
+          <p class="test-sm">Use this to bridge SATORI from the Evrmore blockchain to Ethereum. How the bridge works:
+            <br> • The SATORI that is bridged gets burned and can never be retrieved by anyone.
+            <br> • Burning the Evrmore SATORI triggers a smart contract on Ethereum to mint SATORI of the same amount (minus the gas fees) directly to the Ethereum address provided.
+            <br> • The bridging process can take up to 2 hours to ensure there are no double spends.
+            <br>Please send small amounts. THIS ACTION WILL BURN SATORI. Use at your own risk.
+          </p>
+        </div>
+          <div style="padding: 1.25rem;">
+            <form action="/bridge_satori_transaction_from_{{ title|lower }}/{{ network }}" method="POST">
+              {{ bridgeSatoriTransaction.hidden_tag() }}
+              {{ bridgeSatoriTransaction.csrf_token }}
+              <div class="tight text-format-table-header" style="text-align: left;">
+                {% if darkmode %}{{ bridgeSatoriTransaction.ethAddress.label(class="dark-colors tight-label") }}
+                {% else %}{{ bridgeSatoriTransaction.ethAddress.label(class="tight-label") }}
+                {% endif %}
+              </div>
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
+                <div class="input-group input-group-outline">
+                  {% if darkmode %}{{ bridgeSatoriTransaction.ethAddress(size=32, class_="tight form-control dark-colors", placeholder=ethAddress, value=ethAddress, readonly=true, title="You must bridge to your own address.") }}
+                  {% else %}{{ bridgeSatoriTransaction.ethAddress(size=32, class_="tight form-control", placeholder=ethAddress, value=ethAddress, readonly=true, title="You must bridge to your own address.") }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="row" style="padding: 1px !important; margin-bottom: 2rem;">
+                <div class="col-xl-12 col-sm-12">
+                  <div class="tight text-format-table-header" style="text-align: left;">
+                    {% if darkmode %}{{ bridgeSatoriTransaction.bridgeAmount.label(class="dark-colors tight-label") }}
+                    {% else %}{{ bridgeSatoriTransaction.bridgeAmount.label(class="tight-label") }}
+                    {% endif %}
+                  </div>
+                  <div class="d-flex px-3 py-1" style="padding: 1px !important;">
+                    <div class="input-group input-group-outline">
+                      {% if darkmode %}{{ bridgeSatoriTransaction.bridgeAmount(size=32, class_="tight form-control dark-colors", placeholder=wallet.balance.amount) }}
+                      {% else %}{{ bridgeSatoriTransaction.bridgeAmount(size=32, class_="tight form-control", placeholder=wallet.balance.amount) }}
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
+                <div class="input-group input-group-outline" onclick="">
+                  {% if darkmode %}{{ bridgeSatoriTransaction.bridgeSubmit(size=32, class_="tight form-control dark-colors", onclick="if(validateBridgeJs() && confirmationBridge()) showWorking();") }}
+                  {% else %}{{ bridgeSatoriTransaction.bridgeSubmit(size=32, class_="tight form-control", onclick="if(validateBridgeJs() && confirmationBridge()) showWorking();") }}
+                  {% endif %}
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <hr class="dark horizontal my-0">
+        <div class="card-footer p-1">
+          <center><p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
+            The Bridge Fee must cover ethereum gas fees and is {{ ('%.8f' | format(wallet.bridgeFee)).rstrip('0').rstrip('.') }} SATORI.<br><br>
+            Transaction fees will be added during the send process. If {% if network=='main' %}Evrmore{% else %}Ravencoin{% endif %} is available the transaction fee will be no more than the required reserves of 0.25 {% if network=='main' %}EVR{% else %}RVN{% endif %}, often much less. If there is not more than .25 EVR in the wallet the transaction fee will be {{ ('%.8f' | format(wallet.mundoFee)).rstrip('0').rstrip('.') }} SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://moontree.com/'>Moontree</a> or <a href='https://github.com/EvrmoreOrg/electrum-evrmore/releases'>the Electrum-Evrmore wallet</a>.</p></center>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+	function validateBridgeJs() {
+		return (
+      document.getElementById("ethAddress").value.startsWith("0x") &&
+      document.getElementById("ethAddress").value.length === 42 &&
+      document.getElementById("ethAddress").value == "{{ ethAddress }}" &&
+			document.getElementById("bridgeAmount").value > 0);
+	}
+
+  function confirmationBridge() {
+		return confirm("Are you sure? This action WILL BURN SATORI, comes with no guarantees, and cannot be undone.");
+	}
+
+  function enforceDivisibility() {
+    const inputElement = document.getElementById("bridgeAmount");
+    const divisibility = Number(8);
+    if (divisibility > 0 && inputElement.value.indexOf('.') > -1){
+      inputElement.value = truncateNumber(inputElement.value, divisibility);
+      var newCursorPosition = inputElement.value.length;
+      inputElement.type = 'text';
+      inputElement.setSelectionRange(newCursorPosition, newCursorPosition);
+      inputElement.type = 'number';
+    }
+	}
+  function truncateNumber(value, decimalPlaces) {
+    const valueAsString = value.toString();
+    const pointIndex = valueAsString.indexOf('.');
+    if (pointIndex === -1) {
+        return Number(valueAsString); // No decimal point
+    }
+    if (decimalPlaces <= 0 && pointIndex === 0) {
+        return Number(valueAsString.slice(0, pointIndex)); // Truncate all decimal places
+    }
+    const truncationIndex = pointIndex + 1 + decimalPlaces;
+    const truncatedValue = valueAsString.slice(0, truncationIndex);
+    return Number(truncatedValue);
+  }
+</script>
+{% endblock %}

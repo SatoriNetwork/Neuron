@@ -118,8 +118,8 @@
       margin-bottom: 15px;
   }
   </style>
-  
-  
+
+
   <div class="row">
     <!-- Left column: Lists of active, past, and unapproved proposal titles -->
     <div class="col-md-3 proposal-list-container">
@@ -134,11 +134,11 @@
           </ul>
         </div>
       </div>
-      
+
       <!-- Past Proposals -->
       <div class="proposal-card mt-4">
         <div class="proposal-card-header">
-          <h4 id="past-proposals-header">Past Proposals</h4>
+          <h4 id="past-proposals-header" style="cursor: pointer;">Past Proposals</h4>
         </div>
         <div class="proposal-card-body">
           <ul class="list-group proposal-list" id="past-proposal-list">
@@ -146,7 +146,6 @@
           </ul>
         </div>
       </div>
-  
       <!-- Unapproved Proposals (visible only to authorized users) -->
       <div id="unapproved-proposals-section" class="proposal-card mt-4" style="display: none;">
         <div class="proposal-card-header">
@@ -159,12 +158,11 @@
         </div>
       </div>
     </div>
-    
     <!-- Right column: Welcome card and Detailed view of selected proposal -->
     <div class="col-md-9 proposal-detail-container">
       <!-- Welcome Card -->
       <div id="welcome-card" class="proposal-card welcome-card">
-        <div class="proposal-card-header text-center">         
+        <div class="proposal-card-header text-center">
           <h4>Welcome to Proposals</h4>
         </div>
         <div class="proposal-card-body">
@@ -174,7 +172,6 @@
           </p>
         </div>
       </div>
-  
       <!-- Proposal Details -->
       <div id="proposal-details" style="display: none;">
         <!-- Proposal details will be dynamically inserted here -->
@@ -188,7 +185,6 @@
 let canApprove = false;
 let userWalletAddress = null;
 
-
 document.addEventListener('DOMContentLoaded', (event) => {
     checkApprovalRights()
         .then(() => {
@@ -197,15 +193,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 fetchUnapprovedProposals();
             }
         });
-
     // Add click event for Past Proposals header
     document.getElementById('past-proposals-header').addEventListener('click', fetchExpiredProposals);
 });
-
-
-
-
-
 
 function fetchActiveProposals() {
     fetch('/api/proposals/active')
@@ -282,13 +272,12 @@ function hideWelcomeCard() {
 function processVotes(votes) {
     const voteStats = {};
     let totalSatori = 0;
-    
     // First calculate total satori
     votes.forEach(vote => {
         const satori = parseFloat(vote.satori) || 0;
         totalSatori += satori;
     });
-    
+
     // Then calculate stats for each option
     votes.forEach(vote => {
         if (!voteStats[vote.vote]) {
@@ -298,15 +287,15 @@ function processVotes(votes) {
                 percentage: 0
             };
         }
-        
+
         const satori = parseFloat(vote.satori) || 0;
         voteStats[vote.vote].count += 1;
         voteStats[vote.vote].satori += satori;
-        voteStats[vote.vote].percentage = totalSatori > 0 
+        voteStats[vote.vote].percentage = totalSatori > 0
             ? (voteStats[vote.vote].satori / totalSatori * 100)
             : 0;
     });
-    
+
     return voteStats;
 }
 
@@ -319,7 +308,7 @@ function updateVoteCounts(id, votes) {
 
     const processedVotes = processVotes(votes);
     const voteOptionsContainer = document.getElementById(`vote-options-${id}`);
-    
+
     if (!voteOptionsContainer) {
         console.error(`Vote options container not found for proposal ${id}`);
         return;
@@ -334,7 +323,7 @@ function updateVoteCounts(id, votes) {
         const voteValue = optionDiv.dataset.vote;
         const button = optionDiv.querySelector('.vote-btn');
         const percentageElement = optionDiv.querySelector('.vote-percentage');
-        
+
         if (percentageElement && voteValue) {
             const voteData = processedVotes[voteValue] || { percentage: 0 };
             percentageElement.textContent = `${voteData.percentage.toFixed(2)}%`;
@@ -355,10 +344,10 @@ function updateVoteCounts(id, votes) {
 
 function updateVotingStatus(proposal, data) {
     if (!proposal || !proposal.id) return;
-    
+
     const votingButtons = document.querySelectorAll(`#proposal-${proposal.id} .vote-btn`);
     const messageElement = document.getElementById(`voted-message-${proposal.id}`);
-    
+
     if (data.user_has_voted) {
         votingButtons.forEach(button => {
             if (button.value === data.user_voted) {
@@ -388,7 +377,6 @@ function downloadCsvVotes(csvContent, filename) {
     // Add UTF-8 BOM for Excel compatibility
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-    
     if (navigator.msSaveBlob) {
         // IE10+
         navigator.msSaveBlob(blob, filename);
@@ -409,7 +397,7 @@ function downloadCsvVotes(csvContent, filename) {
 
 
 function getCsvVotes() {
-    if (!chosenProposal) {
+    if (!chosenProposal || !chosenProposal.id) {
         alert('Please select a proposal first.');
         return;
     }
@@ -424,7 +412,6 @@ function getCsvVotes() {
             if (data.status === 'success' && Array.isArray(data.votes) && data.votes.length > 0) {
                 // Initialize CSV with headers
                 const csvRows = ['Wallet Address,Vote,Satori Balance'];
-                
                 // Add each individual vote
                 data.votes.forEach(vote => {
                     // Ensure satori is a valid number
@@ -530,13 +517,13 @@ function updateProposalDetails(proposal, isUnapproved = false) {
     let voteOptionsHtml = options.map(option => `
         <div class="vote-option" data-vote="${option}">
             <div class="input-group input-group-outline is-filled">
-                <input class="tight form-control vote-btn" 
-                       id="submit" 
-                       name="submit" 
-                       size="32" 
-                       type="submit" 
-                       value="${option}" 
-                       onfocus="focused(this)" 
+                <input class="tight form-control vote-btn"
+                       id="submit"
+                       name="submit"
+                       size="32"
+                       type="submit"
+                       value="${option}"
+                       onfocus="focused(this)"
                        onfocusout="defocused(this)">
             </div>
             <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">${0}%</div>
@@ -662,7 +649,7 @@ function fetchProposalVotes(proposal) {
 }
 function generateCsvContent(votes) {
     const csvRows = ['Address,Vote,Satori Balance,Alias'];
-    
+
     votes.forEach(vote => {
         const alias = vote.alias || 'N/A';
         const satori = vote.satori || 0;
@@ -672,29 +659,6 @@ function generateCsvContent(votes) {
     const csvContent = csvRows.join('\n');
     downloadCsvVotes(csvContent, `proposal-${chosenProposal.id}-votes.csv`);
 }
-
-    fetch(`/proposal/votes/get/${chosenProposal.id}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success' && data.votes && data.votes.length > 0) {
-                const csvRows = ['Address,Vote,Satori Balance,Alias'];
-                
-                data.votes.forEach(vote => {
-                    const alias = vote.alias || 'N/A';
-                    const satori = vote.satori || 0;
-                    csvRows.push(`"${vote.address}","${vote.vote}",${satori},"${alias}"`);
-                });
-
-                const csvContent = csvRows.join('\n');
-                downloadCsvVotes(csvContent, `proposal-${chosenProposal.id}-votes.csv`);
-            } else {
-                alert('No voting data available for this proposal.');
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching vote data:', error);
-            alert('Error generating CSV. Please try again.');
-        });
 
 
 function checkApprovalRights() {
@@ -758,8 +722,8 @@ function approveProposal(id, approve) {
         return;
     }
 
-    const endpoint = approve ? 
-        `/api/proposals/approve/${id}` : 
+    const endpoint = approve ?
+        `/api/proposals/approve/${id}` :
         `/api/proposals/disapprove/${id}`;
 
     fetch(endpoint, {
@@ -789,28 +753,18 @@ function approveProposal(id, approve) {
     });
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-    checkApprovalRights()
-        .then(() => {
-            fetchActiveProposals();
-        });
-});
-
-
-
 function fetchProposalVotes(proposal) {
     if (!proposal || !proposal.id) {
         console.error('Invalid proposal object:', proposal);
         return;
     }
-    
+
     fetch(`/proposal/votes/get/${proposal.id}`)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
                 updateVoteCounts(proposal.id, data.votes);
-                
+
                 if (data.disable_voting) {
                     disableVoteButtons(proposal.id);
                     showVotedMessage(proposal.id, 'Voting is closed for this proposal');
