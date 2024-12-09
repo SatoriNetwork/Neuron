@@ -1,6 +1,6 @@
 from satorineuron.synergy.domain.objects import SingleObservation
 from satorisynapse import Envelope
-from satorilib.api.time import now, datetimeToTimestamp
+from satorilib.utils.time import now, datetimeToTimestamp
 ts = datetimeToTimestamp(now())
 obs = SingleObservation(time=ts, data='data', hash='hash')
 obs.isValid

@@ -134,6 +134,8 @@ CMD ["bash", "./start_from_image.sh"]
 
 # test web
 # docker run --rm -it --name satorineuron -p 5000:5000 -v c:\repos\Satori\satori:/Satori/satori --env ENV=prod --env WALLETONLYMODE=1 satorinet/satorineuron:latest python /Satori/satori/app.py
+# docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 --env ENV=prod -v c:\repos\Satori\Neuron\wallet:/Satori/Neuron/wallet -v c:\repos\Satori\Neuron\models:/Satori/Neuron/models -v c:\repos\Satori\Neuron\data:/Satori/Neuron/data -v c:\repos\Satori\Neuron\config:/Satori/Neuron/config satorinet/satorineuron:latest bash
+# docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 --env ENV=prod satorinet/satorineuron:latest bash
 
 # wireguard
 # docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --env ENV=prod satorinet/satorineuron:latest bash

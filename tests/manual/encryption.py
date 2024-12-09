@@ -1,9 +1,9 @@
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.wallet import RavencoinWallet, EvrmoreWallet
 from satorineuron import config
 from satorilib import logging
 from satorineuron.init import engine
-# from satorilib.api.wallet import RavencoinWallet
-from satorilib.api.disk import Cache  # Disk
+# from satorilib.wallet import RavencoinWallet
+from satorilib.disk import Cache  # Disk
 Cache.setConfig(config)
 vaultPath = config.walletPath('vault.yaml')
 vaultPath

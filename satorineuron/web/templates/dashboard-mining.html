@@ -1,23 +1,39 @@
 {% block content %}
 <div class="col-xl-3 col-lg-3 col-sm-12 mb-xl-0 mb-4">
-  <div class="card {% if darkmode %}dark-colors{% endif %}" style="height: 200px;">
-    <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+  <div
+    class="card {% if darkmode %}dark-colors{% endif %}"
+    style="height: 200px"
+  >
+    <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
       <div class="row">
         <div class="col-lg-12 col-12">
-          <h6 class="text-center {% if darkmode %}dark-colors{% endif %}">Running Mode</h6>
-          <p id="miningModeStatus" class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}"></p>
+          <h6 class="text-center {% if darkmode %}dark-colors{% endif %}" style="cursor: help" title="Local Mode: Your Neuron can make and share predictions, but cannot earn rewards. This happens when your staked SATORI is below the required minimum. Mining Mode: Your Neuron is fully participating in the network and is eligible to earn rewards.">
+            Running Mode
+          </h6>
+          <p
+            id="miningModeStatus"
+            class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}"
+          ></p>
         </div>
       </div>
     </div>
-    <div class="card-body px-0 pb-2 ">
+    <div class="card-body px-0 pb-2">
       <div class="mode-container">
         <div class="toggle-options">
-          <div style="padding-bottom: 6px;" onclick="hideMiningInviteCard();">Local</div>
+          <div style="padding-bottom: 6px" onclick="hideMiningInviteCard();">
+            Local
+          </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="modeToggle" onclick="toggleMode('{{stakeStatus}}')">
+            <input
+              type="checkbox"
+              id="modeToggle"
+              onclick="toggleMode('{{stakeStatus}}')"
+            />
             <span class="slider round"></span>
           </label>
-          <div style="padding-bottom: 6px;" onclick="showMiningInviteCard();">Mining</div>
+          <div style="padding-bottom: 6px" onclick="showMiningInviteCard();">
+            Mining
+          </div>
         </div>
       </div>
     </div>
@@ -25,66 +41,66 @@
 </div>
 
 <script>
-  var stakeStatus = "{{ stakeStatus }}";
+  var stakeStatus = '{{ stakeStatus }}';
   function setMiningMode() {
-    if ("{{ miningMode }}" == "True") {
-      document.getElementById("modeToggle").checked = true;
+    if ('{{ miningMode }}' == 'True') {
+      document.getElementById('modeToggle').checked = true;
     } else {
-      document.getElementById("modeToggle").checked = false;
+      document.getElementById('modeToggle').checked = false;
     }
   }
   setMiningMode();
   function toggleMode() {
-    var isChecked = document.getElementById("modeToggle").checked;
-    console.log("Toggle switch is " + (isChecked ? "ON" : "OFF"));
+    var isChecked = document.getElementById('modeToggle').checked;
+    console.log('Toggle switch is ' + (isChecked ? 'ON' : 'OFF'));
     if (isChecked) {
-      if (stakeStatus == "True") {
+      if (stakeStatus == 'True') {
         fetch('/mining/mode/on', { method: 'GET' })
-        .then(response => {
-          if (response.ok) {
-            return response.text();
-          } else {
-            throw new Error('Network response was not ok.');
-          }
-        })
-        .then(text => {
-          console.log(text);
-        })
-        .catch(error => console.error('Error:', error));
+          .then((response) => {
+            if (response.ok) {
+              return response.text();
+            } else {
+              throw new Error('Network response was not ok.');
+            }
+          })
+          .then((text) => {
+            console.log(text);
+          })
+          .catch((error) => console.error('Error:', error));
       } else {
         fetch('/stake/check', { method: 'GET' })
-        .then(response => {
-          if (response.ok) {
-            return response.text();
-          } else {
-            throw new Error('Network response was not ok.');
-          }
-        })
-        .then(text => {
-          console.log(text);
-          stakeStatus = text;
-          if (stakeStatus == "False") {
-            document.getElementById("modeToggle").checked = false;
-            showMiningInviteCard();
-          }
-          updateMiningCard();
-        })
-        .catch(error => console.error('Error:', error));
+          .then((response) => {
+            if (response.ok) {
+              return response.text();
+            } else {
+              throw new Error('Network response was not ok.');
+            }
+          })
+          .then((text) => {
+            console.log(text);
+            stakeStatus = text;
+            if (stakeStatus == 'False') {
+              document.getElementById('modeToggle').checked = false;
+              showMiningInviteCard();
+            }
+            updateMiningCard();
+          })
+          .catch((error) => console.error('Error:', error));
       }
     } else {
       hideMiningInviteCard();
       fetch('/mining/mode/off', { method: 'GET' })
-        .then(response => {
+        .then((response) => {
           if (response.ok) {
             return response.text();
           } else {
             throw new Error('Network response was not ok.');
           }
         })
-        .then(text => {
+        .then((text) => {
           console.log(text);
         })
-        .catch(error => console.error('Error:', error));
+        .catch((error) => console.error('Error:', error));
     }
   }
 </script>

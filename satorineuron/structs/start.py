@@ -4,8 +4,8 @@ import threading
 from queue import Queue
 from reactivex.subject import BehaviorSubject
 from satorilib.concepts.structs import StreamId, Stream
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
-# from satorilib.api.ipfs import Ipfs
+from satorilib.wallet import RavencoinWallet, EvrmoreWallet
+# from satorilib.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
@@ -14,7 +14,7 @@ from satorilib.asynchronous import AsyncThread
 class RunMode(Enum):
     normal = 1
     worker = 2
-    walletOnly = 3
+    wallet = 3
 
     @classmethod
     def choose(cls, runMode):
@@ -32,10 +32,9 @@ class RunMode(Enum):
             2: cls.worker,
             '2': cls.worker,
             'worker': cls.worker,
-            3: cls.walletOnly,
-            '3': cls.walletOnly,
-            'wallet': cls.walletOnly,
-            'walletonly': cls.walletOnly,
+            3: cls.wallet,
+            '3': cls.wallet,
+            'wallet': cls.wallet,
         }
         # Return the corresponding Enum value
         return mapping.get(runMode, cls.normal)
@@ -96,7 +95,7 @@ class StartupDagStruct(object):
         ''' returns the reference to the cache of a stream '''
 
     @property
-    def walletOnlyMode(self) -> bool:
+    def walletMode(self) -> bool:
         ''' get wallet '''
 
     @property
@@ -147,17 +146,10 @@ class StartupDagStruct(object):
 
     def getVault(
         self,
-        network: str = None,
         password: Union[str, None] = None,
         create: bool = False,
     ) -> Union[EvrmoreWallet, RavencoinWallet]:
         ''' get the ravencoin vault '''
-
-    def openWallet(self, network: Union[str, None] = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        ''' get the ravencoin vault '''
-
-    def openWallet(self, network: str = None):
-        ''' opens the local wallet. '''
 
     def checkin(self):
         ''' checks in with the Satori Server '''

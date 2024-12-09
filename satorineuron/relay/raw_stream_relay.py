@@ -13,8 +13,8 @@ import json
 import requests
 from functools import partial
 from satorilib.concepts.structs import Stream, StreamId
-from satorilib.api.disk import Cached
-from satorilib.api.disk.cache import CachedResult
+from satorilib.disk import Cached
+from satorilib.disk.cache import CachedResult
 from satorilib import logging
 
 
