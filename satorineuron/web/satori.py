@@ -1704,7 +1704,7 @@ def vault():
         if theFirstRun:
             return redirect('/dashboard')
         # start.workingUpdates.put('downloading balance...')
-        from satorilib.wallet.eth import EthereumWallet
+        from satorilib.wallet.ethereum.wallet import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
         # if start.server.betaStatus()[1].get('value') == 1:
         #    claimResult = start.server.betaClaim(account.address)[1]
