@@ -5,3 +5,4 @@ neuron lock hash: fs1f3se5ffsef1sf
 mining mode: true
 reward address: EZDfZiJcvx1Ymrj8otCeiY4eLfPsZkHri9
 engine version: v2
+logging level: debug
