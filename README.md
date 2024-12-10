@@ -163,6 +163,36 @@ cd /Satori/Neuron/satorineuron/web
 sh start.sh
 ```
 
+
+## How to Run/Debug Using VSCode Dev Containers
+
+1. Install required VSCode extensions: Dev Containers (WSL on Windows), Python
+
+2. Clone local Neuron repo
+```bash
+git clone -b main https://github.com/SatoriNetwork/Neuron.git
+```
+
+3. Change boot vars if needed
+```bash
+Neuron/.devcontainer.json
+```
+
+4. Open project in VSCode
+ - Make sure Docker is running
+ - In a new window: Open a Remote Window (bottom left corner IDE), Open Folder in Container...
+ - pick local Neuron repo
+
+5. Start satori (or run with debugging)
+```bash
+python satori.py
+```
+
+6. Check project in your browser
+```bash
+http://localhost:24601/
+```
+
 5. Check project on your browser
 ```bash
 http://localhost:24601/
