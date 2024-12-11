@@ -163,6 +163,10 @@ cd /Satori/Neuron/satorineuron/web
 sh start.sh
 ```
 
+5. Check project in your browser
+```bash
+http://localhost:24601/
+```
 
 ## How to Run/Debug Using VSCode Dev Containers
 
@@ -189,11 +193,6 @@ python satori.py
 ```
 
 6. Check project in your browser
-```bash
-http://localhost:24601/
-```
-
-5. Check project on your browser
 ```bash
 http://localhost:24601/
 ```
