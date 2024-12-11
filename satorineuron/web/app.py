@@ -46,8 +46,7 @@ def monitorAndRestartSatori():
     while True:
         print("Starting Satori...")
         if allowedToPull() and time.time() - lastPull > 60*60:
-            # pullSatori()
-            pass
+            pullSatori()
         else:
             print("skipped pull...")
         process = startSatori()
