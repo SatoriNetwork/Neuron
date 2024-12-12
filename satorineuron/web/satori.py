@@ -17,6 +17,7 @@ import random
 import secrets
 import time
 import traceback
+import threading
 import pandas as pd
 from logging.handlers import RotatingFileHandler
 from queue import Queue
@@ -634,7 +635,7 @@ def editConfiguration():
             'title': 'Configuration',
             'edit_configuration': edit_configuration}))
 
-    def accept_submittion(edit_configuration):
+    def acceptSubmittion(edit_configuration):
         data = {}
         if edit_configuration.flaskPort.data not in ['', None, config.flaskPort()]:
             data = {
@@ -662,7 +663,7 @@ def editConfiguration():
 
     edit_configuration = forms.EditConfigurationForm(formdata=request.form)
     if request.method == 'POST':
-        return accept_submittion(edit_configuration)
+        return acceptSubmittion(edit_configuration)
     return present_form(edit_configuration)
 
 
@@ -801,11 +802,11 @@ def sendSatoriTransactionUsing(
     global badForm
     forms = importlib.reload(forms)
 
-    def accept_submittion(sendSatoriForm):
+    def acceptSubmittion(sendSatoriForm):
         def refreshWallet():
-            time.sleep(4)
-            # doesn't respect the cooldown
-            myWallet.get(allWalletInfo=False)
+            time.sleep(10)
+            myWallet.get()
+            myWallet.getReadyToSend()
 
         # doesn't respect the cooldown
         #myWallet.getUnspentSignatures(force=True)
@@ -846,6 +847,7 @@ def sendSatoriTransactionUsing(
                         network=(
                             'ravencoin' if start.networkIsTest(network)
                             else 'evrmore'))
+                    refreshWallet()
                     if r.text.startswith('{"code":1,"message":'):
                         flash(f'Send Failed: {r.json().get("message")}')
                     elif r.text != '':
@@ -870,7 +872,7 @@ def sendSatoriTransactionUsing(
         'amount', sendSatoriForm.amount.data or 0)
     sendForm['address'] = override.get(
         'address', sendSatoriForm.address.data or '')
-    return accept_submittion(sendForm)
+    return acceptSubmittion(sendForm)
 
 
 def bridgeSatoriTransactionUsing(
@@ -886,7 +888,7 @@ def bridgeSatoriTransactionUsing(
     global badForm
     forms = importlib.reload(forms)
 
-    def accept_submittion(bridgeForm: dict):
+    def acceptSubmittion(bridgeForm: dict):
         def refreshWallet():
             time.sleep(4)
             # doesn't respect the cooldown
@@ -952,7 +954,7 @@ def bridgeSatoriTransactionUsing(
         'ethAddress', bridgeSatoriForm.ethAddress.data or '')
     print(bridgeSatoriForm, bridgeSatoriForm.bridgeAmount,
           bridgeSatoriForm.ethAddress)
-    # return accept_submittion(bridgeForm)
+    # return acceptSubmittion(bridgeForm)
 
 
 @app.route('/register_stream', methods=['POST'])
@@ -964,7 +966,7 @@ def registerStream():
     global badForm
     forms = importlib.reload(forms)
 
-    def accept_submittion(newRelayStream):
+    def acceptSubmittion(newRelayStream):
         # done: we should register this stream and
         # todo: save the uri, headers, payload, and hook to a config manifest file.
         global badForm
@@ -1002,7 +1004,7 @@ def registerStream():
         return redirect('/dashboard')
 
     newRelayStream = forms.RelayStreamForm(formdata=request.form)
-    return accept_submittion(newRelayStream)
+    return acceptSubmittion(newRelayStream)
 
 
 @app.route('/edit_stream/<topic>', methods=['GET'])
@@ -1042,7 +1044,7 @@ def removeStream(topic=None):
 
 
 def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
-    def accept_submittion(removeRelayStream: StreamId, doRedirect=True):
+    def acceptSubmittion(removeRelayStream: StreamId, doRedirect=True):
         r = start.server.removeStream(payload=json.dumps({
             'source': removeRelayStream.source,
             # should match removeRelayStream.author
@@ -1066,7 +1068,7 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
             flash(msg)
             return redirect('/dashboard')
 
-    return accept_submittion(removeRelayStream, doRedirect)
+    return acceptSubmittion(removeRelayStream, doRedirect)
 
 
 @app.route('/remove_stream_by_post', methods=['POST'])
@@ -1074,7 +1076,7 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
 @authRequired
 def removeStreamByPost():
 
-    def accept_submittion(removeRelayStream):
+    def acceptSubmittion(removeRelayStream):
         r = start.server.removeStream(payload=json.dumps({
             'source': removeRelayStream.get('source', 'satori'),
             'pubkey': start.wallet.publicKey,
@@ -1097,7 +1099,7 @@ def removeStreamByPost():
         return redirect('/dashboard')
 
     removeRelayStream = json.loads(request.get_json())
-    return accept_submittion(removeRelayStream)
+    return acceptSubmittion(removeRelayStream)
 
 
 ###############################################################################
@@ -1531,7 +1533,7 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 @authRequired
 def wallet(network: str = 'main'):
 
-    def accept_submittion(passwordForm):
+    def acceptSubmittion(passwordForm):
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
@@ -1544,7 +1546,7 @@ def wallet(network: str = 'main'):
         alias = None
     if config.get().get('wallet lock'):
         if request.method == 'POST':
-            accept_submittion(forms.VaultPassword(formdata=request.form))
+            acceptSubmittion(forms.VaultPassword(formdata=request.form))
         if start.vault is not None and not start.vault.isEncrypted:
             return render_template('wallet-page.html', **getResp({
                 'title': 'Wallet',
@@ -1682,7 +1684,7 @@ def presentVaultPasswordForm():
 @authRequired
 def vault():
 
-    def accept_submittion(passwordForm):
+    def acceptSubmittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
         #logging.debug(passwordForm.password.data, color='yellow')
         _vault = start.openVault(
@@ -1697,7 +1699,7 @@ def vault():
         #    flash('unable to open vault')
 
     if request.method == 'POST':
-        accept_submittion(forms.VaultPassword(formdata=request.form))
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
         global firstRun
         theFirstRun = firstRun
@@ -1998,13 +2000,13 @@ def vote():
         #    'vote': 36,
         # }]
 
-    def accept_submittion(passwordForm):
+    def acceptSubmittion(passwordForm):
         _vault = start.openVault(password=passwordForm.password.data)
         # if rvn is None and not rvn.isEncrypted:
         #    flash('unable to open vault')
 
     if request.method == 'POST':
-        accept_submittion(forms.VaultPassword(formdata=request.form))
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
 
     myWallet = start.getWallet()
     return render_template('vote.html', **getResp({
