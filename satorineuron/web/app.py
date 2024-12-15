@@ -15,10 +15,10 @@ def pullSatori():
         ['/bin/bash', 'pull.sh'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    process.wait()
-    # stdout, stderr = process.communicate()
-    # print("STDOUT:", stdout.decode())
-    # print("STDERR:", stderr.decode())
+    #process.wait()
+    stdout, stderr = process.communicate()
+    #print("STDOUT:", stdout.decode())
+    #print("STDERR:", stderr.decode())
     global lastPull
     lastPull = time.time()
 
