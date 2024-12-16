@@ -64,3 +64,135 @@ https://github.com/SatoriNetwork/Neuron.git
 in VSCode new window:
 (bottom left, Open Remote Window) Open Folder in Container...
 pick local Neuron repo
+
+## How to run using Docker (recommended)
+
+1. Move to main route and make directory
+```bash
+cd /
+mkdir Satori
+cd Satori
+```
+
+2. Install project
+```bash
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Synapse.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Lib.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Wallet.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Engine.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Neuron.git && \
+mkdir /Satori/Neuron/models && \
+mkdir /Satori/Neuron/models/huggingface
+```
+
+3. Pull the docker environment
+```bash
+docker pull satorinet/satorineuron:latest
+# or for experimental: docker pull satorinet/satorineuron:test
+```
+
+4. Run docker container while mounting in local code
+```bash
+docker run --rm -it --name satorineuron -p 24601:24601 \
+  -v /Satori/Neuron:/Satori/Neuron \
+  -v /Satori/Synapse:/Satori/Synapse \
+  -v /Satori/Lib:/Satori/Lib \
+  -v /Satori/Wallet:/Satori/Wallet \
+  -v /Satori/Engine:/Satori/Engine \
+  --env ENV=prod \
+  --env RUNMODE=normal \
+  satorinet/satorineuron:latest bash
+```
+
+5. Start satori
+```bash
+python satori.py
+```
+
+6. Check project in your browser
+```bash
+http://localhost:24601/
+```
+
+## How to run without Docker
+
+1. Move to main route and make directory
+```bash
+cd /
+mkdir Satori
+cd Satori
+```
+
+2. Install project
+```bash
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Synapse.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Lib.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Wallet.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Engine.git && \
+cd /Satori && git clone -b main https://github.com/SatoriNetwork/Neuron.git && \
+cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
+cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
+mkdir /Satori/Neuron/models && \
+mkdir /Satori/Neuron/models/huggingface
+```
+
+3. Set Python environment and install packages
+```bash
+cd /Satori
+python3 -m venv .venv
+## in linux and macOs
+source .venv/bin/activate
+## in windows
+# .venv\Scripts\activate
+pip install --upgrade pip && \
+pip install --no-cache-dir transformers==4.44.2 && \
+pip install --no-cache-dir /Satori/granite-tsfm && \
+pip install --no-cache-dir /Satori/chronos-forecasting && \
+cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+```
+
+4. Set workspace and configuration, and run project
+```bash
+cd /Satori/Neuron/config
+echo env: prod > config.yaml
+cd /Satori/Neuron/satorineuron/web
+sh start.sh
+```
+
+5. Check project in your browser
+```bash
+http://localhost:24601/
+```
+
+## How to Run/Debug Using VSCode Dev Containers
+
+1. Install required VSCode extensions: Dev Containers (WSL on Windows), Python
+
+2. Clone local Neuron repo
+```bash
+git clone -b main https://github.com/SatoriNetwork/Neuron.git
+```
+
+3. Change boot vars if needed
+```bash
+Neuron/.devcontainer.json
+```
+
+4. Open project in VSCode
+ - Make sure Docker is running
+ - In a new window: Open a Remote Window (bottom left corner IDE), Open Folder in Container...
+ - pick local Neuron repo
+
+5. Start satori (or run with debugging)
+```bash
+python satori.py
+```
+
+6. Check project in your browser
+```bash
+http://localhost:24601/
+```

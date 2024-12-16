@@ -15,10 +15,10 @@ def pullSatori():
         ['/bin/bash', 'pull.sh'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    process.wait()
-    # stdout, stderr = process.communicate()
-    # print("STDOUT:", stdout.decode())
-    # print("STDERR:", stderr.decode())
+    #process.wait()
+    stdout, stderr = process.communicate()
+    #print("STDOUT:", stdout.decode())
+    #print("STDERR:", stderr.decode())
     global lastPull
     lastPull = time.time()
 
@@ -46,8 +46,7 @@ def monitorAndRestartSatori():
     while True:
         print("Starting Satori...")
         if allowedToPull() and time.time() - lastPull > 60*60:
-            # pullSatori()
-            pass
+            pullSatori()
         else:
             print("skipped pull...")
         process = startSatori()

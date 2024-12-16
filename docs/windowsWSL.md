@@ -12,7 +12,7 @@ docker save -o multiple_images.tar satorinet/satorineuron:latest satorinet/sator
 wsl --shutdown
 
 # Verify everything is stopped by:
-wsl.exe --list --verbose
+wsl --list --verbose
 
 # Then start diskpart:
 diskpart

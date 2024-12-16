@@ -71,6 +71,9 @@
 
   document.addEventListener('DOMContentLoaded', (event) => {
     getPoolAddresses();
+    enableDisablePool();
+    // openClose pool display
+    setPoolToggle();
   });
 
   function getPoolAddresses() {
@@ -284,8 +287,6 @@
   }
 
   // openClose pool display
-  setPoolToggle();
-
   function enableDisablePool() {
     if (document.getElementById("poolCheckbox").checked){
       enablePool();

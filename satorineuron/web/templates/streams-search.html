@@ -733,9 +733,7 @@
         let parsedObservationsAndMostRecent = JSON.parse(data.observations);
         parsedObservations = parsedObservationsAndMostRecent[0]
         let futureForecastingObservationAvgValue = parsedObservationsAndMostRecent[1]
-
         observationsBody.innerHTML = '';
-
         if (parsedObservations.length === 0) {
           // modal container css changes
           modelContent.style.height = "300px"
@@ -752,7 +750,9 @@
           // Graph container css changes
           graphContainer.style.display = 'block';
           // modal container css changes
+
           modelContent.style.height = "600px"
+
           // Table style css changes
           observationTable.style.display = 'block';
           observationTable.style.height = "calc(100% - 350px)";
@@ -761,7 +761,6 @@
           // Render a graph
           parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
           showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue);
-
           parsedObservations.reverse().forEach(observation => {
             const row = document.createElement('tr');
             row.innerHTML = `
