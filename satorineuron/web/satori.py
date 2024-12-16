@@ -2084,7 +2084,7 @@ def getObservations():
     return jsonify({'observations': observations}), 200
 
 
-  @app.route('/proposals', methods=['GET'])
+@app.route('/proposals', methods=['GET'])
 @userInteracted
 @vaultRequired
 @authRequired
