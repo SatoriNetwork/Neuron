@@ -71,6 +71,9 @@
 
   document.addEventListener('DOMContentLoaded', (event) => {
     getPoolAddresses();
+    enableDisablePool();
+    // openClose pool display
+    setPoolToggle();
   });
 
   function getPoolAddresses() {
@@ -282,9 +285,6 @@
       downloadCsv(csvOutput, "pooled.csv")
     }
   }
-
-  // openClose pool display
-  setPoolToggle();
 
   function enableDisablePool() {
     if (document.getElementById("poolCheckbox").checked){

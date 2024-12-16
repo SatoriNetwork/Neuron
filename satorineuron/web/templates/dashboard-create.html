@@ -15,7 +15,7 @@
               <div class="col-lg-2 col-2">
                 <div class="row-container">
                   <!--<p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align: end;/* border-bottom: inset; */font-weight: 600;">
-                    CSV: 
+                    CSV:
                   </p>-->
                   <a href="{{ url_for('static', filename='download/satori_datastream_form.csv') }}" target="_blank">
                     <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
@@ -128,11 +128,11 @@
                   <div class="input-group input-group-outline">
                     <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
                     <input type="number" id="dayCadence" name="dayCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);calculateCadence();">
-                    <span style="font-size: xx-small;display: flex;align-items: center;">hours</span> 
+                    <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
                     <input type="number" id="hourCadence" name="hourCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateCadence();">
-                    <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span> 
+                    <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
                     <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
-                    <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span> 
+                    <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
                     <input type="number" id="secondCadence" name="secondCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
                     {{ newRelayStream.cadence(size=32, class_="tight form-control" +(" dark-colors" if darkmode else ""), placeholder="3600", style="display:none;", id="cadence") }}
                     <script>
@@ -192,11 +192,11 @@
               <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" onmouseover="offsetDescription();">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important;">
                   <div class="input-group input-group-outline">
-                    <span style="font-size: xx-small;display: flex;align-items: center;">hours</span> 
+                    <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
                     <input type="number" id="hourOffset" name="hourOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateOffset();">
-                    <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span> 
+                    <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
                     <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
-                    <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span> 
+                    <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
                     <input type="number" id="secondOffset" name="secondOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
                     {{ newRelayStream.offset(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="108000", style="display:none;", id="offset") }}
                     <script>
@@ -279,7 +279,7 @@
                     {{ newRelayStream.tags(size=32, class_="tight form-control"+(" dark-colors" if darkmode else ""), placeholder="bitcoin, 1hr") }}
                   </div>
                 </div>
-              </div> 
+              </div>
             </div>
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="headersDescription();">
@@ -305,7 +305,7 @@
                     {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
                   </div>
                 </div>
-              </div>         
+              </div>
             </div>
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="payloadDescription();">
@@ -439,8 +439,8 @@
               <div class="col-xl-12 col-sm-12">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
                   <div class="input-group input-group-outline" onclick="">
-                    {% if darkmode %}{{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateJs()) showWorking();") }}
-                    {% else %}{{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateJs()) showWorking();") }}
+                    {% if darkmode %}{{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateCreateJs()) showWorking();") }}
+                    {% else %}{{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateCreateJs()) showWorking();") }}
                     {% endif %}
                   </div>
                 </div>
@@ -465,19 +465,19 @@
     return x;
 	}
 
-	function validateJs() {
+	function validateCreateJs() {
 		/// this validation() method is always false:
 		//console.log("{ { newRelayStream.validate() } }");
 		//return "{ { newRelayStream.validate() } }" == "True";
-		
+
 		/// so we're using js to validate the required fields manually:
 		return (
-			document.getElementById("name").value != "" && 
-			document.getElementById("cadence").value >= 60 && 
-			document.getElementById("url").value.startsWith("http") && 
+			document.getElementById("name").value != "" &&
+			document.getElementById("cadence").value >= 60 &&
+			document.getElementById("url").value.startsWith("http") &&
       (document.getElementById("offset").value== '' || document.getElementById("offset").value < 86400)
       // don't require uri, if blank it'll automatically populate from url
-			//  && document.getElementById("uri").value.startsWith("http") 
+			//  && document.getElementById("uri").value.startsWith("http")
       );
 	}
 </script>
@@ -486,11 +486,11 @@
 		console.log('DELETE');
 		console.log(name);
 		console.log(target);
-	}	
+	}
 </script>
 <script>
   function defaultMessage() {
-    document.getElementById("helpArea").innerHTML = ""; 
+    document.getElementById("helpArea").innerHTML = "";
   }
   defaultMessage();
   function nameDescription() {
@@ -520,15 +520,15 @@
   function tagsDescription() {
     document.getElementById("helpArea1").innerHTML = "Tags";
     document.getElementById("helpArea").innerHTML = "A list of tags, separated by commas, that describe the datastream.";
-  }  
+  }
   function urlDescription() {
     document.getElementById("helpArea1").innerHTML = "Url (required)";
     document.getElementById("helpArea").innerHTML = "The base URL of the datastream. For example https://finance.yahoo.com/bitcoin.";
-  }  
+  }
   function uriDescription() {
     document.getElementById("helpArea1").innerHTML = "Uri (private)";
     document.getElementById("helpArea").innerHTML = "The full URI of the datastream. For example https://finance.yahoo.com/bitcoin?key=supersecretkey.";
-  }  
+  }
   function headersDescription() {
     document.getElementById("helpArea1").innerHTML = "Headers (private)";
     document.getElementById("helpArea").innerHTML = "The headers of the request.";
@@ -536,7 +536,7 @@
   function payloadDescription() {
     document.getElementById("helpArea1").innerHTML = "Payload (private)";
     document.getElementById("helpArea").innerHTML = "The payload of the request.";
-  }  
+  }
   function hookDescription() {
     document.getElementById("helpArea1").innerHTML = "Hook (private)";
     document.getElementById("helpArea").innerHTML = "A python function that intercepts the response before broadcasting. This can be used to filter the data down to a specific key known as the target. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly what the code does before you submit this form.";
@@ -548,7 +548,7 @@
   function historyDescription() {
     document.getElementById("helpArea1").innerHTML = "History (private)";
     document.getElementById("helpArea").innerHTML = "A python class that gathers the history of this datastream before making the datastream publicly available. <br />NOTE: Gathering the history can take a long time, so if you see a spinner for a long time please be patient. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly what the code does before you submit this form.";
-  } 
+  }
   async function hookCreation()  {
     const response = await fetch('http://127.0.0.1:24601/hook/' + document.getElementById("target").value);
     document.getElementById("hook").value = await response.text();

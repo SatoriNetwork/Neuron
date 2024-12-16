@@ -517,6 +517,7 @@
     return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}, ${date.getFullYear()}`;
   }
 
+
   function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue, chunkSize = 100) {
     const totalPoints = combinedTimes.length;
     let currentIndex = 0;
@@ -626,6 +627,7 @@
 
       if (currentIndex < totalPoints) {
         requestAnimationFrame(addChunk); // Schedule the next chunk
+
       }  else {
         // Add the future forecasting point as part of the predictions dataset
         const lastTimestamp = combinedTimes[combinedTimes.length - 1];
@@ -666,11 +668,13 @@
 
           observationsChart.update();
         }, 0);
+
       }
     }
 
     addChunk();
   }
+
 
   function showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue) {
     const ctx = graphCanvas.getContext('2d');
@@ -706,6 +710,7 @@
     });
 
     renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
+
   }
 
   // Show Observations Modal with observations list and graph for value vs time
@@ -733,9 +738,7 @@
         let parsedObservationsAndMostRecent = JSON.parse(data.observations);
         parsedObservations = parsedObservationsAndMostRecent[0]
         let futureForecastingObservationAvgValue = parsedObservationsAndMostRecent[1]
-
         observationsBody.innerHTML = '';
-
         if (parsedObservations.length === 0) {
           // modal container css changes
           modelContent.style.height = "300px"
@@ -752,7 +755,9 @@
           // Graph container css changes
           graphContainer.style.display = 'block';
           // modal container css changes
+
           modelContent.style.height = "600px"
+
           // Table style css changes
           observationTable.style.display = 'block';
           observationTable.style.height = "calc(100% - 350px)";
@@ -761,7 +766,6 @@
           // Render a graph
           parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
           showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue);
-
           parsedObservations.reverse().forEach(observation => {
             const row = document.createElement('tr');
             row.innerHTML = `
