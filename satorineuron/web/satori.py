@@ -1889,9 +1889,15 @@ def poolDisable():
 def poolAddresses():
     success, result = start.server.poolAddresses()
     if success:
-        return result, 200
-    return f'Failed poolAddresses: {result}', 400
+        return jsonify({'data': result}), 200
+    return jsonify({'error': "Failed PoolAddresses"}), 500
 
+@app.route('/pool/addresses/remove', methods=['POST'])
+@authRequired
+def poolAddressesRemove():
+    lend_id = request.json.get('lend_id', "")
+    message = start.server.poolAddressRemove(lend_id=lend_id)
+    return jsonify({'message': message}), 200
 
 @app.route('/proxy/parent/status', methods=['GET'])
 @userInteracted
@@ -2018,6 +2024,15 @@ def vote():
         'vault': start.vault,
         'streams': getStreams(myWallet),
         **getVotes(myWallet)}))
+    
+@app.route('/pool/participants', methods=['GET', 'POST'])
+@userInteracted
+@vaultRequired
+@authRequired
+def poolParticipants():
+    print("vault", start.vault.address)
+    participants = start.server.poolParticipants(start.vault.address)
+    return jsonify({'data': participants}), 200
 
 @app.route('/streams', methods=['GET', 'POST'])
 @userInteracted
@@ -2069,7 +2084,7 @@ def getObservations():
     return jsonify({'observations': observations}), 200
 
 
-@app.route('/proposals', methods=['GET'])
+  @app.route('/proposals', methods=['GET'])
 @userInteracted
 @vaultRequired
 @authRequired
