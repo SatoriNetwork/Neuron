@@ -20,7 +20,6 @@ def fromServer(repo: str) -> bool:
 
     import requests
     import os
-    import shutil
     import requests
     import zipfile
     from io import BytesIO
@@ -90,11 +89,11 @@ def fromServer(repo: str) -> bool:
     return False
 
 
-def fromGithub(repo:str):
+def fromGithub(repo:str) -> tuple[bytes, bytes]:
 
     import subprocess
 
-    def innerPull(first:bool=True):
+    def innerPull(first:bool=True) -> bool:
         '''
         #print("STDOUT:", stdout.decode())
         #print("STDERR:", stderr.decode())
@@ -114,17 +113,15 @@ def fromGithub(repo:str):
                 return False
 
     process = subprocess.Popen(
-        ['/bin/bash', f'/Satori/Neuron/satorineuron/code/pull-{repo}.sh'],
+        #['/bin/bash', f'/Satori/Neuron/satorineuron/update/pull-{repo}.sh'],
+        ['/bin/bash', '-c', f'cd /Satori/{repo.title()}/ && git pull'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    process.wait()
-    return None
+    #process.wait()
+    return process.communicate()
 
 
 def pullReposFromGithub():
     fromGithub('lib')
     fromGithub('engine')
     fromGithub('neuron')
-    # not used any more, phasing out
-    #fromGithub('synapse')
-    #fromGithub('wallet')

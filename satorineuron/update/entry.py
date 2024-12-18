@@ -1,8 +1,8 @@
-from satorineuron.code import config
-from satorineuron.code import pull
-from satorineuron.code import hashes
+from satorineuron.update import config
+from satorineuron.update import pull
+from satorineuron.update import hashes
 
-def run():
+def update():
     if config.allowedToPull():
         # pull from github
         targetHashes = hashes.getTargets()

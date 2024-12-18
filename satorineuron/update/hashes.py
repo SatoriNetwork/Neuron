@@ -1,14 +1,6 @@
+import requests
 import logging
 logging.basicConfig(level=logging.INFO)
-
-def getTargets():
-    import requests
-    response = requests.get('https://stage.satorinet.io/codehashes')
-    try:
-        return response.json()
-    except Exception as e:
-        logging.debug(e)
-        return {'neuron': '','engine': '','wallet': '','synapse': '','lib': ''}
 
 
 def hashFolder(folderPath:str, exclude:list[str]=None):
@@ -46,11 +38,38 @@ def hashFolder(folderPath:str, exclude:list[str]=None):
     return hasher.hexdigest()
 
 
-
 def getFolders() -> dict[str, str]:
     return {
-        'neuron': hashFolder('/Satori/Neuron/satorineuron', [r".*__pycache__$", '/Satori/Neuron/satorineuron/web/static/download']),
+        'lib': hashFolder('/Satori/Lib/satorilib', [r".*__pycache__$"]),
         'engine': hashFolder('/Satori/Engine/satoriengine', [r".*__pycache__$"]),
-        #'Wallet': hashFolder('/Satori/Wallet/satoriwallet', [r".*__pycache__$"]),
-        #'Synapse': hashFolder('/Satori/Synapse/satorisynapse', [r".*__pycache__$"]),
-        'lib': hashFolder('/Satori/Lib/satorilib', [r".*__pycache__$"])}
+        'neuron': hashFolder('/Satori/Neuron/satorineuron', [r".*__pycache__$", '/Satori/Neuron/satorineuron/web/static/download'])}
+
+
+def getTargets():
+    #response = requests.get('https://stage.satorinet.io/repohashes')
+    response = requests.get('http://137.184.38.160/repohashes')
+    try:
+        return response.json()
+    except Exception as e:
+        logging.debug(e)
+        return {'lib': '', 'engine': '', 'neuron': ''}
+
+
+def saveTargets():
+    import os
+    from satorilib.utils.hash import PasswordHash
+    password = os.getenv('SAVE_REPOS_PASSWORD', input('Password: '))
+    if password == '':
+        return 'no password provided'
+    response = requests.post(
+        #'https://stage.satorinet.io/repohashes',
+        'http://137.184.38.160/repohashes',
+        headers={
+            'Content-Type': 'application/json',
+            'auth': PasswordHash.toString(PasswordHash.hash(password))},
+        json=getFolders())
+    try:
+        return response.json()
+    except Exception as e:
+        logging.debug(e)
+        return {'lib': '', 'engine': '', 'neuron': ''}

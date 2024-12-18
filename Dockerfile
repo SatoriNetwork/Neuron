@@ -39,7 +39,8 @@ RUN mkdir /Satori && \
     mkdir /Satori/Neuron/models/huggingface && \
     chmod +x /Satori/Neuron/satorineuron/web/start.sh && \
     chmod +x /Satori/Neuron/satorineuron/web/start_from_image.sh && \
-    dos2unix /Satori/Neuron/satorineuron/web/start.sh && dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
+    dos2unix /Satori/Neuron/satorineuron/web/start.sh && \
+    dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
     # NOTE: dos2unix line is used to convert line endings from Windows to Unix format
 
 ## Install everything
