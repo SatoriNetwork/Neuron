@@ -3,7 +3,6 @@ import sys
 import time
 import subprocess
 from satorineuron.update import update
-lastPull = 0
 
 
 def startSatori():

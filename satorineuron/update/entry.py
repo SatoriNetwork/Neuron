@@ -3,30 +3,39 @@ from satorineuron.update import pull
 from satorineuron.update import hashes
 
 def update():
-    if config.allowedToPull():
-        # pull from github
-        targetHashes = hashes.getTargets()
-        folderHashes = hashes.getFolders()
+
+    def pullFromGithub():
         matched = True
-        for k, v in folderHashes:
+        for k, v in folderHashes.items():
             if targetHashes.get(k) != v:
                 matched = False
-                pull.fromGithub(k)
+                knownSuccess = pull.validateGithub(*pull.fromGithub(k))
                 config.putTime()
-        if matched:
-            return True
-        # pull from server
-        folderHashes = hashes.getFolders()
+                if knownSuccess:
+                    matched = True
+        return matched
+
+    def pullFromServer():
         matched = True
-        for k, v in folderHashes:
+        for k, v in folderHashes.items():
             if targetHashes.get(k) != v:
                 matched = False
                 pull.fromServer(k)
-        if matched:
-            return True
-        # return
-        folderHashes = hashes.getFolders()
-        for k, v in folderHashes:
+        return matched
+
+    def detectSuccess():
+        for k, v in folderHashes.items():
             if targetHashes.get(k) != v:
                 return False
         return True
+
+    if config.allowedToPull():
+        targetHashes = hashes.getTargets()
+        folderHashes = hashes.getFolders()
+        if pullFromGithub():
+            return True
+        folderHashes = hashes.getFolders()
+        if pullFromServer():
+            return True
+        folderHashes = hashes.getFolders()
+        return detectSuccess()

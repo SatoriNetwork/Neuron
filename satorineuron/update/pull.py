@@ -13,6 +13,7 @@ b''
 >>> process.returncode
 0
 '''
+import subprocess
 
 
 def fromServer(repo: str) -> bool:
@@ -41,27 +42,25 @@ def fromServer(repo: str) -> bool:
                     headers, content = part.split(b"\r\n\r\n", 1)
                 except ValueError:
                     # Skip malformed parts
-                    print("Skipping malformed part:")
-                    input('...')
-                    print("Skipping malformed part:", part)
+                    #print("Skipping malformed part:", part)
                     continue
                 # Match and handle each content type
                 if b'Content-Disposition: form-data; name="message"' in headers:
                     message = content.strip().decode()
-                    print("Message:", message)
+                    #print("Message:", message)
                 elif b'Content-Disposition: form-data; name="signature"' in headers:
                     signature = content.strip().decode()
-                    print("Signature:", signature)
+                    #print("Signature:", signature)
                 elif b'Content-Disposition: form-data; name="file"' in headers:
                     zipped = BytesIO(content)
-                    print("Received ZIP file.")
+                    #print("Received ZIP file.")
         return message, signature, zipped
 
-    # Public key and address fetched from the server
+    print(f'Updating Satori {repo.title()}...', end='', flush=True)
     pubkey = '03eb71612d60ab1a9a5656929b1f2329c72373988313df1ea130b137ba0c239c69'
     address = 'EU1EnRbBMDAU3PcyZ63FXrdV2U6xHAqbUv'
-    # Get the repository data
-    response = requests.get(f'https://stage.satorinet.io/download/repo/{repo}')
+    #response = requests.get(f'https://stage.satorinet.io/download/repo/{repo}')
+    response = requests.get(f'http://137.184.38.160/download/repo/{repo}')
     message, signature, zipped = accept(response)
     if (
         zipped is not None and
@@ -71,54 +70,50 @@ def fromServer(repo: str) -> bool:
             publicKey=pubkey,
             address=address)
     ):
-        # Convert base64-encoded binary (if applicable) into BytesIO (if string)
-        #zipped = BytesIO(bytes.fromhex(zipped))  # Replace with `base64.b64decode` if base64 is used
-        # Unzip the contents
         destination = f'/Satori/{repo.title()}/satori{repo.lower()}'
         os.makedirs(destination, exist_ok=True)
+        bytesWritten = 0
         with zipfile.ZipFile(zipped, 'r') as zipRef:
             # Extract files and overwrite existing ones
             for member in zipRef.namelist():
                 memberPath = os.path.join(destination, member)
                 # Ensure directories exist for the current member
                 os.makedirs(os.path.dirname(memberPath), exist_ok=True)
-                if not member.endswith('/'):  # Skip directories (handled by makedirs)
+                # Skip directories (handled by makedirs)
+                if not member.endswith('/'):
                     with open(memberPath, 'wb') as f:
-                        f.write(zipRef.read(member))
+                        bytesWritten += f.write(zipRef.read(member))
+                        print('.', end='', flush=True)
+            print(f" {bytesWritten} bytes written to {destination}")
         return True
     return False
 
 
-def fromGithub(repo:str) -> tuple[bytes, bytes]:
-
-    import subprocess
-
-    def innerPull(first:bool=True) -> bool:
-        '''
-        #print("STDOUT:", stdout.decode())
-        #print("STDERR:", stderr.decode())
-        '''
-        stdout, stderr = process.communicate()
-        if process.returncode != 0:
-            return False
-        if (
-            process.returncode == 0 and
-            (stderr == b'' and stdout == b'Already up to date.\n')
-        ):
-            return True
-        else:
-            if first:
-                return innerPull(first=False)
-            else:
-                return False
-
+def fromGithub(repo:str) -> tuple[bytes, bytes, int]:
     process = subprocess.Popen(
-        #['/bin/bash', f'/Satori/Neuron/satorineuron/update/pull-{repo}.sh'],
         ['/bin/bash', '-c', f'cd /Satori/{repo.title()}/ && git pull'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     #process.wait()
-    return process.communicate()
+    stdout, stderr = process.communicate()
+    return stdout, stderr, process.returncode
+
+
+def validateGithub(
+    stdout: bytes,
+    stderr: bytes,
+    process: subprocess.Popen,
+    strict: bool=False
+) -> bool:
+    #print("STDOUT:", stdout.decode())
+    #print("STDERR:", stderr.decode())
+    if (not strict and process.returncode == 0) or (
+        strict and
+        process.returncode == 0 and
+        stdout == b'Already up to date.\n'
+    ):
+        return True
+    return False
 
 
 def pullReposFromGithub():
