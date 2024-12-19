@@ -38,9 +38,18 @@ def hashFolder(folderPath:str, exclude:list[str]=None, include: list[str]=None) 
 
 def getFolders() -> dict[str, str]:
     return {
-        'lib': hashFolder('/Satori/Lib/satorilib', [r".*__pycache__$"]),
-        'engine': hashFolder('/Satori/Engine/satoriengine', [r".*__pycache__$"]),
-        'neuron': hashFolder('/Satori/Neuron/satorineuron', [r".*__pycache__$", '/Satori/Neuron/satorineuron/web/static/download'])}
+        'lib': hashFolder(
+            '/Satori/Lib/satorilib',
+            exclude=[r".*__pycache__$"],
+            include=[r".*\.py$", r".*\.html$", r".*\.css$"]),
+        'engine': hashFolder(
+            '/Satori/Engine/satoriengine',
+            exclude=[r".*__pycache__$"],
+            include=[r".*\.py$", r".*\.html$", r".*\.css$"]),
+        'neuron': hashFolder(
+            '/Satori/Neuron/satorineuron',
+            exclude=[r".*__pycache__$", '/Satori/Neuron/satorineuron/web/static/download'],
+            include=[r".*\.py$", r".*\.html$", r".*\.css$"])}
 
 
 def getTargets():
