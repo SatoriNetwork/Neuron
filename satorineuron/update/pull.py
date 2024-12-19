@@ -47,13 +47,13 @@ def fromServer(repo: str) -> bool:
                 # Match and handle each content type
                 if b"Content-Disposition: form-data; name='message'" in headers:
                     message = content.strip().decode()
-                    #print('Message:', message)
-                elif b"Content-Disposition: form-data; name='signature'" in headers:
+                    # print('Message:', message)
+                elif b'Content-Disposition: form-data; name="signature"' in headers:
                     signature = content.strip().decode()
-                    #print('Signature:', signature)
-                elif b"Content-Disposition: form-data; name='file'" in headers:
+                    # print('Signature:', signature)
+                elif b'Content-Disposition: form-data; name="file"' in headers:
                     zipped = BytesIO(content)
-                    #print('Received ZIP file.')
+                    # print('Received ZIP file.')
         return message, signature, zipped
 
     print(f'Updating Satori {repo.title()}...', end='', flush=True)
@@ -70,7 +70,7 @@ def fromServer(repo: str) -> bool:
             publicKey=pubkey,
             address=address)
     ):
-        destination = f'/Satori/{repo.title()}/satori{repo.lower()}'
+        destination = f'/Satori/{repo.title()}/test/satori{repo.lower()}'
         os.makedirs(destination, exist_ok=True)
         bytesWritten = 0
         with zipfile.ZipFile(zipped, 'r') as zipRef:
