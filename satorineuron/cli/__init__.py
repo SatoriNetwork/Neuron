@@ -56,3 +56,13 @@ def create_test_wallet_auth_payload():
     w = EvrmoreWallet()
     w.generate()
     print(authenticate.authPayload(w))
+
+
+@main.command()
+def saveRepos():
+    ''' saves repo hashes '''
+    r'''
+    docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env-file c:\repos\Satori\Neuron\.env --env ENV=prod --env RUNMODE=wallet satorinet/satorineuron:latest bash
+    '''
+    from satorineuron.update import hashes
+    hashes.saveTargets()
