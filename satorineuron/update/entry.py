@@ -10,7 +10,7 @@ def update():
             if targetHashes.get(k) != v:
                 print('pulling from github:', k)
                 matched = False
-                knownSuccess = pull.validateGithub(*pull.fromGithub(k), strict=True)
+                knownSuccess = pull.validateGithub(*pull.fromGithub(k))
                 print('knownSuccess:', knownSuccess)
                 config.putTime()
                 if knownSuccess:
