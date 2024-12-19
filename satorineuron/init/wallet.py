@@ -2,7 +2,6 @@ from typing import Union
 import os
 import time
 import shutil
-import threading
 from queue import Queue
 from satorilib.electrumx import Electrumx
 from satorilib.wallet import EvrmoreWallet
