@@ -31,29 +31,29 @@ def fromServer(repo: str) -> bool:
         message = None
         signature = None
         zipped = None
-        if response.status_code == 200 and "multipart/form-data" in response.headers["Content-Type"]:
-            boundary = response.headers["Content-Type"].split("boundary=")[1]
-            parts = response.content.split(f"--{boundary}".encode())
+        if response.status_code == 200 and 'multipart/form-data' in response.headers['Content-Type']:
+            boundary = response.headers['Content-Type'].split('boundary=')[1]
+            parts = response.content.split(f'--{boundary}'.encode())
             for part in parts:
                 # Ignore empty parts and the closing boundary
-                if not part.strip() or part == b"--":
+                if not part.strip() or part == b'--':
                     continue
                 try:
-                    headers, content = part.split(b"\r\n\r\n", 1)
+                    headers, content = part.split(b'\r\n\r\n', 1)
                 except ValueError:
                     # Skip malformed parts
-                    #print("Skipping malformed part:", part)
+                    #print('Skipping malformed part:', part)
                     continue
                 # Match and handle each content type
-                if b'Content-Disposition: form-data; name="message"' in headers:
+                if b"Content-Disposition: form-data; name='message'" in headers:
                     message = content.strip().decode()
-                    #print("Message:", message)
-                elif b'Content-Disposition: form-data; name="signature"' in headers:
+                    #print('Message:', message)
+                elif b"Content-Disposition: form-data; name='signature'" in headers:
                     signature = content.strip().decode()
-                    #print("Signature:", signature)
-                elif b'Content-Disposition: form-data; name="file"' in headers:
+                    #print('Signature:', signature)
+                elif b"Content-Disposition: form-data; name='file'" in headers:
                     zipped = BytesIO(content)
-                    #print("Received ZIP file.")
+                    #print('Received ZIP file.')
         return message, signature, zipped
 
     print(f'Updating Satori {repo.title()}...', end='', flush=True)
@@ -84,7 +84,7 @@ def fromServer(repo: str) -> bool:
                     with open(memberPath, 'wb') as f:
                         bytesWritten += f.write(zipRef.read(member))
                         print('.', end='', flush=True)
-            print(f" {bytesWritten} bytes written to {destination}")
+            print(f' {bytesWritten} bytes written to {destination}')
         return True
     return False
 
@@ -102,15 +102,16 @@ def fromGithub(repo:str) -> tuple[bytes, bytes, int]:
 def validateGithub(
     stdout: bytes,
     stderr: bytes,
-    process: subprocess.Popen,
+    returncode: int,
     strict: bool=False
 ) -> bool:
-    #print("STDOUT:", stdout.decode())
-    #print("STDERR:", stderr.decode())
-    if (not strict and process.returncode == 0) or (
+    #print('STDOUT:', stdout.decode())
+    #print('STDERR:', stderr.decode())
+    if (not strict and returncode == 0) or (
         strict and
-        process.returncode == 0 and
-        stdout == b'Already up to date.\n'
+        returncode == 0 and
+        stdout == b'Already up to date.\n' and
+        stderr == b''
     ):
         return True
     return False

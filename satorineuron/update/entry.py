@@ -8,8 +8,10 @@ def update():
         matched = True
         for k, v in folderHashes.items():
             if targetHashes.get(k) != v:
+                print('pulling from github:', k)
                 matched = False
-                knownSuccess = pull.validateGithub(*pull.fromGithub(k))
+                knownSuccess = pull.validateGithub(*pull.fromGithub(k), strict=True)
+                print('knownSuccess:', knownSuccess)
                 config.putTime()
                 if knownSuccess:
                     matched = True
@@ -29,9 +31,12 @@ def update():
                 return False
         return True
 
+    print('allowedToPull:', config.allowedToPull())
     if config.allowedToPull():
         targetHashes = hashes.getTargets()
         folderHashes = hashes.getFolders()
+        print('targetHashes:', targetHashes)
+        print('folderHashes:', folderHashes)
         if pullFromGithub():
             return True
         folderHashes = hashes.getFolders()

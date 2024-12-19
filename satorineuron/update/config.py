@@ -35,9 +35,9 @@ def byTime() -> bool:
 
 def putTime() -> bool:
     path = '/Satori/Neuron/config/pulled.txt'
-    if os.path.exists(path):
-        with open(path, 'w') as f:
-            f.write(time.time())
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w') as f:
+        f.write(str(time.time()))
 
 
 def allowedToPull() -> bool:

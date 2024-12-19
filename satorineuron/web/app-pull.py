@@ -18,9 +18,9 @@ def isNotWalletMode() -> bool:
 
 def monitorAndRestartSatori():
     while True:
-        print("Starting Satori...")
         if isProdMode() and isNotWalletMode():
             update()
+        print('Starting Satori...')
         process = startSatori()
         while True:
             try:
@@ -32,12 +32,12 @@ def monitorAndRestartSatori():
                     return return_code  # 0 shutdown, 1 restart container, err
                 time.sleep(1)
             except KeyboardInterrupt:
-                print("Shutting down monitor...")
+                print('Shutting down monitor...')
                 process.terminate()
                 process.wait()
                 return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     return_code = monitorAndRestartSatori()
     os._exit(return_code)
