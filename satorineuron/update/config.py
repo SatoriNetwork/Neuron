@@ -2,7 +2,7 @@ import os
 import time
 
 
-def byConfig() -> bool:
+def pullAllowedByConfig() -> bool:
     '''
     open /Satori/Neuron/config/config.yaml if it exists,
     check if the value of 'pull code updates' is true
@@ -17,7 +17,7 @@ def byConfig() -> bool:
     return True
 
 
-def byTime() -> bool:
+def pullAllowedByTime() -> bool:
     '''
     open /Satori/Neuron/config/config.yaml if it exists,
     check if the value of 'pull code updates' is true
@@ -41,4 +41,4 @@ def putTime() -> bool:
 
 
 def allowedToPull() -> bool:
-    return byConfig() and byTime()
+    return pullAllowedByConfig() and pullAllowedByTime()

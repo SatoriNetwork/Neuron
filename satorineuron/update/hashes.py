@@ -53,8 +53,8 @@ def getFolders() -> dict[str, str]:
 
 
 def getTargets():
-    #response = requests.get('https://stage.satorinet.io/repohashes')
-    response = requests.get('http://137.184.38.160/repohashes')
+    response = requests.get('https://stage.satorinet.io/repohashes')
+    #response = requests.get('http://137.184.38.160/repohashes')
     try:
         return response.json()
     except Exception as e:
@@ -69,8 +69,8 @@ def saveTargets():
     if password == '':
         return 'no password provided'
     response = requests.post(
-        #'https://stage.satorinet.io/repohashes',
-        'http://137.184.38.160/repohashes',
+        'https://stage.satorinet.io/repohashes',
+        #'http://137.184.38.160/repohashes',
         headers={
             'Content-Type': 'application/json',
             'auth': PasswordHash.toString(PasswordHash.hash(password))},

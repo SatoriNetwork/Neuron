@@ -59,8 +59,8 @@ def fromServer(repo: str) -> bool:
     print(f'Updating Satori {repo.title()}...', end='', flush=True)
     pubkey = '03eb71612d60ab1a9a5656929b1f2329c72373988313df1ea130b137ba0c239c69'
     address = 'EU1EnRbBMDAU3PcyZ63FXrdV2U6xHAqbUv'
-    #response = requests.get(f'https://stage.satorinet.io/download/repo/{repo}')
-    response = requests.get(f'http://137.184.38.160/download/repo/{repo}')
+    response = requests.get(f'https://stage.satorinet.io/download/repo/{repo}')
+    #response = requests.get(f'http://137.184.38.160/download/repo/{repo}')
     message, signature, zipped = accept(response)
     if (
         zipped is not None and
@@ -70,7 +70,7 @@ def fromServer(repo: str) -> bool:
             publicKey=pubkey,
             address=address)
     ):
-        destination = f'/Satori/{repo.title()}/test/satori{repo.lower()}'
+        destination = f'/Satori/{repo.title()}/satori{repo.lower()}'
         os.makedirs(destination, exist_ok=True)
         bytesWritten = 0
         with zipfile.ZipFile(zipped, 'r') as zipRef:

@@ -9,9 +9,9 @@ def update():
         for k, v in folderHashes.items():
             if targetHashes.get(k) != v:
                 matched = False
-                #knownSuccess = pull.validateGithub(*pull.fromGithub(k))
-                #if knownSuccess:
-                #    matched = True
+                knownSuccess = pull.validateGithub(*pull.fromGithub(k))
+                if knownSuccess:
+                    matched = True
         return matched
 
     def pullFromServer():
@@ -20,7 +20,7 @@ def update():
             if targetHashes.get(k) != v:
                 matched = False
                 pull.fromServer(k)
-                config.putTime()
+                config.putTime() # don't pull from server too often
         return matched
 
     def detectSuccess():
@@ -29,16 +29,14 @@ def update():
                 return False
         return True
 
-    print('allowedToPull:', config.allowedToPull())
-    if config.allowedToPull():
+    if config.pullAllowedByConfig():
         targetHashes = hashes.getTargets()
         folderHashes = hashes.getFolders()
-        print('targetHashes:', targetHashes)
-        print('folderHashes:', folderHashes)
         if pullFromGithub():
             return True
-        folderHashes = hashes.getFolders()
-        if pullFromServer():
-            return True
-        folderHashes = hashes.getFolders()
-        return detectSuccess()
+        if config.pullAllowedByTime():
+            folderHashes = hashes.getFolders()
+            if pullFromServer():
+                return True
+            folderHashes = hashes.getFolders()
+            return detectSuccess()
