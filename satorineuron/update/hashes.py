@@ -28,9 +28,9 @@ def hashFolder(folderPath:str, exclude:list[str]=None, include: list[str]=None) 
                 if not re.match(path, filename):
                     continue
             logging.debug(f'filename {filename}')
-            file_path = os.path.join(root, filename)
+            filepath = os.path.join(root, filename)
             hasher.update(filename.encode('utf-8'))
-            with open(file_path, 'rb') as f:
+            with open(filepath, 'rb') as f:
                 while chunk := f.read(8192):  # Read in chunks to handle large files
                     hasher.update(chunk)
     return hasher.hexdigest()
