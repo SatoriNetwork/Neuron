@@ -8,13 +8,10 @@ def update():
         matched = True
         for k, v in folderHashes.items():
             if targetHashes.get(k) != v:
-                print('pulling from github:', k)
                 matched = False
-                knownSuccess = pull.validateGithub(*pull.fromGithub(k))
-                print('knownSuccess:', knownSuccess)
-                config.putTime()
-                if knownSuccess:
-                    matched = True
+                #knownSuccess = pull.validateGithub(*pull.fromGithub(k))
+                #if knownSuccess:
+                #    matched = True
         return matched
 
     def pullFromServer():
@@ -23,6 +20,7 @@ def update():
             if targetHashes.get(k) != v:
                 matched = False
                 pull.fromServer(k)
+                config.putTime()
         return matched
 
     def detectSuccess():

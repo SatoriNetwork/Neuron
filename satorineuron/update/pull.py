@@ -45,7 +45,7 @@ def fromServer(repo: str) -> bool:
                     #print('Skipping malformed part:', part)
                     continue
                 # Match and handle each content type
-                if b"Content-Disposition: form-data; name='message'" in headers:
+                if b'Content-Disposition: form-data; name="message"' in headers:
                     message = content.strip().decode()
                     # print('Message:', message)
                 elif b'Content-Disposition: form-data; name="signature"' in headers:
