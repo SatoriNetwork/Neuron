@@ -187,7 +187,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def setupWallets(self):
         self.walletVaultManager = WalletVaultManager(
             updateConnectionStatus=self.updateConnectionStatus,
-            persistent=self.runMode != RunMode.worker)
+            persistent=self.runMode == RunMode.wallet)
         self.walletVaultManager.setup()
 
     def closeVault(self):
