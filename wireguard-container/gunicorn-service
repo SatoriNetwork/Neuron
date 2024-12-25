@@ -1,0 +1,23 @@
+/etc/systemd/system/gunicorn.service
+systemctl daemon-reload
+systemctl start gunicorn
+systemctl enable gunicorn
+
+
+[Unit]
+Description=Gunicorn instance to serve Flask App
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/root
+ExecStart=/usr/local/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 server:app
+
+# Restart the service automatically if it fails
+Restart=always
+RestartSec=3
+TimeoutSec=30
+
+[Install]
+WantedBy=multi-user.target
