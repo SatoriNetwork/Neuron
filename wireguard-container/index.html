@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WireGuard Client Setup</title>
+</head>
+<body>
+    <h1>WireGuard Client Setup</h1>
+    <button onclick="addClient()">Add New Client</button>
+
+    <div id="config"></div>
+
+    <script>
+        function addClient() {
+            fetch('/add_client', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                let config = `
+                    <h2>Client Configuration:</h2>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                document.getElementById('config').innerHTML = config;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
