@@ -55,6 +55,6 @@ def monitorAndRestartSatori():
 
 
 if __name__ == '__main__':
-    loadEnvVars('/Satori/Neuron/config/vars.env')
+    loadEnvVars('/Satori/Neuron/config/.env')
     return_code = monitorAndRestartSatori()
     os._exit(return_code)
