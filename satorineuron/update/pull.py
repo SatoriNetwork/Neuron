@@ -105,8 +105,7 @@ def validateGithub(
     returncode: int,
     strict: bool=False
 ) -> bool:
-    #print('STDOUT:', stdout.decode())
-    #print('STDERR:', stderr.decode())
+    print(stdout.decode(), stderr.decode())
     if (not strict and returncode == 0) or (
         strict and
         returncode == 0 and
