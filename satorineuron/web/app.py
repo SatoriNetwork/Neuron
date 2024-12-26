@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import subprocess
-from ..update import update
+from update import update
 
 def loadEnvVars(envFile):
     """
