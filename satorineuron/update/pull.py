@@ -81,9 +81,12 @@ def fromServer(repo: str) -> bool:
                 os.makedirs(os.path.dirname(memberPath), exist_ok=True)
                 # Skip directories (handled by makedirs)
                 if not member.endswith('/'):
-                    with open(memberPath, 'wb') as f:
-                        bytesWritten += f.write(zipRef.read(member))
-                        print('.', end='', flush=True)
+                    try:
+                        with open(memberPath, 'wb') as f:
+                            bytesWritten += f.write(zipRef.read(member))
+                            print('.', end='', flush=True)
+                    except Exception as e:
+                        print(f'Error writing {memberPath}: {e}')
             print(f' {bytesWritten} bytes written to {destination}')
         return True
     return False

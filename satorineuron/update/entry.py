@@ -1,6 +1,6 @@
-from satorineuron.update import config
-from satorineuron.update import pull
-from satorineuron.update import hashes
+from . import config
+from . import pull
+from . import hashes
 
 def update():
 
