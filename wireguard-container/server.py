@@ -1,3 +1,5 @@
+'''
+we probably wont use this. commenting out.
 import os
 import subprocess
 import json
@@ -57,7 +59,7 @@ def update_server_config(client_public_key, client_ip):
         f.write(f"\n[Peer]\n")
         f.write(f"PublicKey = {client_public_key}\n")
         f.write(f"AllowedIPs = {client_ip}/32\n")
-    
+
     subprocess.run(['wg', 'set', 'wg0', 'peer', client_public_key, 'allowed-ips', f'{client_ip}/32'])
     subprocess.run(['systemctl', 'restart', 'wg-quick@wg0'])
 
@@ -67,7 +69,7 @@ def send_config_to_client(client_ip, client_private_key, client_public_key):
         'PrivateKey': client_private_key,
         'PublicKey': client_public_key,
         'Address': client_ip,
-        'Endpoint': '23.239.18.72:51820',  
+        'Endpoint': '23.239.18.72:51820',
         'AllowedIPs': '10.0.0.0/24',
         'PersistentKeepalive': '25',
     }
@@ -96,3 +98,4 @@ def add_client():
 
 if __name__ == "__main__":
     app.run(debug=False, host='0.0.0.0', port=5000)
+'''
