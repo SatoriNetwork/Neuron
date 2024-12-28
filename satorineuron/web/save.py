@@ -1,3 +1,3 @@
 if __name__ == '__main__':
-    from satorineuron.update import hashes
+    from satorineuron.web.update import hashes
     print(hashes.saveTargets())
