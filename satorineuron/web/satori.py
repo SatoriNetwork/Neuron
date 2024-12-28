@@ -1790,7 +1790,7 @@ def mineToAddress(address: str):
         return '', 200
     # the network portion should be whatever network I'm on.
     network = 'main'
-    start.details.wallet['rewardaddress'] = address
+    start.details.wallet['rewardaddress'] = address if address != 'null' else None
     vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
@@ -1799,6 +1799,7 @@ def mineToAddress(address: str):
         signature=vault.sign(address),
         pubkey=vault.publicKey,
         address=address)
+    print(success, result)
     if success:
         return 'OK', 200
     return f'Failed to set reward address: {result}', 400
@@ -2024,7 +2025,7 @@ def vote():
         'vault': start.vault,
         'streams': getStreams(myWallet),
         **getVotes(myWallet)}))
-    
+
 @app.route('/pool/participants', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired

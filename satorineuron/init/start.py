@@ -796,6 +796,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             else config.get().get('mining mode', True))
         self.miningMode = miningMode
         config.add(data={'mining mode': self.miningMode})
+        if hasattr(self, 'server') and self.server is not None:
+            self.server.setMiningMode(miningMode)
         return self.miningMode
 
     def setEngineVersion(self, version: Union[str, None] = None) -> str:
