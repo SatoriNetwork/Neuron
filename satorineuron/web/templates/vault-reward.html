@@ -69,10 +69,12 @@
     }
   }
   function checkEnterForRewardAddress(event){
-    document.getElementById("minigRewardConfirmation").innerHTML = '';
-    if (event.key === "Enter" || event.keyCode === 13) {
-      console.log('enter detected');
-      setRewardAddress();
+    if (isFocused(document.querySelector('#minigReward'))) {
+      document.getElementById("minigRewardConfirmation").innerHTML = '';
+      if (event.key === "Enter" || event.keyCode === 13) {
+        console.log('enter detected');
+        setRewardAddress();
+      }
     }
   }
   function reportVault() {

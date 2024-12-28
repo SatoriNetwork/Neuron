@@ -1730,6 +1730,7 @@ def vault():
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
+            'offer': start.details.wallet['offer'],
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
@@ -1748,6 +1749,7 @@ def vault():
         'vaultOpened': False,
         'stakeRequired': constants.stakeRequired,
         'wallet': start.vault,
+        'offer': start.details.wallet['offer'],
         'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
         'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
@@ -1908,6 +1910,16 @@ def proxyParentStatus():
     if success:
         return result, 200
     return f'Failed stakeProxyChildren: {result}', 400
+
+
+@app.route('/pool/worker/reward/set/<percent>', methods=['GET'])
+@authRequired
+def setPoolWorkerReward(percent: float):
+    success, result = start.server.setPoolWorkerReward(percent)
+    if success:
+        start.details.wallet['offer'] = percent
+        return result, 200
+    return f'Failed setPoolWorkerReward: {result}', 400
 
 
 @app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
