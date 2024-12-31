@@ -1917,7 +1917,7 @@ def proxyParentStatus():
 def setPoolWorkerReward(percent: float):
     success, result = start.server.setPoolWorkerReward(percent)
     if success:
-        start.details.wallet.get('offer', 0) = percent
+        start.details.wallet['offer'] = percent
         return result, 200
     return f'Failed setPoolWorkerReward: {result}', 400
 
