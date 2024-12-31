@@ -1730,7 +1730,7 @@ def vault():
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
-            'offer': start.details.wallet['offer'],
+            'offer': start.details.wallet.get('offer', 0),
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
@@ -1749,7 +1749,7 @@ def vault():
         'vaultOpened': False,
         'stakeRequired': constants.stakeRequired,
         'wallet': start.vault,
-        'offer': start.details.wallet['offer'],
+        'offer': start.details.wallet.get('offer', 0),
         'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
         'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
@@ -1917,7 +1917,7 @@ def proxyParentStatus():
 def setPoolWorkerReward(percent: float):
     success, result = start.server.setPoolWorkerReward(percent)
     if success:
-        start.details.wallet['offer'] = percent
+        start.details.wallet.get('offer', 0) = percent
         return result, 200
     return f'Failed setPoolWorkerReward: {result}', 400
 
