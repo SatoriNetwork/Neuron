@@ -801,11 +801,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.miningMode
 
     def setEngineVersion(self, version: Union[str, None] = None) -> str:
+        default = 'v2'
         version = (
             version
             if version in ['v1', 'v2']
-            else config.get().get('engine version', 'v1'))
-        self.engineVersion = version if version in ['v1', 'v2'] else 'v1'
+            else config.get().get('engine version', default))
+        self.engineVersion = version if version in ['v1', 'v2'] else default
         config.add(data={'engine version': self.engineVersion})
         return self.engineVersion
 
