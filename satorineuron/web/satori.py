@@ -21,6 +21,7 @@ import threading
 import pandas as pd
 from logging.handlers import RotatingFileHandler
 from queue import Queue
+from werkzeug.utils import secure_filename
 # from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
@@ -38,7 +39,6 @@ from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateH
 from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
-
 logging.info(f'version: {VERSION}', print=True)
 
 
@@ -451,46 +451,60 @@ def backup(target: str = 'satori'):
 @userInteracted
 @authRequired
 def import_wallet():
+    '''
+    Safely import wallet files with backups and error handling.
+    '''
     if start.vault is None or start.vault.isEncrypted:
         return jsonify({'success': False, 'message': 'Please unlock the vault first'})
-
     if 'files' not in request.files:
-        return jsonify({'success': False, 'message': 'No files part in the request'})
+        return jsonify({'success': False, 'message': 'No wallet supplied'})
 
-    files = request.files.getlist('files')
-
-    wallet_path = '/Satori/Neuron/wallet'
-    temp_path = '/Satori/Neuron/temp_wallet'
-
-    # Create a temporary directory
-    os.makedirs(temp_path, exist_ok=True)
+    walletPath = '/Satori/Neuron/wallet'
+    backupPath = f'/Satori/Neuron/wallet-backup-{time.time()}'
 
     try:
+        # Ensure wallet service is stopped
+        start.shutdownWallets()
+
+        # Create a backup of the existing wallet
+        if os.path.exists(walletPath):
+            os.makedirs(backupPath, exist_ok=False)  # Ensure backupPath is new
+            print(-1)
+            shutil.copytree(walletPath, backupPath, dirs_exist_ok=True)
+            print(-2)
+
+        # Save incoming files to a temporary path
+        os.makedirs(walletPath, exist_ok=True)
+        files = request.files.getlist('files')
+        print(0)
         for file in files:
             if file.filename.startswith('wallet/'):
-                file_path = os.path.join(temp_path, file.filename[7:])
-                os.makedirs(os.path.dirname(file_path), exist_ok=True)
-                file.save(file_path)
+                filePath = os.path.join(walletPath, secure_filename(file.filename[7:]))
+                print(f"Saving file to {filePath}")
+                os.makedirs(os.path.dirname(filePath), exist_ok=True)
+                file.save(filePath)
 
-        # Backup current wallet
-        if os.path.exists(wallet_path):
-            shutil.move(wallet_path, wallet_path + '_backup')
+        # Restart wallet service
+        start.setupWalletManager()
+        start.walletVaultManager.setupWalletAndVault()
 
-        # Move new wallet into place
-        shutil.move(temp_path, wallet_path)
-
-        return jsonify({'success': True})
+        # Backups are retained, no cleanup performed
+        return jsonify({'success': True, 'backup': backupPath})
     except Exception as e:
-        # If any error occurs, restore the old wallet
-        if os.path.exists(wallet_path + '_backup'):
-            shutil.rmtree(wallet_path, ignore_errors=True)
-            shutil.move(wallet_path + '_backup', wallet_path)
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        # Clean up
-        shutil.rmtree(temp_path, ignore_errors=True)
-        if os.path.exists(wallet_path + '_backup'):
-            shutil.rmtree(wallet_path + '_backup', ignore_errors=True)
+        logging.error(f"Error during wallet import, reverting: {str(e)}")
+        # Restore from backup if it exists and is valid
+        if os.path.exists(backupPath):
+            shutil.copytree(backupPath, walletPath, dirs_exist_ok=True)
+            #if os.path.exists(walletPath):
+            #    shutil.rmtree(walletPath, ignore_errors=True)
+            #shutil.move(backupPath, walletPath)
+        else:
+            logging.error("Backup missing or invalid. Wallet state might be compromised.")
+        # Restart wallet service to maintain state
+        start.setupWalletManager()
+        return jsonify({'success': False, 'message': str(e), 'backup': backupPath})
+
+
 
 
 @app.route('/power/refresh', methods=['GET'])

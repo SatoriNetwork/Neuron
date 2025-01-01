@@ -112,7 +112,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
         self.setEngineVersion()
-        self.setupWallets()
+        self.setupWalletManager()
         if not config.get().get("disable restart", False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic,
@@ -184,11 +184,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             8)
         return self._holdingBalance
 
-    def setupWallets(self):
+    def setupWalletManager(self):
         self.walletVaultManager = WalletVaultManager(
             updateConnectionStatus=self.updateConnectionStatus,
             persistent=self.runMode == RunMode.wallet)
         self.walletVaultManager.setup()
+
+    def shutdownWallets(self):
+        self.walletVaultManager.disconnect()
+        self.walletVaultManager.electrumx = None
+        self.walletVaultManager._wallet = None
+        self.walletVaultManager._vault = None
 
     def closeVault(self):
         self.walletVaultManager.closeVault()
@@ -196,7 +202,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def openVault(self, password: Union[str, None] = None, create: bool = False):
         return self.walletVaultManager.openVault(password=password, create=create)
 
-    def getWallet(self):
+    def getWallet(self, **kwargs):
         return self.walletVaultManager.getWallet()
 
     def getVault(self, password: Union[str, None] = None, create: bool = False):
