@@ -15,7 +15,7 @@ from satorineuron import logging
 from satorineuron.p2p.peer_manager import PeerManager
 from satorineuron.p2p.my_conf import WireguardInfo
 from satorineuron.p2p.wireguard_manager import save_config
-from satorilib.api.disk.cache import Cache
+from satorilib.disk.cache import Cache
 
 class StreamIdEncoder(json.JSONEncoder):
     """Custom JSON encoder for handling StreamId objects and other custom types"""
