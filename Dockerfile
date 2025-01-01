@@ -45,7 +45,8 @@ RUN mkdir /Satori && \
     mkdir /Satori/Neuron/models/huggingface && \
     chmod +x /Satori/Neuron/satorineuron/web/start.sh && \
     chmod +x /Satori/Neuron/satorineuron/web/start_from_image.sh && \
-    dos2unix /Satori/Neuron/satorineuron/web/start.sh && dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
+    dos2unix /Satori/Neuron/satorineuron/web/start.sh && \
+    dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
     # NOTE: dos2unix line is used to convert line endings from Windows to Unix format
 
 ## Install everything
@@ -147,7 +148,7 @@ CMD ["bash", "./start_from_image.sh"]
 
 # automatic fast slow build:
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:previous
-# docker tag satorinet/satorineuron:latest satorinet/satorineuron:0.2.32
+# docker tag satorinet/satorineuron:latest satorinet/satorineuron:0.3.5
 # docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
 # docker pull satorinet/satorineuron:test
 # docker tag satorinet/satorineuron:test satorinet/satorineuron:latest

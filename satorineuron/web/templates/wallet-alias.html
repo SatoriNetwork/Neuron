@@ -32,8 +32,10 @@
     }
   }
   function checkEnter(event, network){
-    if (event.key === "Enter" || event.keyCode === 13) {
-      updateAlias(network);
+    if (isFocused(document.querySelector('#walletAlias'))) {
+      if (event.key === "Enter" || event.keyCode === 13) {
+        updateAlias(network);
+      }
     }
   }
   //document.getElementById('walletAlias').addEventListener('keydown', function(event) {

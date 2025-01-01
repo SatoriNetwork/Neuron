@@ -25,12 +25,7 @@
         <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
           A Satori Neuron Delegate is a Neuron that receives the rewards of, and holds the staking requirement for, one or more remote Neurons.
           <br><br>
-          This Neuron acts as a delegate to the following remote Satori Neurons:
-          <br><br>
         </p>
-        <div class="row mb-4"  style='padding-left:2rem;padding-right:2rem;'>
-          <p id='delegateStakeTable' class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}"></p>
-        </div>
         <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
           <div class="col-xl-3 col-sm-3 mb-xl-0">
             <center>
@@ -59,6 +54,50 @@
           <div class="col-xl-3 col-sm-3 mb-xl-0">
             <p id='addStakingAddressConfirmation'></p>
           </div>
+        </div>
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}" style="display: none;">
+          To automatically pull workers from the network, make an offer to reward them below.
+          <br>
+          You are responsible for rewarding them, see the daily predictors report which tallies each worker's effort.
+          <br><br>
+        </p>
+        <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem; display: none;'>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <center>
+              <p id="addStakingOfferLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;">
+                Miner Reward %:
+              </p>
+            <center>
+          </div>
+          <div class="col-xl-6 col-sm-6 mb-xl-0">
+            <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+              <div class="d-flex px-3 py-1" style="padding-right: 1rem; margin-left:auto; margin-right: auto;">
+                <div class="input-group input-group-outline">
+                  <input
+                    id="addStakingOffer"
+                    name="addStakingOffer"
+                    class="tight form-control {% if darkmode %}dark-colors{% endif %}"
+                    style="text-align: center;"
+                    maxLength="3"
+                    required=""
+                    placeholder="{{ offer }}"
+                    type="text"
+                    onKeyPress="checkEnterForStakingOffer(event)">
+                </div>
+              </div>
+            </h6>
+          </div>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <p id='addStakingOfferConfirmation'></p>
+          </div>
+        </div>
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          <br><br>
+          This Neuron acts as a delegate to the following remote Satori Neurons:
+          <br><br>
+        </p>
+        <div class="row mb-4"  style='padding-left:2rem;padding-right:2rem;'>
+          <p id='delegateStakeTable' class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}"></p>
         </div>
       </div>
     </div>
@@ -104,12 +143,26 @@
   }
 
   function checkEnterForStakingAddress(event){
-    document.getElementById("addStakingAddressConfirmation").innerHTML = '';
-    if (event.key === "Enter" || event.keyCode === 13) {
-      console.log('enter detected');
-      setStakingAddress();
+    if (isFocused(document.querySelector('#addStakingAddress'))) {
+      document.getElementById("addStakingAddressConfirmation").innerHTML = '';
+      if (event.key === "Enter" || event.keyCode === 13) {
+        console.log('enter detected');
+        setStakingAddress();
+      }
     }
   }
+
+
+  function checkEnterForStakingOffer(event){
+    if (isFocused(document.querySelector('#addStakingOffer'))) {
+      document.getElementById("addStakingOfferConfirmation").innerHTML = '';
+      if (event.key === "Enter" || event.keyCode === 13) {
+        console.log('enter detected');
+        setStakingOffer();
+      }
+    }
+  }
+
 
   function setStakingAddress() {
     address = document.getElementById("addStakingAddress").value;

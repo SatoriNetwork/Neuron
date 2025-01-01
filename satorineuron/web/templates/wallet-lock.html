@@ -23,14 +23,14 @@
                 <div class="input-group input-group-outline">
                   {{ vaultPasswordForm.submit(
                       size=32,
-                      style_="display:block" if wallet is none else "display:none;", 
-                      value="Create Vault", 
-                      class_="tight form-control" + (" dark-colors" if darkmode else ""), 
+                      style_="display:block" if wallet is none else "display:none;",
+                      value="Create Vault",
+                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
                       onclick="if(validateVaultPassword()) showWorking();") }}
                 </div>
               </div>
             </form>
-            <!--<input 
+            <!--<input
             style="text-align: center;"
             class="tight form-control input-tall code-placeholder {% if darkmode %}dark-colors{% endif %}",
             type="password" id="passwordInput" placeholder="Enter your password" />-->
@@ -46,16 +46,18 @@
     document.getElementById("password").focus();
   };
   function checkEnter(event){
-    if (event.key === "Enter" || event.keyCode === 13) {
-      if(validateVaultPassword()) {
-        showWorking();
-        console.log('success');
-        return true;
+    if (isFocused(document.querySelector('#repeatPassword'))) {
+      if (event.key === "Enter" || event.keyCode === 13) {
+        if(validateVaultPassword()) {
+          showWorking();
+          console.log('success');
+          return true;
+        }
+        console.log('fail');
+        return false;
       }
-      console.log('fail');
-      return false;
+      return event.keyCode != 13;
     }
-    return event.keyCode != 13;
   }
   function validateVaultPassword() {
     let repeat = document.getElementById("repeatPassword");

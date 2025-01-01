@@ -23,7 +23,7 @@ apt-get clean
 
 
 ## File system setup
-ARG BRANCH_FLAG=dev
+ARG BRANCH_FLAG=main
 RUN mkdir -p /Satori && \
 cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Synapse.git && \
 cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
