@@ -24,6 +24,7 @@ config/autosecure.yaml
 config/manifest.yaml
 config/relay.yaml
 config/config.yaml
+config/.env
 #git rm --cached config/config.yaml
 !data/.gitkeep
 models/*
