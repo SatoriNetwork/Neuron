@@ -114,7 +114,6 @@
         throw new Error('Network response was not ok.');
       }
     }).then(text => {
-      console.log(text);
       if (text == '') {
         document.getElementById("myDelegate").innerHTML = '';
       } else {
@@ -135,7 +134,7 @@
                   alias: ${delegate.alias}<br>
                   wallet: ${delegate.wallet}<br>
                   vault: ${delegate.vault}<br>
-                  accepting: ${delegate.accepting}<br>
+                  <!--accepting: ${delegate.accepting}<br>-->
                   offer: ${delegate.offer}
                 </p>
               </div>
