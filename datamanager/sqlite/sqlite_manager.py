@@ -1,6 +1,7 @@
 import sqlite3
 import os
 from typing import Dict, Any, List
+from Neuron.datamanager.sqlite.uuid import generate_uuid
 
 class SqliteDatabase:
     def __init__(self, data_dir: str = "../../data"):
