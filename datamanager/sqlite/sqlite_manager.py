@@ -89,7 +89,25 @@ class SqliteDatabase:
         except Exception as e:
             print(f"{action.capitalize()} error for {table_name}:", e)
 
+    def import_csv():
+        '''
+        Take a CSV as input and store after creating a UUID as the table name and then take values
+        from the CSV and store it inside the db
+        '''
+        pass
+
+    def export_csv():
+        '''
+        From the table inside the sqlite, a CSV file is produced in the required format
+        '''
+        pass
+
 
 ## Testing
 
 db = SqliteDatabase()
+
+
+# Notes : 
+
+# Find relation and create a UUID with a stream using values in the README inside each folder
