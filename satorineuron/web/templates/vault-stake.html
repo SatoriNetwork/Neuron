@@ -188,30 +188,6 @@
     });
   }
 
-  function setStakingOffer() {
-    offer = document.getElementById("addStakingOffer").value;
-    fetch('/pool/worker/reward/set/' + offer, { method: 'GET' })
-    .then(response => {
-        if (response.ok) {
-          return response.text();
-        } else {
-          throw new Error('Network response was not ok.');
-        }
-    })
-    .then(text => {
-      if (text == 'OK') {
-        document.getElementById("addStakingOfferConfirmation").innerHTML = 'Saved!';
-        getProxyParentStatus();
-      } else {
-        console.log(text);
-        document.getElementById("addStakingOfferConfirmation").innerHTML = 'Unable to save.';
-      }
-    }).catch(error => {
-      document.getElementById("addStakingOfferConfirmation").innerHTML = 'Unable to save.';
-      console.error('Error:', error);
-    });
-  }
-
   function createTable(text) {
     // example text '[{
     //   "parent": 1234,

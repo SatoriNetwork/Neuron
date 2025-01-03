@@ -54,7 +54,7 @@ ENV = config.get().get('env', os.environ.get(
     'ENV', os.environ.get('SATORI_RUN_MODE', 'dev')))
 # DELEGATE = config.get().get('delegate', None)
 CORS(app, origins=[{
-    'local': 'http://central',
+    'local': 'http://192.168.0.10:5002',
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])

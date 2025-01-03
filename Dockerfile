@@ -7,6 +7,9 @@
 FROM python:3.10-slim AS builder
 
 ## System dependencies
+# RUN apt-get update 
+# RUN apt-get install -y build-essential
+# RUN apt-get install -y wget curl git vim cmake dos2unix
 RUN apt-get update && \
     apt-get install -y build-essential && \
     apt-get install -y wget && \
@@ -15,7 +18,8 @@ RUN apt-get update && \
     apt-get install -y vim && \
     apt-get install -y cmake && \
     apt-get install -y dos2unix && \
-    apt-get clean
+    apt-get install -y wireguard iptables iproute2 netcat-openbsd iputils-ping && \
+    apt-get clean 
     # TODO: need zip? I think it was just used for IPFS install
     #apt-get install -y zip
 
@@ -26,6 +30,8 @@ RUN apt-get update && \
     #chmod -R 777 /Satori/Engine && \
     #chmod -R 777 /Satori/Neuron && \
 ## File system setup
+
+# File system setup
 ARG BRANCH_FLAG=main
 RUN mkdir /Satori && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Synapse.git && \
@@ -63,6 +69,12 @@ RUN pip install --upgrade pip && \
     cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
     cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
 
+# WireGuard setup
+RUN mkdir -p /etc/wireguard
+# Note: You need to provide a wg0.conf file in your build context
+COPY Neuron/config/wg0.conf /etc/wireguard/wg0.conf
+RUN chmod 600 /etc/wireguard/wg0.conf
+
 ## no need for ollama at this time.
 #RUN apt-get install -y curl
 #RUN mkdir /Satori/Neuron/chat
@@ -71,8 +83,13 @@ RUN pip install --upgrade pip && \
 #RUN ollama pull llama3
 
 # satori ui
+# Expose ports
 EXPOSE 24601
+EXPOSE 51820/udp
+EXPOSE 51820/tcp
 
+
+# Set working directory
 WORKDIR /Satori/Neuron/satorineuron/web
 CMD ["bash", "./start_from_image.sh"]
 
@@ -120,6 +137,14 @@ CMD ["bash", "./start_from_image.sh"]
 # docker run --rm -it --name satorineuron -p 5000:5000 -v c:\repos\Satori\satori:/Satori/satori --env ENV=prod --env WALLETONLYMODE=1 satorinet/satorineuron:latest python /Satori/satori/app.py
 # docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 --env ENV=prod -v c:\repos\Satori\Neuron\wallet:/Satori/Neuron/wallet -v c:\repos\Satori\Neuron\models:/Satori/Neuron/models -v c:\repos\Satori\Neuron\data:/Satori/Neuron/data -v c:\repos\Satori\Neuron\config:/Satori/Neuron/config satorinet/satorineuron:latest bash
 # docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 --env ENV=prod satorinet/satorineuron:latest bash
+
+# wireguard
+# docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --env ENV=prod satorinet/satorineuron:latest bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -p 51820:51820/udp -v c:\repos\satori\Neuron\config:/config -v c:\repos\Satori\Neuron:/Satori/Neuron --cap-add=NET_ADMIN --cap-add=SYS_MODULE --sysctl="net.ipv4.conf.all.src_valid_mark=1" --network=wireguard-net --env ENV=prod satorinet/satorineuron:latest bash
+# docker build --no-cache -f "Neuron/Dockerfile" -t satorinet/satorineuron:latest .
+# docker build --no-cache -f Dockerfile -t satorinet/satorineuron:latest .
+# docker exec -it satorineuron bash
+#  docker build --progress=plain -t satorinet/satorineuron:latest .
 
 # automatic fast slow build:
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:previous
