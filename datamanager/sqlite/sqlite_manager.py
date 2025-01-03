@@ -2,7 +2,7 @@ import sqlite3
 import os
 from typing import Dict, Any, List
 
-class Database:
+class SqliteDatabase:
     def __init__(self, data_dir: str = "../../data"):
         self.conn = None
         self.cursor = None
@@ -88,3 +88,8 @@ class Database:
             
         except Exception as e:
             print(f"{action.capitalize()} error for {table_name}:", e)
+
+
+## Testing
+
+db = SqliteDatabase()
