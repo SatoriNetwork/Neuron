@@ -3,6 +3,19 @@ import os
 from typing import Dict, Any, List
 from Neuron.datamanager.sqlite.uuid import generate_uuid
 
+## TODO
+
+# At start-up
+# folder scan
+# take readme.md and store in a dictionary
+# key = 'author' and 'stream' and generate UUID
+# the generated UUID becomes the table_name
+# using import_csv function, store values of csv into sqlite
+
+# export csv name will be table name
+
+# check insertion of a single row into sqlite table ( table_name = generate_uuid( author, stream)) 
+
 class SqliteDatabase:
     def __init__(self, data_dir: str = "../../data"):
         self.conn = None
@@ -90,6 +103,7 @@ class SqliteDatabase:
         except Exception as e:
             print(f"{action.capitalize()} error for {table_name}:", e)
 
+    @staticmethod
     def import_csv():
         '''
         Take a CSV as input and store after creating a UUID as the table name and then take values
@@ -97,6 +111,7 @@ class SqliteDatabase:
         '''
         pass
 
+    @staticmethod
     def export_csv():
         '''
         From the table inside the sqlite, a CSV file is produced in the required format
