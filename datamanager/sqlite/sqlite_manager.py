@@ -4,8 +4,7 @@ from typing import Dict, Any, List
 from id_generator import generate_uuid
 import pandas as pd
 from pathlib import Path
-import json
-import uuid
+
 
 ## TODO
 
@@ -132,7 +131,7 @@ class SqliteDatabase:
                 CREATE TABLE IF NOT EXISTS "{table_name}" (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     ts TIMESTAMP NOT NULL,
-                    value REAL NOT NULL,
+                    value NUMERIC(20, 10) NOT NULL,
                     hash TEXT NOT NULL
                 )
             ''')
@@ -182,10 +181,11 @@ class SqliteDatabase:
         Scan all folders in data directory and import their CSV files.
         Assumes CSV files have no headers and columns are in order: timestamp, value, hash
         """
+        
         if not os.path.exists(self.data_dir):
             print(f"Data directory not found: {self.data_dir}")
             return
-            
+        
         imported_count = 0
         
         for folder_name in self.folder_metadata.keys():
@@ -199,31 +199,28 @@ class SqliteDatabase:
             csv_files = list(folder_path.glob('*.csv'))
             
             if not csv_files:
-                # print(f"No CSV files found in folder: {folder_name}")
                 continue
                 
             for csv_file in csv_files:
                 try:
-                    # print(f"Importing {csv_file} for folder {folder_name}")
-                    
                     # Read CSV with no headers
                     df = pd.read_csv(csv_file, header=None, names=['ts', 'value', 'hash'])
                     
-                    # Insert using parameterized queries
                     for _, row in df.iterrows():
-                        query = f'INSERT INTO "{table_name}" (ts, value, hash) VALUES (?, ?, ?)'
-                        values = (row['ts'], float(row['value']), str(row['hash']))
+                        # Check if the record already exists
+                        query_check = f'''
+                        SELECT 1 FROM "{table_name}" WHERE ts = ? AND value = ? AND hash = ?
+                        '''
+                        self.cursor.execute(query_check, (row['ts'], float(row['value']), str(row['hash'])))
+                        result = self.cursor.fetchone()
                         
-                        try:
-                            self.cursor.execute(query, values)
-                        except Exception as e:
-                            print(f"Row insertion error: {e}")
-                            continue
+                        if not result:
+                            # Insert only if not found
+                            query_insert = f'INSERT INTO "{table_name}" (ts, value, hash) VALUES (?, ?, ?)'
+                            self.cursor.execute(query_insert, (row['ts'], float(row['value']), str(row['hash'])))
                     
                     self.conn.commit()
-                    # print(f"Successfully imported {len(df)} rows from {csv_file}")
                     imported_count += 1
-                    
                 except Exception as e:
                     print(f"Error importing {csv_file}: {e}")
                     self.conn.rollback()
@@ -231,17 +228,51 @@ class SqliteDatabase:
         
         print(f"\nImport complete. Successfully processed {imported_count} CSV files.")
 
-    @staticmethod
-    def export_csv():
+
+    def export_csv(self):
         '''
         From the table inside the sqlite, a CSV file is produced in the required format
         '''
-        pass
+        # Create rec directory if it doesn't exist
+        rec_dir = Path('rec')
+        rec_dir.mkdir(exist_ok=True)
+
+        exported_count = 0
+
+        # Reverse the tables dictionary to get folder names from table IDs
+        table_to_folder = {v: k for k, v in self.tables.items()}
+
+        # for table_name in self.tables.values():
+        table_name = '06a3aac1-a127-5c0f-8be9-9f44612fddd4'
+    
+        try:
+            # Query all data from the table
+            query = f'SELECT ts, value, hash FROM "{table_name}"'
+            df = pd.read_sql_query(query, self.conn)
+            if not df.empty:
+                # Get the original folder name for this table
+                folder_name = table_to_folder.get(table_name, table_name)
+                
+                # Create folder inside rec directory
+                folder_path = rec_dir / folder_name
+                folder_path.mkdir(exist_ok=True)
+                # Export to CSV with table name (matching input format)
+                csv_path = folder_path / f"{table_name}.csv"
+                df.to_csv(csv_path, header=False, index=False)
+                
+                exported_count += 1
+                print(f"Exported {len(df)} rows to {csv_path}")
+        except Exception as e:
+            print(f"Error exporting table {table_name}: {e}")
+            # continue
+
+        print(f"\nExport complete. Successfully exported {exported_count} tables to CSV files.")
 
 
 ## Testing
 if __name__ == "__main__":
     db = SqliteDatabase()
+    db.export_csv()
 
 # Notes : 
 
