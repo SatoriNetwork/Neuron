@@ -101,12 +101,28 @@ class SqliteDatabase:
         return [d for d in os.listdir(self.data_dir) 
                 if os.path.isdir(os.path.join(self.data_dir, d))]
 
+    # def create_connection(self):
+    #     try:
+    #         if self.conn:
+    #             self.conn.close()
+    #         self.conn = sqlite3.connect(self.dbname)
+    #         self.cursor = self.conn.cursor()
+    #     except Exception as e:
+    #         print("Connection error:", e)
     def create_connection(self):
         try:
             if self.conn:
                 self.conn.close()
+            print(f"Connecting to database at: {self.dbname}")
             self.conn = sqlite3.connect(self.dbname)
+            # Enable foreign keys and write-ahead logging for better performance
             self.cursor = self.conn.cursor()
+            self.cursor.execute('PRAGMA foreign_keys = ON;')
+            self.cursor.execute('PRAGMA journal_mode = WAL;')
+            # Verify connection
+            self.cursor.execute('SELECT sqlite_version()')
+            version = self.cursor.fetchone()
+            print(f"Connected to SQLite version: {version[0]}")
         except Exception as e:
             print("Connection error:", e)
 
@@ -153,28 +169,66 @@ class SqliteDatabase:
             print(f"Table deletion error for {table_name}:", e)
 
     def edit_table(self, table_name: str, action: str, data: Dict[str, Any] = None, id_: int = None):
+        """
+        Edit table with improved duplicate handling and error checking
+        
+        Args:
+            table_name (str): Name of the table to edit
+            action (str): One of 'insert', 'update', or 'delete'
+            data (Dict[str, Any], optional): Data for insert/update operations
+            id_ (int, optional): Record ID for update/delete operations
+        
+        Returns:
+            int: ID of affected row for insert operations, None otherwise
+            
+        Raises:
+            ValueError: If no matching record found for update/delete
+            sqlite3.IntegrityError: If inserting duplicate data
+        """
         try:
             if action == 'insert':
+                # Check for existing record with same values
+                where_clause = ' AND '.join([f"{k} = ?" for k in data.keys()])
+                check_query = f'SELECT id FROM "{table_name}" WHERE {where_clause}'
+                self.cursor.execute(check_query, list(data.values()))
+                existing = self.cursor.fetchone()
+                
+                if existing:
+                    print(f"Record already exists with id {existing[0]}")
+                    return existing[0]
+                
                 cols = ', '.join(data.keys())
                 placeholders = ', '.join(['?' for _ in data])
-                self.cursor.execute(f"INSERT INTO {table_name} ({cols}) VALUES ({placeholders})", list(data.values()))
-                return self.cursor.lastrowid
+                insert_query = f'INSERT INTO "{table_name}" ({cols}) VALUES ({placeholders})'
+                
+                self.cursor.execute(insert_query, list(data.values()))
+                new_id = self.cursor.lastrowid
+                self.conn.commit()
+                print(f"Inserted new record with id {new_id}")
+                return new_id
 
             elif action == 'update':
                 sets = ', '.join([f"{k} = ?" for k in data.keys()])
                 values = list(data.values()) + [id_]
-                self.cursor.execute(f"UPDATE {table_name} SET {sets} WHERE id = ?", values)
+                self.cursor.execute(f'UPDATE "{table_name}" SET {sets} WHERE id = ?', values)
 
             elif action == 'delete':
-                self.cursor.execute(f"DELETE FROM {table_name} WHERE id = ?", (id_,))
+                self.cursor.execute(f'DELETE FROM "{table_name}" WHERE id = ?', (id_,))
 
-            if self.cursor.rowcount == 0:
+            if self.cursor.rowcount == 0 and action != 'insert':
                 raise ValueError(f"No record found with id {id_}")
             
             self.conn.commit()
-            
+            return None
+                
+        except sqlite3.IntegrityError as e:
+            print(f"Database integrity error: {e}")
+            self.conn.rollback()
+            raise
         except Exception as e:
-            print(f"{action.capitalize()} error for {table_name}:", e)
+            print(f"{action.capitalize()} error for {table_name}: {e}")
+            self.conn.rollback()
+            raise
 
     def import_csv(self):
         """
@@ -272,7 +326,25 @@ class SqliteDatabase:
 ## Testing
 if __name__ == "__main__":
     db = SqliteDatabase()
-    db.export_csv()
+    # db.create_all_tables()
+    #Example 1:insert a row
+    # data_to_insert = {
+    #     'ts': '2025-01-04 15:27:35',
+    #     'value': float(123.45),
+    #     'hash': 'abc123def456'
+    # }
+    # table_name = '0b63267e-4bf3-5815-8b45-a5d41a2cebb0'
+    # inserted_id = db.edit_table(table_name, 'insert', data_to_insert)
+    # Example 2: Update the row we just inserted
+    # update_data = {
+    #     'value': float(999.99),
+    #     'hash': 'updated_hash'
+    # }
+    # db.edit_table(table_name, 'update', update_data, 2)
+    
+    # Example 3: Delete the row
+    # db.edit_table(table_name, 'delete', id_=2)
+    # db.export_csv()
 
 # Notes : 
 
