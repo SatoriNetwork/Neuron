@@ -460,7 +460,7 @@ def import_wallet():
         return jsonify({'success': False, 'message': 'No wallet supplied'})
 
     walletPath = '/Satori/Neuron/wallet'
-    backupPath = f'/Satori/Neuron/wallet-backup-{time.time()}'
+    backupPath = f'/Satori/Neuron/wallet/wallet-backup-{time.time()}'
 
     try:
         # Ensure wallet service is stopped
@@ -469,14 +469,15 @@ def import_wallet():
         # Create a backup of the existing wallet
         if os.path.exists(walletPath):
             os.makedirs(backupPath, exist_ok=False)  # Ensure backupPath is new
-            print(-1)
-            shutil.copytree(walletPath, backupPath, dirs_exist_ok=True)
-            print(-2)
+            # Copy only files from walletPath into backupPath
+            for item in os.listdir(walletPath):
+                itemPath = os.path.join(walletPath, item)
+                if os.path.isfile(itemPath):
+                    shutil.copy2(itemPath, backupPath)
 
         # Save incoming files to a temporary path
         os.makedirs(walletPath, exist_ok=True)
         files = request.files.getlist('files')
-        print(0)
         for file in files:
             if file.filename.startswith('wallet/'):
                 filePath = os.path.join(walletPath, secure_filename(file.filename[7:]))
@@ -494,10 +495,13 @@ def import_wallet():
         logging.error(f"Error during wallet import, reverting: {str(e)}")
         # Restore from backup if it exists and is valid
         if os.path.exists(backupPath):
-            shutil.copytree(backupPath, walletPath, dirs_exist_ok=True)
-            #if os.path.exists(walletPath):
-            #    shutil.rmtree(walletPath, ignore_errors=True)
-            #shutil.move(backupPath, walletPath)
+            os.makedirs(walletPath, exist_ok=True)  # Ensure walletPath exists
+            for item in os.listdir(backupPath):
+                itemPath = os.path.join(backupPath, item)
+                targetPath = os.path.join(walletPath, item)
+                # Skip if target exists
+                if os.path.isfile(itemPath) and not os.path.exists(targetPath):
+                    shutil.copy2(itemPath, walletPath)
         else:
             logging.error("Backup missing or invalid. Wallet state might be compromised.")
         # Restart wallet service to maintain state
