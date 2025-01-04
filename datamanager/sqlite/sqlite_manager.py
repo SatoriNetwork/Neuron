@@ -1,30 +1,100 @@
 import sqlite3
 import os
 from typing import Dict, Any, List
-from Neuron.datamanager.sqlite.uuid import generate_uuid
+from id_generator import generate_uuid
+import pandas as pd
+from pathlib import Path
+import json
+import uuid
 
 ## TODO
 
 # At start-up
-# folder scan
-# take readme.md and store in a dictionary
-# key = 'author' and 'stream' and generate UUID
+# scan all the folders inside data folder 
+# take readme.md from each folder inside data folder  and store in a dictionary
+# from the dictionary take the key = 'author' and 'stream' and generate_uuid 
 # the generated UUID becomes the table_name
-# using import_csv function, store values of csv into sqlite
+# using import_csv function, store values of csv in into sqlite
 
 # export csv name will be table name
 
 # check insertion of a single row into sqlite table ( table_name = generate_uuid( author, stream)) 
-
 class SqliteDatabase:
     def __init__(self, data_dir: str = "../../data"):
         self.conn = None
         self.cursor = None
         self.dbname = "datafolder.db"
         self.data_dir = data_dir
-        self.tables = self.get_folder_names()
+        self.folder_metadata = self.get_folder_metadata()
+        self.tables = self.generate_table_names()
         self.create_connection()
         self.create_all_tables()
+
+    def parse_readme(self, readme_path: Path, folder_name: str) -> Dict[str, str]:
+        """Parse README.md file containing JSON metadata."""
+        import json
+        
+        try:
+            with open(readme_path, 'r') as f:
+                content = f.read().strip()
+                if content:
+                    json_data = json.loads(content)
+                    if isinstance(json_data, dict):
+                        return {
+                            'source': json_data.get('source', ''),
+                            'author': json_data.get('author', ''),
+                            'stream': json_data.get('stream', ''),
+                            'target': json_data.get('target', '')
+                        }
+        except Exception as e:
+            print(f"Error parsing README {readme_path}: {e}")
+        
+        return {}
+            
+
+    def get_folder_metadata(self) -> Dict[str, Dict[str, str]]:
+        """Scan all folders and extract metadata from README.md files."""
+        metadata_dict = {}
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
+            print(f"Created data directory: {self.data_dir}")
+            
+        # print(f"Scanning directory: {self.data_dir}")
+        for folder in os.listdir(self.data_dir):
+            folder_path = Path(self.data_dir) / folder
+            if folder_path.is_dir():
+                # print(f"\nProcessing folder: {folder}")
+                readme_path = folder_path / "readme.md"
+                if readme_path.exists():  # Only process folders with readme.md
+                    metadata = self.parse_readme(readme_path, folder)
+                    if metadata.get('author') and metadata.get('stream'):  # Only include if required fields exist
+                        metadata_dict[folder] = metadata
+                        # print(f"Successfully added metadata for {folder}")
+                        # print(f"Author: {metadata['author']}")
+                        # print(f"Stream: {metadata['stream']}")
+                    else:
+                        print(f"Skipping {folder}: Missing required author or stream in readme.md")
+                else:
+                    print(f"Skipping {folder}: No readme.md found")
+        
+        # print(f"\nTotal folders processed: {len(metadata_dict)}")
+        return metadata_dict
+
+    def generate_table_names(self) -> Dict[str, str]:
+        """Generate UUID-based table names from folder metadata.
+        
+        Returns:
+            Dict[str, str]: A dictionary mapping folder names to their UUID-based table names
+        """
+        table_names = {}
+        for folder, metadata in self.folder_metadata.items():
+            # Create a dictionary with author and stream
+            uuid_input = {
+                'author': metadata.get('author', ''),
+                'stream': metadata.get('stream', '')
+            }
+            table_names[folder] = generate_uuid(uuid_input)
+        return table_names
 
     def get_folder_names(self) -> List[str]:
         if not os.path.exists(self.data_dir):
@@ -55,22 +125,26 @@ class SqliteDatabase:
             print("Delete error:", e)
 
     def create_table(self, table_name: str):
+        """Create table with proper column types and quotes around table name"""
         try:
-            self.cursor.execute(f"""
+            # Note the quotes around the table name and proper column types
+            self.cursor.execute(f'''
                 CREATE TABLE IF NOT EXISTS "{table_name}" (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    ts TIMESTAMP,
-                    value DECIMAL(10,10),
-                    hash VARCHAR(32)
+                    ts TIMESTAMP NOT NULL,
+                    value REAL NOT NULL,
+                    hash TEXT NOT NULL
                 )
-            """)
+            ''')
             self.conn.commit()
         except Exception as e:
             print(f"Table creation error for {table_name}:", e)
 
     def create_all_tables(self):
-        for table in self.tables:
+        for table in self.tables.values():
             self.create_table(table)
+        self.import_csv()
+    
 
     def delete_table(self, table_name: str):
         try:
@@ -103,13 +177,59 @@ class SqliteDatabase:
         except Exception as e:
             print(f"{action.capitalize()} error for {table_name}:", e)
 
-    @staticmethod
-    def import_csv():
-        '''
-        Take a CSV as input and store after creating a UUID as the table name and then take values
-        from the CSV and store it inside the db
-        '''
-        pass
+    def import_csv(self):
+        """
+        Scan all folders in data directory and import their CSV files.
+        Assumes CSV files have no headers and columns are in order: timestamp, value, hash
+        """
+        if not os.path.exists(self.data_dir):
+            print(f"Data directory not found: {self.data_dir}")
+            return
+            
+        imported_count = 0
+        
+        for folder_name in self.folder_metadata.keys():
+            folder_path = Path(self.data_dir) / folder_name
+            table_name = self.tables.get(folder_name)
+            
+            if not table_name:
+                print(f"No table mapping found for folder: {folder_name}")
+                continue
+                
+            csv_files = list(folder_path.glob('*.csv'))
+            
+            if not csv_files:
+                # print(f"No CSV files found in folder: {folder_name}")
+                continue
+                
+            for csv_file in csv_files:
+                try:
+                    # print(f"Importing {csv_file} for folder {folder_name}")
+                    
+                    # Read CSV with no headers
+                    df = pd.read_csv(csv_file, header=None, names=['ts', 'value', 'hash'])
+                    
+                    # Insert using parameterized queries
+                    for _, row in df.iterrows():
+                        query = f'INSERT INTO "{table_name}" (ts, value, hash) VALUES (?, ?, ?)'
+                        values = (row['ts'], float(row['value']), str(row['hash']))
+                        
+                        try:
+                            self.cursor.execute(query, values)
+                        except Exception as e:
+                            print(f"Row insertion error: {e}")
+                            continue
+                    
+                    self.conn.commit()
+                    # print(f"Successfully imported {len(df)} rows from {csv_file}")
+                    imported_count += 1
+                    
+                except Exception as e:
+                    print(f"Error importing {csv_file}: {e}")
+                    self.conn.rollback()
+                    continue
+        
+        print(f"\nImport complete. Successfully processed {imported_count} CSV files.")
 
     @staticmethod
     def export_csv():
@@ -120,9 +240,8 @@ class SqliteDatabase:
 
 
 ## Testing
-
-db = SqliteDatabase()
-
+if __name__ == "__main__":
+    db = SqliteDatabase()
 
 # Notes : 
 
