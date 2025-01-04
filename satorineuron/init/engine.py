@@ -8,7 +8,6 @@ from satoriengine.model import metrics
 from satoriengine.managers.data import DataManager
 from satoriengine.managers.model import ModelManager
 from satoriengine.engine import Engine
-from satorineuron import config
 import copy
 
 
@@ -93,6 +92,7 @@ def getEngine(
 ) -> Engine:
     """starts the Engine. returns Engine."""
     from satorineuron.init.start import getStart
+    from satorineuron import config
 
     def generateModelManager():
         """generate a set of Model(s) for Engine"""

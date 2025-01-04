@@ -1730,6 +1730,7 @@ def vault():
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
+            'offer': start.details.wallet['offer'],
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
@@ -1748,6 +1749,7 @@ def vault():
         'vaultOpened': False,
         'stakeRequired': constants.stakeRequired,
         'wallet': start.vault,
+        'offer': start.details.wallet['offer'],
         'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
         'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
@@ -1790,7 +1792,7 @@ def mineToAddress(address: str):
         return '', 200
     # the network portion should be whatever network I'm on.
     network = 'main'
-    start.details.wallet['rewardaddress'] = address
+    start.details.wallet['rewardaddress'] = address if address != 'null' else None
     vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
@@ -1799,6 +1801,7 @@ def mineToAddress(address: str):
         signature=vault.sign(address),
         pubkey=vault.publicKey,
         address=address)
+    print(success, result)
     if success:
         return 'OK', 200
     return f'Failed to set reward address: {result}', 400
@@ -1907,6 +1910,16 @@ def proxyParentStatus():
     if success:
         return result, 200
     return f'Failed stakeProxyChildren: {result}', 400
+
+
+@app.route('/pool/worker/reward/set/<percent>', methods=['GET'])
+@authRequired
+def setPoolWorkerReward(percent: float):
+    success, result = start.server.setPoolWorkerReward(percent)
+    if success:
+        start.details.wallet['offer'] = percent
+        return result, 200
+    return f'Failed setPoolWorkerReward: {result}', 400
 
 
 @app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
@@ -2024,7 +2037,7 @@ def vote():
         'vault': start.vault,
         'streams': getStreams(myWallet),
         **getVotes(myWallet)}))
-    
+
 @app.route('/pool/participants', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired

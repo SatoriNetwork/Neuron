@@ -60,16 +60,18 @@
     document.getElementById("password").focus();
   };
   function checkEnter(event){
-    if (event.key === "Enter" || event.keyCode === 13) {
-      if(validateVaultPassword()) {
-        showWorking();
-        console.log('success');
-        return true;
+    if (isFocused(document.querySelector('#repeatPassword'))) {
+      if (event.key === "Enter" || event.keyCode === 13) {
+        if(validateVaultPassword()) {
+          showWorking();
+          console.log('success');
+          return true;
+        }
+        console.log('fail');
+        return false;
       }
-      console.log('fail');
-      return false;
+      return event.keyCode != 13;
     }
-    return event.keyCode != 13;
   }
   function validateVaultPassword() {
     let repeat = document.getElementById("repeatPassword");
