@@ -1,7 +1,7 @@
 import uuid
 
 
-def generate_uuid(data: dict) -> uuid:
+def generateUUID(data: dict) -> uuid:
     namespace = uuid.NAMESPACE_DNS
     combined = ':'.join(str(v) for v in data.values())
     return uuid.uuid5(namespace, combined)
