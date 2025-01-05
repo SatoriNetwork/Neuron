@@ -134,39 +134,43 @@ class SqliteDatabase:
         except Exception as e:
             error(f"Table deletion error for {table_uuid}:", e)
 
-    def editTable(self, action: str, table_uuid: str, data: Dict[str, Any] = None, id_: int = None) -> Any:
+    def editTable(self, action: str, table_uuid: str, data: Dict[str, Any] = None, timestamp: str = None) -> Any:
         try:
             if action == 'insert':
                 # Check for existing record with same values
-                where_clause = ' AND '.join([f"{k} = ?" for k in data.keys()])
-                check_query = f'SELECT id FROM "{table_uuid}" WHERE {where_clause}'
-                self.cursor.execute(check_query, list(data.values()))
+                self.cursor.execute(f'SELECT ts FROM "{table_uuid}" WHERE ts = ?', (data['ts'],))
                 existing = self.cursor.fetchone()
                 
                 if existing:
-                    error(f"Record already exists with id {existing[0]}")
-                    return existing[0]
+                    error(f"Record already exists with timestamp {existing[0]}")
+                    raise sqlite3.IntegrityError(f"Record with timestamp {existing[0]} already exists")
                 
                 cols = ', '.join(data.keys())
                 placeholders = ', '.join(['?' for _ in data])
                 insert_query = f'INSERT INTO "{table_uuid}" ({cols}) VALUES ({placeholders})'
                 
                 self.cursor.execute(insert_query, list(data.values()))
-                new_id = self.cursor.lastrowid
                 self.conn.commit()
-                debug(f"Inserted new record with id {new_id}")
-                return new_id
+                debug(f"Inserted new record into table {table_uuid}")
 
-            elif action == 'update':
-                sets = ', '.join([f"{k} = ?" for k in data.keys()])
-                values = list(data.values()) + [id_]
-                self.cursor.execute(f'UPDATE "{table_uuid}" SET {sets} WHERE id = ?', values)
+            # elif action == 'update':
+            #     if not timestamp:
+            #         raise ValueError("Timestamp is required for update operations")
+                    
+            #     sets = ', '.join([f"{k} = ?" for k in data.keys()])
+            #     values = list(data.values()) + [timestamp]
+            #     update_query = f'UPDATE "{table_uuid}" SET {sets} WHERE ts = ?'
+            #     self.cursor.execute(update_query, values)
 
-            elif action == 'delete':
-                self.cursor.execute(f'DELETE FROM "{table_uuid}" WHERE id = ?', (id_,))
+            # elif action == 'delete':
+            #     if not timestamp:
+            #         raise ValueError("Timestamp is required for delete operations")
+                    
+            #     delete_query = f'DELETE FROM "{table_uuid}" WHERE ts = ?'
+            #     self.cursor.execute(delete_query, (timestamp,))
 
             if self.cursor.rowcount == 0 and action != 'insert':
-                raise ValueError(f"No record found with id {id_}")
+                raise ValueError(f"No record found with timestamp {timestamp}")
             
             self.conn.commit()
             return None
@@ -179,6 +183,8 @@ class SqliteDatabase:
             error(f"{action.capitalize()} error for {table_uuid}: {e}")
             self.conn.rollback()
             raise
+        finally:
+            self.sortTableByTimestamp(table_uuid)
         
     def importCSVFromDataFolder(self, folder_metadata: dict, table_uuids: str):
         """
@@ -360,22 +366,23 @@ if __name__ == "__main__":
     # db.importFromDataFolder()
     # db.export_csv('23dc3133-5b3a-5b27-803e-70a07cf3c4f7')
     # db.import_csv('../../data/steeve/aggregate.csv','../../data/steeve/readme.md')
-    #Example 1:insert a row
+    # Example 1: Insert a new record
+    # table_uuid ='08b109cc-d62c-5e2a-a671-c382bc439311'
     # data_to_insert = {
     #     'ts': '2025-01-04 15:27:35',
     #     'value': float(123.45),
     #     'hash': 'abc123def456'
     # }
-    # table_name = '0b63267e-4bf3-5815-8b45-a5d41a2cebb0'
-    # db.edit_table(table_name, 'insert', data_to_insert)
-    # Example 2: Update the row we just inserted
+    # db.editTable('insert', table_uuid, data_to_insert)
+
+    # Example 2: Update an existing record
     # update_data = {
     #     'value': float(999.99),
     #     'hash': 'updated_hash'
     # }
-    # db.edit_table(table_name, 'update', update_data, 2)
-    
-    # Example 3: Delete the row
-    # db.edit_table(table_name, 'delete', id_=2)
+    # db.editTable('update', table_uuid, update_data, timestamp='2025-01-04 15:27:35')
+
+    # # Example 3: Delete a record
+    # db.editTable('delete', table_uuid, timestamp='2025-01-04 15:27:35')
     # db.export_csv()
 
