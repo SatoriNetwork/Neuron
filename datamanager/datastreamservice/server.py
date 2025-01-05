@@ -5,48 +5,34 @@ import os
 import pathlib
 import pandas as pd
 from typing import Dict, Any, Optional
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sqlite.sqlite_manager import SqliteDatabase
 
 class DataServer:
     def __init__(self):
-        self.base_path: str = "../data"
+        self.db = SqliteDatabase()
+        # self.db.importFromDataFolder()
 
-    async def get_stream_info(self, stream_id: str) -> Optional[Dict[str, Any]]:
-        """Get stream info for a specific stream ID when requested"""
+    async def get_stream_data(self, table_uuid: str) -> Optional[Dict[str, Any]]:
+        """Get data for a specific stream from SQLite database"""
         try:
-            stream_path: pathlib.Path = pathlib.Path(self.base_path) / stream_id
-            if not stream_path.exists():
-                return None
+            # Get the CSV file path
+            csv_path = self.db.export_csv(table_uuid)
             
-            readme_path: pathlib.Path = stream_path / "readme.md"
-            if readme_path.exists():
-                with open(readme_path, 'r') as f:
-                    stream_info: Dict[str, Any]  = json.load(f)
-                    return {
-                        "stream_info": stream_info
-                    }
-            return None
+            if csv_path is None:
+                return None
+                
+            # Read the CSV file into a DataFrame
+            df = pd.read_csv(csv_path)
+            
+            # Remove the temporary CSV file
+            os.remove(csv_path)
+            
+            return df
             
         except Exception as e:
-            print(f"Error getting stream info: {e}")
-            return None
-
-    async def load_stream_data(self, stream_id: str) -> Optional[pd.DataFrame]:
-        """Load data for a specific stream from its CSV file"""
-        try:
-            # Get the path to the data folder
-            folder_path: pathlib.Path = pathlib.Path(self.base_path) / stream_id
-            
-            # Look for CSV files in the folder
-            csv_files: list[pathlib.Path] = list(folder_path.glob("*.csv"))
-            if not csv_files:
-                return None
-
-            # Load the first CSV file found
-            data: pd.DataFrame = pd.read_csv(csv_files[0])
-            return data
-
-        except Exception as e:
-            print(f"Error loading data for stream {stream_id}: {e}")
+            print(f"Error getting data for stream {table_uuid}: {e}")
             return None
 
     async def handle_request(self, websocket: websockets.WebSocketServerProtocol):
@@ -56,41 +42,30 @@ class DataServer:
                 try:
                     request: Dict[str, Any] = json.loads(message)
                     
-                    if request.get('type') == 'stream_data':
-                        if 'stream_id' not in request:
-                            response: Dict[str, str] = {
-                                "status": "error",
-                                "message": "Missing stream_id parameter"
-                            }
-                        else:
-                            # 1. First check if stream exists and get its info
-                            stream_info: Optional[Dict[str, Any]]  = await self.get_stream_info(request['stream_id'])
-                            
-                            if stream_info is None:
-                                response = {
-                                    "status": "error",
-                                    "message": f"Stream {request['stream_id']} not found"
-                                }
-                            else:
-                                # 2. If stream exists, load its data
-                                data: Optional[pd.DataFrame] = await self.load_stream_data(request['stream_id'])
-                                
-                                if data is None:
-                                    response = {
-                                        "status": "error",
-                                        "message": "Failed to load stream data"
-                                    }
-                                else:
-                                    response = {
-                                        "status": "success",
-                                        # "stream_info": stream_info,
-                                        "data": data.to_json(orient='split')
-                                    }
-                    else:
+                    if request.get('type') != 'stream_data':
                         response = {
                             "status": "error",
                             "message": f"Unknown request type: {request.get('type')}"
                         }
+                    elif 'table_uuid' not in request:
+                        response = {
+                            "status": "error",
+                            "message": "Missing table_uuid parameter"
+                        }
+                    else:
+                        # Get data from SQLite
+                        df = await self.get_stream_data(request['table_uuid'])
+                        
+                        if df is None:
+                            response = {
+                                "status": "error",
+                                "message": f"No data found for stream {request['table_uuid']}"
+                            }
+                        else:
+                            response = {
+                                "status": "success",
+                                "data": df.to_json(orient='split')
+                            }
 
                     await websocket.send(json.dumps(response))
                     
@@ -115,11 +90,3 @@ if __name__ == "__main__":
     asyncio.run(main())
 
 
-# data-flow :
-
-# server runs first and starts listening
-# client then gives request to the server with a streamID
-# server picks up the request
-# server checks if the streamID exists in the data folder
-# if True, fetch data at that moment to serve the data to the client
-# client recieves the data

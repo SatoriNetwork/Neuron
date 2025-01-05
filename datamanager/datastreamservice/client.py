@@ -6,38 +6,36 @@ import pandas as pd
 from io import StringIO
 from typing import Dict, Any
 
-async def request_stream_data(stream_id:str):
+async def request_stream_data(table_uuid: str):
     """Request data for a specific stream ID"""
-    async with websockets.connect("ws://localhost:8765") as websocket:
-        # Request stream data
-        print(f"Requesting data for stream {stream_id}...")
-        await websocket.send(json.dumps({
-            "type": "stream_data",
-            "stream_id": stream_id
-        }))
-        
-        # Get response
-        response: str = await websocket.recv()
-        result: Dict[str, Any] = json.loads(response)
-        
-        if result["status"] == "success":
-            # print("\nStream info:", json.dumps(result["stream_info"], indent=2))
-            save_dir: pathlib.Path = pathlib.Path("rec_data")
-            save_dir.mkdir(exist_ok=True)
+    try:
+        async with websockets.connect("ws://localhost:8765") as websocket:
+            print(f"Requesting data for stream {table_uuid}...")
+            await websocket.send(json.dumps({
+                "type": "stream_data",
+                "table_uuid": table_uuid 
+            }))
+            
+            response: str = await websocket.recv()
+            result: Dict[str, Any] = json.loads(response)
+            
+            if result["status"] == "success":
+                save_dir: pathlib.Path = pathlib.Path("rec_data")
+                save_dir.mkdir(exist_ok=True)
 
-            # Deserialize the JSON data back to DataFrame
-            # Use StringIO to handle the JSON string
-            df: pd.DataFrame = pd.read_json(StringIO(result["data"]), orient='split')
-
-            # Save to CSV
-            output_path: pathlib.Path = save_dir / f"{stream_id}.csv"
-            df.to_csv(output_path, index=False)
-            print(f"\nData saved to {output_path}")
-            print(f"Total records: {len(df)}")
-        else:
-            print(f"Error: {result['message']}")
+                df: pd.DataFrame = pd.read_json(StringIO(result["data"]), orient='split')
+                output_path: pathlib.Path = save_dir / f"{table_uuid}.csv"
+                df.to_csv(output_path, index=False)
+                print(f"\nData saved to {output_path}")
+                print(f"Total records: {len(df)}")
+            else:
+                print(f"Error: {result['message']}")
+    except websockets.exceptions.ConnectionClosedError as e:
+        print(f"Connection closed unexpectedly: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     # Replace with the actual stream ID you want to request
-    stream_id: str = 'zeAv-URFSz9f_hw57bTJ2c_FeoE-'
-    asyncio.run(request_stream_data(stream_id))
+    table_uuid : str = '75bf71ae-aefa-5aed-89e9-be680e1c9b83'
+    asyncio.run(request_stream_data(table_uuid ))
