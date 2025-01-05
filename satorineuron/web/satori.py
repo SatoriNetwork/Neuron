@@ -794,8 +794,10 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
     # only support main network for this
     greenlight, explain = start.ableToBridge()
+    logging.debug(f'greenlight: {greenlight}', explain,  color='magenta')
     if greenlight:
         result = bridgeSatoriTransactionUsing(start.vault)
+        logging.debug(f'result: {result}', color='magenta')
     else:
         flash(explain)
         return redirect('/vault/main')
@@ -912,41 +914,48 @@ def bridgeSatoriTransactionUsing(
             # doesn't respect the cooldown
             myWallet.get(allWalletInfo=False)
 
+        logging.debug('burning?', color='magenta')
         # doesn't respect the cooldown
-        myWallet.getUnspentSignatures(force=True)
+        #myWallet.getUnspentSignatures(force=True)
+        myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
         try:
-            # logging.debug('sweep', bridgeForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronBridgeTransaction(
                 amount=bridgeForm['bridgeAmount'] or 0,
                 ethAddress=bridgeForm['ethAddress'] or '')
+            logging.debug('result', result, color='magenta')
             if result.msg == 'creating partial, need feeSatsReserved.':
+                logging.debug('result.msg', result.msg, color='magenta')
                 responseJson = start.server.requestSimplePartial(
                     network='main')
+                logging.debug('responseJson', responseJson, color='magenta')
                 result = myWallet.typicalNeuronBridgeTransaction(
                     amount=bridgeForm['bridgeAmount'] or 0,
-                    address=bridgeForm['ethAddress'] or '',
+                    ethAddress=bridgeForm['ethAddress'] or '',
                     completerAddress=responseJson.get('completerAddress'),
                     feeSatsReserved=responseJson.get('feeSatsReserved'),
                     changeAddress=responseJson.get('changeAddress'))
+                logging.debug('result', result, color='magenta')
             if result is None:
                 flash('Send Failed: wait 10 minutes, refresh, and try again.')
             elif result.success:
+                logging.debug('result.success', result.success, color='magenta')
                 if (  # checking any on of these should suffice in theory...
                     result.tx is not None and
                     result.reportedFeeSats is not None and
                     result.reportedFeeSats > 0 and
                     result.msg == 'send transaction requires fee.'
                 ):
+                    logging.debug('broadcasting', color='magenta')
+                    return "ending early until tested"
                     r = start.server.broadcastBridgeSimplePartial(
                         tx=result.tx,
                         reportedFeeSats=result.reportedFeeSats,
                         feeSatsReserved=responseJson.get('feeSatsReserved'),
                         walletId=responseJson.get('partialId'),
-                        network=(
-                            'ravencoin' if start.networkIsTest('main')
-                            else 'evrmore'))
+                        network='evrmore')
+                    logging.debug('broadcasting', r, color='magenta')
                     if r.text.startswith('{"code":1,"message":'):
                         flash(f'Send Failed: {r.json().get("message")}')
                     elif r.text != '':
@@ -964,6 +973,7 @@ def bridgeSatoriTransactionUsing(
         return result
 
     bridgeSatoriForm = forms.BridgeSatoriTransaction(formdata=request.form)
+    logging.debug('burning1',bridgeSatoriForm, color='magenta')
     bridgeForm = {}
     override = override or {}
     bridgeForm['bridgeAmount'] = override.get(
@@ -972,7 +982,7 @@ def bridgeSatoriTransactionUsing(
         'ethAddress', bridgeSatoriForm.ethAddress.data or '')
     print(bridgeSatoriForm, bridgeSatoriForm.bridgeAmount,
           bridgeSatoriForm.ethAddress)
-    # return acceptSubmittion(bridgeForm)
+    return acceptSubmittion(bridgeForm)
 
 
 @app.route('/register_stream', methods=['POST'])
@@ -1195,7 +1205,7 @@ def dashboard():
     #     if start.engine is not None else [])  # StreamOverviews.demo()
     streamOverviews = [stream for stream in start.streamDisplay]
     holdingBalance = start.holdingBalance
-    stakeStatus = holdingBalance >= 5 or (
+    stakeStatus = holdingBalance >= constants.stakeRequired or (
         start.details.wallet.get('rewardaddress', None) not in [
             None,
             start.details.wallet.get('address'),
@@ -1207,7 +1217,7 @@ def dashboard():
         # instead of this make chain single source of truth
         # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
         'stakeStatus': stakeStatus,
-        'miningMode': start.miningMode and stakeStatus,
+        'miningMode': start.miningMode,
         'miningDisplay': 'none',
         'proxyDisplay': 'none',
         'stakeRequired': constants.stakeRequired,
