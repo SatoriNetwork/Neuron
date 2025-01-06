@@ -294,7 +294,6 @@ class SqliteDatabase:
                     float(row['value']), 
                     str(row['hash'])
                 ))
-                # info("already exists:",self.cursor.fetchone())
                 result = self.cursor.fetchone()
                 
                 if not result:
