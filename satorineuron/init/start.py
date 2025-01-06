@@ -5,7 +5,6 @@ import json
 import random
 import threading
 from queue import Queue
-from satorilib.electrumx import Electrumx
 from satorilib.concepts.structs import (
     StreamId,
     Stream,
@@ -23,6 +22,7 @@ import satorineuron
 from satorineuron import VERSION
 from satorineuron import logging
 from satorineuron import config
+from satorineuron.init import engine
 from satorineuron.init.tag import LatestTag, Version
 from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
@@ -112,7 +112,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
         self.setEngineVersion()
-        self.setupWallets()
+        self.setupWalletManager()
         if not config.get().get("disable restart", False):
             self.restartThread = threading.Thread(
                 target=self.restartEverythingPeriodic,
@@ -184,11 +184,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             8)
         return self._holdingBalance
 
-    def setupWallets(self):
+    def setupWalletManager(self):
         self.walletVaultManager = WalletVaultManager(
             updateConnectionStatus=self.updateConnectionStatus,
             persistent=self.runMode == RunMode.wallet)
         self.walletVaultManager.setup()
+
+    def shutdownWallets(self):
+        self.walletVaultManager.disconnect()
+        self.walletVaultManager.electrumx = None
+        self.walletVaultManager._wallet = None
+        self.walletVaultManager._vault = None
 
     def closeVault(self):
         self.walletVaultManager.closeVault()
@@ -196,7 +202,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def openVault(self, password: Union[str, None] = None, create: bool = False):
         return self.walletVaultManager.openVault(password=password, create=create)
 
-    def getWallet(self):
+    def getWallet(self, **kwargs):
         return self.walletVaultManager.getWallet()
 
     def getVault(self, password: Union[str, None] = None, create: bool = False):
@@ -550,8 +556,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             streamDisplayer(subscription)
             for subscription in self.subscriptions]
 
-
-        self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
+        self.engine: satoriengine.Engine = engine.getEngine(
             run=self.engineVersion == 'v1',
             subscriptions=self.subscriptions,
             publications=self.publications)
@@ -575,7 +580,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.sub = None
         if self.key:
             signature = self.wallet.sign(self.key)
-            self.sub = satorineuron.engine.establishConnection(
+            self.sub = engine.establishConnection(
                 url=random.choice(self.urlPubsubs),
                 # url='ws://pubsub3.satorinet.io:24603',
                 pubkey=self.wallet.publicKey,
@@ -603,7 +608,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         for pubsubMachine in self.urlPubsubs:
             signature = self.wallet.sign(self.oracleKey)
             self.pubs.append(
-                satorineuron.engine.establishConnection(
+                engine.establishConnection(
                     subscription=False,
                     url=pubsubMachine,
                     pubkey=self.wallet.publicKey + ":publishing",
@@ -797,14 +802,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             else config.get().get('mining mode', True))
         self.miningMode = miningMode
         config.add(data={'mining mode': self.miningMode})
+        if hasattr(self, 'server') and self.server is not None:
+            self.server.setMiningMode(miningMode)
         return self.miningMode
 
     def setEngineVersion(self, version: Union[str, None] = None) -> str:
+        default = 'v2'
         version = (
             version
             if version in ['v1', 'v2']
-            else config.get().get('engine version', 'v1'))
-        self.engineVersion = version if version in ['v1', 'v2'] else 'v1'
+            else config.get().get('engine version', default))
+        self.engineVersion = version if version in ['v1', 'v2'] else default
         config.add(data={'engine version': self.engineVersion})
         return self.engineVersion
 

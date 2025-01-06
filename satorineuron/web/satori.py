@@ -21,6 +21,7 @@ import threading
 import pandas as pd
 from logging.handlers import RotatingFileHandler
 from queue import Queue
+from werkzeug.utils import secure_filename
 # from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
@@ -38,7 +39,6 @@ from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateH
 from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
-
 logging.info(f'version: {VERSION}', print=True)
 
 
@@ -451,46 +451,64 @@ def backup(target: str = 'satori'):
 @userInteracted
 @authRequired
 def import_wallet():
+    '''
+    Safely import wallet files with backups and error handling.
+    '''
     if start.vault is None or start.vault.isEncrypted:
         return jsonify({'success': False, 'message': 'Please unlock the vault first'})
-
     if 'files' not in request.files:
-        return jsonify({'success': False, 'message': 'No files part in the request'})
+        return jsonify({'success': False, 'message': 'No wallet supplied'})
 
-    files = request.files.getlist('files')
-
-    wallet_path = '/Satori/Neuron/wallet'
-    temp_path = '/Satori/Neuron/temp_wallet'
-
-    # Create a temporary directory
-    os.makedirs(temp_path, exist_ok=True)
+    walletPath = '/Satori/Neuron/wallet'
+    backupPath = f'/Satori/Neuron/wallet/wallet-backup-{time.time()}'
 
     try:
+        # Ensure wallet service is stopped
+        start.shutdownWallets()
+
+        # Create a backup of the existing wallet
+        if os.path.exists(walletPath):
+            os.makedirs(backupPath, exist_ok=False)  # Ensure backupPath is new
+            # Copy only files from walletPath into backupPath
+            for item in os.listdir(walletPath):
+                itemPath = os.path.join(walletPath, item)
+                if os.path.isfile(itemPath):
+                    shutil.copy2(itemPath, backupPath)
+
+        # Save incoming files to a temporary path
+        os.makedirs(walletPath, exist_ok=True)
+        files = request.files.getlist('files')
         for file in files:
             if file.filename.startswith('wallet/'):
-                file_path = os.path.join(temp_path, file.filename[7:])
-                os.makedirs(os.path.dirname(file_path), exist_ok=True)
-                file.save(file_path)
+                filePath = os.path.join(walletPath, secure_filename(file.filename[7:]))
+                print(f"Saving file to {filePath}")
+                os.makedirs(os.path.dirname(filePath), exist_ok=True)
+                file.save(filePath)
 
-        # Backup current wallet
-        if os.path.exists(wallet_path):
-            shutil.move(wallet_path, wallet_path + '_backup')
+        # Restart wallet service
+        start.setupWalletManager()
+        start.walletVaultManager.setupWalletAndVault()
 
-        # Move new wallet into place
-        shutil.move(temp_path, wallet_path)
-
-        return jsonify({'success': True})
+        # Backups are retained, no cleanup performed
+        return jsonify({'success': True, 'backup': backupPath})
     except Exception as e:
-        # If any error occurs, restore the old wallet
-        if os.path.exists(wallet_path + '_backup'):
-            shutil.rmtree(wallet_path, ignore_errors=True)
-            shutil.move(wallet_path + '_backup', wallet_path)
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        # Clean up
-        shutil.rmtree(temp_path, ignore_errors=True)
-        if os.path.exists(wallet_path + '_backup'):
-            shutil.rmtree(wallet_path + '_backup', ignore_errors=True)
+        logging.error(f"Error during wallet import, reverting: {str(e)}")
+        # Restore from backup if it exists and is valid
+        if os.path.exists(backupPath):
+            os.makedirs(walletPath, exist_ok=True)  # Ensure walletPath exists
+            for item in os.listdir(backupPath):
+                itemPath = os.path.join(backupPath, item)
+                targetPath = os.path.join(walletPath, item)
+                # Skip if target exists
+                if os.path.isfile(itemPath) and not os.path.exists(targetPath):
+                    shutil.copy2(itemPath, walletPath)
+        else:
+            logging.error("Backup missing or invalid. Wallet state might be compromised.")
+        # Restart wallet service to maintain state
+        start.setupWalletManager()
+        return jsonify({'success': False, 'message': str(e), 'backup': backupPath})
+
+
 
 
 @app.route('/power/refresh', methods=['GET'])
@@ -776,8 +794,10 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
     # only support main network for this
     greenlight, explain = start.ableToBridge()
+    logging.debug(f'greenlight: {greenlight}', explain,  color='magenta')
     if greenlight:
         result = bridgeSatoriTransactionUsing(start.vault)
+        logging.debug(f'result: {result}', color='magenta')
     else:
         flash(explain)
         return redirect('/vault/main')
@@ -894,41 +914,48 @@ def bridgeSatoriTransactionUsing(
             # doesn't respect the cooldown
             myWallet.get(allWalletInfo=False)
 
+        logging.debug('burning?', color='magenta')
         # doesn't respect the cooldown
-        myWallet.getUnspentSignatures(force=True)
+        #myWallet.getUnspentSignatures(force=True)
+        myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
         try:
-            # logging.debug('sweep', bridgeForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronBridgeTransaction(
                 amount=bridgeForm['bridgeAmount'] or 0,
                 ethAddress=bridgeForm['ethAddress'] or '')
+            logging.debug('result', result, color='magenta')
             if result.msg == 'creating partial, need feeSatsReserved.':
+                logging.debug('result.msg', result.msg, color='magenta')
                 responseJson = start.server.requestSimplePartial(
                     network='main')
+                logging.debug('responseJson', responseJson, color='magenta')
                 result = myWallet.typicalNeuronBridgeTransaction(
                     amount=bridgeForm['bridgeAmount'] or 0,
-                    address=bridgeForm['ethAddress'] or '',
+                    ethAddress=bridgeForm['ethAddress'] or '',
                     completerAddress=responseJson.get('completerAddress'),
                     feeSatsReserved=responseJson.get('feeSatsReserved'),
                     changeAddress=responseJson.get('changeAddress'))
+                logging.debug('result', result, color='magenta')
             if result is None:
                 flash('Send Failed: wait 10 minutes, refresh, and try again.')
             elif result.success:
+                logging.debug('result.success', result.success, color='magenta')
                 if (  # checking any on of these should suffice in theory...
                     result.tx is not None and
                     result.reportedFeeSats is not None and
                     result.reportedFeeSats > 0 and
                     result.msg == 'send transaction requires fee.'
                 ):
+                    logging.debug('broadcasting', color='magenta')
+                    return "ending early until tested"
                     r = start.server.broadcastBridgeSimplePartial(
                         tx=result.tx,
                         reportedFeeSats=result.reportedFeeSats,
                         feeSatsReserved=responseJson.get('feeSatsReserved'),
                         walletId=responseJson.get('partialId'),
-                        network=(
-                            'ravencoin' if start.networkIsTest('main')
-                            else 'evrmore'))
+                        network='evrmore')
+                    logging.debug('broadcasting', r, color='magenta')
                     if r.text.startswith('{"code":1,"message":'):
                         flash(f'Send Failed: {r.json().get("message")}')
                     elif r.text != '':
@@ -946,6 +973,7 @@ def bridgeSatoriTransactionUsing(
         return result
 
     bridgeSatoriForm = forms.BridgeSatoriTransaction(formdata=request.form)
+    logging.debug('burning1',bridgeSatoriForm, color='magenta')
     bridgeForm = {}
     override = override or {}
     bridgeForm['bridgeAmount'] = override.get(
@@ -954,7 +982,7 @@ def bridgeSatoriTransactionUsing(
         'ethAddress', bridgeSatoriForm.ethAddress.data or '')
     print(bridgeSatoriForm, bridgeSatoriForm.bridgeAmount,
           bridgeSatoriForm.ethAddress)
-    # return acceptSubmittion(bridgeForm)
+    return acceptSubmittion(bridgeForm)
 
 
 @app.route('/register_stream', methods=['POST'])
@@ -1177,7 +1205,7 @@ def dashboard():
     #     if start.engine is not None else [])  # StreamOverviews.demo()
     streamOverviews = [stream for stream in start.streamDisplay]
     holdingBalance = start.holdingBalance
-    stakeStatus = holdingBalance >= 5 or (
+    stakeStatus = holdingBalance >= constants.stakeRequired or (
         start.details.wallet.get('rewardaddress', None) not in [
             None,
             start.details.wallet.get('address'),
@@ -1189,7 +1217,7 @@ def dashboard():
         # instead of this make chain single source of truth
         # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
         'stakeStatus': stakeStatus,
-        'miningMode': start.miningMode and stakeStatus,
+        'miningMode': start.miningMode,
         'miningDisplay': 'none',
         'proxyDisplay': 'none',
         'stakeRequired': constants.stakeRequired,
@@ -1730,6 +1758,7 @@ def vault():
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
+            'offer': start.details.wallet.get('offer', 0),
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
@@ -1748,6 +1777,7 @@ def vault():
         'vaultOpened': False,
         'stakeRequired': constants.stakeRequired,
         'wallet': start.vault,
+        'offer': start.details.wallet.get('offer', 0),
         'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
         'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
@@ -1790,7 +1820,7 @@ def mineToAddress(address: str):
         return '', 200
     # the network portion should be whatever network I'm on.
     network = 'main'
-    start.details.wallet['rewardaddress'] = address
+    start.details.wallet['rewardaddress'] = address if address != 'null' else None
     vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
@@ -1799,6 +1829,7 @@ def mineToAddress(address: str):
         signature=vault.sign(address),
         pubkey=vault.publicKey,
         address=address)
+    print(success, result)
     if success:
         return 'OK', 200
     return f'Failed to set reward address: {result}', 400
@@ -1907,6 +1938,16 @@ def proxyParentStatus():
     if success:
         return result, 200
     return f'Failed stakeProxyChildren: {result}', 400
+
+
+@app.route('/pool/worker/reward/set/<percent>', methods=['GET'])
+@authRequired
+def setPoolWorkerReward(percent: float):
+    success, result = start.server.setPoolWorkerReward(percent)
+    if success:
+        start.details.wallet['offer'] = percent
+        return result, 200
+    return f'Failed setPoolWorkerReward: {result}', 400
 
 
 @app.route('/proxy/child/charity/<address>/<id>', methods=['GET'])
@@ -2024,7 +2065,7 @@ def vote():
         'vault': start.vault,
         'streams': getStreams(myWallet),
         **getVotes(myWallet)}))
-    
+
 @app.route('/pool/participants', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired

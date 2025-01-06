@@ -2,7 +2,7 @@ import os
 import time
 
 
-def byConfig() -> bool:
+def pullAllowedByConfig() -> bool:
     '''
     open /Satori/Neuron/config/config.yaml if it exists,
     check if the value of 'pull code updates' is true
@@ -17,7 +17,7 @@ def byConfig() -> bool:
     return True
 
 
-def byTime() -> bool:
+def pullAllowedByTime() -> bool:
     '''
     open /Satori/Neuron/config/config.yaml if it exists,
     check if the value of 'pull code updates' is true
@@ -35,10 +35,10 @@ def byTime() -> bool:
 
 def putTime() -> bool:
     path = '/Satori/Neuron/config/pulled.txt'
-    if os.path.exists(path):
-        with open(path, 'w') as f:
-            f.write(time.time())
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w') as f:
+        f.write(str(time.time()))
 
 
 def allowedToPull() -> bool:
-    return byConfig() and byTime()
+    return pullAllowedByConfig() and pullAllowedByTime()

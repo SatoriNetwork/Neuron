@@ -2,7 +2,6 @@ from typing import Union
 import os
 import time
 import shutil
-import threading
 from queue import Queue
 from satorilib.electrumx import Electrumx
 from satorilib.wallet import EvrmoreWallet
@@ -57,6 +56,7 @@ class WalletVaultManager():
             self.electrumx = None
 
     def reconnect(self):
+        # TODO: improve reconnection process
         self.setupWalletAndVault(force=True)
 
     def userInteracted(self):
@@ -83,10 +83,10 @@ class WalletVaultManager():
             status=False)
         return False
 
-    def createElectrumxConnection(self, hostPort: str = None):
+    def createElectrumxConnection(self):
         try:
             self.electrumx = EvrmoreWallet.createElectrumxConnection(
-                hostPort=hostPort,
+                hostPorts=config.get().get('electrumx servers'),
                 persistent=self.persistent)
             logging.info('initialized electrumx', color='green')
         except Exception as e:
