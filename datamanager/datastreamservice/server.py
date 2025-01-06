@@ -7,17 +7,18 @@ import pandas as pd
 from typing import Dict, Any, Optional
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from sqlite.sqlite_manager import SqliteDatabase
+from sqlite import SqliteDatabase
 
 class DataServer:
     def __init__(self):
         self.db = SqliteDatabase()
-        # self.db.importFromDataFolder()
+        self.db.importFromDataFolder()
 
     async def get_stream_data(self, table_uuid: str) -> Optional[Dict[str, Any]]:
         """Get data for a specific stream from SQLite database"""
         try:
             # Get the CSV file path
+            # Todo : instead directly fetch from sqlite and turn it into dataframe
             csv_path = self.db.export_csv(table_uuid)
             
             if csv_path is None:

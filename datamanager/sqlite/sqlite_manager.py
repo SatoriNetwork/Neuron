@@ -1,13 +1,14 @@
 import sqlite3
 import os
 from typing import Dict, Any, List
-# from .uuid_generator.uuid_gen import generateUUID
-from uuid_generator import generateUUID
+from .uuid_generator import generateUUID
 import pandas as pd
 from pathlib import Path
 from satorilib.logging import INFO, setup, debug, info, warning, error
 
 setup(level=INFO)
+
+# todo : convert to dataframe function ( input ( table_uuid) -> output ( dataframe ))
 
 
 class SqliteDatabase:
@@ -257,7 +258,7 @@ class SqliteDatabase:
             error(f"Error parsing README {readme_path}: {e}")
             return {}
         
-
+    # confirm the inputs for this
     def import_csv(self, csv_path: str, readme_path: str):
         """
         Import a single CSV file with its associated readme metadata.
@@ -362,9 +363,13 @@ class SqliteDatabase:
 ## Testing
 if __name__ == "__main__":
     db = SqliteDatabase()
+
     # db.importFromDataFolder()
+
     # db.export_csv('23dc3133-5b3a-5b27-803e-70a07cf3c4f7')
+
     # db.import_csv('../../data/steeve/aggregate.csv','../../data/steeve/readme.md')
+
     # Example 1: Insert a new record
     # table_uuid ='08b109cc-d62c-5e2a-a671-c382bc439311'
     # data_to_insert = {
@@ -373,15 +378,4 @@ if __name__ == "__main__":
     #     'hash': 'abc123def456'
     # }
     # db.editTable('insert', table_uuid, data_to_insert)
-
-    # Example 2: Update an existing record
-    # update_data = {
-    #     'value': float(999.99),
-    #     'hash': 'updated_hash'
-    # }
-    # db.editTable('update', table_uuid, update_data, timestamp='2025-01-04 15:27:35')
-
-    # # Example 3: Delete a record
-    # db.editTable('delete', table_uuid, timestamp='2025-01-04 15:27:35')
-    # db.export_csv()
 

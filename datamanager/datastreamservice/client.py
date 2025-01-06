@@ -20,7 +20,7 @@ async def request_stream_data(table_uuid: str):
             result: Dict[str, Any] = json.loads(response)
             
             if result["status"] == "success":
-                save_dir: pathlib.Path = pathlib.Path("rec_data")
+                save_dir: pathlib.Path = pathlib.Path("rec")
                 save_dir.mkdir(exist_ok=True)
 
                 df: pd.DataFrame = pd.read_json(StringIO(result["data"]), orient='split')
@@ -37,5 +37,5 @@ async def request_stream_data(table_uuid: str):
 
 if __name__ == "__main__":
     # Replace with the actual stream ID you want to request
-    table_uuid : str = '75bf71ae-aefa-5aed-89e9-be680e1c9b83'
+    table_uuid : str = '23dc3133-5b3a-5b27-803e-70a07cf3c4f7'
     asyncio.run(request_stream_data(table_uuid ))
