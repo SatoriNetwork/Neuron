@@ -359,6 +359,42 @@ class SqliteDatabase:
             error(f"Error exporting table {table_uuid}: {e}")
             return None
 
+    def to_dataframe(self, table_uuid: str) -> pd.DataFrame:
+        
+        try:
+            # Verify table exists
+            self.cursor.execute("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name=?
+            """, (table_uuid,))
+            
+            if not self.cursor.fetchone():
+                raise ValueError(f"Table {table_uuid} does not exist")
+                
+            # Query all data from the table
+            query = f"""
+                SELECT ts, value, hash 
+                FROM "{table_uuid}"
+                ORDER BY ts
+            """
+            
+            df = pd.read_sql_query(query, self.conn)
+            
+            # Convert timestamp to datetime
+            df['ts'] = pd.to_datetime(df['ts'])
+            
+            # Ensure proper types
+            df['value'] = df['value'].astype(float)
+            df['hash'] = df['hash'].astype(str)
+            
+            return df
+            
+        except ValueError as e:
+            error(f"Table error: {e}")
+            raise
+        except Exception as e:
+            error(f"Database error converting table {table_uuid} to DataFrame: {e}")
+            raise
 
 ## Testing
 if __name__ == "__main__":

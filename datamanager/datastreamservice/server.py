@@ -15,23 +15,10 @@ class DataServer:
         self.db.importFromDataFolder()
 
     async def get_stream_data(self, table_uuid: str) -> Optional[Dict[str, Any]]:
-        """Get data for a specific stream from SQLite database"""
+        """Get data for a specific stream directly from SQLite database"""
         try:
-            # Get the CSV file path
-            # Todo : instead directly fetch from sqlite and turn it into dataframe
-            csv_path = self.db.export_csv(table_uuid)
-            
-            if csv_path is None:
-                return None
-                
-            # Read the CSV file into a DataFrame
-            df = pd.read_csv(csv_path)
-            
-            # Remove the temporary CSV file
-            os.remove(csv_path)
-            
+            df = self.db.to_dataframe(table_uuid)
             return df
-            
         except Exception as e:
             print(f"Error getting data for stream {table_uuid}: {e}")
             return None
