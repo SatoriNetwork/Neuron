@@ -134,7 +134,7 @@ class SqliteDatabase:
 
     def deleteTable(self, table_uuid: str):
         try:
-            self.cursor.execute(f"DROP TABLE IF EXISTS {table_uuid}")
+            self.cursor.execute(f'DROP TABLE IF EXISTS "{table_uuid}"')
             self.conn.commit()
         except Exception as e:
             error(f"Table deletion error for {table_uuid}:", e)
@@ -152,9 +152,8 @@ class SqliteDatabase:
                 
                 cols = ', '.join(data.keys())
                 placeholders = ', '.join(['?' for _ in data])
-                insert_query = f'INSERT INTO "{table_uuid}" ({cols}) VALUES ({placeholders})'
                 
-                self.cursor.execute(insert_query, list(data.values()))
+                self.cursor.execute(f'INSERT INTO "{table_uuid}" ({cols}) VALUES ({placeholders})', list(data.values()))
                 self.conn.commit()
                 debug(f"Inserted new record into table {table_uuid}")
 
@@ -164,15 +163,12 @@ class SqliteDatabase:
                     
             #     sets = ', '.join([f"{k} = ?" for k in data.keys()])
             #     values = list(data.values()) + [timestamp]
-            #     update_query = f'UPDATE "{table_uuid}" SET {sets} WHERE ts = ?'
-            #     self.cursor.execute(update_query, values)
+            #     self.cursor.execute(f'UPDATE "{table_uuid}" SET {sets} WHERE ts = ?', values)
 
-            # elif action == 'delete':
-            #     if not timestamp:
-            #         raise ValueError("Timestamp is required for delete operations")
-                    
-            #     delete_query = f'DELETE FROM "{table_uuid}" WHERE ts = ?'
-            #     self.cursor.execute(delete_query, (timestamp,))
+            elif action == 'delete':
+                if not timestamp:
+                    raise ValueError("Timestamp is required for delete operations")
+                self.cursor.execute(f'DELETE FROM "{table_uuid}" WHERE ts = ?', (timestamp,))
 
             if self.cursor.rowcount == 0 and action != 'insert':
                 raise ValueError(f"No record found with timestamp {timestamp}")
@@ -223,16 +219,15 @@ class SqliteDatabase:
                     
                     for _, row in df.iterrows():
                         # Check if the record already exists
-                        query_check = f'''
-                        SELECT 1 FROM "{table_name}" WHERE ts = ? AND value = ? AND hash = ?
-                        '''
-                        self.cursor.execute(query_check, (row['ts'], float(row['value']), str(row['hash'])))
+                        self.cursor.execute(
+                            f'''
+                            SELECT 1 FROM "{table_name}" WHERE ts = ? AND value = ? AND hash = ?
+                            ''', (row['ts'], float(row['value']), str(row['hash'])))
                         result = self.cursor.fetchone()
                         
                         if not result:
                             # Insert only if not found
-                            query_insert = f'INSERT INTO "{table_name}" (ts, value, hash) VALUES (?, ?, ?)'
-                            self.cursor.execute(query_insert, (row['ts'], float(row['value']), str(row['hash'])))
+                            self.cursor.execute(f'INSERT INTO "{table_name}" (ts, value, hash) VALUES (?, ?, ?)', (row['ts'], float(row['value']), str(row['hash'])))
                     
                     self.conn.commit()
                     imported_count += 1
@@ -290,28 +285,28 @@ class SqliteDatabase:
             imported_count = 0
             for _, row in df.iterrows():
                 # Check for existing record
-                query_check = f'''
-                SELECT 1 FROM "{table_uuid}" 
-                WHERE ts = ? AND value = ? AND hash = ?
-                '''
-                self.cursor.execute(query_check, (
-                    row['ts'], 
-                    float(row['value']), 
-                    str(row['hash'])
-                ))
+                self.cursor.execute(
+                    f'''
+                    SELECT 1 FROM "{table_uuid}" 
+                    WHERE ts = ? AND value = ? AND hash = ?
+                    ''', (
+                        row['ts'], 
+                        float(row['value']), 
+                        str(row['hash'])
+                    ))
                 result = self.cursor.fetchone()
                 
                 if not result:
                     # Insert if record doesn't exist
-                    query_insert = f'''
-                    INSERT INTO "{table_uuid}" (ts, value, hash) 
-                    VALUES (?, ?, ?)
-                    '''
-                    self.cursor.execute(query_insert, (
-                        row['ts'],
-                        float(row['value']),
-                        str(row['hash'])
-                    ))
+                    self.cursor.execute(
+                        f'''
+                        INSERT INTO "{table_uuid}" (ts, value, hash) 
+                        VALUES (?, ?, ?)
+                        ''', (
+                            row['ts'],
+                            float(row['value']),
+                            str(row['hash'])
+                        ))
                     imported_count += 1
                     new_data_added = True
                     
@@ -340,13 +335,12 @@ class SqliteDatabase:
             rec_dir.mkdir(exist_ok=True)
             
             # Query all data from the table
-            query = f'''
-            SELECT ts, value, hash 
-            FROM "{table_uuid}" 
-            ORDER BY ts
-            '''
-            
-            df = pd.read_sql_query(query, self.conn)
+            df = pd.read_sql_query(
+                f'''
+                SELECT ts, value, hash 
+                FROM "{table_uuid}" 
+                ORDER BY ts
+                ''', self.conn)
             
             if df.empty:
                 warning(f"No data found in table {table_uuid}")
@@ -367,23 +361,23 @@ class SqliteDatabase:
         
         try:
             # Verify table exists
-            self.cursor.execute("""
+            self.cursor.execute(
+                """
                 SELECT name FROM sqlite_master 
                 WHERE type='table' AND name=?
-            """, (table_uuid,))
+                """, (table_uuid,))
             
             if not self.cursor.fetchone():
                 raise ValueError(f"Table {table_uuid} does not exist")
                 
             # Query all data from the table
-            query = f"""
+            # todo pass the table_uuid as the param
+            df = pd.read_sql_query(
+                f"""
                 SELECT ts, value, hash 
                 FROM "{table_uuid}"
                 ORDER BY ts
-            """
-            
-            # todo pass the table_uuid as the param
-            df = pd.read_sql_query(query, self.conn)
+                """, self.conn)
             return df
             
         except ValueError as e:
@@ -395,13 +389,91 @@ class SqliteDatabase:
 
 
     # from dateframe to sqlite, inputs( table_uuid, df )
-    def dataframeToDatabase():
-        pass
+    def dataframeToDatabase(self, table_uuid: str, df: pd.DataFrame):
+        try:
+            # Verify table exists
+            self.cursor.execute(
+                """
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name=?
+                """, (table_uuid,))
+            
+            if not self.cursor.fetchone():
+                raise ValueError(f"Table {table_uuid} does not exist")
+                
+            # Validate DataFrame structure
+            required_columns = {'ts', 'value', 'hash'}
+            if not all(col in df.columns for col in required_columns):
+                raise ValueError(f"DataFrame must contain columns: {required_columns}")
+                
+            # Convert value column to float
+            df['value'] = df['value'].astype(float)
+            
+            # Convert hash column to string
+            df['hash'] = df['hash'].astype(str)
+            
+            new_data_added = False
+            imported_count = 0
+            
+            # Process each row
+            for _, row in df.iterrows():
+                # Check for existing record
+                self.cursor.execute(
+                    f'''
+                    SELECT 1 FROM "{table_uuid}" 
+                    WHERE ts = ? AND value = ? AND hash = ?
+                    ''', (
+                        row['ts'],
+                        float(row['value']),
+                        str(row['hash'])
+                    ))
+                result = self.cursor.fetchone()
+                
+                if not result:
+                    # Insert if record doesn't exist
+                    self.cursor.execute(
+                        f'''
+                        INSERT INTO "{table_uuid}" (ts, value, hash) 
+                        VALUES (?, ?, ?)
+                        ''', (
+                            row['ts'],
+                            float(row['value']),
+                            str(row['hash'])
+                        ))
+                    imported_count += 1
+                    new_data_added = True
+                    
+            self.conn.commit()
+            
+            # Sort table if new data was added
+            if new_data_added:
+                info(f"Added {imported_count} new records to table {table_uuid}, sorting table")
+                self.sortTableByTimestamp(table_uuid)
+            else:
+                info(f"No new data added to table {table_uuid}, skipping sort")
+                
+            return True
+            
+        except ValueError as e:
+            error(f"Validation error: {e}")
+            self.conn.rollback()
+            raise
+        except Exception as e:
+            error(f"Database error converting DataFrame to table {table_uuid}: {e}")
+            self.conn.rollback()
+            return False
 
 ## Testing
 if __name__ == "__main__":
     db = SqliteDatabase()
-
+    # Example: dataframe to sql
+    # table_uuid = "08b109cc-d62c-5e2a-a671-c382bc439311"
+    # df = pd.DataFrame({
+    #     'ts': ['2025-01-04 15:27:35'],
+    #     'value': [123.45],
+    #     'hash': ['abc123def456']
+    # })
+    # success = db.dataframeToDatabase(table_uuid, df)
     # db.importFromDataFolder()
 
     # db.export_csv('23dc3133-5b3a-5b27-803e-70a07cf3c4f7')
