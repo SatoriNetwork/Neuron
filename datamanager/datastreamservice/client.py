@@ -112,19 +112,8 @@ async def request_stream_data(table_uuid: str, request_type: str = "stream_data"
             # print(f"Total records: {len(df)}")
 
             if result["status"] == "success":
-                
-                if request_type == "delete":
-                    # Delete the table from the database
-                    db = StreamDatabase()
-                    try:
-                        if db.delete_table(table_uuid):
-                            print(f"\nTable {table_uuid} successfully deleted from database")
-                        else:
-                            print(f"\nTable {table_uuid} not found in database")
-                    except sqlite3.Error as e:
-                        print(f"Database error during deletion: {e}")
-
-                elif "data"  in result:
+          
+                if "data"  in result:
                      # Read the JSON data into a DataFrame
                     df: pd.DataFrame = pd.read_json(StringIO(result["data"]), orient='split')
 
@@ -138,6 +127,17 @@ async def request_stream_data(table_uuid: str, request_type: str = "stream_data"
                         
                     except sqlite3.Error as e:
                         print(f"Database error: {e}")
+                    
+                elif request_type == "delete":
+                    # Delete the table from the database
+                    db = StreamDatabase()
+                    try:
+                        if db.delete_table(table_uuid):
+                            print(f"\nTable {table_uuid} successfully deleted from database")
+                        else:
+                            print(f"\nTable {table_uuid} not found in database")
+                    except sqlite3.Error as e:
+                        print(f"Database error during deletion: {e}")
                     
 
                 else:
@@ -166,7 +166,8 @@ if __name__ == "__main__":
         #     'hash': ['abc123def456']
         # })
         # await request_stream_data(table_uuid, "insert", new_data, replace=False)
-        
+        # # Create the new row
+       
         # Example 3: Delete specific records
         # records_to_delete = pd.DataFrame({
         #     'ts': ['2025-01-04 15:27:35']

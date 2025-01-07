@@ -33,9 +33,9 @@ class DataServer:
                     # get stream df from database (DONE)
                     # get stream df from database from date to date (inclusive)
                     # get last record before timestamp
-                    # delete table
-                    # delete stream df from database (just note)
-                    # save by merging stream df to database
+                    # delete table(DONE)
+                    # delete stream df from database (DONE)
+                    # save by merging stream df to database (DONE)
                     # subscribe to all new observations ( later )
                     # unsubscribe to all new observations ( later )
 

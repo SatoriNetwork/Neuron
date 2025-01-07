@@ -106,7 +106,8 @@ class SqliteDatabase:
             ''')
             
             # Copy data from original table to temp table in sorted order
-            self.cursor.execute(f'''
+            self.cursor.execute(
+                f'''
                 INSERT INTO "{temp_table}" (ts, value, hash)
                 SELECT ts, value, hash FROM "{table_uuid}"
                 ORDER BY ts ASC
@@ -466,6 +467,8 @@ class SqliteDatabase:
 ## Testing
 if __name__ == "__main__":
     db = SqliteDatabase()
+    df=db.to_dataframe("23dc3133-5b3a-5b27-803e-70a07cf3c4f7")
+    # print(df)
     # Example: dataframe to sql
     # table_uuid = "08b109cc-d62c-5e2a-a671-c382bc439311"
     # df = pd.DataFrame({
@@ -476,11 +479,25 @@ if __name__ == "__main__":
     # success = db.dataframeToDatabase(table_uuid, df)
     # db.importFromDataFolder()
 
+    # Example: merge
+    # new_row = pd.DataFrame({
+    #         'ts': ['2024-12-01 05:45:00.658943'],  # Timestamp between the two rows
+    #         'value': [78.0500],                     # Same value as surrounding rows
+    #         'hash': ['abc123def456']                # Random hash similar to pattern
+    #     })
+
+    #     # Assuming your original DataFrame is called df
+    #     # Insert the new row at position 22 (which will be between current rows 21 and 22)
+    # df = pd.concat([df.iloc[:22], new_row, df.iloc[22:]]).reset_index(drop=True)
+    # db.deleteTable("23dc3133-5b3a-5b27-803e-70a07cf3c4f7")
+    # db.createTable("23dc3133-5b3a-5b27-803e-70a07cf3c4f7")
+    # db.dataframeToDatabase("23dc3133-5b3a-5b27-803e-70a07cf3c4f7",new_row)
+
     # db.export_csv('23dc3133-5b3a-5b27-803e-70a07cf3c4f7')
 
     # db.import_csv('../../data/steeve/aggregate.csv','../../data/steeve/readme.md')
 
-    # Example 1: Insert a new record
+    # Example : Insert a new record
     # table_uuid ='08b109cc-d62c-5e2a-a671-c382bc439311'
     # data_to_insert = {
     #     'ts': '2025-01-04 15:27:35',
