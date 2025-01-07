@@ -9,6 +9,8 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlite import SqliteDatabase
 
+# three endpoints : table_uuid, sender_info and save to db ( if observation or whole dataframe ) 
+
 class DataServer:
     def __init__(self):
         self.db = SqliteDatabase()
@@ -17,8 +19,7 @@ class DataServer:
     async def get_stream_data(self, table_uuid: str) -> Optional[Dict[str, Any]]:
         """Get data for a specific stream directly from SQLite database"""
         try:
-            df = self.db.to_dataframe(table_uuid)
-            return df
+            return self.db.to_dataframe(table_uuid)
         except Exception as e:
             print(f"Error getting data for stream {table_uuid}: {e}")
             return None
@@ -28,8 +29,29 @@ class DataServer:
             async for message in websocket:
                 print(f"Received request: {message}")
                 try:
-                    request: Dict[str, Any] = json.loads(message)
+                    # endpoints:
+                    # get stream df from database (DONE)
+                    # get stream df from database from date to date (inclusive)
+                    # get last record before timestamp
+                    # delete table
+                    # delete stream df from database (just note)
+                    # save by merging stream df to database
+                    # subscribe to all new observations ( later )
+                    # unsubscribe to all new observations ( later )
+
+                    #endpoint : 
+                    # if insert(uuid, replace=True):
+                        # erase the data in table_uuid
+                        # replace with the new data
+                    # if insert(uuid, replace=False)
+                        # only merge, do not delete what is inside the existing database
+                    # if delete(uuid):
+                        # delete the whole table
+                    # if delete( uuid, df):
+                        # delete from database of what is inside the dataframe
                     
+                    request: Dict[str, Any] = json.loads(message)
+                    print(request)
                     if request.get('type') != 'stream_data':
                         response = {
                             "status": "error",

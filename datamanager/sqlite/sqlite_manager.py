@@ -8,7 +8,11 @@ from satorilib.logging import INFO, setup, debug, info, warning, error
 
 setup(level=INFO)
 
-# todo : convert to dataframe function ( input ( table_uuid) -> output ( dataframe ))
+# todo : pass the inputs as params for sql query
+# todo : dataframe to sqlite
+# todo : recieve data in database after client recieves data from server
+# todo : check server.py for endpoint tasks
+
 
 
 class SqliteDatabase:
@@ -378,15 +382,8 @@ class SqliteDatabase:
                 ORDER BY ts
             """
             
+            # todo pass the table_uuid as the param
             df = pd.read_sql_query(query, self.conn)
-            
-            # Convert timestamp to datetime
-            df['ts'] = pd.to_datetime(df['ts'])
-            
-            # Ensure proper types
-            df['value'] = df['value'].astype(float)
-            df['hash'] = df['hash'].astype(str)
-            
             return df
             
         except ValueError as e:
@@ -395,6 +392,11 @@ class SqliteDatabase:
         except Exception as e:
             error(f"Database error converting table {table_uuid} to DataFrame: {e}")
             raise
+
+
+    # from dateframe to sqlite, inputs( table_uuid, df )
+    def dataframeToDatabase():
+        pass
 
 ## Testing
 if __name__ == "__main__":

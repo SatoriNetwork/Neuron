@@ -6,6 +6,8 @@ import pandas as pd
 from io import StringIO
 from typing import Dict, Any
 
+# todo: inside rec folder, make .db and insert it that way
+
 async def request_stream_data(table_uuid: str):
     """Request data for a specific stream ID"""
     try:
@@ -22,10 +24,9 @@ async def request_stream_data(table_uuid: str):
             if result["status"] == "success":
                 save_dir: pathlib.Path = pathlib.Path("rec")
                 save_dir.mkdir(exist_ok=True)
-
                 df: pd.DataFrame = pd.read_json(StringIO(result["data"]), orient='split')
                 output_path: pathlib.Path = save_dir / f"{table_uuid}.csv"
-                df.to_csv(output_path, index=False)
+                df.to_csv(output_path, index=False, header=False)
                 print(f"\nData saved to {output_path}")
                 print(f"Total records: {len(df)}")
             else:
