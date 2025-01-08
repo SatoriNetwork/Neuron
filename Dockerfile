@@ -145,4 +145,4 @@ CMD ["bash", "./start_from_image.sh"]
 # docker run --rm -it --name satorineuron -p 24601:24601 -v C:\DevNeuron\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
 
 # Scott
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\GitHub\Neuron --env ENV=prod satorinet/satorineuron:latest bash
+# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\GitHub\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
