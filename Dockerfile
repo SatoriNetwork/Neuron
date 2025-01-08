@@ -137,3 +137,6 @@ CMD ["bash", "./start_from_image.sh"]
 
 # Kolten 
 # docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Neumont\Enterprise\Satori\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
+
+# John
+# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Satori\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
