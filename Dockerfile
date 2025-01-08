@@ -135,5 +135,5 @@ CMD ["bash", "./start_from_image.sh"]
 # docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:rpi_satori   --push .
 # echo "Done!"
 
-# 
-# docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
+# Kolten 
+# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Neumont\Enterprise\Satori\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
