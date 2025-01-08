@@ -88,8 +88,7 @@ class StreamDatabase:
         else:
             return "TEXT"
 
-async def request_stream_data(table_uuid: str, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False,
-                              from_date: str = None, to_date: str = None, timestamp: str = None):
+async def request_stream_data(table_uuid: str, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False):
     try:
         async with websockets.connect("ws://localhost:8765") as websocket:
             print(f"Requesting data for stream {table_uuid}...")
