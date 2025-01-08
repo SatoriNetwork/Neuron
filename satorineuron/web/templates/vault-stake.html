@@ -32,7 +32,7 @@
               <p id="addStakingAddressLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;" onClick="toggleRewardAddresses();">
                 Stake for Address:
               </p>
-            <center>
+            </center>
           </div>
           <div class="col-xl-6 col-sm-6 mb-xl-0">
             <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
@@ -55,19 +55,19 @@
             <p id='addStakingAddressConfirmation'></p>
           </div>
         </div>
-        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}" style="display: none;">
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}" style="display: block;">
           To automatically pull workers from the network, make an offer to reward them below.
           <br>
           You are responsible for rewarding them, see the daily predictors report which tallies each worker's effort.
           <br><br>
         </p>
-        <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem; display: none;'>
+        <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem; display: flex;'>
           <div class="col-xl-3 col-sm-3 mb-xl-0">
             <center>
               <p id="addStakingOfferLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;">
                 Miner Reward %:
               </p>
-            <center>
+            </center>
           </div>
           <div class="col-xl-6 col-sm-6 mb-xl-0">
             <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
@@ -232,6 +232,7 @@
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the rewards most recently earned by the remote Neuron">Reward</th>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the amount of stake this delegate Neuron is providing the remote Neuron. Can take up to 24 day to update.">Stake</th>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the remote Neuron is or is not pointing its reward to this Neuron">Pointed</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="this worker was automatically assigned from the public workers">Public</th>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="stake the remote Neuron regardless of their chosen reward address">Charity</th>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="remove staking for the remote Neuron">Remove</th>
             </tr>
@@ -243,10 +244,12 @@
     let totalStake = 0;
     // Iterate over each item in the JSON array
     data.forEach(item => {
+      console.log(item);
         // Determine the alias (use empty string if not provided)
         let alias = item.name ? item.name : item.address;
         let aliasLabel = item.name ? `wallet address: ${item.address}` : `wallet`;
         let pointed = item.pointed == 1 ? 'Yes' : 'No';
+        let public = item.automatic == 1 ? 'Yes' : 'No';
         let satori = item.child_satori ? parseFloat(item.child_satori) : 0;
         console.log(item.child_proxy);
         let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= {{ stakeRequired }} ? 0: {{ stakeRequired }}); // Convert proxy to float
@@ -265,25 +268,32 @@
             </td>
         `;
         tableHTML += `
-            <td>
-              <div class="py-1" style="display: inline-flex;">
-                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${item.reward}</h6>
-              </div>
-            </td>
+          <td>
+            <div class="py-1" style="display: inline-flex;">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${item.reward}</h6>
+            </div>
+          </td>
         `;
         tableHTML += `
-            <td>
-              <div class="py-1" style="display: inline-flex;">
-                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${proxy}</h6>
-              </div>
-            </td>
+          <td>
+            <div class="py-1" style="display: inline-flex;">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${proxy}</h6>
+            </div>
+          </td>
         `;
         tableHTML += `
-            <td>
-              <div class="py-1" style="display: inline-flex;">
-                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="pointing rewards to delegate?">${pointed}</h6>
-              </div>
-            </td>
+          <td>
+            <div class="py-1" style="display: inline-flex;">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="pointing rewards to delegate?">${pointed}</h6>
+            </div>
+          </td>
+        `;
+        tableHTML += `
+          <td>
+            <div class="py-1" style="display: inline-flex;">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="automatically assigned from public workers">${public}</h6>
+            </div>
+          </td>
         `;
         tableHTML += `
             <td>
