@@ -56,6 +56,7 @@ class WalletVaultManager():
             self.electrumx = None
 
     def reconnect(self):
+        # TODO: improve reconnection process
         self.setupWalletAndVault(force=True)
 
     def userInteracted(self):

@@ -460,7 +460,7 @@ def import_wallet():
         return jsonify({'success': False, 'message': 'No wallet supplied'})
 
     walletPath = '/Satori/Neuron/wallet'
-    backupPath = f'/Satori/Neuron/wallet-backup-{time.time()}'
+    backupPath = f'/Satori/Neuron/wallet/wallet-backup-{time.time()}'
 
     try:
         # Ensure wallet service is stopped
@@ -469,14 +469,15 @@ def import_wallet():
         # Create a backup of the existing wallet
         if os.path.exists(walletPath):
             os.makedirs(backupPath, exist_ok=False)  # Ensure backupPath is new
-            print(-1)
-            shutil.copytree(walletPath, backupPath, dirs_exist_ok=True)
-            print(-2)
+            # Copy only files from walletPath into backupPath
+            for item in os.listdir(walletPath):
+                itemPath = os.path.join(walletPath, item)
+                if os.path.isfile(itemPath):
+                    shutil.copy2(itemPath, backupPath)
 
         # Save incoming files to a temporary path
         os.makedirs(walletPath, exist_ok=True)
         files = request.files.getlist('files')
-        print(0)
         for file in files:
             if file.filename.startswith('wallet/'):
                 filePath = os.path.join(walletPath, secure_filename(file.filename[7:]))
@@ -494,10 +495,13 @@ def import_wallet():
         logging.error(f"Error during wallet import, reverting: {str(e)}")
         # Restore from backup if it exists and is valid
         if os.path.exists(backupPath):
-            shutil.copytree(backupPath, walletPath, dirs_exist_ok=True)
-            #if os.path.exists(walletPath):
-            #    shutil.rmtree(walletPath, ignore_errors=True)
-            #shutil.move(backupPath, walletPath)
+            os.makedirs(walletPath, exist_ok=True)  # Ensure walletPath exists
+            for item in os.listdir(backupPath):
+                itemPath = os.path.join(backupPath, item)
+                targetPath = os.path.join(walletPath, item)
+                # Skip if target exists
+                if os.path.isfile(itemPath) and not os.path.exists(targetPath):
+                    shutil.copy2(itemPath, walletPath)
         else:
             logging.error("Backup missing or invalid. Wallet state might be compromised.")
         # Restart wallet service to maintain state
@@ -790,8 +794,10 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
     # only support main network for this
     greenlight, explain = start.ableToBridge()
+    logging.debug(f'greenlight: {greenlight}', explain,  color='magenta')
     if greenlight:
         result = bridgeSatoriTransactionUsing(start.vault)
+        logging.debug(f'result: {result}', color='magenta')
     else:
         flash(explain)
         return redirect('/vault/main')
@@ -908,41 +914,48 @@ def bridgeSatoriTransactionUsing(
             # doesn't respect the cooldown
             myWallet.get(allWalletInfo=False)
 
+        logging.debug('burning?', color='magenta')
         # doesn't respect the cooldown
-        myWallet.getUnspentSignatures(force=True)
+        #myWallet.getUnspentSignatures(force=True)
+        myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
         try:
-            # logging.debug('sweep', bridgeForm['sweep'], color='magenta')
             result = myWallet.typicalNeuronBridgeTransaction(
                 amount=bridgeForm['bridgeAmount'] or 0,
                 ethAddress=bridgeForm['ethAddress'] or '')
+            logging.debug('result', result, color='magenta')
             if result.msg == 'creating partial, need feeSatsReserved.':
+                logging.debug('result.msg', result.msg, color='magenta')
                 responseJson = start.server.requestSimplePartial(
                     network='main')
+                logging.debug('responseJson', responseJson, color='magenta')
                 result = myWallet.typicalNeuronBridgeTransaction(
                     amount=bridgeForm['bridgeAmount'] or 0,
-                    address=bridgeForm['ethAddress'] or '',
+                    ethAddress=bridgeForm['ethAddress'] or '',
                     completerAddress=responseJson.get('completerAddress'),
                     feeSatsReserved=responseJson.get('feeSatsReserved'),
                     changeAddress=responseJson.get('changeAddress'))
+                logging.debug('result', result, color='magenta')
             if result is None:
                 flash('Send Failed: wait 10 minutes, refresh, and try again.')
             elif result.success:
+                logging.debug('result.success', result.success, color='magenta')
                 if (  # checking any on of these should suffice in theory...
                     result.tx is not None and
                     result.reportedFeeSats is not None and
                     result.reportedFeeSats > 0 and
                     result.msg == 'send transaction requires fee.'
                 ):
+                    logging.debug('broadcasting', color='magenta')
+                    return "ending early until tested"
                     r = start.server.broadcastBridgeSimplePartial(
                         tx=result.tx,
                         reportedFeeSats=result.reportedFeeSats,
                         feeSatsReserved=responseJson.get('feeSatsReserved'),
                         walletId=responseJson.get('partialId'),
-                        network=(
-                            'ravencoin' if start.networkIsTest('main')
-                            else 'evrmore'))
+                        network='evrmore')
+                    logging.debug('broadcasting', r, color='magenta')
                     if r.text.startswith('{"code":1,"message":'):
                         flash(f'Send Failed: {r.json().get("message")}')
                     elif r.text != '':
@@ -960,6 +973,7 @@ def bridgeSatoriTransactionUsing(
         return result
 
     bridgeSatoriForm = forms.BridgeSatoriTransaction(formdata=request.form)
+    logging.debug('burning1',bridgeSatoriForm, color='magenta')
     bridgeForm = {}
     override = override or {}
     bridgeForm['bridgeAmount'] = override.get(
@@ -968,7 +982,7 @@ def bridgeSatoriTransactionUsing(
         'ethAddress', bridgeSatoriForm.ethAddress.data or '')
     print(bridgeSatoriForm, bridgeSatoriForm.bridgeAmount,
           bridgeSatoriForm.ethAddress)
-    # return acceptSubmittion(bridgeForm)
+    return acceptSubmittion(bridgeForm)
 
 
 @app.route('/register_stream', methods=['POST'])
@@ -1191,7 +1205,7 @@ def dashboard():
     #     if start.engine is not None else [])  # StreamOverviews.demo()
     streamOverviews = [stream for stream in start.streamDisplay]
     holdingBalance = start.holdingBalance
-    stakeStatus = holdingBalance >= 5 or (
+    stakeStatus = holdingBalance >= constants.stakeRequired or (
         start.details.wallet.get('rewardaddress', None) not in [
             None,
             start.details.wallet.get('address'),
@@ -1203,7 +1217,7 @@ def dashboard():
         # instead of this make chain single source of truth
         # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
         'stakeStatus': stakeStatus,
-        'miningMode': start.miningMode and stakeStatus,
+        'miningMode': start.miningMode,
         'miningDisplay': 'none',
         'proxyDisplay': 'none',
         'stakeRequired': constants.stakeRequired,

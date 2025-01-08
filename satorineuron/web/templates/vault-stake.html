@@ -81,7 +81,7 @@
                     maxLength="3"
                     required=""
                     placeholder="{{ offer }}"
-                    type="text"
+                    type="number"
                     onKeyPress="checkEnterForStakingOffer(event)">
                 </div>
               </div>
@@ -189,7 +189,22 @@
   }
 
   function setStakingOffer() {
+    function validateStakingOffer(offer) {
+      const value = parseInt(offer, 10);
+      // Allow empty input
+      if (isNaN(value)) {
+          return;
+      }
+      // Allow 0 or values 10 and above
+      if (value !== 0 && value < 10) {
+          input.value = ''; // Clear invalid input
+      }
+    }
+
     offer = document.getElementById("addStakingOffer").value;
+    if (!validateStakingOffer(offer)){
+      return;
+    }
     fetch('/pool/worker/reward/set/' + offer, { method: 'GET' })
     .then(response => {
         if (response.ok) {
