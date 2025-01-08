@@ -10,9 +10,9 @@ setup(level=INFO)
 
 # Todo 
 
-# Change function names in other files
-# Documentation to be added
-# importCSV to be tested
+#* Change function names in other files
+#* Documentation to be added
+#* importCSV to be tested
 
 class SqliteDatabase:
     def __init__(self, data_dir: str = "../../data",dbname: str = "data.db"):
@@ -23,9 +23,9 @@ class SqliteDatabase:
         self.createConnection()
 
     def importFromDataFolder(self):
-        """ Doc required """
+        """ Imports data from a structured data directory by scanning for README.md files and CSV data """
         def _getStreamInfoFromFolder() -> Dict:
-            """Scan all folders and extract stream info from README.md files."""
+            """ Scan all folders and extract stream info from README.md files """
             stream_infos = {}
             if not os.path.exists(self.data_dir):
                 error("Data Folder does not exists")
@@ -48,7 +48,7 @@ class SqliteDatabase:
         self.importCSVFromDataFolder(folder_stream_info, table_uuids)
 
     def createConnection(self):
-        """ Doc required """
+        """ Creates or reopens a SQLite database connection with specific pragmas """
         try:
             if self.conn:
                 self.conn.close()
@@ -62,13 +62,13 @@ class SqliteDatabase:
             error("Connection error:", e)
 
     def disconnect(self):
-        """ Doc required """
+        """ Closes the current database connection if one exists """
         if self.cursor:
             self.cursor.close()
             self.conn.close()
 
     def deleteDatabase(self):
-        """ Doc required """
+        """ Deletes the SQLite database file from the filesystem """
         try:
             self.disconnect()
             if os.path.exists(self.dbname):
@@ -77,7 +77,7 @@ class SqliteDatabase:
             error("Delete error:", e)
 
     def createTable(self, table_uuid: str):
-        """Create table with proper column types and quotes around table name"""
+        """ Create table with proper column types and quotes around table name """
         try:
             self.cursor.execute(f'''
                 CREATE TABLE IF NOT EXISTS "{table_uuid}" (
@@ -91,7 +91,7 @@ class SqliteDatabase:
             error(f"Table creation error for {table_uuid}: ", e)
 
     def deleteTable(self, table_uuid: str):
-        """ Doc required """
+        """ Deletes the table from the database """
         try:
             self.cursor.execute(f'DROP TABLE IF EXISTS "{table_uuid}"')
             self.conn.commit()
@@ -99,7 +99,7 @@ class SqliteDatabase:
             error(f"Table deletion error for {table_uuid}:", e)
 
     def editTable(self, action: str, table_uuid: str, data: Dict[str, Any] = None, timestamp: str = None):
-        """ Doc required """
+        """ Edits a table's data based on the specified action """
         try:
             action = action.lower()
             if action == 'insert':
@@ -138,7 +138,7 @@ class SqliteDatabase:
             self._sortTableByTimestamp(table_uuid)
     
     def _sortTableByTimestamp(self, table_uuid: str):
-        """Sort the existing rows in a table by timestamp."""
+        """ Sort the existing rows in a table by timestamp """
         try:
             temp_table = f'temp_{table_uuid}'
             self.cursor.execute(f'DROP TABLE IF EXISTS "{temp_table}"')
@@ -261,7 +261,7 @@ class SqliteDatabase:
             error(f"Error exporting table {table_uuid}: {e}")
         
     def _parseReadme(self, readme_path: Path) -> Dict:
-        """Parse README.md file to return the stream details from it"""
+        """ Parse README.md file to return the stream details from it """
         import json
         try:
             with open(readme_path, 'r') as f:
@@ -279,7 +279,7 @@ class SqliteDatabase:
             error(f"Error parsing README {readme_path}: {e}")
 
     def _toDataframe(self, table_uuid: str) -> pd.DataFrame:
-        """ Doc Required """
+        """ Converts a database table to a pandas DataFrame """
         try:
             self.cursor.execute(
                 """
@@ -301,6 +301,7 @@ class SqliteDatabase:
             error(f"Database error converting table {table_uuid} to DataFrame: {e}")
 
     def _dataframeToDatabase(self, table_uuid: str, df: pd.DataFrame):
+        """ Writes a pandas DataFrame to a specified database table """
         try:
             self.cursor.execute(
                 """
@@ -354,7 +355,7 @@ class SqliteDatabase:
 ## Testing
 if __name__ == "__main__":
     db = SqliteDatabase()
-    df=db.to_dataframe("23dc3133-5b3a-5b27-803e-70a07cf3c4f7")
+    # df=db._toDataframe("23dc3133-5b3a-5b27-803e-70a07cf3c4f7")
     # print(df)
     # Example: dataframe to sql
     # table_uuid = "08b109cc-d62c-5e2a-a671-c382bc439311"
@@ -382,7 +383,7 @@ if __name__ == "__main__":
 
     # db.export_csv('23dc3133-5b3a-5b27-803e-70a07cf3c4f7')
 
-    # db.import_csv('../../data/steeve/aggregate.csv','../../data/steeve/readme.md')
+    # db._importCSV('../../data/steeve/aggregate.csv','../../data/steeve/readme.md')
 
     # Example : Insert a new record
     # table_uuid ='08b109cc-d62c-5e2a-a671-c382bc439311'

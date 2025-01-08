@@ -10,7 +10,6 @@ from io import StringIO
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlite import SqliteDatabase
 
-# three endpoints : table_uuid, sender_info and save to db ( if observation or whole dataframe ) 
 
 class DataServer:
     def __init__(self):
@@ -20,7 +19,7 @@ class DataServer:
     async def get_stream_data(self, table_uuid: str) -> Optional[Dict[str, Any]]:
         """Get data for a specific stream directly from SQLite database"""
         try:
-            df = self.db.to_dataframe(table_uuid)
+            df = self.db._toDataframe(table_uuid)
             if df is None or df.empty:
                 return None
             return df
@@ -31,7 +30,7 @@ class DataServer:
     async def get_stream_data_by_date_range(self, table_uuid: str, from_date: str, to_date: str) -> Optional[pd.DataFrame]:
         """Get stream data within a specific date range (inclusive)"""
         try:
-            df = self.db.to_dataframe(table_uuid)
+            df = self.db._toDataframe(table_uuid)
             
             if df is None or df.empty:
                 return None
@@ -53,7 +52,7 @@ class DataServer:
     async def get_last_record_before_timestamp(self, table_uuid: str, timestamp: str) -> Optional[pd.DataFrame]:
         """Get the last record before the specified timestamp"""
         try:
-            df = self.db.to_dataframe(table_uuid)
+            df = self.db._toDataframe(table_uuid)
             if df is None or df.empty:
                 return None
             
@@ -209,7 +208,7 @@ class DataServer:
                                 self.db.createTable(table_uuid)
                             
                             # Insert/merge the data
-                            success = self.db.dataframeToDatabase(table_uuid, data)
+                            success = self.db._dataframeToDatabase(table_uuid, data)
 
                             # Get updated data after insert
                             updated_df = await self.get_stream_data(table_uuid)
