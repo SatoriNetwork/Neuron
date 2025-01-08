@@ -16,11 +16,11 @@ setup(level=INFO)
 
 
 class SqliteDatabase:
-    def __init__(self, data_dir: str = "../../data"):
+    def __init__(self, data_dir: str = "../../data",dbname: str = "data.db"):
         self.conn = None
         self.cursor = None
         self.data_dir = data_dir
-        self.dbname = os.path.join(data_dir, "data.db")
+        self.dbname = os.path.join(data_dir, dbname)
         self.createConnection()
 
     def importFromDataFolder(self):

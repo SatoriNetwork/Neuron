@@ -6,9 +6,14 @@ import pandas as pd
 from io import StringIO
 import sqlite3
 from typing import Dict, Any, Optional
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sqlite import SqliteDatabase
 
 
-# todo: inside rec folder, make .db and insert it that way
+
+# todo: inside rec folder, make .db and insert it that way(Done)
 class StreamDatabase:
     def __init__(self, db_path: pathlib.Path = None):
         if db_path is None:
@@ -49,27 +54,27 @@ class StreamDatabase:
             raise e
         finally:
             conn.close()
-
-    def delete_table(self, table_uuid: str) -> bool:
-        """Delete a table from the SQLite database"""
-        conn = sqlite3.connect(self.db_path)
-        try:
-            # Check if table exists
-            table_exists = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name=?", 
-                (table_uuid,)
-            ).fetchone() is not None
+    # Not needed
+    # def delete_table(self, table_uuid: str) -> bool:
+    #     """Delete a table from the SQLite database"""
+    #     conn = sqlite3.connect(self.db_path)
+    #     try:
+    #         # Check if table exists
+    #         table_exists = conn.execute(
+    #             "SELECT name FROM sqlite_master WHERE type='table' AND name=?", 
+    #             (table_uuid,)
+    #         ).fetchone() is not None
             
-            if table_exists:
-                conn.execute(f"DROP TABLE IF EXISTS '{table_uuid}'")
-                conn.commit()
-                return True
-            return False
+    #         if table_exists:
+    #             conn.execute(f"DELETE FROM '{table_uuid}' WHERE ts = ?', (timestamp,)")
+    #             conn.commit()
+    #             return True
+    #         return False
             
-        except sqlite3.Error as e:
-            raise e
-        finally:
-            conn.close()
+    #     except sqlite3.Error as e:
+    #         raise e
+    #     finally:
+    #         conn.close()
     
     @staticmethod
     def _get_sqlite_type(dtype):
@@ -83,7 +88,8 @@ class StreamDatabase:
         else:
             return "TEXT"
 
-async def request_stream_data(table_uuid: str, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False):
+async def request_stream_data(table_uuid: str, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False,
+                              from_date: str = None, to_date: str = None, timestamp: str = None):
     try:
         async with websockets.connect("ws://localhost:8765") as websocket:
             print(f"Requesting data for stream {table_uuid}...")
@@ -91,6 +97,23 @@ async def request_stream_data(table_uuid: str, request_type: str = "stream_data"
                 "type": request_type,
                 "table_uuid": table_uuid
             }
+
+            # Add date range parameters if provided
+            if request_type == "date_range_data" and data is not None:
+                # Extract from_date and to_date from the DataFrame
+                if 'from_ts' in data.columns and 'to_ts' in data.columns:
+                    request["from_date"] = data['from_ts'].iloc[0]
+                    request["to_date"] = data['to_ts'].iloc[0]
+                else:
+                    raise ValueError("DataFrame must contain 'from_ts' and 'to_ts' columns for date range queries")
+            
+            
+            # Add timestamp parameter if provided
+            elif request_type == "last_record_before":
+                if data is None:
+                    raise ValueError("DataFrame with timestamp is required for last record before requests")
+                if 'ts' not in data.columns:
+                    raise ValueError("DataFrame must contain 'ts' column for last record before requests")
 
             if data is not None:
                 request["data"] = data.to_json(orient='split')  
@@ -101,7 +124,8 @@ async def request_stream_data(table_uuid: str, request_type: str = "stream_data"
             await websocket.send(json.dumps(request))
             response: str = await websocket.recv()
             result: Dict[str, Any] = json.loads(response)
-            
+
+            # Not needed
             # if result["status"] == "success":
             # save_dir: pathlib.Path = pathlib.Path("rec")
             # save_dir.mkdir(exist_ok=True)
@@ -128,16 +152,17 @@ async def request_stream_data(table_uuid: str, request_type: str = "stream_data"
                     except sqlite3.Error as e:
                         print(f"Database error: {e}")
                     
-                elif request_type == "delete":
-                    # Delete the table from the database
-                    db = StreamDatabase()
-                    try:
-                        if db.delete_table(table_uuid):
-                            print(f"\nTable {table_uuid} successfully deleted from database")
-                        else:
-                            print(f"\nTable {table_uuid} not found in database")
-                    except sqlite3.Error as e:
-                        print(f"Database error during deletion: {e}")
+                # Not needed
+                # elif request_type == "delete":
+                #     # Delete the table from the database
+                #     db = StreamDatabase()
+                #     try:
+                #         if db.delete_table(table_uuid):
+                #             print(f"\nTable {table_uuid} successfully deleted from database")
+                #         else:
+                #             print(f"\nTable {table_uuid} not found in database")
+                #     except sqlite3.Error as e:
+                #         print(f"Database error during deletion: {e}")
                     
 
                 else:
@@ -172,9 +197,33 @@ if __name__ == "__main__":
         # records_to_delete = pd.DataFrame({
         #     'ts': ['2025-01-04 15:27:35']
         # })
-        # await request_stream_data(table_uuid, "delete", records_to_delete)
+        # db = SqliteDatabase(data_dir = "./rec",dbname="stream_data.db")
+        # df = db.to_dataframe(table_uuid)
+        # await request_stream_data(table_uuid, "delete", df)
         
         # # Example 4: Delete entire table
-        # await request_stream_data(table_uuid, "delete")
+        await request_stream_data(table_uuid, "delete")
+
+        # Example 5: Get data for a specific date range
+        # records_to_fetch = pd.DataFrame({
+        #     'from_ts': ["2024-11-07 03:50:00.834062"],
+        #     'to_ts': ["2024-11-20 15:00:00.912330"]
+        # })
+        # await request_stream_data(
+        #     table_uuid,
+        #     request_type="date_range_data",
+        #     data=records_to_fetch
+        # )
+
+        
+        # Example 6: Get last record before timestamp
+        # timestamp_df = pd.DataFrame({
+        #     'ts': ['2024-11-20 15:00:00.912330']  # Same timestamp as before
+        # })
+        # await request_stream_data(
+        #     table_uuid,
+        #     request_type="last_record_before",
+        #     data=timestamp_df
+        # )
 
     asyncio.run(main())

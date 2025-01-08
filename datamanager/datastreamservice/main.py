@@ -33,26 +33,26 @@ class DataServer:
         else:
             return "TEXT"
         
-    def delete_table(self, table_uuid: str) -> bool:
-        """Delete a table from the SQLite database"""
-        conn = sqlite3.connect(self.db_path)
-        try:
-            # Check if table exists
-            table_exists = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name=?", 
-                (table_uuid,)
-            ).fetchone() is not None
+    # def delete_table(self, table_uuid: str) -> bool:
+    #     """Delete a table from the SQLite database"""
+    #     conn = sqlite3.connect(self.db_path)
+    #     try:
+    #         # Check if table exists
+    #         table_exists = conn.execute(
+    #             "SELECT name FROM sqlite_master WHERE type='table' AND name=?", 
+    #             (table_uuid,)
+    #         ).fetchone() is not None
             
-            if table_exists:
-                conn.execute(f"DROP TABLE IF EXISTS '{table_uuid}'")
-                conn.commit()
-                return True
-            return False
+    #         if table_exists:
+    #             conn.execute(f"DROP TABLE IF EXISTS '{table_uuid}'")
+    #             conn.commit()
+    #             return True
+    #         return False
             
-        except sqlite3.Error as e:
-            raise e
-        finally:
-            conn.close()
+    #     except sqlite3.Error as e:
+    #         raise e
+    #     finally:
+    #         conn.close()
 
     def save_dataframe(self, table_uuid: str, df: pd.DataFrame) -> int:
         """Save DataFrame to SQLite database"""
@@ -251,15 +251,15 @@ async def request_stream_data(table_uuid: str, request_type: str = "stream_data"
                     except sqlite3.Error as e:
                         print(f"Database error: {e}")
 
-                elif request_type == "delete":
-                    try:
-                        ds.db.deleteTable(table_uuid)
-                        if ds.delete_table(table_uuid):
-                            print(f"\nTable {table_uuid} successfully deleted from database")
-                        else:
-                            print(f"\nTable {table_uuid} not found in database")
-                    except sqlite3.Error as e:
-                        print(f"Database error during deletion: {e}")
+                # elif request_type == "delete":
+                #     try:
+                #         ds.db.deleteTable(table_uuid)
+                #         if ds.delete_table(table_uuid):
+                #             print(f"\nTable {table_uuid} successfully deleted from database")
+                #         else:
+                #             print(f"\nTable {table_uuid} not found in database")
+                #     except sqlite3.Error as e:
+                #         print(f"Database error during deletion: {e}")
 
                 else:
                        print("Server response:", result['message'])

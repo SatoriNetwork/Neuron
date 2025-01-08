@@ -28,11 +28,67 @@ class DataServer:
             print(f"Error getting data for stream {table_uuid}: {e}")
             return None
 
+    async def get_stream_data_by_date_range(self, table_uuid: str, from_date: str, to_date: str) -> Optional[pd.DataFrame]:
+        """Get stream data within a specific date range (inclusive)"""
+        try:
+            df = self.db.to_dataframe(table_uuid)
+            
+            if df is None or df.empty:
+                return None
+            
+            # Convert string dates to datetime
+            from_ts = pd.to_datetime(from_date)
+            to_ts = pd.to_datetime(to_date)
+            
+            # Ensure ts column is datetime
+            df['ts'] = pd.to_datetime(df['ts'])
+            # Filter data within range (inclusive)
+            filtered_df = df[(df['ts'] >= from_ts) & (df['ts'] <= to_ts)]
+            
+            return filtered_df if not filtered_df.empty else None
+        except Exception as e:
+            print(f"Error getting data for stream {table_uuid} in date range: {e}")
+            return None
+
+    async def get_last_record_before_timestamp(self, table_uuid: str, timestamp: str) -> Optional[pd.DataFrame]:
+        """Get the last record before the specified timestamp"""
+        try:
+            df = self.db.to_dataframe(table_uuid)
+            if df is None or df.empty:
+                return None
+            
+            # Convert string timestamp to datetime
+            ts = pd.to_datetime(timestamp)
+            
+            # Ensure ts column is datetime
+            df['ts'] = pd.to_datetime(df['ts'])
+
+            # First check for exact match
+            exact_match = df[df['ts'] == ts]
+            if not exact_match.empty:
+                return exact_match
+
+            
+            # Get records before the timestamp
+
+            before_ts = df[df['ts'] < ts]
+            
+            if before_ts.empty:
+                return None
+                
+            # Get the last record
+            last_record = before_ts.iloc[[-1]]
+            
+            return last_record
+        except Exception as e:
+            print(f"Error getting last record before timestamp for stream {table_uuid}: {e}")
+            return None
+
     async def handle_request(self, websocket: websockets.WebSocketServerProtocol):
                     # endpoints:
                     # get stream df from database (DONE)
-                    # get stream df from database from date to date (inclusive)
-                    # get last record before timestamp
+                    # get stream df from database from date to date (inclusive) (Done)
+                    # get last record before timestamp (Done)
                     # delete table(DONE)
                     # delete stream df from database (DONE)
                     # save by merging stream df to database (DONE)
@@ -78,6 +134,61 @@ class DataServer:
                             response = {
                                 "status": "success",
                                 "data": df.to_json(orient='split')  # Convert DataFrame to JSON string
+                            }
+
+                    elif request.get('type') == 'date_range_data':
+                        # Handle date range request
+                        from_date = request.get('from_date')
+                        to_date = request.get('to_date')
+                        
+                        if not from_date or not to_date:
+                            response = {
+                                "status": "error",
+                                "message": "Missing from_date or to_date parameter"
+                            }
+                        else:
+                            df = await self.get_stream_data_by_date_range(table_uuid, from_date, to_date)
+                        
+                            if df is None:
+                                response = {
+                                    "status": "error",
+                                    "message": f"No data found for stream {table_uuid} in specified date range"
+                                }
+                            else:
+                                if 'ts' in df.columns:
+                                    df['ts'] = df['ts'].astype(str)
+                                response = {
+                                    "status": "success",
+                                    "data": df.to_json(orient='split')
+                                }
+
+                    elif request.get('type') == 'last_record_before':
+                        try:
+                            data_json = request.get('data')
+                            if data_json is None:
+                                raise ValueError("No timestamp data provided")
+                            
+                            # Convert JSON string to DataFrame
+                            timestamp_df = pd.read_json(StringIO(data_json), orient='split')
+                            timestamp = timestamp_df['ts'].iloc[0]
+                            
+                            df = await self.get_last_record_before_timestamp(table_uuid, timestamp)
+                            if df is None:
+                                response = {
+                                    "status": "error",
+                                    "message": f"No records found before timestamp for stream {table_uuid}"
+                                }
+                            else:
+                                if 'ts' in df.columns:
+                                    df['ts'] = df['ts'].astype(str)
+                                response = {
+                                    "status": "success",
+                                    "data": df.to_json(orient='split')
+                                }
+                        except Exception as e:
+                            response = {
+                                "status": "error",
+                                "message": f"Error processing timestamp request: {str(e)}"
                             }
 
                     elif request.get('type') == 'insert':
@@ -135,12 +246,12 @@ class DataServer:
                             #     self.db.deleteTable(table_uuid)
 
                                 # Get updated data after delete
-                                updated_df = await self.get_stream_data(table_uuid)
+                                # updated_df = await self.get_stream_data(table_uuid)
                                 
                                 response = {
                                     "status": "success",
                                     "message": f"Delete operation completed",
-                                    "data": updated_df.to_json(orient='split') if updated_df is not None else None
+                                    # "data": updated_df.to_json(orient='split') if updated_df is not None else None
                                 }
                             else:
                                 # Delete entire table
