@@ -21,6 +21,7 @@ class DataServer:
         # - can we identify which peer gave us a message
         # - can we send a message to a specific peer
         # perhaps use a package that wraps websockets to provide this functionality
+        # like socketify or others
 
 
         self.db = SqliteDatabase()
