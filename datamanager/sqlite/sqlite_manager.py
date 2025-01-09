@@ -8,14 +8,8 @@ from satorilib.logging import INFO, setup, debug, info, warning, error
 
 setup(level=INFO)
 
-# Todo 
-
-#* Change function names in other files
-#* Documentation to be added
-#* importCSV to be tested
-
 class SqliteDatabase:
-    def __init__(self, data_dir: str = "../../data",dbname: str = "data.db"):
+    def __init__(self, data_dir: str,dbname: str):
         self.conn = None
         self.cursor = None
         self.data_dir = data_dir
@@ -355,45 +349,9 @@ class SqliteDatabase:
             error(f"Database error converting DataFrame to table {table_uuid}: {e}")
             self.conn.rollback()
             return False
-## Testing
+
+
 if __name__ == "__main__":
     db = SqliteDatabase()
-    # df=db._toDataframe("23dc3133-5b3a-5b27-803e-70a07cf3c4f7")
-    # print(df)
-    # Example: dataframe to sql
-    # table_uuid = "08b109cc-d62c-5e2a-a671-c382bc439311"
-    # df = pd.DataFrame({
-    #     'ts': ['2025-01-04 15:27:35'],
-    #     'value': [123.45],
-    #     'hash': ['abc123def456']
-    # })
-    # success = db.dataframeToDatabase(table_uuid, df)
-    # db.importFromDataFolder()
 
-    # Example: merge
-    # new_row = pd.DataFrame({
-    #         'ts': ['2024-12-01 05:45:00.658943'],  # Timestamp between the two rows
-    #         'value': [78.0500],                     # Same value as surrounding rows
-    #         'hash': ['abc123def456']                # Random hash similar to pattern
-    #     })
-
-    #     # Assuming your original DataFrame is called df
-    #     # Insert the new row at position 22 (which will be between current rows 21 and 22)
-    # df = pd.concat([df.iloc[:22], new_row, df.iloc[22:]]).reset_index(drop=True)
-    # db.deleteTable("23dc3133-5b3a-5b27-803e-70a07cf3c4f7")
-    # db.createTable("23dc3133-5b3a-5b27-803e-70a07cf3c4f7")
-    # db.dataframeToDatabase("23dc3133-5b3a-5b27-803e-70a07cf3c4f7",new_row)
-
-    # db.export_csv('23dc3133-5b3a-5b27-803e-70a07cf3c4f7')
-
-    # db._importCSV('../../data/steeve/aggregate.csv','../../data/steeve/readme.md')
-
-    # Example : Insert a new record
-    # table_uuid ='08b109cc-d62c-5e2a-a671-c382bc439311'
-    # data_to_insert = {
-    #     'ts': '2025-01-04 15:27:35',
-    #     'value': float(123.45),
-    #     'hash': 'abc123def456'
-    # }
-    # db.editTable('insert', table_uuid, data_to_insert)
 

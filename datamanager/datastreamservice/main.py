@@ -12,8 +12,26 @@ from satorilib.logging import INFO, setup, debug, info, warning, error
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlite import SqliteDatabase
 
-class DataServer:
-    def __init__(self):
+# Todo : 
+
+# Maybe have two connections ( WebSocketClientProtocol & WebSocketServerProtocol ) or onyl one?
+# after reseatch, implement that in the current code
+
+# example :
+
+# peer1 = DataPeer(uri1)
+# peer1.startServer()
+
+# peer2 = DataPeer(uri2)
+# peer2.sendRequest(req)
+
+## peer1 then picks up the request and replies
+## peer2 gets the request back
+
+
+
+class DataPeer:
+    def __init__(self, uri: str, db_path: str = "../../data", db_name: str = "data.db"):
         #self.subscribers: dict[str, str] = {} # {table_uuid: websocketconn/}
         #self.publications =
 
@@ -22,10 +40,18 @@ class DataServer:
         # - can we send a message to a specific peer
         # perhaps use a package that wraps websockets to provide this functionality
         # like socketify or others
-
-
-        self.db = SqliteDatabase()
+        self.uri = uri
+        self.ws_client: Optional[websockets.WebSocketClientProtocol] = None
+        self.we_server: Optional[websockets.WebSocketServerProtocol] = None
+        self.connected = False
+        self.db = SqliteDatabase(db_path, db_name)
         self.db.importFromDataFolder() # can be disabled if new rows are added to the Database
+
+    def connect():
+        pass
+
+    def disconnect():
+        pass
 
     async def _getStreamData(self, table_uuid: str) -> pd.DataFrame:
         """Get data for a specific stream directly from SQLite database"""
@@ -209,13 +235,7 @@ class DataServer:
         except Exception as e:
             error(f"Error handling client: {e}")
 
-
-class DataClient:
-    def __init__(self, db_path: str = "./client_data", db_name: str = "client.db"):
-        if not os.path.exists(db_path):
-            os.makedirs(db_path)
-        self.clientdb = SqliteDatabase(data_dir=db_path, dbname=db_name)
-
+    # client
     async def request_stream_data(self, table_uuid: str, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False):
         try:
             async with websockets.connect("ws://localhost:8765") as websocket:
@@ -280,12 +300,13 @@ class DataClient:
         else:
             return "TEXT"
 
+
 async def main():
     # Start server
-    server = DataServer()
-    async with websockets.serve(server.handleRequest, "localhost", 8765):
-        print("WebSocket server started on ws://localhost:8765")
-        await asyncio.Future()  # run forever
+    peer1 = DataPeer("ws://localhost:8765")
+    # async with websockets.serve(peer1.handleRequest, "localhost", 8765):
+    #     print("WebSocket server started on ws://localhost:8765")
+    #     await asyncio.Future()  # run forever
 
     # Wait for server to start
     await asyncio.sleep(1)
@@ -340,3 +361,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
