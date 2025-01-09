@@ -345,15 +345,16 @@ class SqliteDatabase:
             if imported_rows > 0:
                 info(f"Added {imported_rows} new records to table {table_uuid}, sorting table")
                 self._sortTableByTimestamp(table_uuid)
+                return True
             else:
-                info(f"No new data added to table {table_uuid}, skipping sort")
+                info(f"No new data added to table {table_uuid}, skipping sort")    
         except ValueError as e:
             error(f"Validation error: {e}")
             self.conn.rollback()
         except Exception as e:
             error(f"Database error converting DataFrame to table {table_uuid}: {e}")
             self.conn.rollback()
-
+            return False
 ## Testing
 if __name__ == "__main__":
     db = SqliteDatabase()

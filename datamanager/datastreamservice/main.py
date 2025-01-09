@@ -143,7 +143,7 @@ class DataServer:
                             if replace:
                                 self.db.deleteTable(table_uuid)
                                 self.db.createTable(table_uuid)
-                            success = self.db._dataframeToDatabase(table_uuid, data)
+                            success = self.db._dataframeToDatabase(table_uuid, data)   
                             updated_df = await self._getStreamData(table_uuid)
                             response = {
                                 "status": "success" if success else "error",
@@ -240,6 +240,9 @@ class DataClient:
                     if "data"  in result:
                         df: pd.DataFrame = pd.read_json(StringIO(result["data"]), orient='split')
                         try:
+                            if request_type == "last_record_before" or request_type == "date_in_range":
+                                self.clientdb.deleteTable(table_uuid)
+                                self.clientdb.createTable(table_uuid)
                             self.clientdb._dataframeToDatabase(table_uuid, df)
                             info(f"\nData saved to database: {self.clientdb.dbname}")
                             debug(f"Table name: {table_uuid}")
@@ -278,10 +281,10 @@ async def main():
     await asyncio.sleep(1)
     
     # Create client
-    client = DataClient()
-    table_uuid: str = '23dc3133-5b3a-5b27-803e-70a07cf3c4f7'
+    # client = DataClient()
+    # table_uuid: str = '23dc3133-5b3a-5b27-803e-70a07cf3c4f7'
     # Example 1: Get stream data
-    # await request_stream_data(table_uuid)
+    # await client.request_stream_data(table_uuid)
     
     # # Example 2: Insert new data (merge)
     # new_data = pd.DataFrame({
@@ -289,7 +292,7 @@ async def main():
     #     'value': [124.45],
     #     'hash': ['abc123def456']
     # })
-    # await request_stream_data(table_uuid, "insert", new_data, replace=False)
+    # await client.request_stream_data(table_uuid, "insert", new_data, replace=False)
     # # Create the new row
     
     # Example 3: Delete specific records
@@ -298,19 +301,19 @@ async def main():
     # })
     # db = SqliteDatabase(data_dir = "./rec",dbname="stream_data.db")
     # df = db.to_dataframe(table_uuid)
-    # await request_stream_data(table_uuid, "delete", df)
+    # await client.request_stream_data(table_uuid, "delete", records_to_delete)
     
     # # Example 4: Delete entire table
-    # await request_stream_data(table_uuid, "delete")
+    # await client.request_stream_data(table_uuid, "delete")
 
     # Example 5: Get data for a specific date range
     # records_to_fetch = pd.DataFrame({
     #     'from_ts': ["2024-11-07 03:50:00.834062"],
-    #     'to_ts': ["2024-11-20 15:00:00.912330"]
+    #     'to_ts': ["2024-11-20 16:00:00.912330"]
     # })
-    # await request_stream_data(
+    # await client.request_stream_data(
     #     table_uuid,
-    #     request_type="date_range_data",
+    #     request_type="date_in_range",
     #     data=records_to_fetch
     # )
 
@@ -319,7 +322,7 @@ async def main():
     # timestamp_df = pd.DataFrame({
     #     'ts': ['2024-11-20 15:00:00.912330']  # Same timestamp as before
     # })
-    # await request_stream_data(
+    # await client.request_stream_data(
     #     table_uuid,
     #     request_type="last_record_before",
     #     data=timestamp_df
