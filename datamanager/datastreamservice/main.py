@@ -14,32 +14,25 @@ from sqlite import SqliteDatabase
 
 # Todo : 
 
-# Maybe have two connections ( WebSocketClientProtocol & WebSocketServerProtocol ) or onyl one?
-# after reseatch, implement that in the current code
+#self.subscribers: dict[str, str] = {} # {table_uuid: websocketconn/}
+#self.publications =
 
-# example :
+# peer1, peer2 starts a server
+# peer3 send a message to peer2
+# peer2 receives message and sends to peer1
+# peer1 recieves and prints it, then its a success
 
-# peer1 = DataPeer(uri1)
-# peer1.startServer()
-
-# peer2 = DataPeer(uri2)
-# peer2.sendRequest(req)
-
-## peer1 then picks up the request and replies
-## peer2 gets the request back
+# management of multiple peers connections through our websocket server/client
+# - can we identify which peer gave us a message
+# - can we send a message to a specific peer
+# perhaps use a package that wraps websockets to provide this functionality
+# like socketify or others
 
 
 
 class DataPeer:
     def __init__(self, host: str, port: int, db_path: str = "../../data", db_name: str = "data.db"):
-        #self.subscribers: dict[str, str] = {} # {table_uuid: websocketconn/}
-        #self.publications =
-
-        # management of multiple peers connections through our websocket server/client
-        # - can we identify which peer gave us a message
-        # - can we send a message to a specific peer
-        # perhaps use a package that wraps websockets to provide this functionality
-        # like socketify or others
+        
         self.host = host
         self.port = port
         self.server = None
@@ -68,12 +61,12 @@ class DataPeer:
         """Handle incoming connections and messages"""
         peer_addr = websocket.remote_address
         print(f"New connection from {peer_addr}")
-        
+        self.connected_peers[peer_addr] = websocket
+        print("Connected peers:", self.connected_peers)
         try:
             async for message in websocket:
                 debug(f"Received request: {message}", print=True)
                 try:
-                    request = json.loads(message)
                     response = await self.handleRequest(websocket, message)
                     await websocket.send(json.dumps(response))
                 except json.JSONDecodeError:
@@ -185,146 +178,6 @@ class DataPeer:
         except Exception as e:
             error(f"Error getting last record before timestamp for stream {table_uuid}: {e}")
 
-    # async def handleRequest(self, websocket: websockets.WebSocketServerProtocol):
-    #     try:
-    #         async for message in websocket:
-    #             debug(f"Received request: {message}", print=True)
-    #             try:
-    #                 request: Dict[str, Any] = json.loads(message)
-    #                 debug(request, print=True)
-    #                 if 'table_uuid' not in request:
-    #                     response = {
-    #                         "status": "error",
-    #                         "message": "Missing table_uuid parameter"
-    #                     }
-    #                     await websocket.send(json.dumps(response))
-    #                     continue
-    #                 table_uuid = request['table_uuid']
-    #                 if request.get('type') == 'stream_data':
-    #                     df = await self._getStreamData(table_uuid)
-    #                     if df is None:
-    #                         response = {
-    #                             "status": "error",
-    #                             "message": f"No data found for stream {table_uuid}"
-    #                         }
-    #                     else:
-    #                         response = {
-    #                             "status": "success",
-    #                             "data": df.to_json(orient='split')
-    #                         }
-    #                 elif request.get('type') == 'date_in_range':
-    #                     from_date = request.get('from_date')
-    #                     to_date = request.get('to_date')
-    #                     if not from_date or not to_date:
-    #                         response = {
-    #                             "status": "error",
-    #                             "message": "Missing from_date or to_date parameter"
-    #                         }
-    #                     else:
-    #                         df = await self._getStreamDataByDateRange(table_uuid, from_date, to_date)
-    #                         if df is None:
-    #                             response = {
-    #                                 "status": "error",
-    #                                 "message": f"No data found for stream {table_uuid} in specified date range"
-    #                             }
-    #                         else:
-    #                             if 'ts' in df.columns:
-    #                                 df['ts'] = df['ts'].astype(str) # todo : needed?
-    #                             response = {
-    #                                 "status": "success",
-    #                                 "data": df.to_json(orient='split')
-    #                             }
-    #                 elif request.get('type') == 'last_record_before':
-    #                     try:
-    #                         data_json = request.get('data')
-    #                         if data_json is None:
-    #                             raise ValueError("No timestamp data provided")
-    #                         timestamp_df = pd.read_json(StringIO(data_json), orient='split')
-    #                         timestamp = timestamp_df['ts'].iloc[0]
-    #                         df = await self._getLastRecordBeforeTimestamp(table_uuid, timestamp)
-    #                         if df is None:
-    #                             response = {
-    #                                 "status": "error",
-    #                                 "message": f"No records found before timestamp for stream {table_uuid}"
-    #                             }
-    #                         else:
-    #                             if 'ts' in df.columns:
-    #                                 df['ts'] = df['ts'].astype(str)
-    #                             response = {
-    #                                 "status": "success",
-    #                                 "data": df.to_json(orient='split')
-    #                             }
-    #                     except Exception as e:
-    #                         response = {
-    #                             "status": "error",
-    #                             "message": f"Error processing timestamp request: {str(e)}"
-    #                         }
-
-    #                 elif request.get('type') == 'insert':
-    #                     try:
-    #                         data_json = request.get('data')
-    #                         if data_json is None:
-    #                             raise ValueError("No data provided for insert operation")
-    #                         data = pd.read_json(StringIO(data_json), orient='split')
-    #                         replace = request.get('replace', False)
-    #                         if replace:
-    #                             self.db.deleteTable(table_uuid)
-    #                             self.db.createTable(table_uuid)
-    #                         success = self.db._dataframeToDatabase(table_uuid, data)   
-    #                         updated_df = await self._getStreamData(table_uuid)
-    #                         response = {
-    #                             "status": "success" if success else "error",
-    #                             "message": f"Data {'replaced' if replace else 'merged'} successfully" if success else "Failed to insert data",
-    #                             "data": updated_df.to_json(orient='split') if success else None
-    #                         }
-    #                     except Exception as e:
-    #                         response = {
-    #                             "status": "error",
-    #                             "message": f"Error inserting data: {str(e)}"
-    #                         }
-    #                 elif request.get('type') == 'delete':
-    #                     try:
-    #                         data_json = request.get('data')
-    #                         if data_json is not None: # Delete from what is inside the dataframe
-    #                             data = pd.read_json(StringIO(data_json), orient='split')
-    #                             timestamps = data['ts'].tolist()
-    #                             for ts in timestamps:
-    #                                 self.db.editTable('delete', table_uuid, timestamp=ts)
-    #                             response = {
-    #                                 "status": "success",
-    #                                 "message": f"Delete operation completed",
-    #                             }
-    #                         else:
-    #                             self.db.deleteTable(table_uuid)
-    #                             response = {
-    #                                 "status": "success",
-    #                                 "message": f"Table {table_uuid} deleted"
-    #                             }
-    #                     except Exception as e:
-    #                         response = {
-    #                             "status": "error",
-    #                             "message": f"Error deleting data: {str(e)}"
-    #                         }
-    #                 else:
-    #                     response = {
-    #                         "status": "error",
-    #                         "message": f"Unknown request type: {request.get('type')}"
-    #                     }
-    #                 await websocket.send(json.dumps(response))
-    #             except json.JSONDecodeError:
-    #                 await websocket.send(json.dumps({
-    #                     "status": "error",
-    #                     "message": "Invalid JSON format"
-    #                 }))
-    #             except Exception as e:
-    #                 await websocket.send(json.dumps({
-    #                     "status": "error",
-    #                     "message": f"Error processing request: {str(e)}"
-    #                 }))
-    #     except websockets.exceptions.ConnectionClosedError:
-    #         error("Client connection closed")
-    #     except Exception as e:
-    #         error(f"Error handling client: {e}")
     async def handleRequest(self, websocket: websockets.WebSocketServerProtocol, message: str) -> Dict[str, Any]:
         """Process incoming requests"""
         request: Dict[str, Any] = json.loads(message)
@@ -458,58 +311,6 @@ class DataPeer:
                 "message": f"Unknown request type: {request_type}"
             }
 
-    # client
-    # async def request_stream_data(self, table_uuid: str, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False):
-    #     try:
-    #         async with websockets.connect("ws://localhost:8765") as websocket:
-    #             print(f"Requesting data for stream {table_uuid}...")
-    #             request = {
-    #                 "type": request_type,
-    #                 "table_uuid": table_uuid
-    #             }
-    #             if request_type == "date_in_range" and data is not None:
-    #                 if 'from_ts' in data.columns and 'to_ts' in data.columns:
-    #                     request["from_date"] = data['from_ts'].iloc[0]
-    #                     request["to_date"] = data['to_ts'].iloc[0]
-    #                 else:
-    #                     raise ValueError("DataFrame must contain 'from_ts' and 'to_ts' columns for date range queries")
-    #             elif request_type == "last_record_before":
-    #                 if data is None:
-    #                     raise ValueError("DataFrame with timestamp is required for last record before requests")
-    #                 if 'ts' not in data.columns:
-    #                     raise ValueError("DataFrame must contain 'ts' column for last record before requests")
-
-    #             if data is not None:
-    #                 request["data"] = data.to_json(orient='split')
-
-    #             if request_type == "insert":
-    #                 request["replace"] = replace
-
-    #             await websocket.send(json.dumps(request))
-    #             response: str = await websocket.recv()
-    #             result: Dict[str, Any] = json.loads(response)
-
-    #             if result["status"] == "success":
-    #                 if "data"  in result:
-    #                     df: pd.DataFrame = pd.read_json(StringIO(result["data"]), orient='split')
-    #                     try:
-    #                         if request_type == "last_record_before" or request_type == "date_in_range":
-    #                             self.clientdb.deleteTable(table_uuid)
-    #                             self.clientdb.createTable(table_uuid)
-    #                         self.clientdb._dataframeToDatabase(table_uuid, df)
-    #                         info(f"\nData saved to database: {self.clientdb.dbname}")
-    #                         debug(f"Table name: {table_uuid}")
-    #                     except sqlite3.Error as e:
-    #                         error(f"Database error: {e}")
-    #                 else:
-    #                     debug("Server response:", result['message'], print=True)
-    #             else:
-    #                 error(f"Error: {result['message']}")
-
-    #     except websockets.exceptions.ConnectionClosedError as e:
-    #         error(f"Connection closed unexpectedly: {e}")
-    #     except Exception as e:
-    #         error(f"Error: {e}")
     async def request_stream_data(self, peer_addr: Tuple[str, int], table_uuid: str, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False):
         """Request stream data from a specific peer"""
         request = {

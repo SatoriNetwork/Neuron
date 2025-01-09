@@ -3,14 +3,17 @@ import asyncio
 import pandas as pd
 
 async def main():
-    peer2 = DataPeer("localhost", 8002, db_path="./client_data", db_name="client.db")
+    peer3 = DataPeer("localhost", 8002, db_path="./client_data", db_name="client.db")
+    # await peer2.start_server()
+    # await asyncio.Future()
     table_uuid = "23dc3133-5b3a-5b27-803e-70a07cf3c4f7"
     # Example 1: Get stream data
     # print("\n=== Example 1: Get Stream Data ===")
-    # response = await peer2.request_stream_data(
-    #     ("localhost", 8001),
-    #     table_uuid
-    # )
+    response = await peer3.request_stream_data(
+        ("localhost", 8001),
+        table_uuid
+    )
+    await asyncio.Future()
     # print("Stream data response:", response)
 
     # # Example 2: Insert new data (merge)
