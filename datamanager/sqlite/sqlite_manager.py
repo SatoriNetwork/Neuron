@@ -24,6 +24,7 @@ class SqliteDatabase:
 
     def importFromDataFolder(self):
         """ Imports data from a structured data directory by scanning for README.md files and CSV data """
+        
         def _getStreamInfoFromFolder() -> Dict:
             """ Scan all folders and extract stream info from README.md files """
             stream_infos = {}
@@ -278,7 +279,7 @@ class SqliteDatabase:
         except Exception as e:
             error(f"Error parsing README {readme_path}: {e}")
 
-    def _toDataframe(self, table_uuid: str) -> pd.DataFrame:
+    def _databasetoDataframe(self, table_uuid: str) -> pd.DataFrame:
         """ Converts a database table to a pandas DataFrame """
         try:
             self.cursor.execute(
@@ -309,7 +310,8 @@ class SqliteDatabase:
                 WHERE type='table' AND name=?
                 """, (table_uuid,))
             if not self.cursor.fetchone():
-                raise ValueError(f"Table {table_uuid} does not exist")
+                debug(f"Table {table_uuid} does not exist", print=True)
+                self.createTable(table_uuid)
             required_columns = {'ts', 'value', 'hash'}
             if not all(col in df.columns for col in required_columns):
                 raise ValueError(f"DataFrame must contain columns: {required_columns}")

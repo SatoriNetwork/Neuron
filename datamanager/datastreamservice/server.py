@@ -19,7 +19,7 @@ class DataServer:
     async def get_stream_data(self, table_uuid: str) -> Optional[Dict[str, Any]]:
         """Get data for a specific stream directly from SQLite database"""
         try:
-            df = self.db._toDataframe(table_uuid)
+            df = self.db._databasetoDataframe(table_uuid)
             if df is None or df.empty:
                 return None
             return df
@@ -30,7 +30,7 @@ class DataServer:
     async def get_stream_data_by_date_range(self, table_uuid: str, from_date: str, to_date: str) -> Optional[pd.DataFrame]:
         """Get stream data within a specific date range (inclusive)"""
         try:
-            df = self.db._toDataframe(table_uuid)
+            df = self.db._databasetoDataframe(table_uuid)
             
             if df is None or df.empty:
                 return None
@@ -52,7 +52,7 @@ class DataServer:
     async def get_last_record_before_timestamp(self, table_uuid: str, timestamp: str) -> Optional[pd.DataFrame]:
         """Get the last record before the specified timestamp"""
         try:
-            df = self.db._toDataframe(table_uuid)
+            df = self.db._databasetoDataframe(table_uuid)
             if df is None or df.empty:
                 return None
             

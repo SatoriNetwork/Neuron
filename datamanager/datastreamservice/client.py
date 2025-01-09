@@ -15,45 +15,47 @@ from sqlite import SqliteDatabase
 
 # todo: inside rec folder, make .db and insert it that way(Done)
 class StreamDatabase:
-    def __init__(self, db_path: pathlib.Path = None):
-        if db_path is None:
-            db_dir = pathlib.Path("rec")
-            db_dir.mkdir(exist_ok=True)
-            db_path = db_dir / "stream_data.db"
-        self.db_path = db_path
+    def __init__(self, db_path: str = "/client_data", db_name: str = "client.db"):
+        # if db_path is None:
+        #     db_dir = pathlib.Path("rec")
+        #     db_dir.mkdir(exist_ok=True)
+        #     db_path = db_dir / "stream_data.db"
+        if not os.path.exists(db_path):
+            os.makedirs(db_path)
+        self.clientdb = SqliteDatabase(data_dir=db_path, dbname=db_name)
     
-    def save_dataframe(self, table_uuid: str, df: pd.DataFrame) -> None:
-        """Save DataFrame to SQLite database"""
-        conn = sqlite3.connect(self.db_path)
-        try:
-            # Get column names and types for creating table
-            columns = df.dtypes.items()
-            create_table_sql = f'CREATE TABLE IF NOT EXISTS "{table_uuid}" ('
-            create_table_sql += ', '.join([
-                f"'{col}' {self._get_sqlite_type(dtype)}" 
-                for col, dtype in columns
-            ])
-            create_table_sql += ')'
+    # def save_dataframe(self, table_uuid: str, df: pd.DataFrame) -> None:
+    #     """Save DataFrame to SQLite database"""
+    #     conn = sqlite3.connect(self.db_path)
+    #     try:
+    #         # Get column names and types for creating table
+    #         columns = df.dtypes.items()
+    #         create_table_sql = f'CREATE TABLE IF NOT EXISTS "{table_uuid}" ('
+    #         create_table_sql += ', '.join([
+    #             f"'{col}' {self._get_sqlite_type(dtype)}" 
+    #             for col, dtype in columns
+    #         ])
+    #         create_table_sql += ')'
             
-            # Create table and insert data
-            conn.execute(f"DROP TABLE IF EXISTS '{table_uuid}'")
-            conn.execute(create_table_sql)
+    #         # Create table and insert data
+    #         conn.execute(f"DROP TABLE IF EXISTS '{table_uuid}'")
+    #         conn.execute(create_table_sql)
             
-            # Convert DataFrame to list of tuples for insertion
-            data = [tuple(x) for x in df.values]
-            placeholders = ",".join(["?" for _ in df.columns])
+    #         # Convert DataFrame to list of tuples for insertion
+    #         data = [tuple(x) for x in df.values]
+    #         placeholders = ",".join(["?" for _ in df.columns])
             
-            conn.executemany(f"INSERT INTO '{table_uuid}' VALUES ({placeholders})", data)
-            conn.commit()
+    #         conn.executemany(f"INSERT INTO '{table_uuid}' VALUES ({placeholders})", data)
+    #         conn.commit()
             
-            # Verify the data
-            count = conn.execute(f"SELECT COUNT(*) FROM '{table_uuid}'").fetchone()[0]
-            return count
+    #         # Verify the data
+    #         count = conn.execute(f"SELECT COUNT(*) FROM '{table_uuid}'").fetchone()[0]
+    #         return count
             
-        except sqlite3.Error as e:
-            raise e
-        finally:
-            conn.close()
+    #     except sqlite3.Error as e:
+    #         raise e
+    #     finally:
+    #         conn.close()
     # Not needed
     # def delete_table(self, table_uuid: str) -> bool:
     #     """Delete a table from the SQLite database"""
