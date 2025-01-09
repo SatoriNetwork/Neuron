@@ -14,6 +14,16 @@ from sqlite import SqliteDatabase
 
 class DataServer:
     def __init__(self):
+        #self.subscribers: dict[str, str] = {} # {table_uuid: websocketconn/}
+        #self.publications =
+
+        # management of multiple peers connections through our websocket server/client
+        # - can we identify which peer gave us a message
+        # - can we send a message to a specific peer
+        # perhaps use a package that wraps websockets to provide this functionality
+        # like socketify or others
+
+
         self.db = SqliteDatabase()
         self.db.importFromDataFolder() # can be disabled if new rows are added to the Database
 
@@ -83,7 +93,7 @@ class DataServer:
                         else:
                             response = {
                                 "status": "success",
-                                "data": df.to_json(orient='split') 
+                                "data": df.to_json(orient='split')
                             }
                     elif request.get('type') == 'date_in_range':
                         from_date = request.get('from_date')
@@ -227,8 +237,8 @@ class DataClient:
                         raise ValueError("DataFrame must contain 'ts' column for last record before requests")
 
                 if data is not None:
-                    request["data"] = data.to_json(orient='split')  
-            
+                    request["data"] = data.to_json(orient='split')
+
                 if request_type == "insert":
                     request["replace"] = replace
 
@@ -252,7 +262,7 @@ class DataClient:
                         debug("Server response:", result['message'], print=True)
                 else:
                     error(f"Error: {result['message']}")
-                    
+
         except websockets.exceptions.ConnectionClosedError as e:
             error(f"Connection closed unexpectedly: {e}")
         except Exception as e:
@@ -276,10 +286,10 @@ async def main():
     async with websockets.serve(server.handleRequest, "localhost", 8765):
         print("WebSocket server started on ws://localhost:8765")
         await asyncio.Future()  # run forever
-    
+
     # Wait for server to start
     await asyncio.sleep(1)
-    
+
     # Create client
     # client = DataClient()
     # table_uuid: str = '23dc3133-5b3a-5b27-803e-70a07cf3c4f7'
@@ -294,7 +304,7 @@ async def main():
     # })
     # await client.request_stream_data(table_uuid, "insert", new_data, replace=False)
     # # Create the new row
-    
+
     # Example 3: Delete specific records
     # records_to_delete = pd.DataFrame({
     #     'ts': ['2025-01-04 15:27:35']
@@ -317,7 +327,7 @@ async def main():
     #     data=records_to_fetch
     # )
 
-    
+
     # Example 6: Get last record before timestamp
     # timestamp_df = pd.DataFrame({
     #     'ts': ['2024-11-20 15:00:00.912330']  # Same timestamp as before
