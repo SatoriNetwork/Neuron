@@ -1138,10 +1138,10 @@ def removeStreamByPost():
 @app.route('/')
 @app.route('/home', methods=['GET'])
 @app.route('/index', methods=['GET'])
-@app.route('/dashboard', methods=['GET'])
+@app.route('/dashboard', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
-@closeVault
+#@closeVault
 @authRequired
 def dashboard():
     '''
@@ -1196,93 +1196,108 @@ def dashboard():
         newRelayStream.history.data = badForm.get('history', '')
         return newRelayStream
 
+    def acceptSubmittion(passwordForm):
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+        
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
-    global firstRun
-    theFirstRun = firstRun
-    firstRun = False
-    # streamOverviews = (
-    #     [model.miniOverview() for model in start.engine.models]
-    #     if start.engine is not None else [])  # StreamOverviews.demo()
-    streamOverviews = [stream for stream in start.streamDisplay]
-    holdingBalance = start.holdingBalance
-    stakeStatus = holdingBalance >= constants.stakeRequired or (
-        start.details.wallet.get('rewardaddress', None) not in [
-            None,
-            start.details.wallet.get('address'),
-            start.details.wallet.get('vaultaddress')]
-        if start.details is not None else 0)
-    return render_template('dashboard.html', **getResp({
-        'firstRun': theFirstRun,
-        'wallet': start.wallet,
-        # instead of this make chain single source of truth
-        # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
-        'stakeStatus': stakeStatus,
-        'miningMode': start.miningMode,
-        'miningDisplay': 'none',
-        'proxyDisplay': 'none',
-        'stakeRequired': constants.stakeRequired,
-        'holdingBalance': holdingBalance,
-        'streamOverviews': streamOverviews,
-        'engineVersion': start.engineVersion,
-        'configOverrides': config.get(),
-        'paused': start.paused,
-        'newRelayStream': present_stream_form(),
-        'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
-        'quote': getRandomQuote(),
-        'relayStreams':  # example stream +
-        ([
-            {
-                **stream.asMap(noneToBlank=True),
-                **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
-                **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
-                **{'cadenceStr': deduceCadenceString(stream.cadence)},
-                **{'offsetStr': deduceOffsetString(stream.offset)}}
-            for stream in start.relay.streams]
-         if start.relay is not None else []),
+    if request.method == 'POST':
+            acceptSubmittion(forms.VaultPassword(formdata=request.form))
+    if start.vault is not None and not start.vault.isEncrypted:
+        global firstRun
+        theFirstRun = firstRun
+        firstRun = False
+        # streamOverviews = (
+        #     [model.miniOverview() for model in start.engine.models]
+        #     if start.engine is not None else [])  # StreamOverviews.demo()
+        streamOverviews = [stream for stream in start.streamDisplay]
+        holdingBalance = start.holdingBalance
+        stakeStatus = holdingBalance >= constants.stakeRequired or (
+            start.details.wallet.get('rewardaddress', None) not in [
+                None,
+                start.details.wallet.get('address'),
+                start.details.wallet.get('vaultaddress')]
+            if start.details is not None else 0)        
+        return render_template('dashboard.html', **getResp({
+            'vaultOpened': True,
+            'firstRun': theFirstRun,
+            'wallet': start.wallet,
+            # instead of this make chain single source of truth
+            # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
+            'stakeStatus': stakeStatus,
+            'miningMode': start.miningMode,
+            'miningDisplay': 'none',
+            'proxyDisplay': 'none',
+            'stakeRequired': constants.stakeRequired,
+            'holdingBalance': holdingBalance,
+            'streamOverviews': streamOverviews,
+            'engineVersion': start.engineVersion,
+            'configOverrides': config.get(),
+            'paused': start.paused,
+            'newRelayStream': present_stream_form(),
+            'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
+            'quote': getRandomQuote(),
+            'relayStreams':  # example stream +
+            ([
+                {
+                    **stream.asMap(noneToBlank=True),
+                    **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+                    **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
+                    **{'cadenceStr': deduceCadenceString(stream.cadence)},
+                    **{'offsetStr': deduceOffsetString(stream.offset)}}
+                for stream in start.relay.streams]
+            if start.relay is not None else []),
 
-        'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'):
-    '''
-    called and given the response each time
-    the endpoint for this data stream is hit.
-    returns the value of the observation
-    as a string, integer or double.
-    if empty string is returned the observation
-    is not relayed to the network.
-    '''
-    if response.text != '':
-        return float(response.json().get('Close', -1.0))
-    return -1.0
-""",
-        'placeholderGetHistory': """class GetHistory(object):
-    '''
-    supplies the history of the data stream
-    one observation at a time (getNext, isDone)
-    or all at once (getAll)
-    '''
-    def __init__(self):
-        pass
-
-    def getNext(self):
+            'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'):
         '''
-        should return a value or a list of two values,
-        the first being the time in UTC as a string of the observation,
-        the second being the observation value
+        called and given the response each time
+        the endpoint for this data stream is hit.
+        returns the value of the observation
+        as a string, integer or double.
+        if empty string is returned the observation
+        is not relayed to the network.
         '''
-        return None
-
-    def isDone(self):
-        ''' returns true when there are no more observations to supply '''
-        return None
-
-    def getAll(self):
+        if response.text != '':
+            return float(response.json().get('Close', -1.0))
+        return -1.0
+        """,
+            'placeholderGetHistory': """class GetHistory(object):
         '''
-        if getAll returns a list or pandas DataFrame
-        then getNext is never called
+        supplies the history of the data stream
+        one observation at a time (getNext, isDone)
+        or all at once (getAll)
         '''
-        return None
+        def __init__(self):
+            pass
 
-""",
-    }))
+        def getNext(self):
+            '''
+            should return a value or a list of two values,
+            the first being the time in UTC as a string of the observation,
+            the second being the observation value
+            '''
+            return None
+
+        def isDone(self):
+            ''' returns true when there are no more observations to supply '''
+            return None
+
+        def getAll(self):
+            '''
+            if getAll returns a list or pandas DataFrame
+            then getNext is never called
+            '''
+            return None
+
+        """,
+        }))
+    else:
+        return render_template('dashboard.html', **getResp({
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
+
 
 
 @app.route('/fetch/wallet/stats/daily', methods=['GET'])
@@ -1557,7 +1572,7 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 @app.route('/wallet/<network>', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
-@closeVault
+#@closeVault
 @authRequired
 def wallet(network: str = 'main'):
 
