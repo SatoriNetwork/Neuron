@@ -803,7 +803,7 @@ def bridgeSatoriTransactionFromVault(network: str = 'main'):
         return redirect('/vault/main')
     if isinstance(result, str) and len(result) == 64:
         flash(str(result))
-        flash('Please wait. The bridge process can take up to 2 hours to complete.')
+        flash("Bridge process started successfully! We need to wait for some on-chain confirmations, it'll be done in an hour.")
     return redirect('/vault/main')
 
 
@@ -948,7 +948,7 @@ def bridgeSatoriTransactionUsing(
                     result.msg == 'send transaction requires fee.'
                 ):
                     logging.debug('broadcasting', color='magenta')
-                    return "ending early until tested"
+                    #return "ending early until tested"
                     r = start.server.broadcastBridgeSimplePartial(
                         tx=result.tx,
                         reportedFeeSats=result.reportedFeeSats,

@@ -64,7 +64,7 @@
                 </div>
               </div>
               <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
-                <div class="input-group input-group-outline" onclick="">
+                <div class="input-group input-group-outline" onclick="showWorking();">
                   {% if darkmode %}{{ bridgeSatoriTransaction.bridgeSubmit(size=32, class_="tight form-control dark-colors", onclick="if(validateBridgeJs() && confirmationBridge()) showWorking();") }}
                   {% else %}{{ bridgeSatoriTransaction.bridgeSubmit(size=32, class_="tight form-control", onclick="if(validateBridgeJs() && confirmationBridge()) showWorking();") }}
                   {% endif %}
