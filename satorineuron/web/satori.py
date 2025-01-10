@@ -1133,10 +1133,13 @@ def removeStreamByPost():
 ###############################################################################
 ## Routes - dashboard #########################################################
 ###############################################################################
-@app.route('logout', methods=['POST'])
+@app.route('/logout', methods=['POST'])
 def logOut():
     closeVault()
-    dashboard()
+    return render_template('dashboard.html', **getResp({
+        'vaultOpened': False,
+        'vaultPasswordForm': presentVaultPasswordForm(),
+    }))
 
 @app.route('/')
 @app.route('/home', methods=['GET'])
