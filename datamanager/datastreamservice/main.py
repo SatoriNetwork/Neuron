@@ -5,7 +5,7 @@ import os
 import pathlib
 import sqlite3
 import pandas as pd
-from typing import Dict, Any, Optional, Union,Tuple
+from typing import Dict, Any, Optional, Union, Tuple, Set
 import sys
 from io import StringIO
 from satorilib.logging import INFO, setup, debug, info, warning, error
@@ -37,6 +37,7 @@ class DataPeer:
         self.port = port
         self.server = None
         self.connected_peers: Dict[Tuple[str, int], websockets.WebSocketServerProtocol] = {}
+        # self.connected_peers: Set = set()
         self.db = SqliteDatabase(db_path, db_name)
         self.db.importFromDataFolder() # can be disabled if new rows are added to the Database
 
@@ -56,6 +57,31 @@ class DataPeer:
         except Exception as e:
             print(f"Failed to connect to peer at {uri}: {e}")
             return False
+        
+    async def send_message_to_client(self, peer_addr, message):
+        """
+        Send a message to a specific connected client
+        
+        Args:
+            peer_addr: The address of the client to send the message to
+            message: The message to send (will be converted to JSON)
+        
+        Returns:
+            bool: True if message was sent successfully, False if client not found
+        """
+        if peer_addr in self.connected_peers:
+            websocket = self.connected_peers[peer_addr]
+            try:
+                await websocket.send(json.dumps({
+                    "status": "message",
+                    "data": message
+                }))
+                return True
+            except websockets.exceptions.ConnectionClosed:
+                # Clean up the disconnected client
+                del self.connected_peers[peer_addr]
+                return False
+        return False
 
     async def handle_connection(self, websocket: websockets.WebSocketServerProtocol, path: str):
         """Handle incoming connections and messages"""
@@ -69,6 +95,9 @@ class DataPeer:
                 try:
                     response = await self.handleRequest(websocket, message)
                     await websocket.send(json.dumps(response))
+                    await asyncio.sleep(10)
+                    tst_msg = "krishna"
+                    await self.connected_peers[peer_addr].send(json.dumps(tst_msg))
                 except json.JSONDecodeError:
                     await websocket.send(json.dumps({
                         "status": "error",
