@@ -59,6 +59,9 @@
             <i id="connectionP2p" class="fa fa-circle" style="color: maroon;"></i>
           </a>-->
         </li>
+        <li class="nav-item pe-2 d-flex align-items-center">
+          <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Satori: {{ wallet.balance.amount }}</span>
+        </li>
         <li class="nav-item dropdown pe-2 d-flex align-items-center">
           <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonPower" data-bs-toggle="dropdown" aria-expanded="false">
             <!--<i class="fa fa-play cursor-pointer"></i>-->
@@ -151,7 +154,7 @@
           </ul>
         </li>
         {% endif %}
-        <li class="nav-item dropdown pe-2 d-flex align-items-center">
+        <li class="nav-item pe-2 d-flex align-items-center">
           <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonBackup" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">file_download</i>
             <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Backup</span>
@@ -182,7 +185,7 @@
             </li>
           </ul>
         </li>
-        <li>
+        <li class="nav-item pe-2 d-flex align-items-center">
           <a href="/logout" class="nav-link text-body p-0" id="logoutButton" aria-expanded="false">
             <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">logout</i>
             <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem; padding-right: 1rem;">Logout</span>
