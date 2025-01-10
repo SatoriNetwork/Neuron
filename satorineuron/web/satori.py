@@ -1134,8 +1134,8 @@ def removeStreamByPost():
 ## Routes - dashboard #########################################################
 ###############################################################################
 @app.route('/logout', methods=['POST'])
+@closeVault
 def logOut():
-    closeVault()
     return render_template('dashboard.html', **getResp({
         'vaultOpened': False,
         'vaultPasswordForm': presentVaultPasswordForm(),
