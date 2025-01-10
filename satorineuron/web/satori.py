@@ -1221,6 +1221,7 @@ def dashboard():
             if start.details is not None else 0)        
         return render_template('dashboard.html', **getResp({
             'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm(),
             'firstRun': theFirstRun,
             'wallet': start.wallet,
             # instead of this make chain single source of truth
