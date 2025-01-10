@@ -132,6 +132,15 @@
         <canvas id="observationsGraph"></canvas>
       </div>
 
+      <select name="Intervals" id="ZoomValue" onchange="ReRenderGraph()">
+        <option value="10">10 Minute</option>
+        <option value="60" selected>1 Hour </option>
+        <option value="1440">1 Day</option>
+        <option value="10080">1 Week</option>
+        <option value="40320">1 Month</option>
+
+    </select>
+      </div>
       <div id="observation-table" style="display: none; overflow-y: scroll; height: calc(100% - 350px);">
         <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
           <thead>
@@ -684,11 +693,17 @@
         const msInTenMinutes = 10 * 60 * 1000;
         return new Date(Math.round(new Date(date).getTime() / msInTenMinutes) * msInTenMinutes);
     };
-
+    ZoomController = (date) => {
+      Zoom = document.getElementById("ZoomValue").value;
+      console.log(Zoom)
+      const msInOneMinute = 10 * 60 * 100 * Zoom;
+      console.log(Zoom.value)
+      return new Date(Math.round(new Date(date).getTime() / msInOneMinute) * msInOneMinute);
+  };
     // Process observations to group by 10-minute intervals
     const intervalsMap = new Map();
     parsedObservations.forEach((obs) => {
-        const roundedTime = roundToTenMinutes(obs.ts).toISOString();
+        const roundedTime = ZoomController(obs.ts).toISOString();
         if (!intervalsMap.has(roundedTime)) {
             intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
         }
@@ -712,9 +727,10 @@
     renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
 
   }
-
+  var mostRecentStreamId;
   // Show Observations Modal with observations list and graph for value vs time
   function showObservations(streamId) {
+    mostRecentStreamId = streamId;
     const observationsBody = document.getElementById('observationsBody');
     const graphContainer = document.getElementById('observationsGraphContainer');
     const graphCanvas = document.getElementById('observationsGraph');
@@ -762,7 +778,7 @@
           observationTable.style.display = 'block';
           observationTable.style.height = "calc(100% - 350px)";
           observationTable.style.overflowY = "scroll";
-
+          
           // Render a graph
           parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
           showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue);
@@ -789,6 +805,10 @@
       updatePaginationButtons(filteredStreams.length);
       showNotification("Failed to load observations", true);
     });
+  }
+
+  function ReRenderGraph(){
+    showObservations(mostRecentStreamId)
   }
 
   // Close Modal
