@@ -12,7 +12,7 @@
             </span>
           </div>
           <div class="col-xl-10 col-sm-10 mb-xl-4 mb-4">
-            <form action="/wallet/{{network}}" method="POST">
+            <form action="/vote" method="POST">
               {{ vaultPasswordForm.hidden_tag() }}
               {{ vaultPasswordForm.csrf_token }}
               <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
@@ -26,6 +26,20 @@
                       onkeypress="checkEnter(event);") }}
                 </div>
               </div>
+              {% if wallet is none %}
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
+                <div class="input-group input-group-outline">
+                  {{ vaultPasswordForm.password(
+                      size=256,
+                      style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
+                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
+                      id="repeatPassword",
+                      placeholder="repeat password",
+                      autofocus=True,
+                      onkeypress="checkEnter(event);") }}
+                </div>
+              </div>
+              {% endif %}
               <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px; display:{{'block' if wallet is none else 'none'}};">
                 <div class="input-group input-group-outline">
                   {{ vaultPasswordForm.submit(
