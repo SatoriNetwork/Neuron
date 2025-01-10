@@ -60,7 +60,7 @@
           </a>-->
         </li>
         <li class="nav-item pe-2 d-flex align-items-center">
-          <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Satori: 0</span>
+          <span id="getSatori" style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;"></span>
         </li>
         <li class="nav-item dropdown pe-2 d-flex align-items-center">
           <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonPower" data-bs-toggle="dropdown" aria-expanded="false">
@@ -417,5 +417,18 @@
       }).catch(error => console.error('Error:', error));
     }
 </script>
+<script>
+  window.onload = function() {
+    document.getElementById("getSatori").innerHTML = getSatori();
+  }
 
+  function getSatori(){
+    try{
+      return "Satori: " + wallet.balance.amount
+    }
+    catch (TypeError) {
+      return "Satori: 0";
+    }
+  }
+</script>
     <!-- End Navbar -->
