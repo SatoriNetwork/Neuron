@@ -131,29 +131,29 @@
       <div id="observationsGraphContainer" style="display: none; height: 300px; margin-bottom: 20px;">
         <canvas id="observationsGraph"></canvas>
       </div>
-
-      <select name="Intervals" id="ZoomValue" onchange="ReRenderGraph()">
-        <option value="10">10 Minute</option>
-        <option value="60" selected>1 Hour </option>
-        <option value="1440">1 Day</option>
-        <option value="10080">1 Week</option>
-        <option value="40320">1 Month</option>
-
-    </select>
+      <div  style="width:35% padding:5px">
+        <select class="d-flex flex-row gap-2 btn btn-outline-dark" xname="Intervals" id="ZoomValue" onchange="ReRenderGraph()">
+          <option value="10" selected>10 Minute</option>
+          <option value="60" selected>1 Hour </option>
+          <option value="1440">1 Day</option>
+          <option value="10080">1 Week</option>
+          <option value="40320">1 Month</option>
+        </select>
       </div>
-      <div id="observation-table" style="display: none; overflow-y: scroll; height: calc(100% - 350px);">
-        <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-          <thead>
-            <tr>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
-            </tr>
-          </thead>
-          <tbody id="observationsBody">
-            <!-- Observations will be populated here -->
-          </tbody>
-        </table>
+        <div id="observation-table" style="display: none; overflow-y: scroll; height: calc(100% - 350px);">
+          <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
+                <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
+                <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
+              </tr>
+            </thead>
+            <tbody id="observationsBody">
+              <!-- Observations will be populated here -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
