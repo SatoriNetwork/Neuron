@@ -96,7 +96,10 @@ class DataPeer:
                     response = await self.handleRequest(websocket, message)
                     await websocket.send(json.dumps(response))
                     await asyncio.sleep(10)
-                    tst_msg = "krishna"
+                    tst_msg = {
+                        "status": "success",
+                        "data": "Message from external Putty"
+                    }
                     await self.connected_peers[peer_addr].send(json.dumps(tst_msg))
                 except json.JSONDecodeError:
                     await websocket.send(json.dumps({
