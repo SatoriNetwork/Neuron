@@ -1,0 +1,84 @@
+{% block content %}
+<div class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="z-index: 9999 !important; left:0px; background: {% if darkmode %}#212529 !important;{% else %}#f0f2f5 !important;{% endif %} display: {% if vaultOpened %}none{% else %}block{% endif %};">
+  <div class="container-for-center vertical-center" style="padding-left: 0px;">
+    <div class="tight">
+      <div class="row mb-4">
+        <center>
+          <div class="col-xl-10 col-sm-10 mb-xl-4 mb-4">
+            <form action="/vote" method="POST">
+              {{ vaultPasswordForm.hidden_tag() }}
+              {{ vaultPasswordForm.csrf_token }}
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
+                <div class="input-group input-group-outline">
+                  {{ vaultPasswordForm.password(
+                      size=256,
+                      style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
+                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
+                      placeholder="password" if wallet is none else "",
+                      autofocus=True,
+                      onkeypress="checkEnter(event);") }}
+                </div>
+              </div>
+              {% if wallet is none %}
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
+                <div class="input-group input-group-outline">
+                  {{ vaultPasswordForm.password(
+                      size=256,
+                      style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
+                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
+                      id="repeatPassword",
+                      placeholder="repeat password",
+                      autofocus=True,
+                      onkeypress="checkEnter(event);") }}
+                </div>
+              </div>
+              {% endif %}
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px; display:{{'block' if wallet is none else 'none'}};">
+                <div class="input-group input-group-outline">
+                  {{ vaultPasswordForm.submit(
+                      size=32,
+                      style_="display:block" if wallet is none else "display:none;",
+                      value="Create Vault",
+                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
+                      onclick="if(validateVaultPassword()) showWorking();") }}
+                </div>
+              </div>
+            </form>
+            <!--<input
+            style="text-align: center;"
+            class="tight form-control input-tall code-placeholder {% if darkmode %}dark-colors{% endif %}",
+            type="password" id="passwordInput" placeholder="Enter your password" />-->
+          </div>
+        </center>
+      </div>
+    </div>
+  </div>
+</div>
+<div style="z-index: 9998 !important; left:0px; display: {% if vaultOpened %}none{% else %}block{% endif %}; height:1000px; width:100%;">
+<script>
+  window.onload = function() {
+    document.getElementById("password").focus();
+  };
+  function checkEnter(event){
+    if (isFocused(document.querySelector('#repeatPassword'))) {
+      if (event.key === "Enter" || event.keyCode === 13) {
+        if(validateVaultPassword()) {
+          showWorking();
+          console.log('success');
+          return true;
+        }
+        console.log('fail');
+        return false;
+      }
+      return event.keyCode != 13;
+    }
+  }
+  function validateVaultPassword() {
+    let repeat = document.getElementById("repeatPassword");
+    if (repeat === null ) {
+      return document.getElementById("password").value.length > 7;
+    }
+    return document.getElementById("password").value.length > 7 && repeat.value === document.getElementById("password").value;
+  }
+</script>
+{% endblock %}

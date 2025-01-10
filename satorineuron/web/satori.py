@@ -2064,23 +2064,30 @@ def vote():
         # }]
 
     def acceptSubmittion(passwordForm):
-        _vault = start.openVault(password=passwordForm.password.data)
-        # if rvn is None and not rvn.isEncrypted:
-        #    flash('unable to open vault')
-
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+        
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
 
-    myWallet = start.getWallet()
-    return render_template('vote.html', **getResp({
-        'title': 'Vote',
-        'network': start.network,
-        'vaultPasswordForm': presentVaultPasswordForm(),
-        'vaultOpened': False,
-        'wallet': myWallet,
-        'vault': start.vault,
-        'streams': getStreams(myWallet),
-        **getVotes(myWallet)}))
+    if start.vault is not None and not start.vault.isEncrypted:
+        myWallet = start.getWallet()
+        return render_template('vote.html', **getResp({
+            'title': 'Vote',
+            'network': start.network,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'vaultOpened': True,
+            'wallet': myWallet,
+            'vault': start.vault,
+            'streams': getStreams(myWallet),
+            **getVotes(myWallet)}))
+    else:
+        return render_template('vote.html', **getResp({
+            'title': 'Vote',
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
 
 @app.route('/pool/participants', methods=['GET', 'POST'])
 @userInteracted
@@ -2103,15 +2110,33 @@ def streams():
     # if searchText is not None:
     #     streamsData = getStreams(searchText)
     #     return jsonify({'streams': streamsData})
-    oracleStreams = start.getAllOracleStreams(fetch=True)
-    return render_template('streams.html', **getResp({
-        'title': 'Streams',
-        'network': start.network,
-        'vault': start.vault,
-        'darkmode': darkmode,
-        'streams': oracleStreams[0:100],
-        'totalStreams': len(oracleStreams),
-        'allStreams': oracleStreams}))
+    
+    def acceptSubmittion(passwordForm):
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+        
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+
+    if start.vault is not None and not start.vault.isEncrypted:
+        oracleStreams = start.getAllOracleStreams(fetch=True)
+        return render_template('streams.html', **getResp({
+            'title': 'Streams',
+            'network': start.network,
+            'vault': start.vault,
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'darkmode': darkmode,
+            'streams': oracleStreams[0:100],
+            'totalStreams': len(oracleStreams),
+            'allStreams': oracleStreams}))
+    else:
+        return render_template('streams.html', **getResp({
+            'title': 'Streams',
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
 
 
 @app.route('/vote_on/sanction/incremental', methods=['POST'])
@@ -2146,7 +2171,26 @@ def getObservations():
 @vaultRequired
 @authRequired
 def proposals():
-    return render_template('proposals.html', **getResp({'title': 'Proposals'}))
+    def acceptSubmittion(passwordForm):
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+        
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+
+    if start.vault is not None and not start.vault.isEncrypted:
+        return render_template('proposals.html', **getResp({
+            'title': 'Proposals',
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            }))
+    else:
+        return render_template('proposals.html', **getResp({
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'title': 'Proposals'
+        }))
 
 
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])
