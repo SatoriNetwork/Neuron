@@ -29,6 +29,45 @@ from sqlite import SqliteDatabase
 # like socketify or others
 
 
+class Message:
+
+    def __init__(self, message: str,):
+        pass 
+
+    @property
+    def endpoint(self):
+        return self.message.get('endpoint')
+
+    #...
+
+        
+    
+
+class ConnectedPeer:
+
+    def __init__(
+        self,
+        hostPort: Tuple[str, int],
+        websocket: websockets.WebSocketServerProtocol,
+        subscriptions: Union[list, None] = None,
+        publications: Union[list, None] = None,
+    ):
+        self.hostPort = hostPort
+        self.websocket = websocket
+        self.subscriptions = subscriptions or []
+        self.publications = publications or []
+    
+    @property
+    def host(self):
+        return self.hostPort[0]
+
+    @property
+    def port(self):
+        return self.hostPort[1]
+        
+    def add_subcription(self, table_uuid: str):
+        self.subscriptions.append(table_uuid)
+
 
 class DataPeer:
     def __init__(self, host: str, port: int, db_path: str = "../../data", db_name: str = "data.db"):
@@ -36,7 +75,10 @@ class DataPeer:
         self.host = host
         self.port = port
         self.server = None
-        self.connected_peers: Dict[Tuple[str, int], websockets.WebSocketServerProtocol] = {}
+        self.connected_peers: Dict[Tuple[str, int], ConnectedPeer] = {} 
+        # an optimization
+        #self.subscriptions: Dict[int, ConnectedPeer] = {}
+
         # self.connected_peers: Set = set()
         self.db = SqliteDatabase(db_path, db_name)
         self.db.importFromDataFolder() # can be disabled if new rows are added to the Database
@@ -51,14 +93,14 @@ class DataPeer:
         uri = f"ws://{peer_host}:{peer_port}"
         try:
             websocket = await websockets.connect(uri)
-            self.connected_peers[(peer_host, peer_port)] = websocket
+            self.connected_peers[(peer_host, peer_port)] = ConnectedPeer((peer_host, peer_port), websocket)
             print(f"Connected to peer at {uri}")
             return True
         except Exception as e:
             print(f"Failed to connect to peer at {uri}: {e}")
             return False
         
-    async def send_message_to_client(self, peer_addr, message):
+    async def send_message_to_client(self, peer_addr:Tuple[str, int], message: str):
         """
         Send a message to a specific connected client
         
@@ -70,7 +112,7 @@ class DataPeer:
             bool: True if message was sent successfully, False if client not found
         """
         if peer_addr in self.connected_peers:
-            websocket = self.connected_peers[peer_addr]
+            websocket = self.connected_peers[peer_addr].websocket
             try:
                 await websocket.send(json.dumps({
                     "status": "message",
@@ -85,9 +127,9 @@ class DataPeer:
 
     async def handle_connection(self, websocket: websockets.WebSocketServerProtocol, msg: str = "No Updates"):
         """Handle incoming connections and messages"""
-        peer_addr = websocket.remote_address
+        peer_addr:Tuple[str, int] = websocket.remote_address
         print(f"New connection from {peer_addr}")
-        self.connected_peers[peer_addr] = websocket
+        self.connected_peers[peer_addr] = ConnectedPeer(peer_addr, websocket)
         print("Connected peers:", self.connected_peers)
         
         try:
@@ -98,8 +140,9 @@ class DataPeer:
             async for message in websocket:
                 debug(f"Received request: {message}", print=True)
                 try:
-                    response = await self.handleRequest(websocket, message)
-                    await self.connected_peers[peer_addr].send(json.dumps(response))
+                    response = await self.handleRequest(peer_addr, websocket, message)
+                    await self.connected_peers[peer_addr].websocket.send(json.dumps(response))
+                    await self.notifySubscribers(self, peer_addr, message)
                     # await websocket.send(json.dumps(response))
                     debug("Response sent", print=True)
                 except json.JSONDecodeError:
@@ -116,8 +159,8 @@ class DataPeer:
             print(f"Connection closed with {peer_addr}")
         finally:
             # Remove disconnected peer
-            for key, ws in list(self.connected_peers.items()):
-                if ws == websocket:
+            for key, cp in list(self.connected_peers.items()):
+                if cp.websocket == websocket:
                     del self.connected_peers[key]
 
     # async def send_additional_messages(self, peer_addr):
@@ -129,9 +172,32 @@ class DataPeer:
     #                 "status": "success",
     #                 "data": "Message from external Putty"
     #             }
-    #             await self.connected_peers[peer_addr].send(json.dumps(tst_msg))
+    #             await self.connected_peers[peer_addr].websocket.send(json.dumps(tst_msg))
     #     except Exception as e:
     #         print(f"Error sending additional messages: {e}")
+
+    async def notifySubscribers(self, peer_addr: Tuple[str, int], msg: str):
+        '''
+        is this message something anyone has subscribed to?
+        if yes, await self.connected_peers[subscribig_peer].websocket.send(message)
+
+        xc -> ys -> zc
+        REST model
+        client - can push to server any time
+        server - can only respond to clinets, can handle lots of clients
+        
+        peer - can push to peers at any time and receive from peer at any timeserver and server can push to client
+        
+
+        our context:
+        client - no  endpoints
+        
+
+        '''
+        # finish
+        #for peer in self.connected_peers.values():
+        #    if msg.params.table_uuid in peer.subscriptions:
+        #        await self.connected_peers[peer].websocket.send(msg.message)
 
     async def subscriptionUpdates(self, peer_addr, msg):
         try:
@@ -140,7 +206,7 @@ class DataPeer:
                     "status": "success",
                     "data": msg
                 }
-                await self.connected_peers[peer_addr].send(json.dumps(tst_msg))
+                await self.connected_peers[peer_addr].websocket.send(json.dumps(tst_msg))
         except Exception as e:
             print(f"Error sending additional messages: {e}")
 
@@ -152,11 +218,15 @@ class DataPeer:
             if not success:
                 return {"status": "error", "message": "Failed to connect to peer"}
 
-        websocket = self.connected_peers[peer_addr]
+        websocket = self.connected_peers[peer_addr].websocket
         try:
             await websocket.send(json.dumps(request))
             response = await websocket.recv()
             result = json.loads(response)
+
+            if result['status'] == 'ping':
+                print("Pinged Successfully")
+                return
 
             # Handle database operations for successful responses
             if result["status"] == "success" and "data" in result:
@@ -183,8 +253,8 @@ class DataPeer:
     async def disconnect(self):
         """Disconnect from all peers and stop the server"""
         # Close all peer connections
-        for websocket in self.connected_peers.values():
-            await websocket.close()
+        for connectedPeer in self.connected_peers.values():
+            await connectedPeer.websocket.close()
         self.connected_peers.clear()
         
         # Stop the server if it's running
@@ -235,24 +305,43 @@ class DataPeer:
         except Exception as e:
             error(f"Error getting last record before timestamp for stream {table_uuid}: {e}")
 
-    async def handleRequest(self, websocket: websockets.WebSocketServerProtocol, message: str) -> Dict[str, Any]:
-        """Process incoming requests"""
+    async def handleRequest(self, peer_addr:Tuple[str, int], websocket: websockets.WebSocketServerProtocol, message: str) -> Dict[str, Any]:
+        """
+        Process incoming requests
+        json: {
+            "endpoint": "get stream data",
+            "magic": "23dc3133-5b3a-5b27-803e-70a07cf3c4f7"
+            "status": "success", # response
+            "params": {
+                "table_uuid": "23dc3133-5b3a-5b27-803e-70a07cf3c4f7",
+            }
+            "data": <any>
+        }
+        """
         request: Dict[str, Any] = json.loads(message)
         debug(request, print=True)
         
-        if 'type' == 'ping':
+        request_type = request.get('type')
+
+
+        if request_type == 'subscribe':
+            self.connected_peers[peer_addr].add_subcription(request.get('params').get('table_uuid'))
+            # self.subscriptions[request.get('params').get('table_uuid')] = self.subscriptions.get(request.get('params').get('table_uuid'), []) + [self.connected_peers[peer_addr]]
+            return {
+                "status": "subscribed",
+                "message": "your good?"
+            }
+        if request_type == 'ping':
             return {
                 "status": "Pinging",
                 "message": "Any updates?"
             }
-        elif 'table_uuid' not in request and 'type' != 'ping':
+        elif 'table_uuid' not in request and request_type != 'ping':
             return {
                 "status": "error",
                 "message": "Missing table_uuid parameter"
             }
-            
         table_uuid = request['table_uuid']
-        request_type = request.get('type')
         
         if request_type == 'stream_data':
             df = await self._getStreamData(table_uuid)
