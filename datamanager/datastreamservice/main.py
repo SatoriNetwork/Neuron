@@ -89,18 +89,17 @@ class DataPeer:
         print(f"New connection from {peer_addr}")
         self.connected_peers[peer_addr] = websocket
         print("Connected peers:", self.connected_peers)
+        
         try:
+            # Start a separate task for sending additional messages
+            asyncio.create_task(self.send_additional_messages(peer_addr))
+            
+            # Handle incoming messages
             async for message in websocket:
                 debug(f"Received request: {message}", print=True)
                 try:
                     response = await self.handleRequest(websocket, message)
                     await websocket.send(json.dumps(response))
-                    await asyncio.sleep(10)
-                    tst_msg = {
-                        "status": "success",
-                        "data": "Message from external Putty"
-                    }
-                    await self.connected_peers[peer_addr].send(json.dumps(tst_msg))
                 except json.JSONDecodeError:
                     await websocket.send(json.dumps({
                         "status": "error",
@@ -118,6 +117,19 @@ class DataPeer:
             for key, ws in list(self.connected_peers.items()):
                 if ws == websocket:
                     del self.connected_peers[key]
+
+    async def send_additional_messages(self, peer_addr):
+        """Send additional messages to the client"""
+        try:
+            while peer_addr in self.connected_peers:
+                await asyncio.sleep(10)
+                tst_msg = {
+                    "status": "success",
+                    "data": "Message from external Putty"
+                }
+                await self.connected_peers[peer_addr].send(json.dumps(tst_msg))
+        except Exception as e:
+            print(f"Error sending additional messages: {e}")
 
     async def send_request(self, peer_addr: Tuple[str, int], request: Dict[str, Any]) -> Dict[str, Any]:
         """Send a request to a specific peer"""
@@ -388,7 +400,7 @@ class DataPeer:
 async def main():
     # Start server
     # Create two peers
-    peer1 = DataPeer("localhost", 8001)
+    peer1 = DataPeer("0.0.0.0", 8080)
     await peer1.start_server()
     await asyncio.Future()  # run forever
 
