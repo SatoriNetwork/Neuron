@@ -792,7 +792,11 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
 @userInteracted
 @authRequired
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
-    # only support main network for this
+    if start.vault is not None and not start.vault.isEncrypted:
+        from satorilib.wallet.ethereum.wallet import EthereumWallet
+        account = EthereumWallet.generateAccount(start.vault._entropy)
+        setEthAddressResult = start.server.setEthAddress(account.address)
+        logging.debug(f'setEthAddressResult: {setEthAddressResult}', color='blue')
     greenlight, explain = start.ableToBridge()
     logging.debug(f'greenlight: {greenlight}', explain,  color='magenta')
     if greenlight:
@@ -1737,11 +1741,7 @@ def vault():
         # start.workingUpdates.put('downloading balance...')
         from satorilib.wallet.ethereum.wallet import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
-        # if start.server.betaStatus()[1].get('value') == 1:
-        #    claimResult = start.server.betaClaim(account.address)[1]
-        #    logging.info(
-        #        'beta NFT not yet claimed. Claiming Beta NFT:',
-        #        claimResult.get('description'))
+        #claimResult = start.server.setEthAddress(account.address)
         myWallet = start.getWallet()
         try:
             alias = myWallet.alias or start.server.getWalletAlias()
