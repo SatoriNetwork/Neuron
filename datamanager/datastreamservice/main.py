@@ -275,6 +275,7 @@ class DataPeer:
 
         ws = self.connectedPeers[peerAddr].websocket
         try:
+            request_data = request.to_dict() if isinstance(request, Message) else request
             await ws.send(json.dumps(request))
             response = await ws.recv()
             result = json.loads(response)
@@ -287,11 +288,11 @@ class DataPeer:
             if result["status"] == "success" and "data" in result:
                 try:
                     df = pd.read_json(StringIO(result["data"]), orient='split')
-                    table_uuid = request.get('table_uuid')
-                    request_type = request.get('type', '')
+                    table_uuid = request.table_uuid if isinstance(request, Message) else request.get('params', {}).get('table_uuid')
+                    endpoint = request.endpoint if isinstance(request, Message) else request.get('endpoint')
 
                     # Update local database
-                    if request_type in ["last_record_before", "date_in_range"]:
+                    if endpoint in ["record-at-or-before", "data-in-range"]:
                         self.db.deleteTable(table_uuid)
                         self.db.createTable(table_uuid)
                     self.db._dataframeToDatabase(table_uuid, df)
@@ -396,9 +397,9 @@ class DataPeer:
 
         if request.endpoint == 'initiate-connection':
             return {"status": "Success", "message": "Connection"}
-        elif 'table_uuid' not in request and request.endpoint != 'ping':
+        elif request.table_uuid is None and request.endpoint not in ['ping', 'initiate-connection', 'subscribe']:
             return {"status": "error", "message": "Missing table_uuid parameter"}
-        table_uuid = request['table_uuid']
+        table_uuid = request.table_uuid
 
         if request.endpoint == 'stream_data':
             df = await self._getStreamData(table_uuid)
@@ -409,9 +410,9 @@ class DataPeer:
                 }
             return {"status": "success", "data": df.to_json(orient='split')}
 
-        elif request.endpoint == 'date_in_range':
-            from_date = request.get('from_date')
-            to_date = request.get('to_date')
+        elif request.endpoint == 'data-in-range':
+            from_date = request.fromDate
+            to_date = request.toDate
             if not from_date or not to_date:
                 return {
                     "status": "error",
@@ -429,9 +430,9 @@ class DataPeer:
                 df['ts'] = df['ts'].astype(str)
             return {"status": "success", "data": df.to_json(orient='split')}
 
-        elif request.endpoint == 'last_record_before':
+        elif request.endpoint == 'record-at-or-before':
             try:
-                data_json = request.get('data')
+                data_json = request.data
                 if data_json is None:
                     return {"status": "error", "message": "No timestamp data provided"}
                 timestamp_df = pd.read_json(StringIO(data_json), orient='split')
@@ -454,14 +455,14 @@ class DataPeer:
 
         elif request.endpoint == 'insert':
             try:
-                data_json = request.get('data')
+                data_json = request.data
                 if data_json is None:
                     return {
                         "status": "error",
                         "message": "No data provided for insert operation",
                     }
                 data = pd.read_json(StringIO(data_json), orient='split')
-                replace = request.get('replace', False)
+                replace = request.replace
                 if replace:
                     self.db.deleteTable(table_uuid)
                     self.db.createTable(table_uuid)
@@ -481,7 +482,7 @@ class DataPeer:
 
         elif request.endpoint == 'delete':
             try:
-                data_json = request.get('data')
+                data_json = request.data
                 if data_json is not None:
                     data = pd.read_json(StringIO(data_json), orient='split')
                     timestamps = data['ts'].tolist()
@@ -555,6 +556,8 @@ class DataPeer:
         magicStr: str = str(
             generateUUID({'endpoint': endpoint, 'currentTime': datetime.now()})
         )
+        
+        
         if endpoint == "initiate-connection":
             request = Message({"endpoint": endpoint, "magic": magicStr})
         elif endpoint == "data-in-range" and data is not None:
@@ -591,6 +594,7 @@ class DataPeer:
                 "data": data,
             }
         )
+
         return await self.sendPeer(peer_addr, request.to_dict())
 
     @staticmethod

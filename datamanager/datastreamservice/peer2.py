@@ -15,11 +15,12 @@ async def main():
 
     # while True:
         # await peer2.pingForUpdates()
-    response = await peer2.sendRequest(
-        ("localhost", 8080),
-        endpoint = "ping"
-    )
-    print(response)
+    # response = await peer2.sendRequest(
+    #     ("localhost", 8080),
+    #     table_uuid=table_uuid,
+    #     endpoint="stream_data"
+    # )
+    # print(response)
     # await asyncio.sleep(10)
     # print("Stream data response:", response)
 
@@ -30,12 +31,12 @@ async def main():
     #     'value': [124.45],
     #     'hash': ['abc123def456']
     # })
-    # response = await peer2.request_stream_data(
-    #     ("localhost", 8001),
+    # response = await peer2.sendRequest(
+    #     ("localhost", 8080),
     #     table_uuid,
-    #     request_type="insert",
+    #     endpoint="insert",
     #     data=new_data,
-    #     replace=False
+    #     replace=True
     # )
     # print("Insert response:", response)
 
@@ -44,20 +45,20 @@ async def main():
     # records_to_delete = pd.DataFrame({
     #     'ts': ['2025-01-04 15:27:35']
     # })
-    # response = await peer2.request_stream_data(
-    #     ("localhost", 8001),
+    # response = await peer2.sendRequest(
+    #     ("localhost", 8080),
     #     table_uuid,
-    #     request_type="delete",
+    #     endpoint="delete",
     #     data=records_to_delete
     # )
     # print("Delete specific records response:", response)
 
     # # Example 4: Delete entire table
     # print("\n=== Example 4: Delete Entire Table ===")
-    # response = await peer2.request_stream_data(
-    #     ("localhost", 8001),
+    # response = await peer2.sendRequest(
+    #     ("localhost", 8080),
     #     table_uuid,
-    #     request_type="delete"
+    #     endpoint="delete"
     # )
     # print("Delete table response:", response)
 
@@ -67,10 +68,10 @@ async def main():
     #     'from_ts': ["2024-11-07 03:50:00.834062"],
     #     'to_ts': ["2024-11-20 16:00:00.912330"]
     # })
-    # response = await peer2.request_stream_data(
-    #     ("localhost", 8001),
+    # response = await peer2.sendRequest(
+    #     ("localhost", 8080),
     #     table_uuid,
-    #     request_type="date_in_range",
+    #     endpoint="data-in-range",
     #     data=records_to_fetch
     # )
     # print("Date range response:", response)
@@ -80,10 +81,10 @@ async def main():
     # timestamp_df = pd.DataFrame({
     #     'ts': ['2024-11-20 15:00:00.912330']
     # })
-    # response = await peer2.request_stream_data(
-    #     ("localhost", 8001),
+    # response = await peer2.sendRequest(
+    #     ("localhost", 8080),
     #     table_uuid,
-    #     request_type="last_record_before",
+    #     endpoint="record-at-or-before",
     #     data=timestamp_df
     # )
     # print("Last record before timestamp response:", response)
