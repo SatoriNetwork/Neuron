@@ -83,7 +83,7 @@ class DataPeer:
                 return False
         return False
 
-    async def handle_connection(self, websocket: websockets.WebSocketServerProtocol, path: str):
+    async def handle_connection(self, websocket: websockets.WebSocketServerProtocol, msg: str = "No Updates"):
         """Handle incoming connections and messages"""
         peer_addr = websocket.remote_address
         print(f"New connection from {peer_addr}")
@@ -92,14 +92,16 @@ class DataPeer:
         
         try:
             # Start a separate task for sending additional messages
-            asyncio.create_task(self.send_additional_messages(peer_addr))
+            asyncio.create_task(self.subscriptionUpdates(peer_addr, msg))
             
             # Handle incoming messages
             async for message in websocket:
                 debug(f"Received request: {message}", print=True)
                 try:
                     response = await self.handleRequest(websocket, message)
-                    await websocket.send(json.dumps(response))
+                    await self.connected_peers[peer_addr].send(json.dumps(response))
+                    # await websocket.send(json.dumps(response))
+                    debug("Response sent", print=True)
                 except json.JSONDecodeError:
                     await websocket.send(json.dumps({
                         "status": "error",
@@ -118,14 +120,25 @@ class DataPeer:
                 if ws == websocket:
                     del self.connected_peers[key]
 
-    async def send_additional_messages(self, peer_addr):
-        """Send additional messages to the client"""
+    # async def send_additional_messages(self, peer_addr):
+    #     """Send additional messages to the client"""
+    #     try:
+    #         while peer_addr in self.connected_peers:
+    #             await asyncio.sleep(10)
+    #             tst_msg = {
+    #                 "status": "success",
+    #                 "data": "Message from external Putty"
+    #             }
+    #             await self.connected_peers[peer_addr].send(json.dumps(tst_msg))
+    #     except Exception as e:
+    #         print(f"Error sending additional messages: {e}")
+
+    async def subscriptionUpdates(self, peer_addr, msg):
         try:
             while peer_addr in self.connected_peers:
-                await asyncio.sleep(10)
                 tst_msg = {
                     "status": "success",
-                    "data": "Message from external Putty"
+                    "data": msg
                 }
                 await self.connected_peers[peer_addr].send(json.dumps(tst_msg))
         except Exception as e:
@@ -227,7 +240,12 @@ class DataPeer:
         request: Dict[str, Any] = json.loads(message)
         debug(request, print=True)
         
-        if 'table_uuid' not in request:
+        if 'type' == 'ping':
+            return {
+                "status": "Pinging",
+                "message": "Any updates?"
+            }
+        elif 'table_uuid' not in request and 'type' != 'ping':
             return {
                 "status": "error",
                 "message": "Missing table_uuid parameter"
@@ -355,12 +373,17 @@ class DataPeer:
                 "message": f"Unknown request type: {request_type}"
             }
 
-    async def request_stream_data(self, peer_addr: Tuple[str, int], table_uuid: str, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False):
+    async def request_stream_data(self, peer_addr: Tuple[str, int], table_uuid: str = None, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False):
         """Request stream data from a specific peer"""
         request = {
             "type": request_type,
             "table_uuid": table_uuid
         }
+
+        if request_type == "ping":
+            request = {
+            "type": request_type,
+            }
 
         # Handle different request types
         if request_type == "date_in_range" and data is not None:

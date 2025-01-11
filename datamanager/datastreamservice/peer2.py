@@ -9,10 +9,21 @@ async def main():
     table_uuid = "23dc3133-5b3a-5b27-803e-70a07cf3c4f7"
     # Example 1: Get stream data
     # print("\n=== Example 1: Get Stream Data ===")
-    response = await peer2.request_stream_data(
-        ("localhost", 8001),
-        table_uuid
-    )
+    
+    ## if reqest available then request else keep pinging every 10 seconds
+
+
+    while True:
+        # await peer2.pingForUpdates()
+        await peer2.request_stream_data(
+            ("localhost", 8001),
+            request_type = "ping"
+        )
+        await asyncio.sleep(10)
+        await peer2.request_stream_data(
+            ("localhost", 8001),
+            table_uuid
+        )
     await asyncio.Future()
     # print("Stream data response:", response)
 
