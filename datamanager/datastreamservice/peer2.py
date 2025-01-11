@@ -15,16 +15,12 @@ async def main():
 
     while True:
         # await peer2.pingForUpdates()
-        await peer2.request_stream_data(
+        response = await peer2.request_stream_data(
             ("localhost", 8001),
             request_type = "ping"
         )
+        print(response)
         await asyncio.sleep(10)
-        await peer2.request_stream_data(
-            ("localhost", 8001),
-            table_uuid
-        )
-    await asyncio.Future()
     # print("Stream data response:", response)
 
     # # Example 2: Insert new data (merge)
