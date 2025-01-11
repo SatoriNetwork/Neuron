@@ -13,14 +13,14 @@ async def main():
     ## if reqest available then request else keep pinging every 10 seconds
 
 
-    while True:
+    # while True:
         # await peer2.pingForUpdates()
-        response = await peer2.request_stream_data(
-            ("localhost", 8001),
-            request_type = "ping"
-        )
-        print(response)
-        await asyncio.sleep(10)
+    response = await peer2.sendRequest(
+        ("localhost", 8080),
+        endpoint = "ping"
+    )
+    print(response)
+    # await asyncio.sleep(10)
     # print("Stream data response:", response)
 
     # # Example 2: Insert new data (merge)
