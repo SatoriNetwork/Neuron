@@ -2,10 +2,9 @@ import asyncio
 import websockets
 import json
 import os
-import pathlib
-import sqlite3
 import pandas as pd
 from typing import Dict, Any, Optional, Union, Tuple, Set
+from dataclasses import dataclass, asdict
 import sys
 from io import StringIO
 from satorilib.logging import INFO, setup, debug, info, warning, error
@@ -16,18 +15,77 @@ from sqlite import generateUUID
 
 
 class Message:
+    def __init__(self, message: dict):
+        """
+        Initialize Message object with a dictionary containing message data
+        """
+        self.message = message
 
-    def __init__(
-        self,
-        message: str,
-    ):
-        pass
+    def to_dict(self) -> dict:
+        """
+        Convert the Message instance back to a dictionary
+        """
+        return {
+            'endpoint': self.endpoint,
+            'magic': self.magic,
+            'status': self.status,
+            'params': {
+                'table_uuid': self.table_uuid,
+                'replace': self.replace,
+                'from_ts': self.fromDate,
+                'to_ts': self.toDate,
+            },
+            'data': self.data,
+        }
 
     @property
-    def endpoint(self):
+    def endpoint(self) -> str:
+        """Get the endpoint"""
         return self.message.get('endpoint')
 
-    # ...
+    @property
+    def magic(self) -> str:
+        """Get the magic UUID"""
+        return self.message.get('magic')
+
+    @property
+    def status(self) -> str:
+        """Get the status"""
+        return self.message.get('status')
+
+    @property
+    def params(self) -> dict:
+        """Get the params"""
+        return self.message.get('params', {})
+
+    @property
+    def table_uuid(self) -> str:
+        """Get the table_uuid from params"""
+        return self.params.get('table_uuid')
+
+    @property
+    def replace(self) -> str:
+        """Get the table_uuid from params"""
+        return self.params.get('replace')
+
+    @property
+    def fromDate(self) -> str:
+        """Get the table_uuid from params"""
+        return self.params.get('from_ts')
+
+    @property
+    def toDate(self) -> str:
+        """Get the table_uuid from params"""
+        return self.params.get('to_ts')
+
+    @property
+    def data(self) -> any:
+        """Get the data"""
+        return self.message.get('data')
+
+    def is_success(self) -> bool:
+        """Get the status"""
+        return self.status == 'success'
 
 
 class ConnectedPeer:
@@ -79,7 +137,7 @@ class DataPeer:
     async def start_server(self):
         """Start the WebSocket server"""
         self.server = await websockets.serve(
-            self.handle_connection, self.host, self.port
+            self.handleConnection, self.host, self.port
         )
         print(f"Server started on ws://{self.host}:{self.port}")
 
@@ -97,40 +155,15 @@ class DataPeer:
             error(f"Failed to connect to peer at {uri}: {e}")
             return False
 
-    async def send_message_to_client(self, peer_addr: Tuple[str, int], message: str):
-        """
-        Send a message to a specific connected client
-
-        Args:
-            peer_addr: The address of the client to send the message to
-            message: The message to send (will be converted to JSON)
-
-        Returns:
-            bool: True if message was sent successfully, False if client not found
-        """
-        if peer_addr in self.connectedPeers:
-            websocket = self.connectedPeers[peer_addr].websocket
-            try:
-                await websocket.send(json.dumps({"status": "message", "data": message}))
-                return True
-            except websockets.exceptions.ConnectionClosed:
-                # Clean up the disconnected client
-                del self.connectedPeers[peer_addr]
-                return False
-        return False
-
-    async def handle_connection(
-        self, websocket: websockets.WebSocketServerProtocol, msg: str = "No Updates"
-    ):
+    async def handleConnection(self, websocket: websockets.WebSocketServerProtocol):
         """Handle incoming connections and messages"""
         peer_addr: Tuple[str, int] = websocket.remote_address
-        print(f"New connection from {peer_addr}")
+        debug(f"New connection from {peer_addr}")
         self.connectedPeers[peer_addr] = ConnectedPeer(peer_addr, websocket)
-        print("Connected peers:", self.connectedPeers)
-
+        debug("Connected peers:", self.connectedPeers)
         try:
             # Start a separate task for sending additional messages
-            asyncio.create_task(self.subscriptionUpdates(peer_addr, msg))
+            # asyncio.create_task(self.subscriptionUpdates(peer_addr, msg))
 
             # Handle incoming messages
             async for message in websocket:
@@ -206,14 +239,12 @@ class DataPeer:
         try:
             while peer_addr in self.connectedPeers:
                 tst_msg = {"status": "success", "data": msg}
-                await self.connectedPeers[peer_addr].websocket.send(
-                    json.dumps(tst_msg)
-                )
+                await self.connectedPeers[peer_addr].websocket.send(json.dumps(tst_msg))
         except Exception as e:
             print(f"Error sending additional messages: {e}")
 
     async def sendPeer(
-        self, peerAddr: Tuple[str, int], request: Dict[str, Any]
+        self, peerAddr: Tuple[str, int], request: Message
     ) -> Dict[str, Any]:
         """Send a request to a specific peer"""
         # json: {
@@ -242,10 +273,10 @@ class DataPeer:
             if not success:
                 return {"status": "error", "message": "Failed to connect to peer"}
 
-        websocket = self.connectedPeers[peerAddr].websocket
+        ws = self.connectedPeers[peerAddr].websocket
         try:
-            await websocket.send(json.dumps(request))
-            response = await websocket.recv()
+            await ws.send(json.dumps(request))
+            response = await ws.recv()
             result = json.loads(response)
 
             if result['status'] == 'ping':
@@ -338,7 +369,7 @@ class DataPeer:
 
     async def handleRequest(
         self,
-        peer_addr: Tuple[str, int],
+        peerAddr: Tuple[str, int],
         websocket: websockets.WebSocketServerProtocol,
         message: str,
     ) -> Dict[str, Any]:
@@ -354,26 +385,22 @@ class DataPeer:
             "data": <any>
         }
         """
-        request: Dict[str, Any] = json.loads(message)
-        debug(request, print=True)
-
-        endpoint = request.get('endpoint')
-
+        request: Message = Message(json.loads(message))
         # todo
-        if endpoint == 'subscribe':
-            self.connectedPeers[peer_addr].add_subcription(
-                request.get('params').get('table_uuid')
+        if request.endpoint == 'subscribe':
+            self.connectedPeers[peerAddr].add_subcription(
+                request.table_uuid
             )
             # self.subscriptions[request.get('params').get('table_uuid')] = self.subscriptions.get(request.get('params').get('table_uuid'), []) + [self.connected_peers[peer_addr]]
             return {"status": "subscribed", "message": "your good?"}
 
-        if endpoint == 'initiate-connection':
+        if request.endpoint == 'initiate-connection':
             return {"status": "Success", "message": "Connection"}
-        elif 'table_uuid' not in request and endpoint != 'ping':
+        elif 'table_uuid' not in request and request.endpoint != 'ping':
             return {"status": "error", "message": "Missing table_uuid parameter"}
         table_uuid = request['table_uuid']
 
-        if endpoint == 'stream_data':
+        if request.endpoint == 'stream_data':
             df = await self._getStreamData(table_uuid)
             if df is None:
                 return {
@@ -382,7 +409,7 @@ class DataPeer:
                 }
             return {"status": "success", "data": df.to_json(orient='split')}
 
-        elif endpoint == 'date_in_range':
+        elif request.endpoint == 'date_in_range':
             from_date = request.get('from_date')
             to_date = request.get('to_date')
             if not from_date or not to_date:
@@ -402,7 +429,7 @@ class DataPeer:
                 df['ts'] = df['ts'].astype(str)
             return {"status": "success", "data": df.to_json(orient='split')}
 
-        elif endpoint == 'last_record_before':
+        elif request.endpoint == 'last_record_before':
             try:
                 data_json = request.get('data')
                 if data_json is None:
@@ -425,7 +452,7 @@ class DataPeer:
                     "message": f"Error processing timestamp request: {str(e)}",
                 }
 
-        elif endpoint == 'insert':
+        elif request.endpoint == 'insert':
             try:
                 data_json = request.get('data')
                 if data_json is None:
@@ -452,7 +479,7 @@ class DataPeer:
             except Exception as e:
                 return {"status": "error", "message": f"Error inserting data: {str(e)}"}
 
-        elif endpoint == 'delete':
+        elif request.endpoint == 'delete':
             try:
                 data_json = request.get('data')
                 if data_json is not None:
@@ -475,7 +502,7 @@ class DataPeer:
         else:
             return {
                 "status": "error",
-                "message": f"Unknown request type: {endpoint}",
+                "message": f"Unknown request type: {request.endpoint}",
             }
 
     # async def sendRequest(self, peer_addr: Tuple[str, int], table_uuid: str = None, request_type: str = "stream_data", data: pd.DataFrame = None, replace: bool = False):
@@ -520,67 +547,51 @@ class DataPeer:
         endpoint: str = "stream_data",
         data: pd.DataFrame = None,
         replace: bool = False,
+        fromDate: str = None,
+        toDate: str = None,
     ):
-        import datetime
-        """Make request into appropriate format"""
-        # json: {
-        #     "endpoint": "get stream data",
-        #     "magic": "23dc3133-5b3a-5b27-803e-70a07cf3c4f7"
-        #     "status": "success", # response
-        #     "params": {
-        #         "table_uuid": "23dc3133-5b3a-5b27-803e-70a07cf3c4f7",
-        #     }
-        #     "data": <any>
-        # }
-        # request = {
-        #     "type": request_type,
-        #     "table_uuid": table_uuid
-        # }
+        from datetime import datetime
 
-        # magic number can be request_type and current_time
-        time = datetime.now() # check
-        request = {
-            "endpoint": "get stream data",
-            "magic": generateUUID({'endpoint': endpoint, 'currentTime': time}),
-            "params": {
-                "table_uuid": table_uuid,
-                "replace": replace
-            },
-            "data": data
-        }
-
+        magicStr: str = str(
+            generateUUID({'endpoint': endpoint, 'currentTime': datetime.now()})
+        )
         if endpoint == "initiate-connection":
-            request = {
-                "endpoint": endpoint,
-                "magic": generateUUID({'endpoint': endpoint, 'currentTime': time})
-            }
-
-        if endpoint == "data-in-range" and request.get("data") is not None:
-            if 'from_ts' in request.get("data").columns and 'to_ts' in request.get("data").columns:
-                request["params"]["from_date"] = request.get("data")['from_ts'].iloc[0]
-                request["params"]["to_date"] = request.get("data")['to_ts'].iloc[0]
+            request = Message({"endpoint": endpoint, "magic": magicStr})
+        elif endpoint == "data-in-range" and data is not None:
+            if 'from_ts' in data.columns and 'to_ts' in data.columns:
+                fromDate = data['from_ts'].iloc[0]
+                toDate = data['to_ts'].iloc[0]
             else:
                 raise ValueError(
                     "DataFrame must contain 'from_ts' and 'to_ts' columns for date range queries"
                 )
-
         elif endpoint == "record-at-or-before":
-            if request.get("data") is None:
+            if data is None:
                 raise ValueError(
                     "DataFrame with timestamp is required for last record before requests"
                 )
-            if 'ts' not in request.get("data").columns:
+            if 'ts' not in data.columns:
                 raise ValueError(
                     "DataFrame must contain 'ts' column for last record before requests"
                 )
 
-        if request.get("data") is not None:
-            request["data"] = request.get("data").to_json(orient='split')
+        if data is not None:
+            data = data.to_json(orient='split')
 
-        if endpoint == "insert":
-            request["params"]["replace"] = replace
-
-        return await self.sendPeer(peer_addr, request)
+        request = Message(
+            {
+                "endpoint": endpoint,
+                "magic": magicStr,
+                "params": {
+                    "table_uuid": table_uuid,
+                    "replace": replace,
+                    "from_ts": fromDate,
+                    "to_ts": toDate,
+                },
+                "data": data,
+            }
+        )
+        return await self.sendPeer(peer_addr, request.to_dict())
 
     @staticmethod
     def _get_sqlite_type(dtype):
