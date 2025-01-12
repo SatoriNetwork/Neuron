@@ -14,149 +14,7 @@ from satorilib.logging import INFO, setup, debug, info, warning, error
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlite import SqliteDatabase, generateUUID
 
-class Subscription:
-    def __init__(
-        self,
-        method: str,
-        params: Union[list, None] = None,
-        callback: Union[callable, None] = None
-    ):
-        self.method = method
-        self.params = params or []
-        self.shortLivedCallback = callback
-
-    def __hash__(self):
-        return hash((self.method, tuple(self.params)))
-
-    def __eq__(self, other):
-        if isinstance(other, Subscription):
-            return self.method == other.method and self.params == other.params
-        return False
-
-    def __call__(self, *args, **kwargs):
-        '''
-        This is the callback that is called when a subscription is triggered.
-        it takes time away from listening to the socket, so it should be short-
-        lived, like saving the value to a variable and returning, or logging,
-        or triggering a thread to do something such as listen to the queue and
-        do some long-running process with the data from the queue.
-        example:
-            def foo(*args, **kwargs):
-                print(f'foo. args:{args}, kwargs:{kwargs}')
-        '''
-        if self.shortLivedCallback is None:
-            return None
-        return self.shortLivedCallback(*args, **kwargs)
-    
-class Message:
-    def __init__(self, message: dict):
-        """
-        Initialize Message object with a dictionary containing message data
-        """
-        self.message = message
-
-    def to_dict(self) -> dict:
-        """
-        Convert the Message instance back to a dictionary
-        """
-        return {
-            'endpoint': self.endpoint,
-            'magic': self.magic,
-            'status': self.status,
-            'params': {
-                'table_uuid': self.table_uuid,
-                'replace': self.replace,
-                'from_ts': self.fromDate,
-                'to_ts': self.toDate,
-            },
-            'data': self.data,
-        }
-
-    @property
-    def endpoint(self) -> str:
-        """Get the endpoint"""
-        return self.message.get('endpoint')
-
-    @property
-    def magic(self) -> str:
-        """Get the magic UUID"""
-        return self.message.get('magic')
-
-    @property
-    def status(self) -> str:
-        """Get the status"""
-        return self.message.get('status')
-
-    @property
-    def params(self) -> dict:
-        """Get the params"""
-        return self.message.get('params', {})
-
-    @property
-    def table_uuid(self) -> str:
-        """Get the table_uuid from params"""
-        return self.params.get('table_uuid')
-
-    @property
-    def replace(self) -> str:
-        """Get the table_uuid from params"""
-        return self.params.get('replace')
-
-    @property
-    def fromDate(self) -> str:
-        """Get the table_uuid from params"""
-        return self.params.get('from_ts')
-
-    @property
-    def toDate(self) -> str:
-        """Get the table_uuid from params"""
-        return self.params.get('to_ts')
-
-    @property
-    def data(self) -> any:
-        """Get the data"""
-        return self.message.get('data')
-
-    def is_success(self) -> bool:
-        """Get the status"""
-        return self.status == 'success'
-
-
-class ConnectedPeer:
-
-    def __init__(
-        self,
-        hostPort: Tuple[str, int],
-        websocket: websockets.WebSocketServerProtocol,
-        subscriptions: Union[list, None] = None,
-        publications: Union[list, None] = None,
-    ):
-        self.hostPort = hostPort
-        self.websocket = websocket
-        self.subscriptions = subscriptions or []
-        self.publications = publications or []
-
-    @property
-    def host(self):
-        return self.hostPort[0]
-
-    @property
-    def port(self):
-        return self.hostPort[1]
-
-    @property
-    def isClient(self):
-        return self.hostPort[1] != 24602
-    
-    @property
-    def isServer(self):
-        return not self.isClient
-
-    def add_subcription(self, table_uuid: str):
-        self.subscriptions.append(table_uuid)
-
-
-class DataPeer:
+class DataServer:
     def __init__(
         self,
         host: str,
@@ -169,7 +27,6 @@ class DataPeer:
         self.port = port
         self.server = None
         self.connectedClients: Dict[Tuple[str, int], ConnectedPeer] = {}
-        self.connectedServers: Dict[Tuple[str, int], ConnectedPeer] = {}
         # an optimization
         # self.subscriptions: Dict[int, ConnectedPeer] = {}
         self.subscriptions: dict[Subscription, queue.Queue] = {}
@@ -188,18 +45,16 @@ class DataPeer:
         """Handle incoming connections and messages"""
         peerAddr: Tuple[str, int] = websocket.remote_address
         debug(f"New connection from {peerAddr}")
-        self.connectedPeers[peerAddr] = self.connectedPeers.get(peerAddr, ConnectedPeer(peerAddr, websocket))
-        debug("Connected peers:", self.connectedPeers)
+        self.connectedClients[peerAddr] = self.connectedClients.get(peerAddr, ConnectedPeer(peerAddr, websocket))
+        debug("Connected peers:", self.connectedClients)
         try:
             async for message in websocket:
                 debug(f"Received request: {message}", print=True)
                 try:
-                    
                     response = await self.handleRequest(peerAddr, websocket, message)
-                    await self.connectedPeers[peerAddr].websocket.send(
+                    await self.connectedClients[peerAddr].websocket.send(
                         json.dumps(response)
                     )
-                    await self.notifySubscribers(self, peerAddr, message)
                     # await websocket.send(json.dumps(response))
                     debug("Response sent", print=True)
                 except json.JSONDecodeError:
@@ -221,179 +76,45 @@ class DataPeer:
             print(f"Connection closed with {peerAddr}")
         finally:
             # Remove disconnected peer
-            for key, cp in list(self.connectedPeers.items()):
+            for key, cp in list(self.connectedClients.items()):
                 if cp.websocket == websocket:
-                    del self.connectedPeers[key]
+                    del self.connectedClients[key]
 
-    async def notifySubscribers(self, peerAddr: Tuple[str, int], msg: Message):
+    async def notifySubscribers(self, msg: Message):
         '''
         is this message something anyone has subscribed to?
         if yes, await self.connected_peers[subscribig_peer].websocket.send(message)
-
-        xc -> ys -> zc
-        REST model
-        client - can push to server any time
-        server - can only respond to clinets, can handle lots of clients
-
-        peer - can push to peers at any time and receive from peer at any timeserver and server can push to client
-
-
-        our context:
-        client - no  endpoints
-
-
         '''
-        for peerAddr in self.connectedPeers.values():
-           if msg.table_uuid in self.connectedPeers[peerAddr].subscriptions:
-               await self.connectedPeers[peerAddr].websocket.send(json.dumps(msg.to_dict()))
-
-
-    async def connectToPeer(self, peerHost: str, peerPort: int) -> bool:
-        """Connect to another peer"""
-        uri = f"ws://{peerHost}:{peerPort}"
-        try:
-            websocket = await websockets.connect(uri)
-            self.connectedClients[(peerHost, peerPort)] = ConnectedPeer(
-                (peerHost, peerPort), websocket
-            )
-            asyncio.create_task(self.listenToPeer((peerHost, peerPort), websocket))
-            debug(f"Connected to peer at {uri}", print=True)
-            return True
-        except Exception as e:
-            error(f"Failed to connect to peer at {uri}: {e}")
-            return False
-
-
-    async def listenToPeer(self, peerAddr: Tuple[str, int], websocket: websockets.WebSocketServerProtocol):
-        """Listen for messages from a connected peer"""
-
-
-        def handleMultipleMessages(buffer: str):
-            ''' split on the first newline to handle multiple messages '''
-            return buffer.partition('\n')
-
-        async def listen():
-            try:
-                async for message in websocket:
-                    debug(f"Received message from peer {peerAddr}: {message}", print=True)
-                    await self.handleRequest(peerAddr, websocket, message)
-            except websockets.exceptions.ConnectionClosed:
-                debug(f"Connection closed with peer {peerAddr}", print=True)
-                del self.connectedClients[peerAddr]
-
-
-
-        buffer = ''
-        while not self.listenerStop.is_set():
-            if not self.isConnected:
-                time.sleep(1)
-                continue
-            try:
-                raw = self.connection.recv(1024 * 16).decode('utf-8')
-                buffer += raw
-                if raw == '':
-                    self.quiet.put(time.time())
-                    self.isConnected = False
-                    continue
-                if '\n' in raw:
-                    message, _, buffer = handleMultipleMessages(buffer)
-                    try:
-                        r: dict = json.loads(message)
-                        method = r.get('method', '')
-                        if method == 'blockchain.headers.subscribe':
-                            subscription = self.findSubscription(
-                                subscription=Subscription(method, params=[]))
-                            q = self.subscriptions.get(subscription)
-                            if isinstance(q, queue.Queue):
-                                q.put(r)
-                            subscription(r)
-                        if method == 'blockchain.scripthash.subscribe':
-                            subscription = self.findSubscription(
-                                subscription=Subscription(
-                                    method,
-                                    params=r.get(
-                                        'params',
-                                        ['scripthash', 'status'])[0]))
-                            q = self.subscriptions.get(subscription)
-                            if isinstance(q, queue.Queue):
-                                q.put(r)
-                            subscription(r)
-                        else:
-                            self.responses[
-                                r.get('id', self._generateCallId())] = r
-                    except json.decoder.JSONDecodeError as e:
-                        logging.error((
-                            f"JSONDecodeError: {e} in message: {message} "
-                            "error in _receive"))
-                        self.quiet.put(time.time())
-            except socket.timeout:
-                logging.warning('no activity for 10 minutes, wallet going to sleep.')
-                self.quiet.put(time.time())
-            # except Exception as e:
-            #    logging.error(f"Socket error during receive: {str(e)}")
-            #    self.quiet.put(time.time())
-            #    self.isConnected = False
-
-
-
-
-
-    async def sendPeer(
-        self, peerAddr: Tuple[str, int], request: Message
-    ) -> Dict:
-        """Send a request to a specific peer"""
-        if peerAddr not in self.connectedPeers:
-            peerHost, peerPort = peerAddr
-            success = await self.connectToPeer(peerHost, peerPort)
-            if not success:
-                return {"status": "error", "magic": request.magic, "message": "Failed to connect to peer"}
-
-        ws = self.connectedPeers[peerAddr].websocket
-        try:
-            await ws.send(json.dumps(request.to_dict())) # race condition? 
-            ws.recv()
-            response = Message(json.loads(await ws.recv()))
-            if response.status == "success" and response.data is not None:
-                try:
-                    df = pd.read_json(StringIO(response.data), orient='split')
-                    if response.endpoint in ["record-at-or-before", "data-in-range"]:
-                        self.db.deleteTable(response.table_uuid)
-                        self.db.createTable(response.table_uuid)
-                    self.db._dataframeToDatabase(response.table_uuid, df)
-                    info(f"\nData saved to database: {self.db.dbname}")
-                    debug(f"Table name: {response.table_uuid}")
-                except Exception as e:
-                    error(f"Database error: {e}")
-            return response.to_dict()
-        except Exception as e:
-            error(f"Error sending request to peer: {e}")
-            return {"status": "error", "message": str(e)}
+        for peerAddr in self.connectedClients.values():
+           if msg.table_uuid in self.connectedClients[peerAddr].subscriptions:
+               await self.connectedClients[peerAddr].websocket.send(msg.to_json())
 
     async def disconnectAllPeers(self):
         """Disconnect from all peers and stop the server"""
-        for connectedPeer in self.connectedPeers.values():
+        for connectedPeer in self.connectedClients.values():
             await connectedPeer.websocket.close()
-        self.connectedPeers.clear()
+        self.connectedClients.clear()
         if self.server:
             self.server.close()
             await self.server.wait_closed()
         info("Disconnected from all peers and stopped server")
 
     
-
     async def handleRequest(
         self,
         peerAddr: Tuple[str, int],
         websocket: websockets.WebSocketServerProtocol,
         message: str,
     ) -> Dict:
-
-        
-
         # can make a function which can reduce the redundancy
         request: Message = Message(json.loads(message))
+
+        # TODO: need and endpoint to notify subscribers
+        # neuron-dataClient, raw data -> dataClient --ws-> datamanager.dataServer
+        #self.notifySubscribers(request) 
+
         if request.endpoint == 'subscribe' and request.table_uuid is not None:
-            self.connectedPeers[peerAddr].add_subcription(request.table_uuid)
+            self.connectedClients[peerAddr].add_subcription(request.table_uuid)
             return {
                 "status": "success",
                 "magic": request.magic,
@@ -667,11 +388,11 @@ class DataPeer:
 async def main():
     # Start server
     # Create two peers
-    peer1 = DataPeer("0.0.0.0", 8080)
+    peer1 = DataServer("0.0.0.0", 8080)
     await peer1.start_server()
     await asyncio.Future()  # run forever
 
-    # peer1 = DataPeer("ws://localhost:8765")
+    # peer1 = DataServer("ws://localhost:8765")
     # async with websockets.serve(peer1.handleRequest, "localhost", 8765):
     #     print("WebSocket server started on ws://localhost:8765")
     #     await asyncio.Future()  # run forever

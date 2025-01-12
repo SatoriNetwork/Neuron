@@ -26,19 +26,19 @@ async def main():
 
     # # Example 2: Insert new data (merge)
     # print("\n=== Example 2: Insert New Data ===")
-    # new_data = pd.DataFrame({
-    #     'ts': ['2025-01-04 15:27:35'],
-    #     'value': [124.45],
-    #     'hash': ['abc123def456']
-    # })
-    # response = await peer2.sendRequest(
-    #     ("localhost", 8080),
-    #     table_uuid,
-    #     endpoint="insert",
-    #     data=new_data,
-    #     replace=True
-    # )
-    # print("Insert response:", response)
+    new_data = pd.DataFrame({
+        'ts': ['2024-12-07 04:30:01.270985'],
+        'value': [124.45],
+        'hash': ['abc123def456']
+    })
+    response = await peer2.sendRequest(
+        ("localhost", 8080),
+        table_uuid,
+        endpoint="insert",
+        data=new_data,
+        replace=False
+    )
+    print(response)
 
     # # Example 3: Delete specific records
     # print("\n=== Example 3: Delete Specific Records ===")
