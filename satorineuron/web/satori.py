@@ -2192,6 +2192,7 @@ def proposals():
     if start.vault is not None and not start.vault.isEncrypted:
         return render_template('proposals.html', **getResp({
             'title': 'Proposals',
+            'walletBalance': start.wallet.balance.amount,
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
             }))
