@@ -685,7 +685,7 @@
   }
 
 
-  function showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue) {
+  function showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody) {
     const ctx = graphCanvas.getContext('2d');
 
     // Helper: Round to nearest 10 minutes
@@ -695,9 +695,9 @@
     };
     ZoomController = (date) => {
       Zoom = document.getElementById("ZoomValue").value;
-      console.log(Zoom)
+
       const msInOneMinute = 10 * 60 * 100 * Zoom;
-      console.log(Zoom.value)
+      
       return new Date(Math.round(new Date(date).getTime() / msInOneMinute) * msInOneMinute);
   };
     // Process observations to group by 10-minute intervals
@@ -711,6 +711,8 @@
         current.observationAvg += parseFloat(obs.value); // Use value for observations
         current.predictionAvg += parseFloat(obs.avg);   // Use avg for predictions
         current.count += 1;
+
+
     });
 
     // Prepare sorted data for the chart
@@ -723,6 +725,22 @@
         const data = intervalsMap.get(time);
         return data.predictionAvg / data.count; // Average prediction value
     });
+
+    
+    iterator = combinedTimes.length-1;
+    combinedTimes.reverse().forEach(time => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${time}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observationValues[iterator]}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${predictionValues[iterator]}</td>
+      `;
+      observationsBody.appendChild(row);
+      iterator-=1;
+
+    });
+    combinedTimes.reverse();
+
 
     renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
 
@@ -758,7 +776,7 @@
         if (parsedObservations.length === 0) {
           // modal container css changes
           modelContent.style.height = "300px"
-          // Graph container css changes
+          // Graph container css  changes
           graphContainer.style.display = 'none';
           // Table style css changes
           observationTable.style.display = 'block';
@@ -781,8 +799,10 @@
           
           // Render a graph
           parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
-          showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue);
+          showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody);
+          /*
           parsedObservations.reverse().forEach(observation => {
+            console.log(observation.time);
             const row = document.createElement('tr');
             row.innerHTML = `
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
@@ -791,6 +811,7 @@
             `;
             observationsBody.appendChild(row);
           });
+          */
         }
 
         document.getElementById('modalLoading').style.display = "none"
