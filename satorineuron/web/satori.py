@@ -1230,6 +1230,7 @@ def dashboard():
             'vaultPasswordForm': presentVaultPasswordForm(),
             'firstRun': theFirstRun,
             'wallet': start.wallet,
+            'walletBalance': start.wallet.balance.amount,
             # instead of this make chain single source of truth
             # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
             'stakeStatus': stakeStatus,
@@ -1780,6 +1781,7 @@ def vault():
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
+            'walletBalance': wallet,
             'offer': start.details.wallet.get('offer', 0),
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
@@ -2085,6 +2087,7 @@ def vote():
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': myWallet,
+            'walletBalance': wallet.balance.amount,
             'vault': start.vault,
             'streams': getStreams(myWallet),
             **getVotes(myWallet)}))
@@ -2130,6 +2133,7 @@ def streams():
         return render_template('streams.html', **getResp({
             'title': 'Streams',
             'network': start.network,
+            'walletBalance': wallet.balance.amount,
             'vault': start.vault,
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
