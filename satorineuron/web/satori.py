@@ -1781,7 +1781,7 @@ def vault():
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
-            'walletBalance': wallet,
+            'walletBalance': start.wallet.balance.amount,
             'offer': start.details.wallet.get('offer', 0),
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
@@ -2087,7 +2087,7 @@ def vote():
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
             'wallet': myWallet,
-            'walletBalance': wallet.balance.amount,
+            'walletBalance': start.wallet.balance.amount,
             'vault': start.vault,
             'streams': getStreams(myWallet),
             **getVotes(myWallet)}))
@@ -2133,7 +2133,7 @@ def streams():
         return render_template('streams.html', **getResp({
             'title': 'Streams',
             'network': start.network,
-            'walletBalance': wallet.balance.amount,
+            'walletBalance': start.wallet.balance.amount,
             'vault': start.vault,
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
