@@ -133,7 +133,10 @@
       </div>
       <div  style="width:35% padding:5px">
         <select class="d-flex flex-row gap-2 btn btn-outline-dark" xname="Intervals" id="ZoomValue" onchange="ReRenderGraph()">
+          <option value="5" selected>5 Minute</option>
           <option value="10" selected>10 Minute</option>
+          <option value="15" selected>15 Minute</option>
+          <option value="30" selected>30 Minute</option>
           <option value="60" selected>1 Hour </option>
           <option value="1440">1 Day</option>
           <option value="10080">1 Week</option>
@@ -642,8 +645,7 @@
         const lastTimestamp = combinedTimes[combinedTimes.length - 1];
         const futureTimestamp = new Date(lastTimestamp);
         futureTimestamp.setMinutes(futureTimestamp.getMinutes() + 10); // Add 10 minutes to the last timestamp
-        const formattedFutureTimestamp = futureTimestamp.toISOString();
-
+        const formattedFutureTimestamp = futureTimestamp.toLocaleString('en-US');
         observationsChart.data.labels.push(formattedFutureTimestamp);
         observationsChart.data.datasets[1].data.push(futureForecastingObservationAvgValue);
         observationsChart.update();
@@ -703,7 +705,7 @@
     // Process observations to group by 10-minute intervals
     const intervalsMap = new Map();
     parsedObservations.forEach((obs) => {
-        const roundedTime = ZoomController(obs.ts).toLocaleString('en-GB');
+        const roundedTime = ZoomController(obs.ts).toLocaleString('en-US');
         if (!intervalsMap.has(roundedTime)) {
             intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
         }
