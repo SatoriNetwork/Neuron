@@ -1006,6 +1006,10 @@ progress {
     flex: 0 0 auto;
     width: 16.66666667%;
   }
+  .col-xs-2-5 {
+    flex: 0 0 auto;
+    width: 20%;
+  }
   .col-xs-3 {
     flex: 0 0 auto;
     width: 25%;
@@ -1231,6 +1235,10 @@ progress {
   .col-sm-2 {
     flex: 0 0 auto;
     width: 16.66666667%;
+  }
+  .col-sm-2-5 {
+    flex: 0 0 auto;
+    width: 20%;
   }
   .col-sm-3 {
     flex: 0 0 auto;
@@ -1906,6 +1914,10 @@ progress {
   .col-xl-2 {
     flex: 0 0 auto;
     width: 16.66666667%;
+  }
+  .col-xl-2-5 {
+    flex: 0 0 auto;
+    width: 20%;
   }
   .col-xl-3 {
     flex: 0 0 auto;
