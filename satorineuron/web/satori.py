@@ -792,19 +792,23 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
 @userInteracted
 @authRequired
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
+    from satorilib.server import ofac
+    if not ofac.requestPermission():
+        return redirect('/vault/main')
     if start.vault is not None and not start.vault.isEncrypted:
         from satorilib.wallet.ethereum.wallet import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
         setEthAddressResult = start.server.setEthAddress(account.address)
         logging.debug(f'setEthAddressResult: {setEthAddressResult}', color='blue')
-    greenlight, explain = start.ableToBridge()
-    logging.debug(f'greenlight: {greenlight}', explain,  color='magenta')
-    if greenlight:
-        result = bridgeSatoriTransactionUsing(start.vault)
-        logging.debug(f'result: {result}', color='magenta')
     else:
+        flash('please unlock your vault first')
+        return redirect('/vault/main')
+    greenlight, explain = start.ableToBridge()
+    if not greenlight:
         flash(explain)
         return redirect('/vault/main')
+    result = bridgeSatoriTransactionUsing(start.vault)
+    logging.debug(f'result: {result}', color='magenta')
     if isinstance(result, str) and len(result) == 64:
         flash(str(result))
         flash("Bridge process started successfully! We need to wait for some on-chain confirmations, it'll be done in an hour.")
@@ -832,61 +836,23 @@ def sendSatoriTransactionUsing(
             myWallet.get()
             myWallet.getReadyToSend()
 
-        # doesn't respect the cooldown
-        #myWallet.getUnspentSignatures(force=True)
+        logging.debug('1', color='magenta')
         myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
-        try:
-            # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
-            result = myWallet.typicalNeuronTransaction(
-                sweep=sendSatoriForm['sweep'],
-                amount=sendSatoriForm['amount'] or 0,
-                address=sendSatoriForm['address'] or '')
-            if result.msg == 'creating partial, need feeSatsReserved.':
-                responseJson = start.server.requestSimplePartial(
-                    network=network)
-                result = myWallet.typicalNeuronTransaction(
-                    sweep=sendSatoriForm['sweep'],
-                    amount=sendSatoriForm['amount'] or 0,
-                    address=sendSatoriForm['address'] or '',
-                    completerAddress=responseJson.get('completerAddress'),
-                    feeSatsReserved=responseJson.get('feeSatsReserved'),
-                    changeAddress=responseJson.get('changeAddress'),
-                )
-            if result is None:
-                flash('Send Failed: wait 10 minutes, refresh, and try again.')
-            elif result.success:
-                if (  # checking any on of these should suffice in theory...
-                    result.tx is not None and
-                    result.reportedFeeSats is not None and
-                    result.reportedFeeSats > 0 and
-                    result.msg == 'send transaction requires fee.'
-                ):
-                    r = start.server.broadcastSimplePartial(
-                        tx=result.tx,
-                        reportedFeeSats=result.reportedFeeSats,
-                        feeSatsReserved=responseJson.get('feeSatsReserved'),
-                        walletId=responseJson.get('partialId'),
-                        network=(
-                            'ravencoin' if start.networkIsTest(network)
-                            else 'evrmore'))
-                    refreshWallet()
-                    if r.text.startswith('{"code":1,"message":'):
-                        flash(f'Send Failed: {r.json().get("message")}')
-                    elif r.text != '':
-                        return r.text
-                    else:
-                        flash(
-                            'Send Failed: wait 10 minutes, refresh, and try again.')
-                else:
-                    return result.result
-            else:
-                flash(f'Send Failed: {result.msg}')
-        except TransactionFailure as e:
-            flash(f'Send Failed: {e}')
+        logging.debug('2', color='magenta')
+        transactionResult = myWallet.typicalNeuronTransaction(
+            sweep=sendSatoriForm['sweep'],
+            amount=sendSatoriForm['amount'] or 0,
+            address=sendSatoriForm['address'] or '',
+            requestSimplePartialFn=start.server.requestSimplePartial,
+            broadcastBridgeSimplePartialFn=start.server.broadcastSimplePartial)
         refreshWallet()
-        return result
+        if not transactionResult.success:
+            flash(f'unable to send Transaction: {transactionResult.msg}')
+            return flash(transactionResult.msg)
+        refreshWallet()
+        return transactionResult.msg
 
     sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
     sendForm = {}
@@ -913,10 +879,11 @@ def bridgeSatoriTransactionUsing(
     forms = importlib.reload(forms)
 
     def acceptSubmittion(bridgeForm: dict):
+        from satorilib.server import ofac
+
         def refreshWallet():
             time.sleep(4)
-            # doesn't respect the cooldown
-            myWallet.get(allWalletInfo=False)
+            myWallet.get()
 
         logging.debug('burning?', color='magenta')
         # doesn't respect the cooldown
@@ -924,57 +891,19 @@ def bridgeSatoriTransactionUsing(
         myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
-        try:
-            result = myWallet.typicalNeuronBridgeTransaction(
-                amount=bridgeForm['bridgeAmount'] or 0,
-                ethAddress=bridgeForm['ethAddress'] or '')
-            logging.debug('result', result, color='magenta')
-            if result.msg == 'creating partial, need feeSatsReserved.':
-                logging.debug('result.msg', result.msg, color='magenta')
-                responseJson = start.server.requestSimplePartial(
-                    network='main')
-                logging.debug('responseJson', responseJson, color='magenta')
-                result = myWallet.typicalNeuronBridgeTransaction(
-                    amount=bridgeForm['bridgeAmount'] or 0,
-                    ethAddress=bridgeForm['ethAddress'] or '',
-                    completerAddress=responseJson.get('completerAddress'),
-                    feeSatsReserved=responseJson.get('feeSatsReserved'),
-                    changeAddress=responseJson.get('changeAddress'))
-                logging.debug('result', result, color='magenta')
-            if result is None:
-                flash('Send Failed: wait 10 minutes, refresh, and try again.')
-            elif result.success:
-                logging.debug('result.success', result.success, color='magenta')
-                if (  # checking any on of these should suffice in theory...
-                    result.tx is not None and
-                    result.reportedFeeSats is not None and
-                    result.reportedFeeSats > 0 and
-                    result.msg == 'send transaction requires fee.'
-                ):
-                    logging.debug('broadcasting', color='magenta')
-                    #return "ending early until tested"
-                    r = start.server.broadcastBridgeSimplePartial(
-                        tx=result.tx,
-                        reportedFeeSats=result.reportedFeeSats,
-                        feeSatsReserved=responseJson.get('feeSatsReserved'),
-                        walletId=responseJson.get('partialId'),
-                        network='evrmore')
-                    logging.debug('broadcasting', r, color='magenta')
-                    if r.text.startswith('{"code":1,"message":'):
-                        flash(f'Send Failed: {r.json().get("message")}')
-                    elif r.text != '':
-                        return r.text
-                    else:
-                        flash(
-                            'Send Failed: wait 10 minutes, refresh, and try again.')
-                else:
-                    return result.result
-            else:
-                flash(f'Send Failed: {result.msg}')
-        except TransactionFailure as e:
-            flash(f'Send Failed: {e}')
+
+        # should I send a transaction or send a partial?
+        transactionResult = myWallet.typicalNeuronBridgeTransaction(
+            amount=bridgeForm['bridgeAmount'] or 0,
+            ethAddress=bridgeForm['ethAddress'] or '',
+            ofacReportedFn=ofac.reportTxid,
+            requestSimplePartialFn=start.server.requestSimplePartial,
+            broadcastBridgeSimplePartialFn=start.server.broadcastSimplePartial)
         refreshWallet()
-        return result
+        if not transactionResult.success:
+            flash('Bridge Failed: wait 10 minutes, refresh, and try again.')
+            return flash(transactionResult.msg)
+        return transactionResult.msg
 
     bridgeSatoriForm = forms.BridgeSatoriTransaction(formdata=request.form)
     logging.debug('burning1',bridgeSatoriForm, color='magenta')
@@ -1576,6 +1505,8 @@ def wallet(network: str = 'main'):
         alias = start.wallet.alias or start.server.getWalletAlias()
     except Exception as e:
         alias = None
+    start.wallet.get()
+    start.wallet.getReadyToSend()
     if config.get().get('wallet lock'):
         if request.method == 'POST':
             acceptSubmittion(forms.VaultPassword(formdata=request.form))
