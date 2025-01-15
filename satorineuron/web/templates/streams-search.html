@@ -703,7 +703,7 @@
     // Process observations to group by 10-minute intervals
     const intervalsMap = new Map();
     parsedObservations.forEach((obs) => {
-        const roundedTime = ZoomController(obs.ts).toISOString();
+        const roundedTime = ZoomController(obs.ts).toLocaleString('en-GB');
         if (!intervalsMap.has(roundedTime)) {
             intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
         }
