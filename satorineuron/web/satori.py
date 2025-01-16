@@ -194,6 +194,11 @@ def getFile(ext: str = '.csv') -> tuple[str, int, Union[None, 'FileStorage']]:
 
 
 def getResp(resp: Union[dict, None] = None) -> dict:
+    try:
+        holdingBalance = start.holdingBalance
+    except Exception as e:
+        logging.debug(e)
+        holdingBalance = 0
     return {
         'version': VERSION,
         'lockEnabled': isActuallyLocked(),
@@ -203,6 +208,7 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'paused': start.paused,
         'darkmode': darkmode,
         'title': 'Satori',
+        'holdingBalance': holdingBalance,
         **(resp or {})}
 
 
@@ -1147,7 +1153,6 @@ def logOut():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
-#@closeVault
 @authRequired
 def dashboard():
     '''
@@ -1206,14 +1211,11 @@ def dashboard():
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
-        
+
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
     if request.method == 'POST':
             acceptSubmittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
-        global firstRun
-        theFirstRun = firstRun
-        firstRun = False
         # streamOverviews = (
         #     [model.miniOverview() for model in start.engine.models]
         #     if start.engine is not None else [])  # StreamOverviews.demo()
@@ -1224,13 +1226,11 @@ def dashboard():
                 None,
                 start.details.wallet.get('address'),
                 start.details.wallet.get('vaultaddress')]
-            if start.details is not None else 0)        
+            if start.details is not None else 0)
         return render_template('dashboard.html', **getResp({
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
-            'firstRun': theFirstRun,
             'wallet': start.wallet,
-            'walletBalance': start.wallet.balance.amount,
             # instead of this make chain single source of truth
             # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
             'stakeStatus': stakeStatus,
@@ -1238,7 +1238,6 @@ def dashboard():
             'miningDisplay': 'none',
             'proxyDisplay': 'none',
             'stakeRequired': constants.stakeRequired,
-            'holdingBalance': holdingBalance,
             'streamOverviews': streamOverviews,
             'engineVersion': start.engineVersion,
             'configOverrides': config.get(),
@@ -1580,7 +1579,6 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 @app.route('/wallet/<network>', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
-#@closeVault
 @authRequired
 def wallet(network: str = 'main'):
 
@@ -1752,11 +1750,6 @@ def vault():
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
-        global firstRun
-        theFirstRun = firstRun
-        firstRun = False
-        if theFirstRun:
-            return redirect('/dashboard')
         # start.workingUpdates.put('downloading balance...')
         from satorilib.wallet.ethereum.wallet import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
@@ -2075,7 +2068,7 @@ def vote():
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
-        
+
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
 
@@ -2119,12 +2112,12 @@ def streams():
     # if searchText is not None:
     #     streamsData = getStreams(searchText)
     #     return jsonify({'streams': streamsData})
-    
+
     def acceptSubmittion(passwordForm):
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
-        
+
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
 
@@ -2185,7 +2178,7 @@ def proposals():
         _vault = start.openVault(
             password=passwordForm.password.data,
             create=True)
-        
+
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
 
