@@ -613,9 +613,14 @@
           },
         },
         zoom: {
+          limits: {
+            y: {min: null, max: null},
+            x: {min: 0, max: null},
+          },
           pan: {
             enabled: true,
-            mode: 'x',
+            mode: 'xy',
+            threshold: 10
           },
           zoom: {
             
@@ -645,13 +650,22 @@
       const endIndex = Math.min(currentIndex + chunkSize, totalPoints);
       observationsChart.data.labels.push(...combinedTimes.slice(currentIndex, endIndex));
       observationsChart.data.datasets[0].data.push(...observationValues.slice(currentIndex, endIndex));
-      const realLow = Math.min(observationValues)*.8;
-      const realHigh = Math.max(observationValues)*1.25;
+      const realLow = Math.min(...observationValues)*.8;
+      const realHigh = Math.max(...observationValues)*1.25;
       observationsChart.data.datasets[1].data.push(
         ...predictionValues.slice(currentIndex, endIndex).map(value =>
           value === 0 || value < realLow || value > realHigh ? null : value
         )
       );
+
+      //calculate bounds for zoom.  
+      const BoundLow = Math.min(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *0.98;
+      const BoundHigh = Math.max(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *1.02;
+      //set the new bounds
+      observationsChart.options.plugins.zoom.limits.y.min = BoundLow;
+      observationsChart.options.plugins.zoom.limits.y.max = BoundHigh;
+      observationsChart.options.plugins.zoom.limits.x.max = endIndex;
+
       observationsChart.update();
 
       currentIndex += chunkSize;
