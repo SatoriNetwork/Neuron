@@ -26,9 +26,9 @@
         <div style="padding-left: 2.5rem; padding-right:2.5rem;">
           <p class="test-sm">Use this to bridge SATORI from the Evrmore blockchain to Ethereum. How the bridge works:
             <br> • The SATORI that is bridged gets burned and can never be retrieved by anyone.
-            <br> • Burning the Evrmore SATORI triggers a smart contract on Ethereum to mint SATORI of the same amount (minus the gas fees) directly to the Ethereum address provided.
+            <br> • Burning the Evrmore SATORI triggers a smart contract on Ethereum to mint SATORI of the same amount (minus the bridge fees for gas) directly to the Ethereum address provided.
             <br> • The bridging process can take up to 2 hours to ensure there are no double spends.
-            <br>Please send small amounts. THIS ACTION WILL BURN SATORI. Use at your own risk.
+            <br>Please don't send large amounts. THIS ACTION WILL BURN SATORI. Use at your own risk.
           </p>
         </div>
           <div style="padding: 1.25rem;">
@@ -64,7 +64,7 @@
                 </div>
               </div>
               <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
-                <div class="input-group input-group-outline" onclick="">
+                <div class="input-group input-group-outline" onclick="showWorking();">
                   {% if darkmode %}{{ bridgeSatoriTransaction.bridgeSubmit(size=32, class_="tight form-control dark-colors", onclick="if(validateBridgeJs() && confirmationBridge()) showWorking();") }}
                   {% else %}{{ bridgeSatoriTransaction.bridgeSubmit(size=32, class_="tight form-control", onclick="if(validateBridgeJs() && confirmationBridge()) showWorking();") }}
                   {% endif %}
