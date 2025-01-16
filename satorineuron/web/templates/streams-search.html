@@ -718,7 +718,6 @@
       Zoom = document.getElementById("ZoomValue").value;
 
       const msInOneMinute = 10 * 60 * 100 * Zoom;
-      
       return new Date(Math.round(new Date(date).getTime() / msInOneMinute) * msInOneMinute);
   };
     // Process observations to group by 10-minute intervals
@@ -747,7 +746,6 @@
         return data.predictionAvg / data.count; // Average prediction value
     });
 
-    
     iterator = combinedTimes.length-1;
     combinedTimes.reverse().forEach(time => {
       const row = document.createElement('tr');
