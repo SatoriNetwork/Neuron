@@ -163,6 +163,8 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.2.0/chartjs-plugin-zoom.min.js"></script>
 <script type="text/javascript">
   const darkmode = {{ 'true' if darkmode else 'false' }};
   let storedStreams = {{ allStreams|tojson }};
@@ -536,6 +538,7 @@
 
     const ctx = graphCanvas.getContext('2d');
 
+    Chart.register(ChartZoom);
     const chartData = {
       labels: [],
       datasets: [
@@ -609,7 +612,23 @@
             },
           },
         },
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'x',
+          },
+          zoom: {
+            
+            wheel: {
+              enabled: true
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'xy',
+          }
       },
+      }
     };
 
     if (observationsChart) {
@@ -699,7 +718,6 @@
       Zoom = document.getElementById("ZoomValue").value;
 
       const msInOneMinute = 10 * 60 * 100 * Zoom;
-      
       return new Date(Math.round(new Date(date).getTime() / msInOneMinute) * msInOneMinute);
   };
     // Process observations to group by 10-minute intervals
@@ -728,7 +746,6 @@
         return data.predictionAvg / data.count; // Average prediction value
     });
 
-    
     iterator = combinedTimes.length-1;
     combinedTimes.reverse().forEach(time => {
       const row = document.createElement('tr');
