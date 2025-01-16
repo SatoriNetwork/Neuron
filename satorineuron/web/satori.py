@@ -194,6 +194,11 @@ def getFile(ext: str = '.csv') -> tuple[str, int, Union[None, 'FileStorage']]:
 
 
 def getResp(resp: Union[dict, None] = None) -> dict:
+    try:
+        holdingBalance = start.holdingBalance
+    except Exception as e:
+        logging.debug(e)
+        holdingBalance = 0
     return {
         'version': VERSION,
         'lockEnabled': isActuallyLocked(),
@@ -203,6 +208,7 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'paused': start.paused,
         'darkmode': darkmode,
         'title': 'Satori',
+        'holdingBalance': holdingBalance,
         **(resp or {})}
 
 
@@ -1066,15 +1072,20 @@ def removeStreamByPost():
 ###############################################################################
 ## Routes - dashboard #########################################################
 ###############################################################################
-
+@app.route('/logout', methods=['GET', 'POST'])
+@closeVault
+def logOut():
+    return render_template('dashboard.html', **getResp({
+        'vaultOpened': False,
+        'vaultPasswordForm': presentVaultPasswordForm(),
+    }))
 
 @app.route('/')
 @app.route('/home', methods=['GET'])
 @app.route('/index', methods=['GET'])
-@app.route('/dashboard', methods=['GET'])
+@app.route('/dashboard', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
-@closeVault
 @authRequired
 def dashboard():
     '''
@@ -1129,93 +1140,104 @@ def dashboard():
         newRelayStream.history.data = badForm.get('history', '')
         return newRelayStream
 
+    def acceptSubmittion(passwordForm):
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
-    global firstRun
-    theFirstRun = firstRun
-    firstRun = False
-    # streamOverviews = (
-    #     [model.miniOverview() for model in start.engine.models]
-    #     if start.engine is not None else [])  # StreamOverviews.demo()
-    streamOverviews = [stream for stream in start.streamDisplay]
-    holdingBalance = start.holdingBalance
-    stakeStatus = holdingBalance >= constants.stakeRequired or (
-        start.details.wallet.get('rewardaddress', None) not in [
-            None,
-            start.details.wallet.get('address'),
-            start.details.wallet.get('vaultaddress')]
-        if start.details is not None else 0)
-    return render_template('dashboard.html', **getResp({
-        'firstRun': theFirstRun,
-        'wallet': start.wallet,
-        # instead of this make chain single source of truth
-        # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
-        'stakeStatus': stakeStatus,
-        'miningMode': start.miningMode,
-        'miningDisplay': 'none',
-        'proxyDisplay': 'none',
-        'stakeRequired': constants.stakeRequired,
-        'holdingBalance': holdingBalance,
-        'streamOverviews': streamOverviews,
-        'engineVersion': start.engineVersion,
-        'configOverrides': config.get(),
-        'paused': start.paused,
-        'newRelayStream': present_stream_form(),
-        'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
-        'quote': getRandomQuote(),
-        'relayStreams':  # example stream +
-        ([
-            {
-                **stream.asMap(noneToBlank=True),
-                **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
-                **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
-                **{'cadenceStr': deduceCadenceString(stream.cadence)},
-                **{'offsetStr': deduceOffsetString(stream.offset)}}
-            for stream in start.relay.streams]
-         if start.relay is not None else []),
+    if request.method == 'POST':
+            acceptSubmittion(forms.VaultPassword(formdata=request.form))
+    if start.vault is not None and not start.vault.isEncrypted:
+        # streamOverviews = (
+        #     [model.miniOverview() for model in start.engine.models]
+        #     if start.engine is not None else [])  # StreamOverviews.demo()
+        streamOverviews = [stream for stream in start.streamDisplay]
+        holdingBalance = start.holdingBalance
+        stakeStatus = holdingBalance >= constants.stakeRequired or (
+            start.details.wallet.get('rewardaddress', None) not in [
+                None,
+                start.details.wallet.get('address'),
+                start.details.wallet.get('vaultaddress')]
+            if start.details is not None else 0)
+        return render_template('dashboard.html', **getResp({
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'wallet': start.wallet,
+            # instead of this make chain single source of truth
+            # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
+            'stakeStatus': stakeStatus,
+            'miningMode': start.miningMode,
+            'miningDisplay': 'none',
+            'proxyDisplay': 'none',
+            'stakeRequired': constants.stakeRequired,
+            'streamOverviews': streamOverviews,
+            'engineVersion': start.engineVersion,
+            'configOverrides': config.get(),
+            'paused': start.paused,
+            'newRelayStream': present_stream_form(),
+            'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
+            'quote': getRandomQuote(),
+            'relayStreams':  # example stream +
+            ([
+                {
+                    **stream.asMap(noneToBlank=True),
+                    **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+                    **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
+                    **{'cadenceStr': deduceCadenceString(stream.cadence)},
+                    **{'offsetStr': deduceOffsetString(stream.offset)}}
+                for stream in start.relay.streams]
+            if start.relay is not None else []),
 
-        'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'):
-    '''
-    called and given the response each time
-    the endpoint for this data stream is hit.
-    returns the value of the observation
-    as a string, integer or double.
-    if empty string is returned the observation
-    is not relayed to the network.
-    '''
-    if response.text != '':
-        return float(response.json().get('Close', -1.0))
-    return -1.0
-""",
-        'placeholderGetHistory': """class GetHistory(object):
-    '''
-    supplies the history of the data stream
-    one observation at a time (getNext, isDone)
-    or all at once (getAll)
-    '''
-    def __init__(self):
-        pass
-
-    def getNext(self):
+            'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'):
         '''
-        should return a value or a list of two values,
-        the first being the time in UTC as a string of the observation,
-        the second being the observation value
+        called and given the response each time
+        the endpoint for this data stream is hit.
+        returns the value of the observation
+        as a string, integer or double.
+        if empty string is returned the observation
+        is not relayed to the network.
         '''
-        return None
-
-    def isDone(self):
-        ''' returns true when there are no more observations to supply '''
-        return None
-
-    def getAll(self):
+        if response.text != '':
+            return float(response.json().get('Close', -1.0))
+        return -1.0
+        """,
+            'placeholderGetHistory': """class GetHistory(object):
         '''
-        if getAll returns a list or pandas DataFrame
-        then getNext is never called
+        supplies the history of the data stream
+        one observation at a time (getNext, isDone)
+        or all at once (getAll)
         '''
-        return None
+        def __init__(self):
+            pass
 
-""",
-    }))
+        def getNext(self):
+            '''
+            should return a value or a list of two values,
+            the first being the time in UTC as a string of the observation,
+            the second being the observation value
+            '''
+            return None
+
+        def isDone(self):
+            ''' returns true when there are no more observations to supply '''
+            return None
+
+        def getAll(self):
+            '''
+            if getAll returns a list or pandas DataFrame
+            then getNext is never called
+            '''
+            return None
+
+        """,
+        }))
+    else:
+        return render_template('dashboard.html', **getResp({
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
+
 
 
 @app.route('/fetch/wallet/stats/daily', methods=['GET'])
@@ -1490,7 +1512,6 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 @app.route('/wallet/<network>', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
-@closeVault
 @authRequired
 def wallet(network: str = 'main'):
 
@@ -1664,11 +1685,6 @@ def vault():
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
-        global firstRun
-        theFirstRun = firstRun
-        firstRun = False
-        if theFirstRun:
-            return redirect('/dashboard')
         # start.workingUpdates.put('downloading balance...')
         from satorilib.wallet.ethereum.wallet import EthereumWallet
         account = EthereumWallet.generateAccount(start.vault._entropy)
@@ -1979,23 +1995,30 @@ def vote():
         # }]
 
     def acceptSubmittion(passwordForm):
-        _vault = start.openVault(password=passwordForm.password.data)
-        # if rvn is None and not rvn.isEncrypted:
-        #    flash('unable to open vault')
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
 
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
 
-    myWallet = start.getWallet()
-    return render_template('vote.html', **getResp({
-        'title': 'Vote',
-        'network': start.network,
-        'vaultPasswordForm': presentVaultPasswordForm(),
-        'vaultOpened': False,
-        'wallet': myWallet,
-        'vault': start.vault,
-        'streams': getStreams(myWallet),
-        **getVotes(myWallet)}))
+    if start.vault is not None and not start.vault.isEncrypted:
+        myWallet = start.getWallet()
+        return render_template('vote.html', **getResp({
+            'title': 'Vote',
+            'network': start.network,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'vaultOpened': True,
+            'wallet': myWallet,
+            'vault': start.vault,
+            'streams': getStreams(myWallet),
+            **getVotes(myWallet)}))
+    else:
+        return render_template('vote.html', **getResp({
+            'title': 'Vote',
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
 
 @app.route('/pool/participants', methods=['GET', 'POST'])
 @userInteracted
@@ -2018,15 +2041,33 @@ def streams():
     # if searchText is not None:
     #     streamsData = getStreams(searchText)
     #     return jsonify({'streams': streamsData})
-    oracleStreams = start.getAllOracleStreams(fetch=True)
-    return render_template('streams.html', **getResp({
-        'title': 'Streams',
-        'network': start.network,
-        'vault': start.vault,
-        'darkmode': darkmode,
-        'streams': oracleStreams[0:100],
-        'totalStreams': len(oracleStreams),
-        'allStreams': oracleStreams}))
+
+    def acceptSubmittion(passwordForm):
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+
+    if start.vault is not None and not start.vault.isEncrypted:
+        oracleStreams = start.getAllOracleStreams(fetch=True)
+        return render_template('streams.html', **getResp({
+            'title': 'Streams',
+            'network': start.network,
+            'vault': start.vault,
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'darkmode': darkmode,
+            'streams': oracleStreams[0:100],
+            'totalStreams': len(oracleStreams),
+            'allStreams': oracleStreams}))
+    else:
+        return render_template('streams.html', **getResp({
+            'title': 'Streams',
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
 
 
 @app.route('/vote_on/sanction/incremental', methods=['POST'])
@@ -2056,12 +2097,31 @@ def getObservations():
     return jsonify({'observations': observations}), 200
 
 
-@app.route('/proposals', methods=['GET'])
+@app.route('/proposals', methods=['GET','POST'])
 @userInteracted
 @vaultRequired
 @authRequired
 def proposals():
-    return render_template('proposals.html', **getResp({'title': 'Proposals'}))
+    def acceptSubmittion(passwordForm):
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+
+    if start.vault is not None and not start.vault.isEncrypted:
+        return render_template('proposals.html', **getResp({
+            'title': 'Proposals',
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            }))
+    else:
+        return render_template('proposals.html', **getResp({
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'title': 'Proposals'
+        }))
 
 
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])

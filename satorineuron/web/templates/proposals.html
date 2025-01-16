@@ -1,10 +1,14 @@
 {% extends "basic.html" %}
 {% block content %}
 
+{% if vaultOpened %}
 <div id="proposalsCreatebr"></div>
 {% include 'proposals-create.html' %}
 <br id="proposalsExplorebr">
 {% include 'proposals-explore.html' %}
 
 {% include 'footer-on-front.html' %}
+{% else %}
+    {% include 'proposals-lock.html' %}
+{% endif %}
 {% endblock %}

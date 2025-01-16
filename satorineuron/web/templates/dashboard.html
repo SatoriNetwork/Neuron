@@ -1,25 +1,29 @@
 {% extends "basic.html" %}
 {% block content %}
-  {% if holdingBalance == 0 %}
-    {% include 'dashboard-welcome.html' %}
+  {% if vaultOpened %}
+    {% if holdingBalance == 0 %}
+      {% include 'dashboard-welcome.html' %}
+    {% endif %}
+    {% include 'dashboard-top.html' %}
+    <!--<br id='invitebr'>
+    include 'dashboard-invite.html' move into balances next to wallet eventually-->
+    <!--br id='rankbr'>
+    include 'dashboard-rank.html'-->
+    <!--br id='extrasbr'>
+    include 'dashboard-extras.html'-->
+    <br id='predictionsbr'>
+    {% include 'dashboard-predictions.html' %}
+    {% if relayStreams|length > 0 %}
+      <br id='oraclesbr'>
+      {% include 'dashboard-oracles.html' %}
+    {% endif %}
+    <br id='createbr'>
+    {% include 'dashboard-create.html' %}
+    {% include 'dashboard-eula.html' %}
+    {% include 'footer-on-front.html' %}
+  {% else %}
+    {% include 'dashboard-lock.html' %}
   {% endif %}
-  {% include 'dashboard-top.html' %}
-  <!--<br id='invitebr'>
-  include 'dashboard-invite.html' move into balances next to wallet eventually-->
-  <!--br id='rankbr'>
-  include 'dashboard-rank.html'-->
-  <!--br id='extrasbr'>
-  include 'dashboard-extras.html'-->
-  <br id='predictionsbr'>
-  {% include 'dashboard-predictions.html' %}
-  {% if relayStreams|length > 0 %}
-    <br id='oraclesbr'>
-    {% include 'dashboard-oracles.html' %}
-  {% endif %}
-  <br id='createbr'>
-  {% include 'dashboard-create.html' %}
-  {% include 'dashboard-eula.html' %}
-  {% include 'footer-on-front.html' %}
 {% endblock %}
 
 

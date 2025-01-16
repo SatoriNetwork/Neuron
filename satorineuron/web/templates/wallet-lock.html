@@ -1,9 +1,16 @@
 {% block content %}
 <div class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="z-index: 9999 !important; left:0px; background: {% if darkmode %}#212529 !important;{% else %}#f0f2f5 !important;{% endif %} display: {% if vaultOpened %}none{% else %}block{% endif %};">
-  <div class="container-for-center vertical-center" style="padding-left: 0px;">
+  <div class="container-for-center vertical-center" style="padding-left: 0px; top: 10%">
     <div class="tight">
       <div class="row mb-4">
         <center>
+          <!-- Logo and Title above the textbox with styling changes, Mizuki -->
+          <div style="margin-bottom: 50px; font-family: Zen Maru Gothic;">
+            <header style="font-size: 80px;">Welcome to</header>
+            <span class="text-black" title="{{v}}" style="font-size: 120px; color: black;">
+              Sat<img src="{{ url_for('static', filename='img/ensodarkclear.png') }}" width="70" style='margin-right: 0.2rem; filter: invert(100%);'>ri
+            </span>
+          </div>
           <div class="col-xl-10 col-sm-10 mb-xl-4 mb-4">
             <form action="/wallet/{{network}}" method="POST">
               {{ vaultPasswordForm.hidden_tag() }}
@@ -29,6 +36,7 @@
                       onclick="if(validateVaultPassword()) showWorking();") }}
                 </div>
               </div>
+              <button class="d-flex flex-row gap-2 btn btn-outline-dark" onclick="checkEnter(event);">Login</button> <!-- Login Button added, Mizuki -->
             </form>
             <!--<input
             style="text-align: center;"

@@ -972,3 +972,15 @@ input:checked + .slider:before {
 .no-scroll {
   overflow: hidden;
 }
+
+/* Login Button class */
+.login-btn {
+  text-align: center;
+}
+.login-btn:hover {
+  background-color: grey;
+}
+.login-btn:active {
+  background-color: #10051D;
+  color: whitesmoke;
+}
