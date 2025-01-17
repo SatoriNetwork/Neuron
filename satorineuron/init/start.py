@@ -5,6 +5,7 @@ import json
 import random
 import threading
 from queue import Queue
+import asyncio
 from satorilib.concepts.structs import (
     StreamId,
     Stream,
@@ -97,7 +98,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
-        self.dataClient: DataClient= DataClient()
+        self.dataClient: DataClient= DataClient("./client", "client.db")
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -284,7 +285,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def networkIsTest(self, network: str = None) -> bool:
         return network.lower().strip() in ("testnet", "test", "ravencoin", "rvn")
 
-    def start(self):
+    async def start(self):
         """start the satori engine."""
         # while True:
         if self.ranOnce:
@@ -300,6 +301,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
+        logging.debug("Before", print=True)
+        await self.initializeDataClient()
+        logging.debug("After", print=True)
         self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
@@ -309,7 +313,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.startRelay()
         self.buildEngine()
-        self.initializeDataClient()
+        
         time.sleep(60 * 60 * 24)
 
     def engine_necessary(self):
@@ -619,15 +623,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
     
+    # TODO : None type error
     async def initializeDataClient(self):
         """Initialize the DataClient"""
         try:
-            # Create async task to connect to DataServer
+            logging.debug("Inside", print=True)
             await self.dataClient.connectToPeer("0.0.0.0", 24602)
-            
-            # Register streams
             await self._registerStreams()
-            
             logging.info("DataClient initialized and connected to DataServer", color="green")
         except Exception as e:
             logging.error(f"Failed to initialize DataClient: {e}")
@@ -636,23 +638,23 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def _registerStreams(self):
         """Register subscriptions and publications with the DataServer"""
         if not self.dataClient:
-            return
+            return # TODO :  then reconnect to client
         # Register subscriptions
         for subscription in self.subscriptions:
             try:
+                logging.debug(subscription.streamId, print=True)
                 stream_dict = {
                 "source": subscription.streamId.source,
                 "author": subscription.streamId.author,
                 "stream": subscription.streamId.stream,
                 "target": subscription.streamId.target
-            }
-                table_uuid = str(generateUUID(stream_dict))
-                await self.dataClient.subscribe(
+                }
+                response = await self.dataClient.sendRequest(
                     peerAddr=("0.0.0.0", 24602),
-                    table_uuid=table_uuid,
-                    method="subscribe"
+                    table_uuid=str(generateUUID(stream_dict)),
+                    method="stream_data"
                 )
-                logging.info(f"Registered subscription: {subscription.streamId.topic()}", color="green")
+                logging.info(f"Registered subscription: {response}", color="green")
             except Exception as e:
                 logging.error(f"Failed to register subscription {subscription.streamId.topic()}: {e}")
                 
