@@ -29,6 +29,8 @@ from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
+from satorilib.data.datamanager import DataClient
+from satorilib.utils import generateUUID
 
 def getStart():
     """returns StartupDag singleton"""
@@ -95,6 +97,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
+        self.dataClient: DataClient= DataClient()
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -306,6 +309,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.startRelay()
         self.buildEngine()
+        self.initializeDataClient()
         time.sleep(60 * 60 * 24)
 
     def engine_necessary(self):
@@ -614,6 +618,44 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     pubkey=self.wallet.publicKey + ":publishing",
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
+    
+    async def initializeDataClient(self):
+        """Initialize the DataClient"""
+        try:
+            # Create async task to connect to DataServer
+            await self.dataClient.connectToPeer("0.0.0.0", 24602)
+            
+            # Register streams
+            await self._registerStreams()
+            
+            logging.info("DataClient initialized and connected to DataServer", color="green")
+        except Exception as e:
+            logging.error(f"Failed to initialize DataClient: {e}")
+            self.dataClient = None
+
+    async def _registerStreams(self):
+        """Register subscriptions and publications with the DataServer"""
+        if not self.dataClient:
+            return
+        # Register subscriptions
+        for subscription in self.subscriptions:
+            try:
+                stream_dict = {
+                "source": subscription.streamId.source,
+                "author": subscription.streamId.author,
+                "stream": subscription.streamId.stream,
+                "target": subscription.streamId.target
+            }
+                table_uuid = str(generateUUID(stream_dict))
+                await self.dataClient.subscribe(
+                    peerAddr=("0.0.0.0", 24602),
+                    table_uuid=table_uuid,
+                    method="subscribe"
+                )
+                logging.info(f"Registered subscription: {subscription.streamId.topic()}", color="green")
+            except Exception as e:
+                logging.error(f"Failed to register subscription {subscription.streamId.topic()}: {e}")
+                
 
     def startRelay(self):
         def append(streams: list[Stream]):
