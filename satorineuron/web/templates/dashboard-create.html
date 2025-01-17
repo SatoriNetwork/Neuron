@@ -1,5 +1,5 @@
 {% block content %}
-<div id='CreateDataStream', class="row mb-4">
+<div id='CreateDataStream' , class="row mb-4">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
@@ -20,44 +20,48 @@
                   </p>-->
                   <a href="{{ url_for('static', filename='download/satori_datastream_form.csv') }}" target="_blank">
                     <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
-                      <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>
+                      <i class="material-icons {% if darkmode %}dark-text{% endif %}"
+                        style="font-size: 28px;">file_download</i>
                     </button>
                   </a>
-                  <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" type="file" id="csvDatastreamFile" name="file" accept=".csv" style="display:none;">
-                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" type="submit" onclick="document.getElementById('csvDatastreamFile').click();">
-                    <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_upload</i>
+                  <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" type="file"
+                    id="csvDatastreamFile" name="file" accept=".csv" style="display:none;">
+                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" type="submit"
+                    onclick="document.getElementById('csvDatastreamFile').click();">
+                    <i class="material-icons {% if darkmode %}dark-text{% endif %}"
+                      style="font-size: 28px;">file_upload</i>
                   </button>
                   <script>
                     const fileDatastreamInput = document.getElementById('csvDatastreamFile');
                     fileDatastreamInput.addEventListener('change', () => {
-                        const file = fileDatastreamInput.files[0];
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        showWorking();
-                        var working_output = document.getElementById("working_message");
-                        var working_update = new EventSource("/working_updates");
-                        working_update.onmessage = function (e) {
-                          console.log(e.data);
-                          working_output.innerHTML = e.data;
-                        };
-                        fetch('/upload_datastream_csv', {
-                            method: 'POST',
-                            body: formData
-                        })
+                      const file = fileDatastreamInput.files[0];
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      showWorking();
+                      var working_output = document.getElementById("working_message");
+                      var working_update = new EventSource("/working_updates");
+                      working_update.onmessage = function (e) {
+                        console.log(e.data);
+                        working_output.innerHTML = e.data;
+                      };
+                      fetch('/upload_datastream_csv', {
+                        method: 'POST',
+                        body: formData
+                      })
                         .then(response => {
                           console.log(response.status);
                           console.log(response.text);
-                          if (response.ok){
+                          if (response.ok) {
                             console.log('show success message?');
                           } else {
                             console.log('show failure message?');
                           }
                           hideWorking();
                           working_update.close();
-                          fetch('/working_updates_end', {method: 'GET'});
+                          fetch('/working_updates_end', { method: 'GET' });
                         })
                         .catch(error => {
-                            console.error('Error:', error);
+                          console.error('Error:', error);
                         });
                     });
                   </script>
@@ -89,7 +93,7 @@
       </div>
       <div class="card-body px-0 pb-2">
         <div style="padding: 1.25rem;">
-            <!--{{ newRelayStream.hidden_tag() }}
+          <!--{{ newRelayStream.hidden_tag() }}
             {{ newRelayStream.csrf_token }}
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="nameDescription();">
@@ -435,17 +439,18 @@
                 </div>
               </div>
             </div>-->
-            <div class="row">
-              <div class="col-xl-12 col-sm-12">
-                <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
-                  <button class="flex-row btn btn-outline-dark" style="width: 100%" id="btnOpenForm"> Create Oracle Datastream
-                    <!--{% if darkmode %}{{ newRelayStream.submit(size=32, class_="tight form-control dark-colors"  ) }}
+          <div class="row">
+            <div class="col-xl-12 col-sm-12">
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
+                <button class="flex-row btn btn-outline-dark" style="width: 100%" id="btnOpenForm" onclick="openForm()"> Create Oracle
+                  Datastream
+                  <!--{% if darkmode %}{{ newRelayStream.submit(size=32, class_="tight form-control dark-colors"  ) }}
                     {% else %}{{ newRelayStream.submit(size=32, class_="tight form-control") }}
                     {% endif %}-->
-                  </button>
-                </div>
+                </button>
               </div>
             </div>
+          </div>
         </div>
       </div>
     </div>
@@ -458,31 +463,39 @@
 <p id="learn_output3"></p>
 
 <div class="form-popup-bg">
-  <div class="form-container bg-gradient-dark">
+  <div class="form-container bg-gradient-dark" id="step1_desc">
     <button id="btnCloseForm" class="close-button">X</button>
     <h1 class="text-white">Create a Datastream</h1>
     <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
     <form action="">
       <div class="form-group">
         <label class="text-white" for="">Name</label>
-        <input type="text" class="form-control"  placeholder="BTC1HR" style="padding: 5px;" />
+        <input type="text" class="form-control" placeholder="BTC1HR" style="padding: 5px;" />
       </div>
       <div class="form-group">
         <label class="text-white" for="">Interval</label>
         <div class="row">
           <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
             <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
-                <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
-                <input type="number" id="dayCadence" name="dayCadence" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);">
-                <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
-                <input type="number" id="hourCadence" name="hourCadence" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);">
-                <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
-                <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);">
-                <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
-                <input type="number" id="secondCadence" name="secondCadence" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);">
-            </div>     
-          </div>     
-        </div>     
+              <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
+              <input type="number" id="dayCadence" name="dayCadence" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=3650
+                oninput="enforceIntegerValue(this, 0, 3650);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
+              <input type="number" id="hourCadence" name="hourCadence" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=24
+                oninput="enforceIntegerValue(this, 0, 24);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
+              <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60
+                oninput="enforceIntegerValue(this, 0, 60);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
+              <input type="number" id="secondCadence" name="secondCadence" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60
+                oninput="enforceIntegerValue(this, 0, 60);">
+            </div>
+          </div>
+        </div>
       </div>
       <div class="form-group">
         <label class="text-white" for="">Offset</label>
@@ -490,14 +503,20 @@
           <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
             <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
               <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
-              <input type="number" id="hourOffset" name="hourOffset" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);">
+              <input type="number" id="hourOffset" name="hourOffset" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=24
+                oninput="enforceIntegerValue(this, 0, 24);">
               <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
-              <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);">
+              <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=60
+                oninput="enforceIntegerValue(this, 0, 60);">
               <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
-              <input type="number" id="secondOffset" name="secondOffset" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);">
-            </div>     
-          </div>    
-        </div> 
+              <input type="number" id="secondOffset" name="secondOffset" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=3650
+                oninput="enforceIntegerValue(this, 0, 3650);">
+            </div>
+          </div>
+        </div>
       </div>
       <div class="form-group">
         <label class="text-white" for="">Tags</label>
@@ -505,7 +524,78 @@
       </div>
       <div class="form-group">
         <label class="text-white" for="">Description</label>
-        <textarea class="form-control" type="text" placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours." style="padding: 5px;"></textarea>
+        <textarea class="form-control" type="text"
+          placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours."
+          style="padding: 5px;"></textarea>
+      </div>
+      <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;">Prev</button>
+      <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_desc')">Next</button>
+    </form>
+  </div>
+  <div class="form-container bg-gradient-dark" id="step2_desc">
+    <button id="btnCloseForm" class="close-button">X</button>
+    <h1 class="text-white">Create a Datastream 2</h1>
+    <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+    <form action="">
+      <div class="form-group">
+        <label class="text-white" for="">Name</label>
+        <input type="text" class="form-control" placeholder="BTC1HR" style="padding: 5px;" />
+      </div>
+      <div class="form-group">
+        <label class="text-white" for="">Interval</label>
+        <div class="row">
+          <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
+            <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
+              <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
+              <input type="number" id="dayCadence" name="dayCadence" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=3650
+                oninput="enforceIntegerValue(this, 0, 3650);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
+              <input type="number" id="hourCadence" name="hourCadence" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=24
+                oninput="enforceIntegerValue(this, 0, 24);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
+              <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60
+                oninput="enforceIntegerValue(this, 0, 60);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
+              <input type="number" id="secondCadence" name="secondCadence" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60
+                oninput="enforceIntegerValue(this, 0, 60);">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="text-white" for="">Offset</label>
+        <div class="row">
+          <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
+            <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
+              <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
+              <input type="number" id="hourOffset" name="hourOffset" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=24
+                oninput="enforceIntegerValue(this, 0, 24);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
+              <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=60
+                oninput="enforceIntegerValue(this, 0, 60);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
+              <input type="number" id="secondOffset" name="secondOffset" class="tight form-control"
+                style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=3650
+                oninput="enforceIntegerValue(this, 0, 3650);">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="text-white" for="">Tags</label>
+        <input class="form-control" type="text" placeholder="bitcoin, 1hr" style="padding: 5px;" />
+      </div>
+      <div class="form-group">
+        <label class="text-white" for="">Description</label>
+        <textarea class="form-control" type="text"
+          placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours."
+          style="padding: 5px;"></textarea>
       </div>
       <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;">Submit</button>
     </form>
@@ -513,62 +603,75 @@
 </div>
 
 <script>
-function closeForm() {
-  $(".form-popup-bg").removeClass("is-visible");
-}
+  function openForm() {
+    const popup_initial = document.getElementById('step1_desc');
+    popup_initial.classList.add('active');
+  }
+  function closeForm() {
+    $(".form-popup-bg").removeClass("is-visible");
+  }
 
-$(document).ready(function ($) {
-  /* Contact Form Interactions */
-  $("#btnOpenForm").on("click", function (event) {
-    event.preventDefault();
-
-    $(".form-popup-bg").addClass("is-visible");
-  });
-
-  //close popup when clicking x or off popup
-  $(".form-popup-bg").on("click", function (event) {
-    if (
-      $(event.target).is(".form-popup-bg") ||
-      $(event.target).is("#btnCloseForm")
-    ) {
+  $(document).ready(function ($) {
+    /* Contact Form Interactions */
+    $("#btnOpenForm").on("click", function (event) {
       event.preventDefault();
-      $(this).removeClass("is-visible");
-    }
-  });
-});
+      $(".form-popup-bg").addClass("is-visible");
+    });
 
+    //close popup when clicking x or off popup
+    $(".form-popup-bg").on("click", function (event) {
+      if (
+        $(event.target).is(".form-popup-bg") ||
+        $(event.target).is("#btnCloseForm")
+      ) {
+        event.preventDefault();
+        $(this).removeClass("is-visible");
+      }
+    });
+  });
+  function navPopup(popup_id){
+    const activePopup = document.querySelector('.form-container.active');
+    if (activePopup) {
+      activePopup.remove('active');
+    }
+
+    const nextPopup = document.getElementById(popup_id)
+    if (nextPopup) {
+      nextPopup.classList.add('active');
+    }
+  }
 </script>
 
-<script>  
+<script>
   function shorten(x) {
     if (x.length > 25) {
-      return x.substring(0,15) + '...';
+      return x.substring(0, 15) + '...';
     }
     return x;
-	}
+  }
 
-	function validateCreateJs() {
-		/// this validation() method is always false:
-		//console.log("{ { newRelayStream.validate() } }");
-		//return "{ { newRelayStream.validate() } }" == "True";
+  function validateCreateJs() {
+    /// this validation() method is always false:
+    //console.log("{ { newRelayStream.validate() } }");
+    //return "{ { newRelayStream.validate() } }" == "True";
 
-		/// so we're using js to validate the required fields manually:
-		return (
-			document.getElementById("name").value != "" &&
-			document.getElementById("cadence").value >= 60 &&
-			document.getElementById("url").value.startsWith("http") &&
-      (document.getElementById("offset").value== '' || document.getElementById("offset").value < 86400)
+    /// so we're using js to validate the required fields manually:
+    return (
+      document.getElementById("name").value != "" &&
+      document.getElementById("cadence").value >= 60 &&
+      document.getElementById("url").value.startsWith("http") &&
+      (document.getElementById("offset").value == '' || document.getElementById("offset").value < 86400)
       // don't require uri, if blank it'll automatically populate from url
-			//  && document.getElementById("uri").value.startsWith("http")
-      );
-	}
+      //  && document.getElementById("uri").value.startsWith("http")
+    );
+  }
 </script>
 <script>
-	function deleteRelayStream(name, target) {
-		console.log('DELETE');
-		console.log(name);
-		console.log(target);
-	}
+  function deleteRelayStream(name, target) {
+    console.log('DELETE');
+    console.log(name);
+    console.log(target);
+  }
 </script>
 <script>
   function defaultMessage() {
@@ -631,7 +734,7 @@ $(document).ready(function ($) {
     document.getElementById("helpArea1").innerHTML = "History (private)";
     document.getElementById("helpArea").innerHTML = "A python class that gathers the history of this datastream before making the datastream publicly available. <br />NOTE: Gathering the history can take a long time, so if you see a spinner for a long time please be patient. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly what the code does before you submit this form.";
   }
-  async function hookCreation()  {
+  async function hookCreation() {
     const response = await fetch('http://127.0.0.1:24601/hook/' + document.getElementById("target").value);
     document.getElementById("hook").value = await response.text();
   }
