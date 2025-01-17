@@ -98,7 +98,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
-        self.dataClient: DataClient= DataClient("./client", "client.db")
+        self.dataClient: DataClient
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -628,6 +628,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """Initialize the DataClient"""
         try:
             logging.debug("Inside", print=True)
+            self.dataClient = DataClient("./client", "client.db")
             await self.dataClient.connectToPeer("0.0.0.0", 24602)
             await self._registerStreams()
             logging.info("DataClient initialized and connected to DataServer", color="green")
@@ -652,7 +653,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 response = await self.dataClient.sendRequest(
                     peerAddr=("0.0.0.0", 24602),
                     table_uuid=str(generateUUID(stream_dict)),
-                    method="stream_data"
+                    method='subscribe'
                 )
                 logging.info(f"Registered subscription: {response}", color="green")
             except Exception as e:
