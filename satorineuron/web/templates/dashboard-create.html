@@ -10,7 +10,7 @@
               <div class="col-lg-10 col-10">
                 <h6 class="{% if darkmode %}dark-colors{% endif %}">Create Oracle Datastream</h6>
                 <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
-                  Fill out the form to published a new primary datastream to the Satori Network
+                  Fill out the form to publish a new primary datastream to the Satori Network
                 </p>
               </div>
               <div class="col-lg-2 col-2">
@@ -64,7 +64,7 @@
                 </div>
               </div>
             </div>
-            <div class="pt-3 px-3" style="height:100px;">
+            <!-- <div class="pt-3 px-3" style="height:100px;">
               <p id="ErrorArea" class="mb-0 text-sm">
                 {% if newRelayStream.errors %}
                 <ul class="errors">
@@ -83,7 +83,7 @@
               </p>
               <p id="helpArea1" class="mb-0 text-sm"></p>
               <p id="helpArea" class="mb-0 text-sm"></p>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
@@ -438,7 +438,7 @@
             <div class="row">
               <div class="col-xl-12 col-sm-12">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
-                  <button id="btnOpenForm"> Create Stream
+                  <button class="flex-row btn btn-outline-dark" style="width: 100%" id="btnOpenForm"> Create Oracle Datastream
                     <!--{% if darkmode %}{{ newRelayStream.submit(size=32, class_="tight form-control dark-colors"  ) }}
                     {% else %}{{ newRelayStream.submit(size=32, class_="tight form-control") }}
                     {% endif %}-->
@@ -458,28 +458,56 @@
 <p id="learn_output3"></p>
 
 <div class="form-popup-bg">
-  <div class="form-container">
+  <div class="form-container bg-gradient-dark">
     <button id="btnCloseForm" class="close-button">X</button>
-    <h1>Contact Us</h1>
-    <p>For more information. Please complete this form.</p>
+    <h1 class="text-white">Create a Datastream</h1>
+    <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
     <form action="">
       <div class="form-group">
-        <label for="">Name</label>
-        <input type="text" class="form-control" />
+        <label class="text-white" for="">Name</label>
+        <input type="text" class="form-control"  placeholder="BTC1HR" style="padding: 5px;" />
       </div>
       <div class="form-group">
-        <label for="">Company Name</label>
-        <input class="form-control" type="text" />
+        <label class="text-white" for="">Interval</label>
+        <div class="row">
+          <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
+            <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
+                <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
+                <input type="number" id="dayCadence" name="dayCadence" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);">
+                <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
+                <input type="number" id="hourCadence" name="hourCadence" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);">
+                <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
+                <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);">
+                <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
+                <input type="number" id="secondCadence" name="secondCadence" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);">
+            </div>     
+          </div>     
+        </div>     
       </div>
       <div class="form-group">
-        <label for="">E-Mail Address</label>
-        <input class="form-control" type="text" />
+        <label class="text-white" for="">Offset</label>
+        <div class="row">
+          <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
+            <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
+              <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
+              <input type="number" id="hourOffset" name="hourOffset" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
+              <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);">
+              <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
+              <input type="number" id="secondOffset" name="secondOffset" class="tight form-control" style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);">
+            </div>     
+          </div>    
+        </div> 
       </div>
       <div class="form-group">
-        <label for="">Phone Number</label>
-        <input class="form-control" type="text" />
+        <label class="text-white" for="">Tags</label>
+        <input class="form-control" type="text" placeholder="bitcoin, 1hr" style="padding: 5px;" />
       </div>
-      <button>Submit</button>
+      <div class="form-group">
+        <label class="text-white" for="">Description</label>
+        <textarea class="form-control" type="text" placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours." style="padding: 5px;"></textarea>
+      </div>
+      <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;">Submit</button>
     </form>
   </div>
 </div>

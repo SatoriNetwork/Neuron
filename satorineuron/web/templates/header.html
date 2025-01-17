@@ -419,18 +419,4 @@
       }).catch(error => console.error('Error:', error));
     }
 </script>
-<script>
-  window.onload = function() {
-    document.getElementById("getSatori").innerHTML = getSatori();
-  }
-
-  function getSatori(){
-    try{
-      return "Satori: " + wallet.balance.amount
-    }
-    catch (TypeError) {
-      return "Unable to load Satori";
-    }
-  }
-</script>
     <!-- End Navbar -->
