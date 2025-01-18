@@ -30,7 +30,7 @@ from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
-from satorilib.data.datamanager import DataClient
+from satorilib.datamanager import DataClient
 from satorilib.utils import generateUUID
 
 def getStart():
@@ -301,9 +301,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        logging.debug("Before", print=True)
         await self.initializeDataClient()
-        logging.debug("After", print=True)
         self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
@@ -628,8 +626,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """Initialize the DataClient"""
         try:
             logging.debug("Inside", print=True)
-            self.dataClient = DataClient("./client", "client.db")
-            await self.dataClient.connectToPeer("0.0.0.0", 24602)
+            self.dataClient = DataClient()
+            await self.dataClient.connectToServer("0.0.0.0", 24602)
             await self._registerStreams()
             logging.info("DataClient initialized and connected to DataServer", color="green")
         except Exception as e:

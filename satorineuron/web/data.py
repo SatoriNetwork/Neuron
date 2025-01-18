@@ -1,6 +1,6 @@
 # from Lib.satorilib.data.datamanager import DataServer
 import asyncio
-from satorilib.data.datamanager import DataServer
+from satorilib.datamanager import DataServer
 
 async def runServerForever():
     server = DataServer('0.0.0.0', 24602, "../../data")
