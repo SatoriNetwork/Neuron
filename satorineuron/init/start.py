@@ -651,7 +651,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 response = await self.dataClient.sendRequest(
                     peerAddr=("0.0.0.0", 24602),
                     table_uuid=str(generateUUID(stream_dict)),
-                    method='subscribe'
+                    method='subscribe' # subscribers-list
                 )
                 logging.info(f"Registered subscription: {response}", color="green")
             except Exception as e:
