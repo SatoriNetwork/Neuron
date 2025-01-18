@@ -5,7 +5,7 @@ import json
 import random
 import threading
 from queue import Queue
-import asyncio
+import pandas as pd
 from satorilib.concepts.structs import (
     StreamId,
     Stream,
@@ -620,8 +620,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     pubkey=self.wallet.publicKey + ":publishing",
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
-    
-    # TODO : None type error
+
     async def initializeDataClient(self):
         """Initialize the DataClient"""
         try:
@@ -648,14 +647,36 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 "stream": subscription.streamId.stream,
                 "target": subscription.streamId.target
                 }
+                sub_df = pd.DataFrame([stream_dict])
                 response = await self.dataClient.sendRequest(
                     peerAddr=("0.0.0.0", 24602),
                     table_uuid=str(generateUUID(stream_dict)),
-                    method='subscribe' # subscribers-list
+                    method='subscribers-list', # subscribers-list
+                    data=sub_df
                 )
                 logging.info(f"Registered subscription: {response}", color="green")
             except Exception as e:
                 logging.error(f"Failed to register subscription {subscription.streamId.topic()}: {e}")
+
+        for publication in self.publications:
+            try:
+                logging.debug(publication.streamId, print=True)
+                stream_dict = {
+                    "source": publication.streamId.source,
+                    "author": publication.streamId.author,
+                    "stream": publication.streamId.stream,
+                    "target": publication.streamId.target
+                }
+                pub_df = pd.DataFrame([stream_dict])
+                response = await self.dataClient.sendRequest(
+                    peerAddr=("0.0.0.0", 24602),
+                    table_uuid=str(generateUUID(stream_dict)),
+                    method='publishers-list',
+                    data=pub_df
+                )
+                logging.info(f"Registered publication: {response}", color="green")
+            except Exception as e:
+                logging.error(f"Failed to register publication {publication.streamId.topic()}: {e}")
                 
 
     def startRelay(self):
