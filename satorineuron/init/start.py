@@ -97,7 +97,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.ipfs: Ipfs = Ipfs()
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
-        self.server: SatoriServerClient
         self.dataClient: DataClient
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
@@ -625,7 +624,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """Initialize the DataClient"""
         try:
             self.dataClient = DataClient()
-            await self.dataClient.connectToServer("0.0.0.0", 24602)
+            await self.dataClient.connectToServer("0.0.0.0", 24602) # TODO : what happens if this is not present
             await self._registerStreams()
             logging.info("DataClient initialized and connected to DataServer", color="green")
         except Exception as e:
@@ -634,28 +633,28 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     async def _registerStreams(self):
         """Share subscriptions and publications list as table_uuids with the DataServer"""
-        subList = []
-        pubList = []
+        subDict = {}
+        pubDict = {}
         for sub in self.subscriptions:
-            subDict = {
+            subStreamDict = {
             "source": sub.streamId.source,
             "author": sub.streamId.author,
             "stream": sub.streamId.stream,
             "target": sub.streamId.target
             }
-            subList.append(str(generateUUID(subDict)))
+            subDict[str(generateUUID(subStreamDict))] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
         for pub in self.publications:
-            pubDict = {
+            pubStreamDict = {
             "source": pub.streamId.source,
             "author": pub.streamId.author,
             "stream": pub.streamId.stream,
             "target": pub.streamId.target
             }
-            pubList.append(str(generateUUID(pubDict)))
+            pubDict[str(generateUUID(pubStreamDict))] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
         try:
             await self.dataClient.sendRequest(
                 peerAddr=("0.0.0.0", 24602),
-                table_uuid=subList,
+                table_uuid=subDict,
                 method='subscribers-list'
             )
         except Exception as e:
@@ -663,7 +662,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         try:
             await self.dataClient.sendRequest(
                 peerAddr=("0.0.0.0", 24602),
-                table_uuid=pubList,
+                table_uuid=pubDict,
                 method='publishers-list'
             )
         except Exception as e:
