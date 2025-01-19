@@ -794,6 +794,18 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
     return redirect(f'/vault/{network}')
 
 
+@app.route('/bridge/accept-tos', methods=['GET'])
+@userInteracted
+@authRequired
+def bridgeAcceptBurnBridgeTerms():
+    from satorilib.server import ofac
+    if ofac.acceptTerms():
+        if ofac.requestPermission():
+            return 'OK', 200
+        return 'error: please try again later.', 200
+    return 'FAIL', 200
+
+
 @app.route('/bridge_satori_transaction_from_vault/<network>', methods=['POST'])
 @userInteracted
 @authRequired
@@ -819,6 +831,20 @@ def bridgeSatoriTransactionFromVault(network: str = 'main'):
         flash(str(result))
         flash("Bridge process started successfully! We need to wait for some on-chain confirmations, it'll be done in an hour.")
     return redirect('/vault/main')
+
+
+@app.route('/set/eth/address', methods=['GET'])
+@userInteracted
+@authRequired
+def setEthAddress():
+    if start.vault is not None and not start.vault.isEncrypted:
+        from satorilib.wallet.ethereum.wallet import EthereumWallet
+        account = EthereumWallet.generateAccount(start.vault._entropy)
+        setEthAddressResult = start.server.setEthAddress(account.address)
+        logging.debug(f'setEthAddressResult: {setEthAddressResult}', color='blue')
+    if setEthAddressResult[0]:
+        return 'OK', 200
+    return 'failed', 500
 
 
 def sendSatoriTransactionUsing(
@@ -897,6 +923,9 @@ def bridgeSatoriTransactionUsing(
         myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
+
+        if bridgeForm['bridgeAmount'] > 100:
+            return 'Bridge Failed: too much satori, please try again with less than 100 Satori.'
 
         # should I send a transaction or send a partial?
         transactionResult = myWallet.typicalNeuronBridgeTransaction(
@@ -1147,7 +1176,7 @@ def dashboard():
 
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
     if request.method == 'POST':
-            acceptSubmittion(forms.VaultPassword(formdata=request.form))
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
         # streamOverviews = (
         #     [model.miniOverview() for model in start.engine.models]

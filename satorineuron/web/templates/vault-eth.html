@@ -10,14 +10,14 @@
           To see your balance import your private key into a wallet like Metamask.
         </p>
         <br/>
-        <div id='ethAddress'>{{ ethAddress }}</div>
+        <div id='ethAddress' onclick='document.getElementById("bridge-for-testing").style.display = "block";'>{{ ethAddress }}</div>
         <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">
           your ethereum address
         </p>
       </div>
       <hr class="dark horizontal my-3">
       <center>
-        <p id="showKeyEth" class="cursor-pointer danger text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('sensitiveKeyEth').style.display='block';document.getElementById('showKeyEth').style.display='none';">
+        <p id="showKeyEth" class="cursor-pointer danger text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('sensitiveKeyEth').style.display='block';document.getElementById('showKeyEth').style.display='none';setEthAddress();">
           Show private key
         </p>
         <div id="sensitiveKeyEth" style="display: none; margin-left:2rem; margin-right:2rem;">
@@ -30,4 +30,22 @@
     </div>
   </div>
 </div>
+<script>
+  function setEthAddress() {
+    fetch('/set/eth/address', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        return response.text().then(errorMessage => {
+          throw new Error(errorMessage || 'Network response was not ok.');
+        });
+      }
+    }).then(text => {
+      console.log(text);
+    }).catch(error => {
+      console.error('Error:', error)
+    });
+  }
+</script>
 {% endblock %}
