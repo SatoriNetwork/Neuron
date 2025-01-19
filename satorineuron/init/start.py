@@ -624,7 +624,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def initializeDataClient(self):
         """Initialize the DataClient"""
         try:
-            logging.debug("Inside", print=True)
             self.dataClient = DataClient()
             await self.dataClient.connectToServer("0.0.0.0", 24602)
             await self._registerStreams()
@@ -634,50 +633,41 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.dataClient = None
 
     async def _registerStreams(self):
-        """Register subscriptions and publications with the DataServer"""
-        if not self.dataClient:
-            return # TODO :  then reconnect to client
-        # Register subscriptions
-        for subscription in self.subscriptions:
-            try:
-                logging.debug(subscription.streamId, print=True)
-                stream_dict = {
-                "source": subscription.streamId.source,
-                "author": subscription.streamId.author,
-                "stream": subscription.streamId.stream,
-                "target": subscription.streamId.target
-                }
-                sub_df = pd.DataFrame([stream_dict])
-                response = await self.dataClient.sendRequest(
-                    peerAddr=("0.0.0.0", 24602),
-                    table_uuid=str(generateUUID(stream_dict)),
-                    method='subscribers-list', # subscribers-list
-                    data=sub_df
-                )
-                logging.info(f"Registered subscription: {response}", color="green")
-            except Exception as e:
-                logging.error(f"Failed to register subscription {subscription.streamId.topic()}: {e}")
-
-        for publication in self.publications:
-            try:
-                logging.debug(publication.streamId, print=True)
-                stream_dict = {
-                    "source": publication.streamId.source,
-                    "author": publication.streamId.author,
-                    "stream": publication.streamId.stream,
-                    "target": publication.streamId.target
-                }
-                pub_df = pd.DataFrame([stream_dict])
-                response = await self.dataClient.sendRequest(
-                    peerAddr=("0.0.0.0", 24602),
-                    table_uuid=str(generateUUID(stream_dict)),
-                    method='publishers-list',
-                    data=pub_df
-                )
-                logging.info(f"Registered publication: {response}", color="green")
-            except Exception as e:
-                logging.error(f"Failed to register publication {publication.streamId.topic()}: {e}")
-                
+        """Share subscriptions and publications list as table_uuids with the DataServer"""
+        subList = []
+        pubList = []
+        for sub in self.subscriptions:
+            subDict = {
+            "source": sub.streamId.source,
+            "author": sub.streamId.author,
+            "stream": sub.streamId.stream,
+            "target": sub.streamId.target
+            }
+            subList.append(str(generateUUID(subDict)))
+        for pub in self.publications:
+            pubDict = {
+            "source": pub.streamId.source,
+            "author": pub.streamId.author,
+            "stream": pub.streamId.stream,
+            "target": pub.streamId.target
+            }
+            pubList.append(str(generateUUID(pubDict)))
+        try:
+            await self.dataClient.sendRequest(
+                peerAddr=("0.0.0.0", 24602),
+                table_uuid=subList,
+                method='subscribers-list'
+            )
+        except Exception as e:
+            logging.error(f"Failed to send subscription List {e}")
+        try:
+            await self.dataClient.sendRequest(
+                peerAddr=("0.0.0.0", 24602),
+                table_uuid=pubList,
+                method='publishers-list'
+            )
+        except Exception as e:
+            logging.error(f"Failed to send publication List {e}")
 
     def startRelay(self):
         def append(streams: list[Stream]):
