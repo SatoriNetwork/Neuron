@@ -97,7 +97,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.ipfs: Ipfs = Ipfs()
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
-        self.dataClient: DataClient
+        self.dataClient: DataClient = DataClient()
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -300,7 +300,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        await self.initializeDataClient()
+        await self._shareSubPubInfo()
         self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
@@ -620,53 +620,49 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
 
-    async def initializeDataClient(self):
-        """Initialize the DataClient"""
-        try:
-            self.dataClient = DataClient()
-            await self.dataClient.connectToServer("0.0.0.0", 24602) # TODO : what happens if this is not present
-            await self._registerStreams()
-            logging.info("DataClient initialized and connected to DataServer", color="green")
-        except Exception as e:
-            logging.error(f"Failed to initialize DataClient: {e}")
-            self.dataClient = None
+    async def _shareSubPubInfo(self):
 
-    async def _registerStreams(self):
-        """Share subscriptions and publications list as table_uuids with the DataServer"""
-        subDict = {}
-        pubDict = {}
-        for sub in self.subscriptions:
-            subStreamDict = {
-            "source": sub.streamId.source,
-            "author": sub.streamId.author,
-            "stream": sub.streamId.stream,
-            "target": sub.streamId.target
-            }
-            subDict[str(generateUUID(subStreamDict))] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
-        for pub in self.publications:
-            pubStreamDict = {
-            "source": pub.streamId.source,
-            "author": pub.streamId.author,
-            "stream": pub.streamId.stream,
-            "target": pub.streamId.target
-            }
-            pubDict[str(generateUUID(pubStreamDict))] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
-        try:
-            await self.dataClient.sendRequest(
-                peerAddr=("0.0.0.0", 24602),
-                table_uuid=subDict,
-                method='subscribers-list'
-            )
-        except Exception as e:
-            logging.error(f"Failed to send subscription List {e}")
-        try:
-            await self.dataClient.sendRequest(
-                peerAddr=("0.0.0.0", 24602),
-                table_uuid=pubDict,
-                method='publishers-list'
-            )
-        except Exception as e:
-            logging.error(f"Failed to send publication List {e}")
+        async def _shareSubInfo():
+            """Share subscriptions list as table_uuids with peer informations to the DataServer"""
+            subDict = {}
+            for sub in self.subscriptions:
+                subStreamDict = {
+                "source": sub.streamId.source,
+                "author": sub.streamId.author,
+                "stream": sub.streamId.stream,
+                "target": sub.streamId.target
+                }
+                subDict[str(generateUUID(subStreamDict))] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
+
+            try:
+                await self.dataClient.sendRequest(
+                    table_uuid=subDict,
+                    method='subscribers-list'
+                )
+            except Exception as e:
+                logging.error(f"Failed to send subscription List {e}")
+
+        async def _sharePubInfo():
+            """Share publications list as table_uuids with peer informations to the DataServer"""
+            pubDict = {}
+            for pub in self.publications:
+                pubStreamDict = {
+                "source": pub.streamId.source,
+                "author": pub.streamId.author,
+                "stream": pub.streamId.stream,
+                "target": pub.streamId.target
+                }
+                pubDict[str(generateUUID(pubStreamDict))] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
+            try:
+                await self.dataClient.sendRequest(
+                    table_uuid=pubDict,
+                    method='publishers-list'
+                )
+            except Exception as e:
+                logging.error(f"Failed to send publication List {e}")
+
+        await _shareSubInfo()
+        await _sharePubInfo()
 
     def startRelay(self):
         def append(streams: list[Stream]):
