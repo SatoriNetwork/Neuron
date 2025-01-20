@@ -300,7 +300,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        await self._shareSubPubInfo()
+        await self.shareSubPubInfo()
         self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
@@ -309,7 +309,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.isDebug:
             return
         self.startRelay()
-        self.buildEngine()
+        await self.buildEngine()
         
         time.sleep(60 * 60 * 24)
 
@@ -516,7 +516,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """filter down to prediciton publications"""
         return [s for s in streams if s.predicting is None]
 
-    def buildEngine(self):
+    async def buildEngine(self):
         """start the engine, it will run w/ what it has til ipfs is synced"""
 
         def streamDisplayer(subsription: Stream):
@@ -570,7 +570,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #    logging.warning('Running in Local Mode.', color='green')
         if self.engineVersion == 'v2':
             self.aiengine: satoriengine.veda.engine.Engine = (
-                satoriengine.veda.engine.Engine(
+                await satoriengine.veda.engine.Engine.create(
                     streams=self.subscriptions, pubstreams=self.publications)
             )
             self.aiengine.predictionProduced.subscribe(
@@ -620,25 +620,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
 
-    async def _shareSubPubInfo(self):
+    async def shareSubPubInfo(self):
 
         async def _shareSubInfo():
             """Share subscriptions list as table_uuids with peer informations to the DataServer"""
             subDict = {}
             for sub in self.subscriptions:
-                subStreamDict = {
-                "source": sub.streamId.source,
-                "author": sub.streamId.author,
-                "stream": sub.streamId.stream,
-                "target": sub.streamId.target
-                }
-                subDict[str(generateUUID(subStreamDict))] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
+                subDict[sub.streamId.uuid] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
 
             try:
-                await self.dataClient.sendRequest(
+                response = await self.dataClient.sendRequest(
                     table_uuid=subDict,
-                    method='subscribers-list'
+                    method='send-subscribers-list'
                 )
+                print("response", response)
             except Exception as e:
                 logging.error(f"Failed to send subscription List {e}")
 
@@ -646,17 +641,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             """Share publications list as table_uuids with peer informations to the DataServer"""
             pubDict = {}
             for pub in self.publications:
-                pubStreamDict = {
-                "source": pub.streamId.source,
-                "author": pub.streamId.author,
-                "stream": pub.streamId.stream,
-                "target": pub.streamId.target
-                }
-                pubDict[str(generateUUID(pubStreamDict))] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
+                pubDict[pub.streamId.uuid] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
             try:
                 await self.dataClient.sendRequest(
                     table_uuid=pubDict,
-                    method='publishers-list'
+                    method='send-publishers-list'
                 )
             except Exception as e:
                 logging.error(f"Failed to send publication List {e}")
