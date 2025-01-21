@@ -52,7 +52,7 @@ WE WILL RELEASE FUTURE UPDATES SO IN ORDER TO NOT OVERWRITE YOUR STYLES IT'S BET
   background-color: #2d3638;
   border-radius: 10px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
-  display: flex;
+  display: none; /*changed*/
   flex-direction: column;
   width: 100%;
   max-width: 700px;
@@ -61,6 +61,9 @@ WE WILL RELEASE FUTURE UPDATES SO IN ORDER TO NOT OVERWRITE YOUR STYLES IT'S BET
   position: relative;
   padding: 40px;
   color: #fff;
+}
+.form-container.active {
+  display: flex; /*changed*/
 }
 .close-button {
   background: none;
@@ -1104,7 +1107,7 @@ input:checked + .slider:before {
     background-color: #2d3638;
     border-radius: 10px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
-    display: flex;
+    display: none; /*changed*/
     flex-direction: column;
     width: 100%;
     max-width: 700px;

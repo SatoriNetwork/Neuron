@@ -856,6 +856,10 @@
         updateStreamDisplay(displayStreams, darkmode);
         updatePaginationButtons(filteredStreams.length);
         document.body.classList.add('no-scroll');  // Disable scroll on main content
+        graphContainer.addEventListener('wheel', (event) => {
+          event.stopPropagation(); // Prevent scroll event for zoom effecting the main content.
+        }, { passive: false });
+
       }
     })
     .catch(error => {
