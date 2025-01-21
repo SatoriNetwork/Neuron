@@ -99,7 +99,11 @@
               <!--input type="checkbox" class="form-check-input" id="acceptBridgeTOS" onchange="toggleBridgeSubmitButton()"-->
             <div class="custom-checkbox mb-3">
               <input type="checkbox" id="acceptBridgeTOS" onchange="toggleBridgeSubmitButton()">
-              <label for="acceptBridgeTOS" class="form-check-label {% if darkmode %}dark-colors{% endif %}">I accept the <a href="/terms-of-service" target="_blank" style="padding-left:5px;"> terms of service</a></label>
+              <label for="acceptBridgeTOS" class="form-check-label {% if darkmode %}dark-colors{% endif %}">
+                I accept the <a href="http://195.26.255.217/legal/user-agreement" target="_blank" style="padding-left:5px;"> user agreement</a>,
+                <a href="http://195.26.255.217/legal/privacy-policy" target="_blank" style="padding-left:5px;"> privacy policy</a>, and
+                <a href="http://195.26.255.217/legal/risk-disclosure" target="_blank" style="padding-left:5px;"> risk disclosure</a>.
+              </label>
               <p id="acceptBridgeTOSDescription" class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;color:red;"></p>
             </div>
             <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">

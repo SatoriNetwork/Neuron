@@ -798,9 +798,9 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
 @userInteracted
 @authRequired
 def bridgeAcceptBurnBridgeTerms():
-    from satorilib.server import ofac
-    if ofac.acceptTerms():
-        if ofac.requestPermission():
+    from satorilib.server.ofac import OfacServer
+    if OfacServer.acceptTerms():
+        if OfacServer.requestPermission():
             return 'OK', 200
         return 'error: please try again later.', 200
     return 'FAIL', 200
@@ -810,8 +810,8 @@ def bridgeAcceptBurnBridgeTerms():
 @userInteracted
 @authRequired
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
-    from satorilib.server import ofac
-    if not ofac.requestPermission():
+    from satorilib.server.ofac import OfacServer
+    if not OfacServer.requestPermission():
         return redirect('/vault/main')
     if start.vault is not None and not start.vault.isEncrypted:
         from satorilib.wallet.ethereum.wallet import EthereumWallet
@@ -911,7 +911,7 @@ def bridgeSatoriTransactionUsing(
     forms = importlib.reload(forms)
 
     def acceptSubmittion(bridgeForm: dict):
-        from satorilib.server import ofac
+        from satorilib.server.ofac import OfacServer
 
         def refreshWallet():
             time.sleep(4)
@@ -931,7 +931,7 @@ def bridgeSatoriTransactionUsing(
         transactionResult = myWallet.typicalNeuronBridgeTransaction(
             amount=bridgeForm['bridgeAmount'] or 0,
             ethAddress=bridgeForm['ethAddress'] or '',
-            ofacReportedFn=ofac.reportTxid,
+            ofacReportedFn=OfacServer.reportTxid,
             requestSimplePartialFn=start.server.requestSimplePartial,
             broadcastBridgeSimplePartialFn=start.server.broadcastSimplePartial)
         refreshWallet()
