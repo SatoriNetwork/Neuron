@@ -72,7 +72,7 @@
                       </div>
                     {% endif %}
                     <div id="observations">
-                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }});">stacked_line_chart</i>
+                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }}, stream['stream']);">stacked_line_chart</i>
                     </div>
                   </div>
                 </td>
@@ -119,7 +119,7 @@
   <div id="observationsModal" class="modal" style="display: none;">
     <div id="modal-content" class="modal-content" style="position: relative;padding: 1rem;border-radius: 8px;background-color: #fff;max-height: 90vh;margin-top: 3rem;max-width: 150vh;margin-left: auto;margin-right: auto;">
       <div class="d-flex" style="align-items:center; justify-content:space-between">
-        <h4>Real-World vs Average Predictions</h4>
+        <h4 id="streamName"></h4>
         <i class="material-icons opacity-10" class="close" onclick="closeModal()" style="cursor:pointer">cancel</i>
       </div>
 
@@ -467,7 +467,7 @@
                 </div>`
             }
             <div id="observations">
-              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id});">stacked_line_chart</i>
+              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}' );">stacked_line_chart</i>
             </div>
           </div>
         </td>
@@ -778,16 +778,21 @@
     renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
 
   }
+  var mostRecentName;
   var mostRecentStreamId;
   // Show Observations Modal with observations list and graph for value vs time
-  function showObservations(streamId) {
+  function showObservations(streamId, streamName) {
+    mostRecentName = streamName;
+    
     mostRecentStreamId = streamId;
     const observationsBody = document.getElementById('observationsBody');
     const graphContainer = document.getElementById('observationsGraphContainer');
     const graphCanvas = document.getElementById('observationsGraph');
     const modelContent = document.getElementById('modal-content');
     const observationTable = document.getElementById('observation-table');
+    const nameOfStream = document.getElementById('streamName');
 
+    nameOfStream.innerHTML = "Stream: " + mostRecentName;
     // Show observation modal
     document.getElementById('observationsModal').style.display = 'block';
     graphContainer.style.display = 'none';
@@ -862,7 +867,7 @@
   }
 
   function ReRenderGraph(){
-    showObservations(mostRecentStreamId)
+    showObservations(mostRecentStreamId, mostRecentName);
   }
 
   // Close Modal
