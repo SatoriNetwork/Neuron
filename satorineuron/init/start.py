@@ -302,7 +302,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createServerConn()
         self.checkin()
         await self.connectToDataServer()
-        await self.shareSubPubInfo()
+        await self.sharePubSubInfo()
         self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
@@ -621,6 +621,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     pubkey=self.wallet.publicKey + ":publishing",
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
+    
+    
         
     async def connectToDataServer(self):
         self.dataServerIp = config.get().get('server ip', '0.0.0.0')
@@ -632,40 +634,48 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.dataServerIp = self.start.server.getPublicIp().text.split()[-1] # TODO : is this correct?
 
 
-    async def shareSubPubInfo(self):
+    async def sharePubSubInfo(self):
 
-        async def _shareSubInfo():
+        def matchPubSub() -> dict:
+            ''' match related pub/sub stream and return dictionary with pub-sub mapping '''
+            streamPairs = StreamPairs(
+                self.subscriptions,
+                StartupDag.predictionStreams(self.publications))
+            self.subscriptions, self.publications = streamPairs.get_matched_pairs()
+            subInfo = {
+                sub.streamId.uuid: {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
+                for sub in self.subscriptions
+            }
+            pubInfo = {
+                pub.streamId.uuid: {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
+                for pub in self.publications
+            }
+            return {
+                sub_uuid: {
+                    'publication_uuid': pub_uuid,
+                    'subscription_subscribers': subInfo[sub_uuid]['subscribers'],
+                    'subscription_publishers': subInfo[sub_uuid]['publishers'],
+                    'publication_subscribers': pubInfo[pub_uuid]['subscribers'],
+                    'publication_publishers': pubInfo[pub_uuid]['publishers']
+                }
+                for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
+            }
+
+
+        async def _sendPubSubMapping( mappingDict: dict):
             """Share subscriptions list as table_uuids with peer informations to the DataServer"""
-            subDict = {}
-            for sub in self.subscriptions:
-                subDict[sub.streamId.uuid] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
-
-            try:
-                response = await self.dataClient.sendRequest(
-                    self.dataServerIp,
-                    table_uuid=subDict,
-                    method='send-subscribers-list'
-                )
-                print("response", response)
-            except Exception as e:
-                logging.error(f"Failed to send subscription List {e}")
-
-        async def _sharePubInfo():
-            """Share publications list as table_uuids with peer informations to the DataServer"""
-            pubDict = {}
-            for pub in self.publications:
-                pubDict[pub.streamId.uuid] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
             try:
                 await self.dataClient.sendRequest(
                     self.dataServerIp,
-                    table_uuid=pubDict,
-                    method='send-publishers-list'
+                    table_uuid=mappingDict,
+                    method='send-pubsub-mapping'
                 )
             except Exception as e:
-                logging.error(f"Failed to send publication List {e}")
+                logging.error(f"Failed to send subscription List {e}")
 
-        await _shareSubInfo()
-        await _sharePubInfo()
+        pubSubMapping = matchPubSub()
+        await _sendPubSubMapping(pubSubMapping)
+
 
     def startRelay(self):
         def append(streams: list[Stream]):
