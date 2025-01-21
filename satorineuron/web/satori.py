@@ -1015,7 +1015,7 @@ def editStream(topic=None):
     try:
         badForm = [
             s for s in start.relay.streams
-            if s.streamId.topic() == topic][0].asMap(noneToBlank=True)
+            if s.streamId.jsonId == topic][0].asMap(noneToBlank=True)
     except IndexError:
         # on rare occasions
         # IndexError: list index out of range
@@ -1211,7 +1211,7 @@ def dashboard():
             ([
                 {
                     **stream.asMap(noneToBlank=True),
-                    **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+                    **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
                     **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
                     **{'cadenceStr': deduceCadenceString(stream.cadence)},
                     **{'offsetStr': deduceOffsetString(stream.offset)}}
@@ -2621,7 +2621,7 @@ def relayCsv():
             **{'stream': stream.streamId.stream},
             **{'target': stream.streamId.target},
             **stream.asMap(noneToBlank=True),
-            **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+            **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
             **{'cadenceStr': deduceCadenceString(stream.cadence)},
             **{'offsetStr': deduceOffsetString(stream.offset)}}
             for stream in start.relay.streams]

@@ -40,7 +40,7 @@ def establishConnection(
                     obs = Observation.parse(response)
                     logging.info(
                         'received:',
-                        f'\n {obs.streamId.cleanId}',
+                        f'\n {obs.streamId.strId}',
                         f'\n ({obs.value}, {obs.observationTime}, {obs.observationHash})',
                         print=True)
                     getStart().engine.data.newData.on_next(obs)
