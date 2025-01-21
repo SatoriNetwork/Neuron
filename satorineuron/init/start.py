@@ -97,6 +97,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.ipfs: Ipfs = Ipfs()
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
+        self.dataServerIp: str =  ''
         self.dataClient: DataClient = DataClient()
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
@@ -300,6 +301,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
+        await self.connectToDataServer()
         await self.shareSubPubInfo()
         self.setRewardAddress()
         self.verifyCaches()
@@ -619,6 +621,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     pubkey=self.wallet.publicKey + ":publishing",
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
+        
+    async def connectToDataServer(self):
+        self.dataServerIp = config.get().get('server ip', '0.0.0.0')
+        try:
+            await self.dataClient.connectToServer(self.dataServerIp)
+            logging.info("Successfully connected to Server at :", self.dataServerIp, color="green")
+        except Exception as e:
+            logging.error("Error connecting to server : ", e)
+            self.dataServerIp = self.start.server.getPublicIp().text.split()[-1] # TODO : is this correct?
+
 
     async def shareSubPubInfo(self):
 
@@ -630,6 +642,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
             try:
                 response = await self.dataClient.sendRequest(
+                    self.dataServerIp,
                     table_uuid=subDict,
                     method='send-subscribers-list'
                 )
@@ -644,6 +657,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 pubDict[pub.streamId.uuid] = {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
             try:
                 await self.dataClient.sendRequest(
+                    self.dataServerIp,
                     table_uuid=pubDict,
                     method='send-publishers-list'
                 )
