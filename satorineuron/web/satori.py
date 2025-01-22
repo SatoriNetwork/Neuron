@@ -798,9 +798,9 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
 @userInteracted
 @authRequired
 def bridgeAcceptBurnBridgeTerms():
-    from satorilib.server import ofac
-    if ofac.acceptTerms():
-        if ofac.requestPermission():
+    from satorilib.server.ofac import OfacServer
+    if OfacServer.acceptTerms():
+        if OfacServer.requestPermission():
             return 'OK', 200
         return 'error: please try again later.', 200
     return 'FAIL', 200
@@ -810,8 +810,8 @@ def bridgeAcceptBurnBridgeTerms():
 @userInteracted
 @authRequired
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
-    from satorilib.server import ofac
-    if not ofac.requestPermission():
+    from satorilib.server.ofac import OfacServer
+    if not OfacServer.requestPermission():
         return redirect('/vault/main')
     if start.vault is not None and not start.vault.isEncrypted:
         from satorilib.wallet.ethereum.wallet import EthereumWallet
@@ -911,7 +911,7 @@ def bridgeSatoriTransactionUsing(
     forms = importlib.reload(forms)
 
     def acceptSubmittion(bridgeForm: dict):
-        from satorilib.server import ofac
+        from satorilib.server.ofac import OfacServer
 
         def refreshWallet():
             time.sleep(4)
@@ -931,7 +931,7 @@ def bridgeSatoriTransactionUsing(
         transactionResult = myWallet.typicalNeuronBridgeTransaction(
             amount=bridgeForm['bridgeAmount'] or 0,
             ethAddress=bridgeForm['ethAddress'] or '',
-            ofacReportedFn=ofac.reportTxid,
+            ofacReportedFn=OfacServer.reportTxid,
             requestSimplePartialFn=start.server.requestSimplePartial,
             broadcastBridgeSimplePartialFn=start.server.broadcastSimplePartial)
         refreshWallet()
@@ -1015,7 +1015,7 @@ def editStream(topic=None):
     try:
         badForm = [
             s for s in start.relay.streams
-            if s.streamId.topic() == topic][0].asMap(noneToBlank=True)
+            if s.streamId.jsonId == topic][0].asMap(noneToBlank=True)
     except IndexError:
         # on rare occasions
         # IndexError: list index out of range
@@ -1211,7 +1211,7 @@ def dashboard():
             ([
                 {
                     **stream.asMap(noneToBlank=True),
-                    **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+                    **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
                     **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
                     **{'cadenceStr': deduceCadenceString(stream.cadence)},
                     **{'offsetStr': deduceOffsetString(stream.offset)}}
@@ -2621,7 +2621,7 @@ def relayCsv():
             **{'stream': stream.streamId.stream},
             **{'target': stream.streamId.target},
             **stream.asMap(noneToBlank=True),
-            **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+            **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
             **{'cadenceStr': deduceCadenceString(stream.cadence)},
             **{'offsetStr': deduceOffsetString(stream.offset)}}
             for stream in start.relay.streams]

@@ -269,7 +269,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             #        self.cacheOf(stream.streamId).getLatestObservationTime()
             #    )
             #    if ts > 0 and ts + 60*60*24 < time.time():
-            #        self.server.removeStream(stream.streamId.topic())
+            #        self.server.removeStream(stream.streamId.jsonId)
             #        self.triggerRestart()
             if self.server.checkinCheck():
                 self.triggerRestart()  # should just be start()
@@ -533,9 +533,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     stream_display.predictions = [
                         value
                         for value in streamForecast.predictionHistory.value]
-            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId.cleanId}', color='blue')
+            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId.strId}', color='blue')
             self.server.publish(
-                topic=streamForecast.predictionStreamId.topic(),
+                topic=streamForecast.predictionStreamId.jsonId,
                 data=streamForecast.forecast["pred"].iloc[0],
                 observationTime=streamForecast.observationTime,
                 observationHash=streamForecast.observationHash,
@@ -620,7 +620,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             relays = satorineuron.config.get("relay")
             rawStreams = []
             for x in streams:
-                topic = x.streamId.topic(asJson=True)
+                topic = x.streamId.jsonId
                 if topic in relays.keys():
                     x.uri = relays.get(topic).get("uri")
                     x.headers = relays.get(topic).get("headers")
