@@ -121,13 +121,15 @@ CMD ["bash", "./start_from_image.sh"]
 # docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 --env ENV=prod -v c:\repos\Satori\Neuron\wallet:/Satori/Neuron/wallet -v c:\repos\Satori\Neuron\models:/Satori/Neuron/models -v c:\repos\Satori\Neuron\data:/Satori/Neuron/data -v c:\repos\Satori\Neuron\config:/Satori/Neuron/config satorinet/satorineuron:latest bash
 # docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 --env ENV=prod satorinet/satorineuron:latest bash
 
-# automatic fast slow build:
+#### automatic fast slow build:
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:previous
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:0.3.5
+## fast
 # docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
 # docker pull satorinet/satorineuron:test
 # docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # docker push satorinet/satorineuron:latest
+## slow
 # docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
 # docker pull satorinet/satorineuron:test
 # docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
@@ -135,7 +137,7 @@ CMD ["bash", "./start_from_image.sh"]
 # docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:rpi_satori   --push .
 # echo "Done!"
 
-# Kolten 
+# Kolten
 # docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Neumont\Enterprise\Satori\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
 
 # John
