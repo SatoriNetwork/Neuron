@@ -4,7 +4,7 @@
 	"name": "SatoriNet",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	// "image": "python:3.9-slim",
-	"build": { "dockerfile": "Dockerfile-dev", "args": {"GPU_FLAG": "off", "BRANCH_FLAG": "main"} },
+	"build": { "dockerfile": "Dockerfile", "args": {"GPU_FLAG": "off", "BRANCH_FLAG": "main"} },
 	"runArgs": ["--env","ENV=prod", "--env","PREDICTOR=xgboost"],
 	// "build": { "dockerfile": "Dockerfile-dev", "args": {"GPU_FLAG": "on"} },
 	// "runArgs": ["--env","ENV=prod", "--env","PREDICTOR=chronos", "--env","GPU_FLAG=on", "--runtime=nvidia", "--gpus","all"],
@@ -27,5 +27,5 @@
 	"workspaceMount": "source=${localWorkspaceFolder},target=/Satori/${localWorkspaceFolderBasename},type=bind,consistency=cached",
 
 	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	"postCreateCommand": "cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop",
+	"postCreateCommand": "cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop"
 }

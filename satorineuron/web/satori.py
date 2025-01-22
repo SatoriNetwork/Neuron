@@ -440,7 +440,7 @@ def backup(target: str = 'satori'):
         if target == 'satori':
             from satorilib.disk.zip.zip import zipSelected
             zipSelected(
-                folderPath=f'/Satori/Neuron/{target}',
+                folderPath=f'/Satori/Neuron/',
                 outputPath=f'{outputPath}/{target}.zip',
                 selectedFiles=['config', 'data', 'models', 'wallet', 'uploaded'])
         else:
