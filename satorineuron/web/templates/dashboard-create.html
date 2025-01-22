@@ -68,7 +68,7 @@
                 </div>
               </div>
             </div>
-            <!-- <div class="pt-3 px-3" style="height:100px;">
+            <div class="pt-3 px-3" style="height:100px;">
               <p id="ErrorArea" class="mb-0 text-sm">
                 {% if newRelayStream.errors %}
                 <ul class="errors">
@@ -87,7 +87,7 @@
               </p>
               <p id="helpArea1" class="mb-0 text-sm"></p>
               <p id="helpArea" class="mb-0 text-sm"></p>
-            </div> -->
+            </div> 
           </div>
         </div>
       </div>
@@ -463,70 +463,131 @@
 <p id="learn_output3"></p>
 
 <div class="form-popup-bg">
-  <form action="">
+  <form action="/register_stream" method="POST">
+    {{ newRelayStream.hidden_tag() }}
+    {{ newRelayStream.csrf_token }}
     <div class="form-container bg-gradient-dark" id="step1_desc">
       <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
         <div class="form-group">
           <label class="text-white" for="">Name</label>
-          <input type="text" class="form-control" placeholder="BTC1HR" style="padding: 5px;" />
+          {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
         </div>
         <div class="form-group">
           <label class="text-white" for="">Interval</label>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
               <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
-                <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
-                <input type="number" id="dayCadence" name="dayCadence" class="tight form-control"
-                  style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=3650
-                  oninput="enforceIntegerValue(this, 0, 3650);">
-                <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
-                <input type="number" id="hourCadence" name="hourCadence" class="tight form-control"
-                  style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=24
-                  oninput="enforceIntegerValue(this, 0, 24);">
-                <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
-                <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control"
-                  style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60
-                  oninput="enforceIntegerValue(this, 0, 60);">
-                <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
-                <input type="number" id="secondCadence" name="secondCadence" class="tight form-control"
-                  style="margin-left:4px; margin-right:12px; width: 25%;" min=0 max=60
-                  oninput="enforceIntegerValue(this, 0, 60);">
+                  <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
+                  <input type="number" id="dayCadence" name="dayCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);calculateCadence();">
+                  <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
+                  <input type="number" id="hourCadence" name="hourCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateCadence();">
+                  <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
+                  <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
+                  <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
+                  <input type="number" id="secondCadence" name="secondCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
+                  {{ newRelayStream.cadence(size=32, class_="tight form-control" +(" dark-colors" if darkmode else ""), placeholder="3600", style="display:none;", id="cadence") }}
+                  <script>
+                    function enforceIntegerValue(inputField, minimum, maximum) {
+                      if (inputField.value < minimum) {
+                        inputField.value = minimum;
+                      }
+                      if (inputField.value > maximum) {
+                          inputField.value = maximum;
+                      }
+                    }
+                    function calculateCadence() {
+                      const dayCadenceInput = document.getElementById('dayCadence');
+                      const hourCadenceInput = document.getElementById('hourCadence');
+                      const minuteCadenceInput = document.getElementById('minuteCadence');
+                      const secondCadenceInput = document.getElementById('secondCadence');
+                      var seconds = (dayCadenceInput.value*24*60*60) + (hourCadenceInput.value*60*60) + (minuteCadenceInput.value*60) + (secondCadenceInput.value*1)
+                      if (seconds >= 60) {
+                        document.getElementById('cadence').value = seconds;
+                      } else {
+                        document.getElementById('cadence').value = 60;
+                      }
+                    }
+                    function showCadence() {
+                      const dayCadenceInput = document.getElementById('dayCadence');
+                      const hourCadenceInput = document.getElementById('hourCadence');
+                      const minuteCadenceInput = document.getElementById('minuteCadence');
+                      const secondCadenceInput = document.getElementById('secondCadence');
+                      var seconds = document.getElementById('cadence').value;
+                      const daySeconds = Math.floor(seconds/24/60/60);
+                      if (daySeconds > 0) {
+                        dayCadenceInput.value = daySeconds;
+                        seconds = seconds - (daySeconds*24*60*60);
+                      }
+                      const hourSeconds = Math.floor(seconds/60/60);
+                      if (hourSeconds > 0) {
+                        hourCadenceInput.value = hourSeconds;
+                        seconds = seconds - (hourSeconds*60*60);
+                      }
+                      const minuteSeconds = Math.floor(seconds/60);
+                      if (minuteSeconds > 0) {
+                        minuteCadenceInput.value = minuteSeconds;
+                        seconds = seconds - (minuteSeconds*60);
+                      }
+                      secondCadenceInput.value = seconds;
+                    }
+                    showCadence();
+                  </script>
               </div>
             </div>
           </div>
         </div>
+
         <div class="form-group">
           <label class="text-white" for="">Offset</label>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
-              <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
-                <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
-                <input type="number" id="hourOffset" name="hourOffset" class="tight form-control"
-                  style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=24
-                  oninput="enforceIntegerValue(this, 0, 24);">
-                <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
-                <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control"
-                  style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=60
-                  oninput="enforceIntegerValue(this, 0, 60);">
-                <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
-                <input type="number" id="secondOffset" name="secondOffset" class="tight form-control"
-                  style="margin-left:4px; margin-right:12px; width: 30%;" min=0 max=3650
-                  oninput="enforceIntegerValue(this, 0, 3650);">
+                <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
+                    <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
+                    <input type="number" id="hourOffset" name="hourOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 30%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateOffset();">
+                    <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
+                    <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 30%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
+                    <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
+                    <input type="number" id="secondOffset" name="secondOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 30%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
+                    {{ newRelayStream.offset(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="108000", style="display:none;", id="offset") }}
+                    <script>
+                      function calculateOffset() {
+                        const hourOffsetInput = document.getElementById('hourOffset');
+                        const minuteOffsetInput = document.getElementById('minuteOffset');
+                        const secondOffsetInput = document.getElementById('secondOffset');
+                        document.getElementById('offset').value = (hourOffsetInput.value*60*60) + (minuteOffsetInput.value*60) + (secondOffsetInput.value*1);
+                      }
+                      function showOffset() {
+                        const hourOffsetInput = document.getElementById('hourOffset');
+                        const minuteOffsetInput = document.getElementById('minuteOffset');
+                        const secondOffsetInput = document.getElementById('secondOffset');
+                        var seconds = document.getElementById('offset').value;
+                        const hourSeconds = Math.floor(seconds/60/60);
+                        if (hourSeconds > 0) {
+                          hourOffsetInput.value = hourSeconds;
+                          seconds = seconds - (hourSeconds*60*60);
+                        }
+                        const minuteSeconds = Math.floor(seconds/60);
+                        if (minuteSeconds > 0) {
+                          minuteOffsetInput.value = minuteSeconds;
+                          seconds = seconds - (minuteSeconds*60);
+                        }
+                        secondOffsetInput.value = seconds;
+                      }
+                      showOffset();
+                    </script>
+                </div>
               </div>
-            </div>
           </div>
         </div>
         <div class="form-group">
           <label class="text-white" for="">Tags</label>
-          <input class="form-control" type="text" placeholder="bitcoin, 1hr" style="padding: 5px;" />
+          {{ newRelayStream.tags(size=32, class_="tight form-control"+(" dark-colors" if darkmode else ""), placeholder="bitcoin, 1hr") }}
         </div>
         <div class="form-group">
           <label class="text-white" for="">Description</label>
-          <textarea class="form-control" type="text"
-            placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours."
-            style="padding: 5px;"></textarea>
+          {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
         </div>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_desc', event)">Next</button>
     </div>
@@ -536,31 +597,27 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
         <div class="form-group">
           <label class="text-white" for="">URL</label>
-          <input type="text" class="form-control" placeholder="BTC1HR" style="padding: 5px;" />
+          {{ newRelayStream.url(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin") }}
         </div>
         <div class="form-group">
           <label class="text-white" for="">URI</label>
-          <input type="text" class="form-control" placeholder="BTC1HR" style="padding: 5px;" />
+          {{ newRelayStream.uri(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
         </div>
         <div class="form-group">
           <label class="text-white" for="">Target</label>
-          <input type="text" class="form-control" placeholder="BTC1HR" style="padding: 5px;" />
+          {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Close") }}
         </div>
         <div class="form-group">
           <label class="text-white" for="">Data Type</label>
-          <input class="form-control" type="text" placeholder="DROPDOWN" style="padding: 5px;" />
+          {{ newRelayStream.datatype(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="float") }}
         </div>
         <div class="form-group">
-          <label class="text-white" for="">Header</label>
-          <textarea class="form-control" type="text"
-            placeholder="Blah"
-            style="padding: 5px;"></textarea>
+          <label class="text-white" for="">Headers</label>
+          {{ newRelayStream.headers(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
         <div class="form-group">
           <label class="text-white" for="">Payload</label>
-          <textarea class="form-control" type="text"
-            placeholder="Blah"
-            style="padding: 5px;"></textarea>
+          {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step1_desc', event)">Prev</button>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_desc', event)">Next</button>
@@ -571,9 +628,7 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
         <div class="form-group">
           <label class="text-white" for="">Encryption Script Generation</label>
-          <textarea class="form-control" type="text"
-            placeholder="Generate the hook; may be outdated in the process"
-            style="padding: 5px;"></textarea>
+          {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
         </div>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_desc', event)">Prev</button>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_desc', event)">Next</button>
@@ -584,9 +639,7 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
         <div class="form-group">
           <label class="text-white" for="">History</label>
-          <textarea class="form-control" type="text"
-            placeholder="enter file; may be outdated in the process"
-            style="padding: 5px;"></textarea>
+          {{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderGetHistory, id="historyCode") }}
         </div>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_desc', event)">Prev</button>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step5_desc', event)">Next</button>
@@ -637,12 +690,8 @@
   });
   function navPopup(popup_id, event){
     event.preventDefault();
-    console.log("Popup ID: ", popup_id)
     const activePopup = document.querySelector('.form-container.active');
     const nextPopup = document.getElementById(popup_id);
-    console.log("next pp: ", nextPopup);
-    console.log("before: ", activePopup.classList);
-    console.log("before: ", nextPopup.classList);
     if (activePopup) {
       activePopup.classList.remove('active');
     }
@@ -650,8 +699,6 @@
     if (nextPopup) {
       nextPopup.classList.add('active');
     }
-    console.log("after: ", activePopup.classList);
-    console.log("after: ", nextPopup.classList);
   }
 </script>
 
