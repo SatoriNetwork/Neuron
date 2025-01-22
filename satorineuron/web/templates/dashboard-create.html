@@ -470,12 +470,13 @@
       <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">Name & Descriptions</p>
         <div class="form-group">
-          <label class="text-white" for="">Name</label>
+          <label class="text-white" for="">Name (required)</label>
           {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
         </div>
         <div class="form-group">
-          <label class="text-white" for="">Interval</label>
+          <label class="text-white" for="">Interval (required)</label>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
               <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
@@ -589,12 +590,13 @@
           <label class="text-white" for="">Description</label>
           {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_desc', event)">Next</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event)">Next</button>
     </div>
-    <div class="form-container bg-gradient-dark" id="step2_desc">
+    <div class="form-container bg-gradient-dark" id="step2_metadata">
       <button id="btnCloseForm" class="close-button">X</button>
-      <h1 class="text-white">Create a Datastream 2</h1>
+      <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">URL & Metadata</p>
         <div class="form-group">
           <label class="text-white" for="">URL</label>
           {{ newRelayStream.url(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin") }}
@@ -620,41 +622,44 @@
           {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step1_desc', event)">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_desc', event)">Next</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event)">Next</button>
     </div>
-    <div class="form-container bg-gradient-dark" id="step3_desc">
+    <div class="form-container bg-gradient-dark" id="step3_encryption">
       <button id="btnCloseForm" class="close-button">X</button>
-      <h1 class="text-white">Create a Datastream 3</h1>
+      <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">Encryption</p>
         <div class="form-group">
           <label class="text-white" for="">Encryption Script Generation</label>
           {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_desc', event)">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_desc', event)">Next</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event)">Prev</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event)">Next</button>
     </div>
-    <div class="form-container bg-gradient-dark" id="step4_desc">
+    <div class="form-container bg-gradient-dark" id="step4_history">
       <button id="btnCloseForm" class="close-button">X</button>
-      <h1 class="text-white">Create a Datastream 4</h1>
+      <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">Datastream History</p>
         <div class="form-group">
           <label class="text-white" for="">History</label>
           {{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderGetHistory, id="historyCode") }}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_desc', event)">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step5_desc', event)">Next</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event)">Prev</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step5_review', event)">Next</button>
     </div>
-    <div class="form-container bg-gradient-dark" id="step5_desc">
+    <div class="form-container bg-gradient-dark" id="step5_review">
       <button id="btnCloseForm" class="close-button">X</button>
-      <h1 class="text-white">Create a Datastream 5</h1>
+      <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">Review before submitting</p>
         <div class="form-group">
           <label class="text-white" for="">Review</label>
           <textarea class="form-control" type="text"
             placeholder="show all inputted values"
             style="padding: 5px;"></textarea>
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_desc', event)">Prev</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event)">Prev</button>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;">Submit</button>
     </div>
   </form>
