@@ -56,12 +56,13 @@ RUN pip install --upgrade pip && \
     fi && \
     pip install --no-cache-dir transformers==4.44.2 && \
     pip install --no-cache-dir /Satori/granite-tsfm && \
-    pip install --no-cache-dir /Satori/chronos-forecasting && \
-    cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
-    cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
-    cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
-    cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
-    cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+    pip install --no-cache-dir /Satori/chronos-forecasting
+
+#RUN cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+RUN cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+RUN cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+RUN cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+RUN cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
 
 ## no need for ollama at this time.
 #RUN apt-get install -y curl
