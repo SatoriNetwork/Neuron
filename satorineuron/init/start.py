@@ -540,14 +540,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     stream_display.predictions = [
                         value
                         for value in streamForecast.predictionHistory.value]
-            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId.cleanId}', color='blue')
-            self.server.publish(
-                topic=streamForecast.predictionStreamId.topic(),
-                data=streamForecast.forecast["pred"].iloc[0],
-                observationTime=streamForecast.observationTime,
-                observationHash=streamForecast.observationHash,
-                isPrediction=True,
-                useAuthorizedCall=self.version >= Version("0.2.6"))
+            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId}', color='blue')
+            # self.server.publish( # TODO : fix this for the new datamanager
+            #     topic=streamForecast.predictionStreamId.topic(),
+            #     data=streamForecast.forecast["pred"].iloc[0],
+            #     observationTime=streamForecast.observationTime,
+            #     observationHash=streamForecast.observationHash,
+            #     isPrediction=True,
+            #     useAuthorizedCall=self.version >= Version("0.2.6"))
 
         # TODO: we will have to change this some day to a mapping between the
         #       publication (key) and all the supporting subscriptions (value)
@@ -572,8 +572,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #    logging.warning('Running in Local Mode.', color='green')
         if self.engineVersion == 'v2':
             self.aiengine: satoriengine.veda.engine.Engine = (
-                await satoriengine.veda.engine.Engine.create(
-                    streams=self.subscriptions, pubstreams=self.publications)
+                await satoriengine.veda.engine.Engine.create()
             )
             self.aiengine.predictionProduced.subscribe(
                 lambda x: handleNewPrediction(x) if x is not None else None)
