@@ -663,15 +663,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
 
         async def _sendPubSubMapping( mappingDict: dict):
-            """Share subscriptions list as table_uuids with peer informations to the DataServer"""
+            """ send pub-sub mapping with peer informations to the DataServer """
             try:
                 await self.dataClient.sendRequest(
                     self.dataServerIp,
                     table_uuid=mappingDict,
-                    method='send-pubsub-mapping'
+                    method='send-pubsub-map'
                 )
             except Exception as e:
-                logging.error(f"Failed to send subscription List {e}")
+                logging.error(f"Failed to send pub-sub mapping {e}")
 
         pubSubMapping = matchPubSub()
         await _sendPubSubMapping(pubSubMapping)
