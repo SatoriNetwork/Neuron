@@ -79,11 +79,11 @@
           .then((text) => {
             console.log(text);
             stakeStatus = text;
-            if (stakeStatus == 'False') {
-              document.getElementById('modeToggle').checked = false;
-              showMiningInviteCard();
-            }
-            updateMiningCard();
+            //if (stakeStatus == 'False') {
+            //  document.getElementById('modeToggle').checked = false;
+            //  showMiningInviteCard();
+            //}
+            //updateMiningCard();
           })
           .catch((error) => console.error('Error:', error));
       }
