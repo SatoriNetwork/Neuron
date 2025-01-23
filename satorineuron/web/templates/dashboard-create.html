@@ -468,6 +468,7 @@
   <form action="/register_stream" method="POST">
     {{ newRelayStream.hidden_tag() }}
     {{ newRelayStream.csrf_token }}
+    <!--#region step1  -->
     <div class="form-container bg-gradient-dark" id="step1_desc">
       <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
@@ -594,6 +595,8 @@
         </div>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event)">Next</button>
     </div>
+    <!--#endregion -->
+    <!--#region step2  -->
     <div class="form-container bg-gradient-dark" id="step2_metadata">
       <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
@@ -626,6 +629,8 @@
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step1_desc', event)">Prev</button>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event)">Next</button>
     </div>
+    <!--#endregion -->
+    <!--#region step3  -->
     <div class="form-container bg-gradient-dark" id="step3_encryption">
       <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
@@ -638,6 +643,8 @@
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event)">Prev</button>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event)">Next</button>
     </div>
+    <!--#endregion -->
+    <!--#region step4  -->
     <div class="form-container bg-gradient-dark" id="step4_history">
       <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
@@ -650,6 +657,8 @@
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event)">Prev</button>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step5_review', event)">Next</button>
     </div>
+    <!--#endregion -->
+    <!--#region step5  -->
     <div class="form-container bg-gradient-dark" id="step5_review">
       <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
@@ -664,6 +673,7 @@
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event)">Prev</button>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;">Submit</button>
     </div>
+    <!--#endregion -->
   </form>
 </div>
 
