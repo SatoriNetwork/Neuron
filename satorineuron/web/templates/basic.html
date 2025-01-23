@@ -67,7 +67,6 @@
         return 0;
       }
     }
-    checkMainSize();
   </script>
 
   <script>
@@ -76,18 +75,37 @@
       let padding_width = (mainWidth - 200) / 2;
       return padding_width;
     }
-    loadingRightPadding();
   </script>
 
   <script>
+    const spinner_container = document.getElementById('working');
+    let spinnerCheckInterval;
+    let spinnerUpdateInterval;
     function spaceLoadingImg() {
       return "margin-right:" + loadingRightPadding() + "px;"; 
     }
     async function updateSpinner() {  
       const spinner = document.getElementsByClassName('loadingThingy')[0];
       spinner.setAttribute("style", spaceLoadingImg());
+      console.log("updating style: spinner")
     }
-    setInterval(updateSpinner, 100);
+    function checkSpinnerDisplaying() {
+      if(spinner_container.style.display == 'block') {
+        if (!spinnerUpdateInterval) {
+          spinnerUpdateInterval = setInterval(updateSpinner, 100);
+        }
+      } else {
+        if (spinnerUpdateInterval) {
+          clearInterval(spinnerUpdateInterval);
+          spinnerUpdateInterval = null;
+        }
+      }
+    }
+    spinnerCheckInterval = setInterval(checkSpinnerDisplaying, 100);
+    
+    window.onload = function () {
+      updateSpinner();
+    }
   </script>
   </body>
 </html>
