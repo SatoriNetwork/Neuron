@@ -794,12 +794,24 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
     return redirect(f'/vault/{network}')
 
 
+@app.route('/bridge/accept-tos', methods=['GET'])
+@userInteracted
+@authRequired
+def bridgeAcceptBurnBridgeTerms():
+    from satorilib.server.ofac import OfacServer
+    if OfacServer.acceptTerms():
+        if OfacServer.requestPermission():
+            return 'OK', 200
+        return 'error: please try again later.', 200
+    return 'FAIL', 200
+
+
 @app.route('/bridge_satori_transaction_from_vault/<network>', methods=['POST'])
 @userInteracted
 @authRequired
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
-    from satorilib.server import ofac
-    if not ofac.requestPermission():
+    from satorilib.server.ofac import OfacServer
+    if not OfacServer.requestPermission():
         return redirect('/vault/main')
     if start.vault is not None and not start.vault.isEncrypted:
         from satorilib.wallet.ethereum.wallet import EthereumWallet
@@ -819,6 +831,20 @@ def bridgeSatoriTransactionFromVault(network: str = 'main'):
         flash(str(result))
         flash("Bridge process started successfully! We need to wait for some on-chain confirmations, it'll be done in an hour.")
     return redirect('/vault/main')
+
+
+@app.route('/set/eth/address', methods=['GET'])
+@userInteracted
+@authRequired
+def setEthAddress():
+    if start.vault is not None and not start.vault.isEncrypted:
+        from satorilib.wallet.ethereum.wallet import EthereumWallet
+        account = EthereumWallet.generateAccount(start.vault._entropy)
+        setEthAddressResult = start.server.setEthAddress(account.address)
+        logging.debug(f'setEthAddressResult: {setEthAddressResult}', color='blue')
+    if setEthAddressResult[0]:
+        return 'OK', 200
+    return 'failed', 500
 
 
 def sendSatoriTransactionUsing(
@@ -885,7 +911,7 @@ def bridgeSatoriTransactionUsing(
     forms = importlib.reload(forms)
 
     def acceptSubmittion(bridgeForm: dict):
-        from satorilib.server import ofac
+        from satorilib.server.ofac import OfacServer
 
         def refreshWallet():
             time.sleep(4)
@@ -898,11 +924,14 @@ def bridgeSatoriTransactionUsing(
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
 
+        if bridgeForm['bridgeAmount'] > 100:
+            return 'Bridge Failed: too much satori, please try again with less than 100 Satori.'
+
         # should I send a transaction or send a partial?
         transactionResult = myWallet.typicalNeuronBridgeTransaction(
             amount=bridgeForm['bridgeAmount'] or 0,
             ethAddress=bridgeForm['ethAddress'] or '',
-            ofacReportedFn=ofac.reportTxid,
+            ofacReportedFn=OfacServer.reportTxid,
             requestSimplePartialFn=start.server.requestSimplePartial,
             broadcastBridgeSimplePartialFn=start.server.broadcastSimplePartial)
         refreshWallet()
@@ -986,7 +1015,7 @@ def editStream(topic=None):
     try:
         badForm = [
             s for s in start.relay.streams
-            if s.streamId.topic() == topic][0].asMap(noneToBlank=True)
+            if s.streamId.jsonId == topic][0].asMap(noneToBlank=True)
     except IndexError:
         # on rare occasions
         # IndexError: list index out of range
@@ -1147,7 +1176,7 @@ def dashboard():
 
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
     if request.method == 'POST':
-            acceptSubmittion(forms.VaultPassword(formdata=request.form))
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
         # streamOverviews = (
         #     [model.miniOverview() for model in start.engine.models]
@@ -1182,7 +1211,7 @@ def dashboard():
             ([
                 {
                     **stream.asMap(noneToBlank=True),
-                    **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+                    **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
                     **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
                     **{'cadenceStr': deduceCadenceString(stream.cadence)},
                     **{'offsetStr': deduceOffsetString(stream.offset)}}
@@ -2593,7 +2622,7 @@ def relayCsv():
             **{'stream': stream.streamId.stream},
             **{'target': stream.streamId.target},
             **stream.asMap(noneToBlank=True),
-            **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+            **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
             **{'cadenceStr': deduceCadenceString(stream.cadence)},
             **{'offsetStr': deduceOffsetString(stream.offset)}}
             for stream in start.relay.streams]

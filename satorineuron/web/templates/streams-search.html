@@ -531,7 +531,6 @@
     return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}, ${date.getFullYear()}`;
   }
 
-
   function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue, chunkSize = 100) {
     const totalPoints = combinedTimes.length;
     let currentIndex = 0;
@@ -672,7 +671,6 @@
 
       if (currentIndex < totalPoints) {
         requestAnimationFrame(addChunk); // Schedule the next chunk
-
       }  else {
         // Add the future forecasting point as part of the predictions dataset
         const lastTimestamp = combinedTimes[combinedTimes.length - 1];
@@ -712,7 +710,6 @@
 
           observationsChart.update();
         }, 0);
-
       }
     }
 
@@ -776,7 +773,6 @@
 
 
     renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
-
   }
   var mostRecentName;
   var mostRecentStreamId;
@@ -836,14 +832,14 @@
           observationTable.style.overflowY = "scroll";
           
           // Render a graph
-          parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
+          parsedObservations.sort((a, b) => new Date(a.ts) - new Date(b.ts));
           showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody);
           /*
           parsedObservations.reverse().forEach(observation => {
             console.log(observation.time);
             const row = document.createElement('tr');
             row.innerHTML = `
-              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.ts}</td>
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.value}</td>
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.avg}</td>
             `;

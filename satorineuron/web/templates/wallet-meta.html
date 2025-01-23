@@ -13,8 +13,10 @@
         </div>
       </div>
       <div class="card-body px-0 pb-2">
-        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}">
-          <pre>{{ wallet.showStats() }}</pre>
+        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}" style='padding-left: 1.5rem; padding-bottom: 1.5rem;padding-right: 1.5rem;'>
+          <code style="color:  lightslategrey;">
+            {{ wallet.showStats() }}
+          </code>
         </p>
       </div>
     </div>
@@ -32,8 +34,8 @@
         </div>
       </div>
       <div class="card-body px-0 pb-2">
-        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}"  style='padding-left: 1.5rem; padding-bottom: 1.5rem;'>
-          <code>
+        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}" style='padding-left: 1.5rem; padding-bottom: 1.5rem;padding-right: 1.5rem;'>
+          <code style="color:  lightslategrey;">
           {{ wallet.banner }}
           </code>
         </p>

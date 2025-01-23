@@ -21,7 +21,7 @@
                       size=256,
                       style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
                       class_="tight form-control" + (" dark-colors" if darkmode else ""),
-                      placeholder="Enter Password",
+                      placeholder="password",
                       autofocus=True,
                       onkeypress="checkEnter(event);") }}
                 </div>
@@ -50,7 +50,7 @@
                       onclick="if(validateVaultPassword()) showWorking();") }}
                 </div>
               </div>
-              <button class="d-flex flex-row gap-2 btn btn-outline-dark" onclick="checkEnter(event); showWorking();">Login</button> <!-- Login Button added, Mizuki -->
+              <button class="d-flex flex-row gap-2 btn btn-outline-dark" onclick="checkEnter(event); showWorking();">login</button> <!-- Login Button added, Mizuki -->
             </form>
             <!--<input
             style="text-align: center;"
