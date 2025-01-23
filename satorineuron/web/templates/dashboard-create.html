@@ -593,7 +593,7 @@
           <label class="text-white" for="">Description</label>
           {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event)">Next</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step1_desc')">Next</button>
     </div>
     <!--#endregion -->
     <!--#region step2  -->
@@ -626,8 +626,8 @@
           <label class="text-white" for="">Payload</label>
           {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step1_desc', event)">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event)">Next</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step1_desc', event, 'step2_metadata')">Prev</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event, 'step2_metadata')">Next</button>
     </div>
     <!--#endregion -->
     <!--#region step3  -->
@@ -640,8 +640,8 @@
           <label class="text-white" for="">Encryption Script Generation</label>
           {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event)">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event)">Next</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step3_encryption')">Prev</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step3_encryption')">Next</button>
     </div>
     <!--#endregion -->
     <!--#region step4  -->
@@ -654,8 +654,8 @@
           <label class="text-white" for="">History</label>
           {{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderGetHistory, id="historyCode") }}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event)">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step5_review', event)">Next</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event, 'step4_history')">Prev</button>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step5_review', event, 'step4_history')">Next</button>
     </div>
     <!--#endregion -->
     <!--#region step5  -->
@@ -670,9 +670,11 @@
             placeholder="show all inputted values"
             style="padding: 5px;"></textarea>
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event)">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;">Submit</button>
-    </div>
+        <div>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; width: 50%;" onclick="navPopup('step4_history', event, 'step5_review')">Prev</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; width: 50%;">Submit</button>
+        </div>
+      </div>
     <!--#endregion -->
   </form>
 </div>
@@ -695,27 +697,87 @@
 
     //close popup when clicking x or off popup
     $(".form-popup-bg").on("click", function (event) {
-      if (
-        $(event.target).is(".form-popup-bg") ||
-        $(event.target).is("#btnCloseForm")
-      ) {
+      if ($(event.target).is("#btnCloseForm")) {
         event.preventDefault();
         $(this).removeClass("is-visible");
         $(this).find('.form-container').removeClass("active");
       }
     });
   });
-  function navPopup(popup_id, event){
+  function navPopup(popup_id, event, currentPage){
     event.preventDefault();
     const activePopup = document.querySelector('.form-container.active');
     const nextPopup = document.getElementById(popup_id);
-    if (activePopup) {
-      activePopup.classList.remove('active');
+    canMoveToNext = false;
+    canMoveToNextList = checkRequired(currentPage);
+    indexOfFalse = -1;
+    for(i = 0; i < canMoveToNextList.length; i++) {
+      if(canMoveToNextList[i] == true){
+        canMoveToNext = true;
+      }
+      else{
+        canMoveToNext = false;
+        indexOfFalse = i;
+        break;
+      }
     }
+    if (canMoveToNext){
+      if (activePopup) {
+        activePopup.classList.remove('active');
+      }
 
-    if (nextPopup) {
-      nextPopup.classList.add('active');
+      if (nextPopup) {
+        nextPopup.classList.add('active');
+      }
     }
+    else if (indexOfFalse != -1){
+      alert('Required Field ' + (indexOfFalse + 1) + ' is empty!')
+    }
+  }
+
+  function checkRequired(currentPage){
+    requiredFilled = [];
+    if(currentPage == 'step1_desc'){
+      requiredFilled = [false, false, false, false, false];
+      requiredFilled[0] = checkElement('name');
+      requiredFilled[1] = checkElement('dayCadence');
+      requiredFilled[2] = checkElement('hourCadence');
+      requiredFilled[3] = checkElement('minuteCadence');
+      requiredFilled[4] = checkElement('secondCadence');
+      if (
+        requiredFilled[1] == true ||
+        requiredFilled[2] == true ||
+        requiredFilled[3] == true ||
+        requiredFilled[4] == true
+      ){
+        requiredFilled[1] = true;
+        requiredFilled[2] = true;
+        requiredFilled[3] = true;
+        requiredFilled[4] = true;
+      }
+      return requiredFilled;
+    }
+    // else if(currentPage == 'step2_metadata'){
+
+    // }
+    // else if(currentPage == 'step3_encryption'){
+      
+    // }
+    // else if(currentPage == 'step4_history'){
+      
+    // }
+    // else if(currentPage == 'step5_review'){
+      
+    // }
+  }
+
+  function checkElement(elementId){
+    input = document.getElementById(elementId);
+    if (input.value.length == 0)
+    { 
+      return false; 
+    }  	
+    return true; 
   }
 </script>
 
