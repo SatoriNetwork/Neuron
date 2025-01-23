@@ -76,7 +76,7 @@
   <script>
     function loadingRightPadding() {
       let mainWidth = checkMainSize();
-      let padding_width = (mainWidth - 160) / 2;
+      let padding_width = (mainWidth - 200) / 2;
       console.log("Calculated padding width: ", padding_width);
       return padding_width;
     }
@@ -91,7 +91,7 @@
       const spinner = document.getElementsByClassName('loadingThingy')[0];
       spinner.setAttribute("style", spaceLoadingImg());
     }
-    setInterval(updateSpinner, 500);
+    setInterval(updateSpinner, 100);
   </script>
   </body>
 </html>
