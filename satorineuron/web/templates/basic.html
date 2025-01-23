@@ -60,13 +60,10 @@
   <script>
     function checkMainSize() {
       let mainFrame = document.getElementsByClassName('main-content')[0];
-      console.log(mainFrame);
       if (mainFrame) {
         let mainSize = mainFrame.clientWidth;
-        console.log("main width = ", mainSize);
         return mainSize;
       } else {
-        console.log("main width = ERROR");
         return 0;
       }
     }
@@ -77,7 +74,6 @@
     function loadingRightPadding() {
       let mainWidth = checkMainSize();
       let padding_width = (mainWidth - 200) / 2;
-      console.log("Calculated padding width: ", padding_width);
       return padding_width;
     }
     loadingRightPadding();
