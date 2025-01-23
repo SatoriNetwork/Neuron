@@ -765,20 +765,21 @@
         requiredFilled[3] = true;
         requiredFilled[4] = true;
       }
-      return requiredFilled;
+      
     }
-    // else if(currentPage == 'step2_metadata'){
-
-    // }
-    // else if(currentPage == 'step3_encryption'){
-      
-    // }
-    // else if(currentPage == 'step4_history'){
-      
-    // }
-    // else if(currentPage == 'step5_review'){
-      
-    // }
+    else if(currentPage == 'step2_metadata'){
+      requiredFilled = [true];
+    }
+    else if(currentPage == 'step3_encryption'){
+      requiredFilled = [true];
+    }
+    else if(currentPage == 'step4_history'){
+      requiredFilled = [true];
+    }
+    else if(currentPage == 'step5_review'){
+      requiredFilled = [true];
+    }
+    return requiredFilled;
   }
 
   function checkElement(elementId){
