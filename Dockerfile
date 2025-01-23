@@ -15,6 +15,7 @@ RUN apt-get update && \
     apt-get install -y vim && \
     apt-get install -y cmake && \
     apt-get install -y dos2unix && \
+    apt-get install -y libleveldb-dev && \
     apt-get clean
     # TODO: need zip? I think it was just used for IPFS install
     #apt-get install -y zip
