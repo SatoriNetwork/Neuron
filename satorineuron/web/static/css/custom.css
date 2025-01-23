@@ -500,7 +500,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
   padding: 20px;
   text-align: center;
   height: 100%;
-  z-index: 10000;
+  z-index: 100000;
 }
 
 
@@ -515,7 +515,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 	padding: 20px;
 	text-align: center;
 	height: 100%;
-	z-index: 10000;
+	z-index: 100000;
   }
 
 .overlayForLoading {
@@ -526,15 +526,15 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 	pointer-events: none;
 }
 .loadingThingy {
-    z-index: 101;
+  z-index: 101;
     /*position: relative;
     background: url(../img/loading_icon.gif);
     display: none;
     margin: auto;*/
-	margin: auto;
-    height: 160px;
-    width: 160px;
-    position: absolute;
+	margin-left: auto;
+  height: 160px;
+  width: 160px;
+  position: relative;
 }
 
 .yellow-hover:hover {
