@@ -593,7 +593,9 @@
           <label class="text-white" for="">Description</label>
           {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step1_desc')">Next</button>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step1_desc')">Next</button>
+        </div>
     </div>
     <!--#endregion -->
     <!--#region step2  -->
@@ -626,8 +628,10 @@
           <label class="text-white" for="">Payload</label>
           {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step1_desc', event, 'step2_metadata')">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event, 'step2_metadata')">Next</button>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step1_desc', event, 'step2_metadata')">Prev</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step3_encryption', event, 'step2_metadata')">Next</button>
+        </div>
     </div>
     <!--#endregion -->
     <!--#region step3  -->
@@ -640,8 +644,10 @@
           <label class="text-white" for="">Encryption Script Generation</label>
           {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step3_encryption')">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step3_encryption')">Next</button>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step3_encryption')">Prev</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step3_encryption')">Next</button>
+        </div>
     </div>
     <!--#endregion -->
     <!--#region step4  -->
@@ -654,8 +660,10 @@
           <label class="text-white" for="">History</label>
           {{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderGetHistory, id="historyCode") }}
         </div>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event, 'step4_history')">Prev</button>
-        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step5_review', event, 'step4_history')">Next</button>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event, 'step4_history')">Prev</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step5_review', event, 'step4_history')">Next</button>
+        </div>
     </div>
     <!--#endregion -->
     <!--#region step5  -->
@@ -671,10 +679,12 @@
             style="padding: 5px;"></textarea>
         </div>
         <div>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
           <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; width: 50%;" onclick="navPopup('step4_history', event, 'step5_review')">Prev</button>
-          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; width: 50%;">Submit</button>
+            <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; width: 50%; grid-column: 5 / 5;">Submit</button>
         </div>
-      </div>
+          </div>
+    </div>
     <!--#endregion -->
   </form>
 </div>
