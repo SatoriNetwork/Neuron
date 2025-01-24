@@ -475,11 +475,21 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Name & Descriptions</p>
         <div class="form-group">
-          <label class="text-white" for="">Name (required)</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Name (required)</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
         </div>
         <div class="form-group">
-          <label class="text-white" for="">Interval (required)</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Interval (required)</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
               <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
@@ -544,7 +554,12 @@
         </div>
 
         <div class="form-group">
-          <label class="text-white" for="">Offset</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Offset</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
@@ -586,11 +601,21 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="text-white" for="">Tags</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Tags</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.tags(size=32, class_="tight form-control"+(" dark-colors" if darkmode else ""), placeholder="bitcoin, 1hr") }}
         </div>
         <div class="form-group">
-          <label class="text-white" for="">Description</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Description</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
@@ -605,27 +630,57 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">URL & Metadata</p>
         <div class="form-group">
-          <label class="text-white" for="">URL (required)</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">URL (required)</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.url(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin") }}
         </div>
         <div class="form-group">
-          <label class="text-white" for="">URI</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">URI</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.uri(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
         </div>
         <div class="form-group">
-          <label class="text-white" for="">Target</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Target</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Close") }}
         </div>
         <div class="form-group">
-          <label class="text-white" for="">Data Type</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Data Type</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.datatype(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="float") }}
         </div>
         <div class="form-group">
-          <label class="text-white" for="">Headers</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Headers</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.headers(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
         <div class="form-group">
-          <label class="text-white" for="">Payload</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Payload</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
@@ -641,7 +696,12 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Encryption</p>
         <div class="form-group">
-          <label class="text-white" for="">Encryption Script Generation</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">Encryption Script Generation</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
@@ -657,7 +717,12 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Datastream History</p>
         <div class="form-group">
-          <label class="text-white" for="">History</label>
+          <div style="display: flex;">
+            <label class="text-white" for="">History</label>
+            <button class="btn p-0">
+              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
+            </button>
+          </div>
           </div>
               <div class='{% if darkmode %}dark-colors{% else %}{%endif%} tight form-control'>
                 <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data"></form>
@@ -737,6 +802,10 @@
                   });
                 </script>
               </div>
+              <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+                <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step3_encryption', event, 'step4_history')">Prev</button>
+                <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step5_review', event, 'step4_history')">Next</button>
+              </div>
     </div>
     <!--#endregion -->
     <!--#region step5  -->
@@ -753,7 +822,17 @@
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
           <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step5_review')">Prev</button>
-          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;grid-column: 5 / 5;">Submit</button>
+          <div class="row">
+            <div class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;">
+              <div class="input-group">
+                {% if darkmode %}
+                  {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateCreateJs()) showWorking();") }}
+                {% else %}
+                  {{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateCreateJs()) showWorking();") }}
+                {% endif %}
+              </div>
+            </div>
+          </div>
         </div>
     </div>
     <!--#endregion -->
