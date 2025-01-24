@@ -5,10 +5,10 @@
       <div class="row mb-4">
         <center>
           <!-- Logo and Title above the textbox with styling changes, Mizuki -->
-          <div style="margin-bottom: 6rem; font-family: Zen Maru Gothic;">
-            <header style="font-size: 40px;padding-bottom:3rem;">Welcome to</header>
+          <div style="margin-bottom: 3rem; font-family: Zen Maru Gothic;">
+            <header style="font-size: 40px;padding-bottom:1rem;">Welcome to</header>
             <span class="text-black" title="{{v}}" style="font-size: 120px; color: black;">
-              <img src="{{ url_for('static', filename='img/satori-light-inline.png') }}" height="360px">
+              <img src="{{ url_for('static', filename='img/satori-light-inline.png') }}" style="max-height:360px;max-width:100%; width: auto; height: auto;">
             </span>
           </div>
           <div class="col-xl-10 col-sm-10 mb-xl-4 mb-4">
@@ -32,7 +32,7 @@
                   {{ vaultPasswordForm.password(
                       size=256,
                       style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
-                      class_="tight form-control; height:40px;" + (" dark-colors" if darkmode else ""),
+                      class_="tight form-control;" + (" dark-colors" if darkmode else ""),
                       id="repeatPassword",
                       placeholder="repeat password",
                       autofocus=True,
@@ -40,7 +40,7 @@
                 </div>
               </div>
               {% endif %}
-              <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px; display:{{'block' if wallet is none else 'none'}};">
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 20px; display:{{'block' if wallet is none else 'none'}};">
                 <div class="input-group input-group-outline">
                   {{ vaultPasswordForm.submit(
                       size=32,

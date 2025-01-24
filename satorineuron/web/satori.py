@@ -827,8 +827,8 @@ def bridgeSatoriTransactionFromVault(network: str = 'main'):
         return redirect('/vault/main')
     result = bridgeSatoriTransactionUsing(start.vault)
     logging.debug(f'result: {result}', color='magenta')
+    flash(str(result))
     if isinstance(result, str) and len(result) == 64:
-        flash(str(result))
         flash("Bridge process started successfully! We need to wait for some on-chain confirmations, it'll be done in an hour.")
     return redirect('/vault/main')
 
@@ -924,7 +924,7 @@ def bridgeSatoriTransactionUsing(
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
 
-        if bridgeForm['bridgeAmount'] > 100:
+        if bridgeForm['bridgeAmount'] > myWallet.maxBridgeAmount:
             return 'Bridge Failed: too much satori, please try again with less than 100 Satori.'
 
         # should I send a transaction or send a partial?

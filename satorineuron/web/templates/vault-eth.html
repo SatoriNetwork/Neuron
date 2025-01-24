@@ -10,9 +10,11 @@
           To see your balance import your private key into a wallet like Metamask.
         </p>
         <br/>
-        <div id='ethAddress' onclick='document.getElementById("bridge-for-testing").style.display = "block";'>{{ ethAddress }}</div>
+        <a href="https://basescan.org/address/{{ ethAddress }}#tokentxns", target='_blank'>
+          <div id='ethAddress' onclick='document.getElementById("bridge-for-testing").style.display = "block";'>{{ ethAddress }}</div>
+        </a>
         <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">
-          your ethereum address
+          your address on Base
         </p>
       </div>
       <hr class="dark horizontal my-3">

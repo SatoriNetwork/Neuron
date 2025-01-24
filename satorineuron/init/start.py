@@ -85,7 +85,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.urlSynergy: str = urlSynergy
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
-        self.details: CheckinDetails = None
+        self.details: CheckinDetails = CheckinDetails(raw={})
         self.key: str
         self.oracleKey: str
         self.idKey: str
