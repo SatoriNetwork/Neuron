@@ -719,16 +719,21 @@
     canMoveToNext = false;
     canMoveToNextList = checkRequired(currentPage);
     indexOfFalse = -1;
-    for(i = 0; i < canMoveToNextList.length; i++) {
-      if(canMoveToNextList[i] == true){
+    i = 0;
+    do{
+      if(canMoveToNextList[i]){
         canMoveToNext = true;
+        console.log('set true');
       }
       else{
         canMoveToNext = false;
         indexOfFalse = i;
+        console.log('set false');
         break;
       }
-    }
+      
+      i++;
+    }while(i <= canMoveToNextList.length - 1);
     if (canMoveToNext){
       if (activePopup) {
         activePopup.classList.remove('active');
@@ -746,7 +751,6 @@
   function checkRequired(currentPage){
     requiredFilled = [];
     if(currentPage == 'step1_desc'){
-      requiredFilled = [false, false, false, false, false];
       requiredFilled[0] = checkElement('name');
       requiredFilled[1] = checkElement('dayCadence');
       requiredFilled[2] = checkElement('hourCadence');
@@ -766,7 +770,7 @@
       
     }
     else if(currentPage == 'step2_metadata'){
-      requiredFilled = [true];
+      requiredFilled[0] = checkElement('url');
     }
     else if(currentPage == 'step3_encryption'){
       requiredFilled = [true];
