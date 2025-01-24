@@ -1,6 +1,7 @@
 /* NOTE:
 PLACE HERE YOUR OWN CSS CODES AND IF NEEDED, OVERRIDE THE STYLES FROM THE OTHER STYLESHEETS.
 WE WILL RELEASE FUTURE UPDATES SO IN ORDER TO NOT OVERWRITE YOUR STYLES IT'S BETTER LIKE THIS.  */
+
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
@@ -84,6 +85,10 @@ WE WILL RELEASE FUTURE UPDATES SO IN ORDER TO NOT OVERWRITE YOUR STYLES IT'S BET
   left: 0;
   right: 0;
   bottom: 0;
+}
+
+.form_hint {
+  text-align: center;
 }
 
 
@@ -1137,4 +1142,8 @@ input:checked + .slider:before {
   left: 0;
   right: 0;
   bottom: 0;
+}
+
+.hidden {
+  display: none;
 }

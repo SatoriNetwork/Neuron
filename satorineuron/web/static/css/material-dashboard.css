@@ -6257,7 +6257,7 @@ textarea.form-control-lg {
 }
 
 .popover {
-  --bs-popover-zindex: 1060;
+  --bs-popover-zindex: 100060;
   --bs-popover-max-width: 276px;
   --bs-popover-font-size: 0.75rem;
   --bs-popover-bg: #fff;

@@ -1,4 +1,5 @@
 {% block content %}
+
 <div id='CreateDataStream' , class="row mb-4">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
@@ -477,9 +478,8 @@
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Name (required)</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint">?</span>
+            <!-- <span class="material-icons form_hint" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</span> -->
           </div>
           {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
         </div>
@@ -559,6 +559,7 @@
             <button class="btn p-0">
               <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
             </button>
+            
           </div>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
@@ -839,6 +840,41 @@
   </form>
 </div>
 
+<div class="info_msg hidden" id="popover-cont" style="z-index: 1;">
+  <p>this is a hint</p>
+</div>
+
+<script>
+  $(document).ready(function () {
+    $('[data-bs-toggle="popover"]').popover(); // Initialize all popovers
+});
+
+  $(function(){
+    $(".form_hint").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+</script>
 <script>
   function openForm() {
     const popup_initial = document.getElementById('step1_desc');
