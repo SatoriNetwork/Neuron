@@ -666,7 +666,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             try:
                 await self.dataClient.sendRequest(
                     self.dataServerIp,
-                    table_uuid=mappingDict,
+                    uuid=mappingDict,
                     method='send-pubsub-map'
                 )
             except Exception as e:
