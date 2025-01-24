@@ -651,11 +651,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             }
             return {
                 sub_uuid: {
-                    'publication_uuid': pub_uuid,
-                    'subscription_subscribers': subInfo[sub_uuid]['subscribers'],
-                    'subscription_publishers': subInfo[sub_uuid]['publishers'],
-                    'publication_subscribers': pubInfo[pub_uuid]['subscribers'],
-                    'publication_publishers': pubInfo[pub_uuid]['publishers']
+                    'publicationUuid': pub_uuid,
+                    'dataStreamSubscribers': subInfo[sub_uuid]['subscribers'],
+                    'dataStreamPublishers': subInfo[sub_uuid]['publishers'],
+                    'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'],
+                    'predictiveStreamPublishers': pubInfo[pub_uuid]['publishers']
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
