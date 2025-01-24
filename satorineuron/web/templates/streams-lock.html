@@ -5,14 +5,14 @@
       <div class="row mb-4">
         <center>
           <!-- Logo and Title above the textbox with styling changes, Mizuki -->
-          <div style="margin-bottom: 50px; font-family: Zen Maru Gothic;">
-            <header style="font-size: 80px;">Welcome to</header>
+          <div style="margin-bottom: 6rem; font-family: Zen Maru Gothic;">
+            <header style="font-size: 40px;padding-bottom:3rem;">Welcome to</header>
             <span class="text-black" title="{{v}}" style="font-size: 120px; color: black;">
-              Sat<img src="{{ url_for('static', filename='img/ensodarkclear.png') }}" width="70" style='margin-right: 0.2rem; filter: invert(100%);'>ri
+              <img src="{{ url_for('static', filename='img/satori-light-inline.png') }}" height="360px">
             </span>
           </div>
           <div class="col-xl-10 col-sm-10 mb-xl-4 mb-4">
-            <form action="/streams" method="POST">
+            <form action="/dashboard" method="POST">
               {{ vaultPasswordForm.hidden_tag() }}
               {{ vaultPasswordForm.csrf_token }}
               <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
@@ -32,7 +32,7 @@
                   {{ vaultPasswordForm.password(
                       size=256,
                       style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
-                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
+                      class_="tight form-control; height:40px;" + (" dark-colors" if darkmode else ""),
                       id="repeatPassword",
                       placeholder="repeat password",
                       autofocus=True,
