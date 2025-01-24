@@ -747,7 +747,7 @@
       <p class="text-white">Review before submitting</p>
         <div class="form-group">
           <label class="text-white" for="">Review</label>
-          <textarea class="form-control" type="text"
+          <textarea class="form-control" id="review" type="text"
             placeholder="show all inputted values"
             style="padding: 5px;"></textarea>
         </div>
@@ -786,6 +786,9 @@
     });
   });
   function navPopup(popup_id, event, currentPage){
+    if(popup_id == 'step5_review'){
+      populateReview();
+    }
     event.preventDefault();
     const activePopup = document.querySelector('.form-container.active');
     const nextPopup = document.getElementById(popup_id);
@@ -819,6 +822,37 @@
     else if (indexOfFalse != -1){
       alert('Required Field ' + (indexOfFalse + 1) + ' is empty!')
     }
+  }
+
+  function populateReview(){
+    reviewTextField = document.getElementById('review');
+    name = document.getElementById('name').value;
+    dayCadence = document.getElementById('dayCadence').value;
+    hourCadence = document.getElementById('hourCadence').value;
+    minuteCadence = document.getElementById('minuteCadence').value;
+    secondCadence = document.getElementById('secondCadence').value;
+    
+    reviewTextField.innerHTML = 
+   `Name & Descriptions:
+      Name: ${name}
+      Interval: ${dayCadence}:${hourCadence}:${minuteCadence}:${secondCadence}
+      Offset:
+      Tags:
+      Description:
+
+    URL & Metadata:
+      URL:
+      URI:
+      Target:
+      Data Type:
+      Headers:
+      Payload:
+
+    Encryption:
+
+    History:
+    
+   `
   }
 
   function checkRequired(currentPage){
