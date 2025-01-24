@@ -441,7 +441,7 @@
                 </div>
               </div>
             </div>-->
-<!--#region main  -->
+<!--#endregion -->
           <div class="row">
             <div class="col-xl-12 col-sm-12">
               <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
@@ -817,14 +817,14 @@
       <p class="text-white">Review before submitting</p>
         <div class="form-group">
           <label class="text-white" for="">Review</label>
-          <textarea class="form-control" type="text"
+          <p class="form-control" id="review" type="text"
             placeholder="show all inputted values"
-            style="padding: 5px;"></textarea>
+            style="padding: 5px;"></p>
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
           <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step5_review')">Prev</button>
           <div class="row">
-            <div class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;">
+            <div class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; grid-column: 4/4;">
               <div class="input-group">
                 {% if darkmode %}
                   {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateCreateJs()) showWorking();") }}
@@ -901,6 +901,9 @@
     });
   });
   function navPopup(popup_id, event, currentPage){
+    if(popup_id == 'step5_review'){
+      populateReview();
+    }
     event.preventDefault();
     const activePopup = document.querySelector('.form-container.active');
     const nextPopup = document.getElementById(popup_id);
@@ -934,6 +937,59 @@
     else if (indexOfFalse != -1){
       alert('Required Field ' + (indexOfFalse + 1) + ' is empty!')
     }
+  }
+
+  function populateReview(){
+    // #region page 1 info
+    reviewTextField = document.getElementById('review');
+    console.log(document.getElementById('name').value);
+    streamName = document.getElementById('name').value;
+    dayCadence = document.getElementById('dayCadence').value != '' ? document.getElementById('dayCadence').value : "00";
+    hourCadence = document.getElementById('hourCadence').value != '' ? document.getElementById('hourCadence').value : "00";
+    minuteCadence = document.getElementById('minuteCadence').value != '' ? document.getElementById('minuteCadence').value : "00";
+    secondCadence = document.getElementById('secondCadence').value != '' ? document.getElementById('secondCadence').value : "00";
+    hourOffset = document.getElementById('hourOffset').value != '' ? document.getElementById('hourOffset').value : "00";
+    minuteOffset = document.getElementById('minuteOffset').value != '' ? document.getElementById('minuteOffset').value : "00";
+    secondOffset = document.getElementById('secondOffset').value != '' ? document.getElementById('secondOffset').value : "00";
+    tags = document.getElementById('tags').value;
+    description = document.getElementById('description').value;
+    // #endregion
+
+    // #region page 2 info
+    url = document.getElementById('url').value;
+    uri = document.getElementById('uri').value;
+    target = document.getElementById('target').value;
+    dataType = document.getElementById('datatype').value;
+    headers = document.getElementById('headers').value;
+    payload = document.getElementById('payload').value;
+    // #endregion
+    
+    encryption = document.getElementById('hook').value;
+    history = document.getElementById('csvHistoryFile').value;
+
+
+    reviewTextField.innerHTML = 
+    `Name & Descriptions: \n
+      Name: ${streamName} \n
+      Interval (dd:hh:mm:ss): ${dayCadence}:${hourCadence}:${minuteCadence}:${secondCadence} \n
+      Offset (hh:mm:ss): ${hourOffset}:${minuteOffset}:${secondOffset} \n
+      Tags: ${tags} \n
+      Description: ${description} \n
+    \n
+    URL & Metadata: \n
+      URL: ${url} \n
+      URI: ${uri} \n
+      Target: ${target} \n
+      Data Type: ${datatype} \n
+      Headers: ${headers} \n
+      Payload: ${payload} \n
+    \n
+    Encryption: \n
+      ${encryption} \n
+    \n
+    History: \n
+      File: ${history}
+    `
   }
 
   function checkRequired(currentPage){
