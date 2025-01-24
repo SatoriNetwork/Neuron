@@ -658,12 +658,85 @@
       <p class="text-white">Datastream History</p>
         <div class="form-group">
           <label class="text-white" for="">History</label>
-          {{ newRelayStream.history(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderGetHistory, id="historyCode") }}
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
-          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step3_encryption', event, 'step4_history')">Prev</button>
-          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step5_review', event, 'step4_history')">Next</button>
-        </div>
+          </div>
+              <div class='{% if darkmode %}dark-colors{% else %}{%endif%} tight form-control'>
+                <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data"></form>
+                <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" type="file" id="csvHistoryFile" name="file" accept=".csv">
+                <script>
+                  //const form = document.getElementById('uploadForm');
+                  const historyFileInput = document.getElementById('csvHistoryFile');
+                  historyFileInput.addEventListener('change', () => {
+                      const file = historyFileInput.files[0];
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      fetch('/upload_history_csv', {
+                          method: 'POST',
+                          body: formData
+                      })
+                      .then(response => response.text())
+                      .then(data => {
+                        console.log(data);  // Optional: Display response from the server
+                        if (data == "Successful upload."){
+                          var historyCode = document.getElementById('historyCode');
+                          historyCode.value = historyCode.value || (
+"class GetHistory(object):"+
+"\n    '''"+
+"\n    supplies the history of the datastream"+
+"\n    one observation at a time (getNext, isDone)"+
+"\n    or all at once (getAll)"+
+"\n    '''"+
+"\n"+
+"\n    def __init__(self):"+
+"\n        pass"+
+"\n"+
+"\n    def getNext(self):"+
+"\n        '''"+
+"\n        should return a value or a list of two values,"+
+"\n        the first being the time in UTC as a string of the observation,"+
+"\n        the second being the observation value"+
+"\n        '''"+
+"\n        return None"+
+"\n"+
+"\n    def isDone(self):"+
+"\n        ''' returns true when there are no more observations to supply '''"+
+"\n        return None"+
+"\n"+
+"\n    def getAll(self):"+
+"\n        ''' "+
+"\n        if getAll returns a list or pandas DataFrame"+
+"\n        then getNext is never called."+
+"\n        csv history sourced from ______"+
+"\n        index assumed to be the first column if there are 2"+
+"\n        '''"+
+"\n        import re"+
+"\n        import pandas as pd"+
+"\n        import datetime as dt"+
+"\n        df = pd.read_csv('/Satori/Neuron/uploaded/history.csv')"+
+"\n        # if the csv is just a list of values (oldest should be first)"+
+"\n        if len(df.columns) == 1:"+
+"\n            now = str(dt.datetime.utcnow())"+
+"\n            df.index = [now for _ in range(len(df))]"+
+"\n            return df"+
+"\n        # if the csv has two columns the first should be a datetime in the format:"+
+"\n        # YYYY-MM-DD HH:MM:SS.000000"+
+"\n        elif len(df.columns) == 2:"+
+"\n            df = pd.read_csv('/Satori/Neuron/uploaded/history.csv', index_col=0)"+
+"\n            # if only YYYY-MM-DD are provide, add 0s"+
+"\n            if re.search(r'^\d{4}-\d{2}-\d{2}$', df.index[0]):"+
+"\n                df.index = [f'{d} 00:00:00.000000' for d in df.index]"+
+"\n            df.index.name = None"+
+"\n            return df"+
+"\n        # otherwise just try to use what is given"+
+"\n        return df"+
+"\n");
+                        }
+                      })
+                      .catch(error => {
+                          console.error('Error:', error);
+                      });
+                  });
+                </script>
+              </div>
     </div>
     <!--#endregion -->
     <!--#region step5  -->
@@ -729,16 +802,21 @@
     canMoveToNext = false;
     canMoveToNextList = checkRequired(currentPage);
     indexOfFalse = -1;
-    for(i = 0; i < canMoveToNextList.length; i++) {
-      if(canMoveToNextList[i] == true){
+    i = 0;
+    do{
+      if(canMoveToNextList[i]){
         canMoveToNext = true;
+        console.log('set true');
       }
       else{
         canMoveToNext = false;
         indexOfFalse = i;
+        console.log('set false');
         break;
       }
-    }
+      
+      i++;
+    }while(i <= canMoveToNextList.length - 1);
     if (canMoveToNext){
       if (activePopup) {
         activePopup.classList.remove('active');
@@ -756,7 +834,6 @@
   function checkRequired(currentPage){
     requiredFilled = [];
     if(currentPage == 'step1_desc'){
-      requiredFilled = [false, false, false, false, false];
       requiredFilled[0] = checkElement('name');
       requiredFilled[1] = checkElement('dayCadence');
       requiredFilled[2] = checkElement('hourCadence');
@@ -776,7 +853,7 @@
       
     }
     else if(currentPage == 'step2_metadata'){
-      requiredFilled = [true];
+      requiredFilled[0] = checkElement('url');
     }
     else if(currentPage == 'step3_encryption'){
       requiredFilled = [true];
