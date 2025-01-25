@@ -12,7 +12,7 @@
             </span>
           </div>
           <div class="col-xl-10 col-sm-10 mb-xl-4 mb-4">
-            <form action="/dashboard" method="POST">
+            <form action="/vault" method="POST">
               {{ vaultPasswordForm.hidden_tag() }}
               {{ vaultPasswordForm.csrf_token }}
               <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
@@ -32,7 +32,7 @@
                   {{ vaultPasswordForm.password(
                       size=256,
                       style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
-                      class_="tight form-control;" + (" dark-colors" if darkmode else ""),
+                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
                       id="repeatPassword",
                       placeholder="repeat password",
                       autofocus=True,
@@ -50,7 +50,9 @@
                       onclick="if(validateVaultPassword()) showWorking();") }}
                 </div>
               </div>
+              {% if wallet is not none %}
               <button class="d-flex flex-row gap-2 btn btn-outline-dark" onclick="checkEnter(event);">login</button> <!-- Login Button added, Mizuki -->
+              {% endif %}
             </form>
             <!--<input
             style="text-align: center;"
