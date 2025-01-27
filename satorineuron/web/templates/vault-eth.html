@@ -1,4 +1,11 @@
 {% block content %}
+<style>
+  #addTokenButton {
+    border: 1px dashed #d2d6da;
+    border-radius: 0.375rem;
+    padding: 25px;
+  }
+</style>
 <div class="row">
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
@@ -16,6 +23,9 @@
         <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">
           your address on Base
         </p>
+      </div>
+      <div style="padding: 1.25rem;display: none;">
+        <button class="btn w-100 text-left mb-3 {% if darkmode %}dark-colors{% endif %}" id="addTokenButton">Add SATORI to MetaMask</button>
       </div>
       <hr class="dark horizontal my-3">
       <center>
@@ -49,5 +59,43 @@
       console.error('Error:', error)
     });
   }
+    // Add SATORI token to metamask
+    document.getElementById("addTokenButton").addEventListener("click", async function () {
+      const tokenAddress = "0xc1c37473079884CbFCf4905a97de361FEd414B2B";
+      const tokenSymbol = "SATORI";
+      const tokenDecimals = 18;
+      const tokenImage = "https://raw.githubusercontent.com/SatoriNetwork/Neuron/refs/heads/main/satorineuron/web/static/img/Satori.png";
+
+      try {
+        if (!window.ethereum) {
+          alert("MetaMask is not installed. Please install it to use this feature.");
+          return;
+        }
+
+        const wasAdded = await window.ethereum.request({
+          method: "wallet_watchAsset",
+          params: {
+            type: "ERC20",
+            options: {
+              address: tokenAddress,
+              symbol: tokenSymbol,
+              decimals: tokenDecimals,
+              image: tokenImage,
+            },
+          },
+        });
+
+        if (wasAdded) {
+          console.log("Token added successfully!");
+          alert("Token added to MetaMask successfully!");
+        } else {
+          console.log("User declined to add the token.");
+          alert("User declined to add the token.");
+        }
+      } catch (error) {
+        console.error("Error adding token:", error);
+        alert("An error occurred while trying to add the token. Check the console for details.");
+      }
+    });
 </script>
 {% endblock %}
