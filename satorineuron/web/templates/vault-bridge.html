@@ -122,7 +122,7 @@
           </form>
         </div>
         <div style="padding: 1.25rem;">
-          <button class="btn w-100 text-left mb-3 {% if darkmode %}dark-colors{% endif %}" id="addTokenButton">Add Token to MetaMask</button>
+          <button class="btn w-100 text-left mb-3 {% if darkmode %}dark-colors{% endif %}" id="addTokenButton">Add SATORI to MetaMask</button>
         </div>
         <hr class="dark horizontal my-0">
         <div class="card-footer p-1">
@@ -219,7 +219,7 @@
 
   // Add SATORI token to metamask
   document.getElementById("addTokenButton").addEventListener("click", async function () {
-    const tokenAddress = "0xc1c37473079884CbFCf4905a97de361FEd414B2B"; // Replace with your token's address
+    const tokenAddress = "0xc1c37473079884CbFCf4905a97de361FEd414B2B";
     const tokenSymbol = "SATORI"; 
     const tokenDecimals = 18; 
     const tokenImage = "https://raw.githubusercontent.com/SatoriNetwork/Neuron/refs/heads/main/satorineuron/web/static/img/Satori.png"; 
