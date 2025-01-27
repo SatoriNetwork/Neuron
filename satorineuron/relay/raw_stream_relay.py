@@ -136,6 +136,7 @@ class RawStreamRelayEngine(Cached):
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
             data, timestamp, print=True)
         start = getStart()
+        # TODO : sent to server here
         start.publish(
             topic=stream.streamId.topic(),
             data=data,
@@ -162,7 +163,7 @@ class RawStreamRelayEngine(Cached):
             for stream in streams:
                 hookResult = RawStreamRelayEngine.callHook(stream, result)
                 if hookResult is not None:
-                    cachedResult = self.save(stream, data=hookResult)
+                    cachedResult = self.save(stream, data=hookResult) # TODO : dataserver should handle this
                     if cachedResult.success:
                         self.relay(
                             stream,
