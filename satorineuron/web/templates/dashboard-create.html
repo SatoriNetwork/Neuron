@@ -478,7 +478,7 @@
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Name (required)</label>
-            <span class="form_hint">?</span>
+            <span class="form_hint_name">&nbsp;?</span>
             <!-- <span class="material-icons form_hint" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</span> -->
           </div>
           {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
@@ -486,9 +486,7 @@
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Interval (required)</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_interval">&nbsp;?</span>
           </div>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
@@ -556,10 +554,7 @@
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Offset</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
-            
+            <span class="form_hint_offset">&nbsp;?</span>
           </div>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
@@ -604,18 +599,14 @@
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Tags</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_tags">&nbsp;?</span>
           </div>
           {{ newRelayStream.tags(size=32, class_="tight form-control"+(" dark-colors" if darkmode else ""), placeholder="bitcoin, 1hr") }}
         </div>
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Description</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_desc">&nbsp;?</span>
           </div>
           {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
         </div>
@@ -633,54 +624,42 @@
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">URL (required)</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_url">&nbsp;?</span>
           </div>
           {{ newRelayStream.url(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin") }}
         </div>
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">URI</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_uri">&nbsp;?</span>
           </div>
           {{ newRelayStream.uri(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
         </div>
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Target</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_target">&nbsp;?</span>
           </div>
           {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Close") }}
         </div>
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Data Type</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_datatype">&nbsp;?</span>
           </div>
           {{ newRelayStream.datatype(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="float") }}
         </div>
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Headers</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_headers">&nbsp;?</span>
           </div>
           {{ newRelayStream.headers(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Payload</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_payload">&nbsp;?</span>
           </div>
           {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
@@ -699,9 +678,7 @@
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Encryption Script Generation</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_encryption">&nbsp;?</span>
           </div>
           {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
         </div>
@@ -720,9 +697,7 @@
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">History</label>
-            <button class="btn p-0">
-              <i class="material-icons" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</i>
-            </button>
+            <span class="form_hint_history">&nbsp;?</span>
           </div>
           </div>
               <div class='{% if darkmode %}dark-colors{% else %}{%endif%} tight form-control'>
@@ -837,23 +812,88 @@
     <!--#endregion -->
   </form>
 </div>
-
-<div class="info_msg hidden" id="popover-cont" style="z-index: 1;">
-  <p>this is a hint</p>
+<!--#region hints text-->
+<div class="info_msg_name hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter a unique name for the data stream. Special characters are not allowed.</p>
 </div>
+<div class="info_msg_interval hidden" id="popover-cont" style="z-index: 1;">
+  <p>Set the time interval between data points, specifying how often the endpoint should be called to collect data.</p>
+</div>
+<div class="info_msg_offset hidden" id="popover-cont" style="z-index: 1;">
+  <p>The time offset from UTC to start data collection. For example, with a 1-hour interval and a 3-hour offset, data collection starts at 3 AM UTC.</p>
+</div>
+<div class="info_msg_tags hidden" id="popover-cont" style="z-index: 1;">
+  <p> Enter a list of tags, separated by commas, to describe the data stream.</p>
+</div>
+<div class="info_msg_desc hidden" id="popover-cont" style="z-index: 1;">
+  <p>A short, human-readable summary of the data stream.</p>
+</div>
+<div class="info_msg_url hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter the base URL of the data stream, such as https://finance.yahoo.com/bitcoin.</p>
+</div>
+<div class="info_msg_uri hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter the full web address (URI) of the data stream, which includes the base URL and any additional details, like https://finance.yahoo.com/bitcoin?key=supersecretkey.</p>
+</div>
+<div class="info_msg_target hidden" id="popover-cont" style="z-index: 1;">
+  <p>Specify the target key for the data stream, typically used when the stream is a JSON object with key-value pairs.</p>
+</div>
+<div class="info_msg_datatype hidden" id="popover-cont" style="z-index: 1;">
+  <p>Specify the data type of the stream, such as 'float,' 'int'.</p>
+</div>
+<div class="info_msg_headers hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter the request headers, which provide additional information for the data stream.</p>
+</div>
+<div class="info_msg_payload hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter the data (payload) sent with the request, typically in JSON or another format, that contains the information for the data stream.</p>
+</div>
+<div class="info_msg_encryption hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter a Python function that intercepts the response before it's sent out, allowing you to filter the data by a specific key (target). <br />WARNING: This code runs without security measures, so ensure you understand its function before submitting.</p>
+</div>
+<div class="info_msg_history hidden" id="popover-cont" style="z-index: 1;">
+  <p>Upload a CSV file with two columns: timestamps (in YYYY-MM-DD HH:MM:SS.000000 format) and their corresponding values.</p>
+</div>
+<!--#endregion-->
 
 <script>
+  //Popover Hints Script
   $(document).ready(function () {
     $('[data-bs-toggle="popover"]').popover(); // Initialize all popovers
 });
-
+//#region step1 hints
+  //Name Hint
   $(function(){
-    $(".form_hint").popover({
+    $(".form_hint_name").popover({
         html : true,
         trigger:'manual',
         placement:'top',
         content: function() {
-          return $(".info_msg").html();
+          return $(".info_msg_name").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });  
+  //Interval Hint
+  $(function(){
+    $(".form_hint_interval").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_interval").html();
         }
     }).on("mouseenter",function(){
       console.log("hint moused over");
@@ -872,6 +912,299 @@
         }, 100);
   });
   });
+  //Offset Hint
+  $(function(){
+    $(".form_hint_offset").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_offset").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //Tags Hint
+  $(function(){
+    $(".form_hint_tags").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_tags").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //Description Hint
+  $(function(){
+    $(".form_hint_desc").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_desc").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //#endregion
+  //#region step2 hints
+    //URL Hint
+    $(function(){
+    $(".form_hint_url").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_url").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });  
+    //URI Hint
+    $(function(){
+    $(".form_hint_uri").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_uri").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });  
+    //Target Hint
+    $(function(){
+    $(".form_hint_target").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_target").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });  
+    //Data Type Hint
+    $(function(){
+    $(".form_hint_datatype").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_datatype").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });  
+    //Headers Hint
+    $(function(){
+    $(".form_hint_headers").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_headers").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });  
+    //Payload Hint
+    $(function(){
+    $(".form_hint_payload").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_payload").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });  
+  //#endregion
+  //#region step3 encryption
+    //Encryption Hint
+    $(function(){
+    $(".form_hint_encryption").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_encryption").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });  
+  //#endregion
+  //#region step4 history
+    //Encryption Hint
+    $(function(){
+    $(".form_hint_history").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_history").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });  
+  //#endregion
 </script>
 <script>
   function openForm() {
