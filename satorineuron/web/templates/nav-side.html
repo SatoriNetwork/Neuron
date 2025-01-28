@@ -3,7 +3,7 @@
     <i class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
     <a class="navbar-brand m-0" href="{{ url_for('dashboard') }}" target="_blank">
       <span class="text-white" title="{{v}}">
-        Sat<img src="{{ url_for('static', filename='img/ensodarkclear.png') }}" width="30" style='margin-right: 0.2rem;'>ri
+        <img src="{{ url_for('static', filename='img/satori-dark-inline.png') }}" style='margin-right: 0.2rem;width: 80%; max-width: 15.625rem;'>
       </span>
     </a>
   </div>
@@ -108,13 +108,6 @@
           </li>
           <li class='sub-nav-item'>
             <a href='#' onclick="scrollOrJumpTo('ethvaultbr');">Ethereum Address</a>
-          </li>
-        {% else %}
-          <li class="sub-nav-item" >
-            <a href="{{ url_for('wallet', network='main') }}" onclick="showWorking();" class="{{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}">
-              <i class="material-icons opacity-10" style="padding-right: 8px;">wallet</i>
-              <span class="nav-link-text">Wallet</span>
-            </a>
           </li>
         {% endif %}
       {% endif %}

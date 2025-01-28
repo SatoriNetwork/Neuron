@@ -7,3 +7,4 @@ reward address: EZDfZiJcvx1Ymrj8otCeiY4eLfPsZkHri9
 engine version: v2
 logging level: debug
 electrumx servers: [electrum1-mainnet.evrmorecoin.org:50002, evr-electrum.wutup.io:50002]
+vault password: password

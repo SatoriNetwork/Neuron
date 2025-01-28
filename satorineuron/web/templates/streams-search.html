@@ -131,20 +131,32 @@
       <div id="observationsGraphContainer" style="display: none; height: 300px; margin-bottom: 20px;">
         <canvas id="observationsGraph"></canvas>
       </div>
-
-      <div id="observation-table" style="display: none; overflow-y: scroll; height: calc(100% - 350px);">
-        <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-          <thead>
-            <tr>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
-            </tr>
-          </thead>
-          <tbody id="observationsBody">
-            <!-- Observations will be populated here -->
-          </tbody>
-        </table>
+      <div  style="width:35% padding:5px">
+        <select class="d-flex flex-row gap-2 btn btn-outline-dark" xname="Intervals" id="ZoomValue" onchange="ReRenderGraph()">
+          <option value="5" selected>5 Minute</option>
+          <option value="10" selected>10 Minute</option>
+          <option value="15" selected>15 Minute</option>
+          <option value="30" selected>30 Minute</option>
+          <option value="60" selected>1 Hour </option>
+          <option value="1440">1 Day</option>
+          <option value="10080">1 Week</option>
+          <option value="40320">1 Month</option>
+        </select>
+      </div>
+        <div id="observation-table" style="display: none; overflow-y: scroll; height: calc(100% - 350px);">
+          <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
+                <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
+                <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
+              </tr>
+            </thead>
+            <tbody id="observationsBody">
+              <!-- Observations will be populated here -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -517,7 +529,6 @@
     return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}, ${date.getFullYear()}`;
   }
 
-
   function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue, chunkSize = 100) {
     const totalPoints = combinedTimes.length;
     let currentIndex = 0;
@@ -627,14 +638,12 @@
 
       if (currentIndex < totalPoints) {
         requestAnimationFrame(addChunk); // Schedule the next chunk
-
       }  else {
         // Add the future forecasting point as part of the predictions dataset
         const lastTimestamp = combinedTimes[combinedTimes.length - 1];
         const futureTimestamp = new Date(lastTimestamp);
         futureTimestamp.setMinutes(futureTimestamp.getMinutes() + 10); // Add 10 minutes to the last timestamp
-        const formattedFutureTimestamp = futureTimestamp.toISOString();
-
+        const formattedFutureTimestamp = futureTimestamp.toLocaleString('en-US');
         observationsChart.data.labels.push(formattedFutureTimestamp);
         observationsChart.data.datasets[1].data.push(futureForecastingObservationAvgValue);
         observationsChart.update();
@@ -668,7 +677,6 @@
 
           observationsChart.update();
         }, 0);
-
       }
     }
 
@@ -676,7 +684,7 @@
   }
 
 
-  function showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue) {
+  function showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody) {
     const ctx = graphCanvas.getContext('2d');
 
     // Helper: Round to nearest 10 minutes
@@ -684,11 +692,16 @@
         const msInTenMinutes = 10 * 60 * 1000;
         return new Date(Math.round(new Date(date).getTime() / msInTenMinutes) * msInTenMinutes);
     };
+    ZoomController = (date) => {
+      Zoom = document.getElementById("ZoomValue").value;
 
+      const msInOneMinute = 10 * 60 * 100 * Zoom;
+      return new Date(Math.round(new Date(date).getTime() / msInOneMinute) * msInOneMinute);
+  };
     // Process observations to group by 10-minute intervals
     const intervalsMap = new Map();
     parsedObservations.forEach((obs) => {
-        const roundedTime = roundToTenMinutes(obs.ts).toISOString();
+        const roundedTime = ZoomController(obs.ts).toLocaleString('en-US');
         if (!intervalsMap.has(roundedTime)) {
             intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
         }
@@ -696,6 +709,8 @@
         current.observationAvg += parseFloat(obs.value); // Use value for observations
         current.predictionAvg += parseFloat(obs.avg);   // Use avg for predictions
         current.count += 1;
+
+
     });
 
     // Prepare sorted data for the chart
@@ -709,12 +724,27 @@
         return data.predictionAvg / data.count; // Average prediction value
     });
 
+    iterator = combinedTimes.length-1;
+    combinedTimes.reverse().forEach(time => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${time}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observationValues[iterator]}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${predictionValues[iterator]}</td>
+      `;
+      observationsBody.appendChild(row);
+      iterator-=1;
+
+    });
+    combinedTimes.reverse();
+
+
     renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
-
   }
-
+  var mostRecentStreamId;
   // Show Observations Modal with observations list and graph for value vs time
   function showObservations(streamId) {
+    mostRecentStreamId = streamId;
     const observationsBody = document.getElementById('observationsBody');
     const graphContainer = document.getElementById('observationsGraphContainer');
     const graphCanvas = document.getElementById('observationsGraph');
@@ -742,7 +772,7 @@
         if (parsedObservations.length === 0) {
           // modal container css changes
           modelContent.style.height = "300px"
-          // Graph container css changes
+          // Graph container css  changes
           graphContainer.style.display = 'none';
           // Table style css changes
           observationTable.style.display = 'block';
@@ -764,17 +794,20 @@
           observationTable.style.overflowY = "scroll";
 
           // Render a graph
-          parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
-          showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue);
+          parsedObservations.sort((a, b) => new Date(a.ts) - new Date(b.ts));
+          showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody);
+          /*
           parsedObservations.reverse().forEach(observation => {
+            console.log(observation.time);
             const row = document.createElement('tr');
             row.innerHTML = `
-              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.ts}</td>
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.value}</td>
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.avg}</td>
             `;
             observationsBody.appendChild(row);
           });
+          */
         }
 
         document.getElementById('modalLoading').style.display = "none"
@@ -789,6 +822,10 @@
       updatePaginationButtons(filteredStreams.length);
       showNotification("Failed to load observations", true);
     });
+  }
+
+  function ReRenderGraph(){
+    showObservations(mostRecentStreamId)
   }
 
   // Close Modal
