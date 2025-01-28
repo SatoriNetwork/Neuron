@@ -1,5 +1,5 @@
 {% block content %}
-<div class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="z-index: 9999 !important; left:0px; background: {% if darkmode %}#212529 !important;{% else %}#f0f2f5 !important;{% endif %} display: {% if vaultOpened %}none{% else %}block{% endif %};">
+<div class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="z-index: 997 !important; left:0px; background: {% if darkmode %}#212529 !important;{% else %}#f0f2f5 !important;{% endif %} display: {% if vaultOpened %}none{% else %}block{% endif %};">
   <div class="container-for-center vertical-center" style="padding-left: 0px; top: 10%">
     <div class="tight">
       <div class="row mb-4">
@@ -48,7 +48,7 @@
     </div>
   </div>
 </div>
-<div style="z-index: 9998 !important; left:0px; display: {% if vaultOpened %}none{% else %}block{% endif %}; height:1000px; width:100%;">
+<div style="z-index: 998 !important; left:0px; display: {% if vaultOpened %}none{% else %}block{% endif %}; height:1000px; width:100%;">
 <script>
   window.onload = function() {
     document.getElementById("password").focus();

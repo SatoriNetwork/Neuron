@@ -1557,46 +1557,49 @@ def wallet(network: str = 'main'):
         alias = None
     start.wallet.get()
     start.wallet.getReadyToSend()
-    if config.get().get('wallet lock'):
-        if request.method == 'POST':
-            acceptSubmittion(forms.VaultPassword(formdata=request.form))
-        if start.vault is not None and not start.vault.isEncrypted:
-            return render_template('wallet-page.html', **getResp({
-                'title': 'Wallet',
-                'walletIcon': 'wallet',
-                'proxyParent': start.rewardAddress,
-                'vaultIsSetup': start.vault is not None,
-                'unlocked': True,
-                'walletlockEnabled': True,
-                'network': network,
-                'image': getQRCode(start.wallet.address),
-                'wallet': start.wallet,
-                'exampleAlias': getRandomName(),
-                'alias': alias,
-                'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    #if config.get().get('wallet lock'):
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+    
+    if start.vault is not None and not start.vault.isEncrypted:
         return render_template('wallet-page.html', **getResp({
             'title': 'Wallet',
             'walletIcon': 'wallet',
             'proxyParent': start.rewardAddress,
             'vaultIsSetup': start.vault is not None,
-            'unlocked': False,
+            'vaultOpened': True,
+            'walletlockEnabled': True,
+            'network': network,
+            'image': getQRCode(start.wallet.address),
+            'wallet': start.wallet,
+            'exampleAlias': getRandomName(),
+            'alias': alias,
+            'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
+            'vaultPasswordForm': presentVaultPasswordForm()}))
+    else:
+        return render_template('wallet-page.html', **getResp({
+            'title': 'Wallet',
+            'walletIcon': 'wallet',
+            'proxyParent': start.rewardAddress,
+            'vaultIsSetup': start.vault is not None,
+            'vaultOpened': False,
             'walletlockEnabled': True,
             'network': network,
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
-    return render_template('wallet-page.html', **getResp({
-        'title': 'Wallet',
-        'walletIcon': 'wallet',
-        'proxyParent': start.rewardAddress,
-        'vaultIsSetup': start.vault is not None,
-        'unlocked': True,
-        'walletlockEnabled': False,
-        'network': network,
-        'image': getQRCode(start.wallet.address),
-        'wallet': start.wallet,
-        'exampleAlias': getRandomName(),
-        'alias': alias,
-        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    #return render_template('wallet-page.html', **getResp({
+        #'title': 'Wallet',
+        #'walletIcon': 'wallet',
+        #'proxyParent': start.rewardAddress,
+        # 'vaultIsSetup': start.vault is not None,
+        # 'unlocked': True,
+        # 'walletlockEnabled': False,
+        # 'network': network,
+        # 'image': getQRCode(start.wallet.address),
+        # 'wallet': start.wallet,
+        # 'exampleAlias': getRandomName(),
+        # 'alias': alias,
+        # 'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
 def getQRCode(value: str) -> str:
