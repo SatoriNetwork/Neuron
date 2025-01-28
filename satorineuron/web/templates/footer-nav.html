@@ -20,6 +20,13 @@
         </div>
       </a>
     </div>
+    <div class="col-xl-2-5 col-sm-2-5 col-xs-2-5" style="padding-right: 0px !important;padding-left: 0px !important;"></div>
+      <a class="border-0 icon icon-md icon-shape border-radius-xl d-flex align-items-center justify-content-center {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" style="margin-left:auto;margin-right:auto;" href="{{ url_for('wallet', network='main') }}" onclick="showWorking();">
+        <div class="text-white text-center" style="margin-top:0.25rem;">
+          <i class="material-icons text-sm opacity-10" title="Wallet">wallet</i>
+        </div>
+      </a>
+    </div>
     <div class="col-xl-2-5 col-sm-2-5 col-xs-2-5" style="padding-right: 0px !important;padding-left: 0px !important;">
       <a class="border-0 icon icon-md icon-shape border-radius-xl d-flex align-items-center justify-content-center {{ 'active bg-gradient-primary-reverse' if title=='Vote' else '' }}" style="margin-left:auto;margin-right:auto;" href="{{ url_for('vote') }}" onclick="showWorking();">
         <div class="text-white text-center" style="margin-top:0.25rem;">
