@@ -933,7 +933,7 @@ def bridgeSatoriTransactionUsing(
             ethAddress=bridgeForm['ethAddress'] or '',
             ofacReportedFn=OfacServer.reportTxid,
             requestSimplePartialFn=start.server.requestSimplePartial,
-            broadcastBridgeSimplePartialFn=start.server.broadcastSimplePartial)
+            broadcastBridgeSimplePartialFn=start.server.broadcastBridgeSimplePartial)
         refreshWallet()
         if not transactionResult.success:
             flash('Bridge Failed: wait 10 minutes, refresh, and try again.')
