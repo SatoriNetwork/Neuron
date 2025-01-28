@@ -123,7 +123,6 @@
             <p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
               Transaction fees will be paid during the send process. They typically amount to no more than 0.25 {% if network=='main' %}EVR{% else %}RVN{% endif %}. If there isn't enough EVR available the transaction fee will be {{ ('%.8f' | format(wallet.mundoFee)).rstrip('0').rstrip('.') }} SATORI.<br><br>
               A fee of {{ ('%.8f' | format(wallet.bridgeFee)).rstrip('0').rstrip('.') }} SATORI is charged for this transaction.<br><br>
-              powered by BurnBridge
             </p>
           </center>
         </div>
