@@ -86,7 +86,7 @@
           <span class="nav-link-text ms-1">Vault</span>
         </a>
       </li>
-      {% if title=='Vault' or title=='Wallet' %}
+      {% if title=='Vault' %}
         {% if vaultOpened %}
           <li class='sub-nav-item'>
             <a href='#' onclick="scrollOrJumpTo('rewardbr');">Reward Address</a>
@@ -105,6 +105,16 @@
           </li>
         {% endif %}
       {% endif %}
+
+      <li class="nav-item">
+        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" href="{{ url_for('wallet', network='main') }}" onclick="showWorking();">
+          <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+            <i class="material-icons opacity-10">wallet</i>
+          </div>
+          <span class="nav-link-text ms-1">Wallet</span>
+        </a>
+      </li>
+
       <li class="nav-item">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Vote' else '' }}" href="{{ url_for('vote') }}" onclick="showWorking();">
           <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
@@ -113,6 +123,7 @@
           <span class="nav-link-text ms-1">Vote</span>
         </a>
       </li>
+
       {% if title=='Vote' %}
       <li class='sub-nav-item'>
         <a href='#' onclick="scrollOrJumpTo('manifestbr');">Minting Manifest</a>
