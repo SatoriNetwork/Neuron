@@ -16,6 +16,8 @@ from satorilib.concepts.structs import Stream, StreamId
 from satorilib.disk import Cached
 from satorilib.disk.cache import CachedResult
 from satorilib import logging
+import asyncio
+import pandas as pd
 
 
 def postRequestHookForNone(r: requests.Response):
@@ -124,7 +126,7 @@ class RawStreamRelayEngine(Cached):
             return None  # ret could return boolean, so return None if failure
         return text
 
-    def relay(
+    async def relay(
         self,
         stream: Stream, data: str = None,
         timestamp: str = None, observationHash: str = None
@@ -136,7 +138,19 @@ class RawStreamRelayEngine(Cached):
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
             data, timestamp, print=True)
         start = getStart()
-        # TODO : sent to server here
+        # TODO : make sure if we dont have to call await start.connectToDataServer()
+        dataForServer = pd.Dataframe({
+            'date_time': [timestamp],
+            'value': [data]
+        })
+        try:
+            await start.dataClient.passDataToServer(
+                start.dataServerIp, 
+                uuid=stream.streamId.uuid,
+                data=dataForServer
+            )
+        except Exception as e:
+            logging.error('Unable to send to Server: ', e)
         start.publish(
             topic=stream.streamId.topic(),
             data=data,
@@ -149,6 +163,15 @@ class RawStreamRelayEngine(Cached):
         self.latest[stream.streamId.topic()] = data
         self.streamId = stream.streamId  # required by Cache
         return self.disk.appendByAttributes(value=data, hashThis=True)
+    
+    def run_async_in_thread(self, coroutine):
+        """Helper function to run an async function in a thread"""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(coroutine)
+        finally:
+            loop.close()
 
     def callRelay(self, streams: list[Stream]) -> bool:
         '''
@@ -165,11 +188,14 @@ class RawStreamRelayEngine(Cached):
                 if hookResult is not None:
                     cachedResult = self.save(stream, data=hookResult) # TODO : dataserver should handle this
                     if cachedResult.success:
-                        self.relay(
+                        self.run_async_in_thread(
+                            self.relay(
                             stream,
                             data=hookResult,
                             timestamp=cachedResult.time,
-                            observationHash=cachedResult.hash)
+                            observationHash=cachedResult.hash
+                            )
+                        )
                         successes.append(True)
                     else:
                         # log or flash message or something...

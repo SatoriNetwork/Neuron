@@ -98,7 +98,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.dataServerIp: str =  ''
-        self.dataClient: DataClient = DataClient()
+        self.dataClient: Union[DataClient, None] = None
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -622,16 +622,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     key=signature.decode() + "|" + self.oracleKey))
     
     
-        
     async def connectToDataServer(self):
-        self.dataServerIp = config.get().get('server ip', '0.0.0.0')
         try:
-            await self.dataClient.connectToServer(self.dataServerIp)
-            logging.info("Successfully connected to Server at :", self.dataServerIp, color="green")
+            self.dataServerIp = config.get().get('server ip', '0.0.0.0')
+            self.dataClient = DataClient(self.dataServerIp)
+            logging.info("Successfully connected to Server Ip at :", self.dataServerIp, color="green")
         except Exception as e:
-            logging.error("Error connecting to server : ", e)
-            self.dataServerIp = self.start.server.getPublicIp().text.split()[-1] # TODO : is this correct?
-
+            logging.error("Error connecting to server ip in config : ", e)
+            try:
+                self.dataServerIp = self.start.server.getPublicIp().text.split()[-1] # TODO : is this correct?
+                self.dataClient = DataClient(self.dataServerIp)
+                logging.info("Successfully connected to Server Ip at :", self.dataServerIp, color="green")
+            except Exception as e:
+                logging.error("Failed to find a valid Server Ip : ", e)
+                # TODO : maybe retry in an hour or when we are provided with a valid server Ip
 
     async def sharePubSubInfo(self):
 
