@@ -776,7 +776,6 @@ def stakeCheck():
 @userInteracted
 @authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
-    # return sendSatoriTransactionUsing(start.getWallet(), network, 'wallet')
     result = sendSatoriTransactionUsing(
         start.getWallet(), network, 'wallet')
     if isinstance(result, str) and len(result) == 64:
