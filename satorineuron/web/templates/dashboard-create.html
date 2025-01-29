@@ -675,6 +675,7 @@
           </div>
           {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Close") }}
         </div>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="hookCreation()">Generate</button>
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Extraction Script</label>
@@ -1501,9 +1502,52 @@
     document.getElementById("helpArea1").innerHTML = "History (private)";
     document.getElementById("helpArea").innerHTML = "A python class that gathers the history of this datastream before making the datastream publicly available. <br />NOTE: Gathering the history can take a long time, so if you see a spinner for a long time please be patient. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly what the code does before you submit this form.";
   }
-  async function hookCreation() {
+  async function hookCreationAsync() {
     const response = await fetch('http://127.0.0.1:24601/hook/' + document.getElementById("target").value);
     document.getElementById("hook").value = await response.text();
   }
+  function hookCreation() {
+    event.preventDefault();
+    const response = generateHookFromTarget(document.getElementById("target").value);
+    document.getElementById("hook").value = response;
+  }
+
+  function generateHookFromTarget(target = '') {
+    /**
+     * Creates a function that drills down into a JSON object according to a path.
+     */
+    function replaceLastOccurrence(inputStr, oldSubstring, newSubstring) {
+        const lastIndex = inputStr.lastIndexOf(oldSubstring);
+        if (lastIndex !== -1) {
+            return inputStr.substring(0, lastIndex) + newSubstring + inputStr.substring(lastIndex + oldSubstring.length);
+        }
+        return inputStr;
+    }
+
+    function generateDrill() {
+        const parts = target.split('.');
+        return replaceLastOccurrence(
+            parts.map(part => `["${part}"]`).join('?.'), 
+            '?.["', '?.["' // Adjusting to avoid trailing undefined cases
+        );
+    }
+
+    target = target || 'Close';
+    return `function postRequestHook(response) {
+        /**
+         * Called and given the response each time the endpoint for this data stream is hit.
+         * Returns the value of the observation as a number.
+         * If an empty string is returned, the observation is not relayed to the network.
+         */
+        if (response.text !== '') {
+            try {
+                return parseFloat(response.json()${generateDrill()});
+            } catch (e) {
+                return null;
+            }
+        }
+        return null;
+    }`;
+}
 </script>
 {% endblock %}
