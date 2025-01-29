@@ -1352,12 +1352,14 @@
     reviewPage2TextField.innerHTML =
     ` URL: ${url} <br>
       URI: ${uri} <br>
-      Target: ${target} <br>
       Data Type: ${dataType} <br>
       Headers: ${headers} <br>
       Payload: ${payload}
     `;
-    reviewPage3TextField.innerHTML = `${encryption} <br>`;
+    reviewPage3TextField.innerHTML = 
+    ` Target: ${target} <br>
+      ${encryption} <br>
+    `;
     reviewPage4TextField.innerHTML = `File: ${historyFile}`;
   }
 
