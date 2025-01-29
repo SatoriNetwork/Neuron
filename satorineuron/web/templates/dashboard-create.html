@@ -665,26 +665,26 @@
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
           <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step1_desc', event, 'step2_metadata')">Prev</button>
-          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step3_encryption', event, 'step2_metadata')">Next</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step3_extraction', event, 'step2_metadata')">Next</button>
         </div>
     </div>
     <!--#endregion -->
     <!--#region step3  -->
-    <div class="form-container bg-gradient-dark" id="step3_encryption">
+    <div class="form-container bg-gradient-dark" id="step3_extraction">
       <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
-      <p class="text-white">Encryption</p>
+      <p class="text-white">Extraction</p>
         <div class="form-group">
           <div style="display: flex;">
-            <label class="text-white" for="">Encryption Script Generation</label>
-            <span class="form_hint_encryption">&nbsp;?</span>
+            <label class="text-white" for="">Extraction Script</label>
+            <span class="form_hint_extraction">&nbsp;?</span>
           </div>
           {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
-          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step3_encryption')">Prev</button>
-          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step3_encryption')">Next</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step3_extraction')">Prev</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step3_extraction')">Next</button>
         </div>
     </div>
     <!--#endregion -->
@@ -779,7 +779,7 @@
                 </script>
               </div>
               <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
-                <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step3_encryption', event, 'step4_history')">Prev</button>
+                <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step3_extraction', event, 'step4_history')">Prev</button>
                 <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step5_review', event, 'step4_history')">Next</button>
               </div>
     </div>
@@ -798,7 +798,7 @@
           <h4 class="text-white">URL & Metadata</h4>
           <p class="form-control" id="reviewPage2" type="text" style="padding: 5px; color: black;"></p>
 
-          <h4 class="text-white">Encryption</h4>
+          <h4 class="text-white">Extraction</h4>
           <p class="form-control" id="reviewPage3" type="text" style="padding: 5px; color: black;"></p>
 
           <h4 class="text-white">History</h4>
@@ -854,7 +854,7 @@
 <div class="info_msg_payload hidden" id="popover-cont" style="z-index: 1;">
   <p>Enter the data (payload) sent with the request, typically in JSON or another format, that contains the information for the data stream.</p>
 </div>
-<div class="info_msg_encryption hidden" id="popover-cont" style="z-index: 1;">
+<div class="info_msg_extraction hidden" id="popover-cont" style="z-index: 1;">
   <p>Enter a Python function that intercepts the response before it's sent out, allowing you to filter the data by a specific key (target). <br />WARNING: This code runs without security measures, so ensure you understand its function before submitting.</p>
 </div>
 <div class="info_msg_history hidden" id="popover-cont" style="z-index: 1;">
@@ -1157,15 +1157,15 @@
   });
   });  
   //#endregion
-  //#region step3 encryption
-    //Encryption Hint
+  //#region step3 extraction
+    //Extraction Hint
     $(function(){
-    $(".form_hint_encryption").popover({
+    $(".form_hint_extraction").popover({
         html : true,
         trigger:'manual',
         placement:'top',
         content: function() {
-          return $(".info_msg_encryption").html();
+          return $(".info_msg_extraction").html();
         }
     }).on("mouseenter",function(){
       console.log("hint moused over");
@@ -1186,7 +1186,7 @@
   });  
   //#endregion
   //#region step4 history
-    //Encryption Hint
+    //extraction Hint
     $(function(){
     $(".form_hint_history").popover({
         html : true,
@@ -1328,9 +1328,9 @@
     }
     // #endregion
     
-    encryption = document.getElementById('hook').value;
-    if (encryption == ''){
-      encryption = 'No encryption.';
+    extraction = document.getElementById('hook').value;
+    if (extraction == ''){
+      extraction = 'No extraction.';
     }
 
     historyFile = "No file selected.";
@@ -1357,7 +1357,7 @@
       Headers: ${headers} <br>
       Payload: ${payload}
     `;
-    reviewPage3TextField.innerHTML = `${encryption} <br>`;
+    reviewPage3TextField.innerHTML = `${extraction} <br>`;
     reviewPage4TextField.innerHTML = `File: ${historyFile}`;
   }
 
@@ -1385,7 +1385,7 @@
     else if(currentPage == 'step2_metadata'){
       requiredFilled[0] = checkElement('url');
     }
-    else if(currentPage == 'step3_encryption'){
+    else if(currentPage == 'step3_extraction'){
       requiredFilled = [true];
     }
     else if(currentPage == 'step4_history'){
