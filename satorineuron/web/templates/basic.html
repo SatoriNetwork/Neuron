@@ -84,10 +84,20 @@
     function spaceLoadingImg() {
       return "margin-right:" + loadingRightPadding() + "px;"; 
     }
-    async function updateSpinner() {  
+    async function updateSpinner() {
       const spinner = document.getElementsByClassName('loadingThingy')[0];
-      spinner.setAttribute("style", spaceLoadingImg());
-      console.log("updating style: spinner")
+      const popup = document.getElementById('create_ds_popup');
+      if (popup) {
+        if (popup.classList.contains('is-visible')){
+          const spinner = document.getElementsByClassName('loadingThingy')[0];
+          spinner.setAttribute("style", "margin: auto;");
+        } else {
+          spinner.setAttribute("style", spaceLoadingImg());  
+        }
+      } else {
+        spinner.setAttribute("style", spaceLoadingImg());  
+      }
+      console.log("updating style: spinner");
     }
     function checkSpinnerDisplaying() {
       if(spinner_container.style.display == 'block') {
