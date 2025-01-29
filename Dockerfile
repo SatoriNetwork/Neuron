@@ -33,7 +33,7 @@ RUN mkdir /Satori && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Wallet.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Engine.git && \
-    cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Neuron.git && \
+    cd /Satori && git clone -b release https://github.com/SatoriNetwork/Neuron.git && \
     cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
     cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
     mkdir /Satori/Neuron/models && \
