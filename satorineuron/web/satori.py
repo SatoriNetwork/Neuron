@@ -1678,7 +1678,14 @@ def decryptVault():
 @userInteracted
 @authRequired
 def vaultMainTest(network: str = 'main'):
-    return vault()
+    return theVault()
+
+
+@app.route('/vault', methods=['GET', 'POST'])
+@userInteracted
+@authRequired
+def vault():
+    return theVault()
 
 
 def presentVaultPasswordForm():
@@ -1691,10 +1698,7 @@ def presentVaultPasswordForm():
     return passwordForm
 
 
-@app.route('/vault', methods=['GET', 'POST'])
-@userInteracted
-@authRequired
-def vault():
+def theVault():
 
     def acceptSubmittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
@@ -1719,6 +1723,7 @@ def vault():
         #claimResult = start.server.setEthAddress(account.address)
         myWallet = start.getWallet()
         try:
+            myWallet.get()
             alias = myWallet.alias or start.server.getWalletAlias()
         except Exception as e:
             alias = None
