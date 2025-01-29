@@ -471,12 +471,12 @@
     {{ newRelayStream.csrf_token }}
     <!--#region step1  -->
     <div class="form-container bg-gradient-dark" id="step1_desc">
-      <button id="btnCloseForm" class="close-button">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Name & Descriptions</p>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Name (required)</label>
             <span class="form_hint_name">&nbsp;?</span>
             <!-- <span class="material-icons form_hint" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</span> -->
@@ -484,7 +484,7 @@
           {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
         </div>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Interval (required)</label>
             <span class="form_hint_interval">&nbsp;?</span>
           </div>
@@ -552,7 +552,7 @@
         </div>
 
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Offset</label>
             <span class="form_hint_offset">&nbsp;?</span>
           </div>
@@ -597,14 +597,14 @@
           </div>
         </div>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Tags</label>
             <span class="form_hint_tags">&nbsp;?</span>
           </div>
           {{ newRelayStream.tags(size=32, class_="tight form-control"+(" dark-colors" if darkmode else ""), placeholder="bitcoin, 1hr") }}
         </div>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Description</label>
             <span class="form_hint_desc">&nbsp;?</span>
           </div>
@@ -622,35 +622,35 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">URL & Metadata</p>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">URL (required)</label>
             <span class="form_hint_url">&nbsp;?</span>
           </div>
           {{ newRelayStream.url(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin") }}
         </div>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">URI</label>
             <span class="form_hint_uri">&nbsp;?</span>
           </div>
           {{ newRelayStream.uri(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
         </div>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Data Type</label>
             <span class="form_hint_datatype">&nbsp;?</span>
           </div>
           {{ newRelayStream.datatype(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="float") }}
         </div>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Headers</label>
             <span class="form_hint_headers">&nbsp;?</span>
           </div>
           {{ newRelayStream.headers(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
         </div>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Payload</label>
             <span class="form_hint_payload">&nbsp;?</span>
           </div>
@@ -669,7 +669,7 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Extraction</p>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Target</label>
             <span class="form_hint_target">&nbsp;?</span>
           </div>
@@ -677,7 +677,7 @@
         </div>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="hookCreation()">Generate</button>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">Extraction Script</label>
             <span class="form_hint_extraction">&nbsp;?</span>
           </div>
@@ -696,7 +696,7 @@
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Datastream History</p>
         <div class="form-group">
-          <div style="display: flex;">
+          <div style="display: flex; padding-top: 15px;">
             <label class="text-white" for="">History</label>
             <span class="form_hint_history">&nbsp;?</span>
           </div>
