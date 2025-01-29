@@ -637,13 +637,6 @@
         </div>
         <div class="form-group">
           <div style="display: flex;">
-            <label class="text-white" for="">Target</label>
-            <span class="form_hint_target">&nbsp;?</span>
-          </div>
-          {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Close") }}
-        </div>
-        <div class="form-group">
-          <div style="display: flex;">
             <label class="text-white" for="">Data Type</label>
             <span class="form_hint_datatype">&nbsp;?</span>
           </div>
@@ -675,6 +668,13 @@
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Extraction</p>
+        <div class="form-group">
+          <div style="display: flex;">
+            <label class="text-white" for="">Target</label>
+            <span class="form_hint_target">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Close") }}
+        </div>
         <div class="form-group">
           <div style="display: flex;">
             <label class="text-white" for="">Extraction Script</label>
