@@ -617,7 +617,7 @@
     <!--#endregion -->
     <!--#region step2  -->
     <div class="form-container bg-gradient-dark" id="step2_metadata">
-      <button id="btnCloseForm" class="close-button">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">URL & Metadata</p>
@@ -664,7 +664,7 @@
     <!--#endregion -->
     <!--#region step3  -->
     <div class="form-container bg-gradient-dark" id="step3_extraction">
-      <button id="btnCloseForm" class="close-button">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Extraction</p>
@@ -691,7 +691,7 @@
     <!--#endregion -->
     <!--#region step4  -->
     <div class="form-container bg-gradient-dark" id="step4_history">
-      <button id="btnCloseForm" class="close-button">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Datastream History</p>
@@ -787,7 +787,7 @@
     <!--#endregion -->
     <!--#region step5  -->
     <div class="form-container bg-gradient-dark" id="step5_review">
-      <button id="btnCloseForm" class="close-button">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Review before submitting</p>
@@ -844,7 +844,17 @@
   <p>Enter the full web address (URI) of the data stream, which includes the base URL and any additional details, like https://finance.yahoo.com/bitcoin?key=supersecretkey.</p>
 </div>
 <div class="info_msg_target hidden" id="popover-cont" style="z-index: 1;">
-  <p>Specify the target key for the data stream, typically used when the stream is a JSON object with key-value pairs.</p>
+  <p>Specify the target key for the data stream, typically used when the stream is a JSON object with key-value pairs.
+    <br>Example:
+    <br>For this JSON
+    <i>
+      <br>Bitcoin {
+        <br><span>&nbsp;&nbsp;&nbsp;&nbsp;</span>value:"10.00"
+      <br>}
+    </i>
+    <br>Put in this target
+    <br><i>Bitcoin.value</i>
+  </p>
 </div>
 <div class="info_msg_datatype hidden" id="popover-cont" style="z-index: 1;">
   <p>Specify the data type of the stream, such as 'float,' 'int'.</p>
