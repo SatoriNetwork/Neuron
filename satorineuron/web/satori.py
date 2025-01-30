@@ -924,7 +924,7 @@ def bridgeSatoriTransactionUsing(
             return 'Vault is encrypted, please unlock it and try again.'
 
         if bridgeForm['bridgeAmount'] > myWallet.maxBridgeAmount:
-            return 'Bridge Failed: too much satori, please try again with less than 100 Satori.'
+            return f'Bridge Failed: too much satori, please try again with less than {myWallet.maxBridgeAmount} Satori.'
 
         # should I send a transaction or send a partial?
         transactionResult = myWallet.typicalNeuronBridgeTransaction(
