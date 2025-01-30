@@ -290,6 +290,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.walletOnlyMode:
             self.walletVaultManager.setupWalletAndVault()
             self.createServerConn()
+            self.checkin()
             logging.info("in WALLETONLYMODE")
             return
         self.walletVaultManager.setupWalletAndVault()

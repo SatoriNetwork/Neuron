@@ -122,6 +122,7 @@ CMD ["bash", "./start_from_image.sh"]
 # docker run --rm -it --name satorineuron -p 5000:5000 -v c:\repos\Satori\satori:/Satori/satori --env ENV=prod --env WALLETONLYMODE=1 satorinet/satorineuron:latest python /Satori/satori/app.py
 # docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 --env ENV=prod -v c:\repos\Satori\Neuron\wallet:/Satori/Neuron/wallet -v c:\repos\Satori\Neuron\models:/Satori/Neuron/models -v c:\repos\Satori\Neuron\data:/Satori/Neuron/data -v c:\repos\Satori\Neuron\config:/Satori/Neuron/config satorinet/satorineuron:latest bash
 # docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 --env ENV=prod satorinet/satorineuron:latest bash
+# docker run --rm -it --name satorineuron -p 127.0.0.1:24601:24601 --env ENV=prod satorinet/satorineuron:test bash
 
 #### automatic fast slow build:
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:previous
