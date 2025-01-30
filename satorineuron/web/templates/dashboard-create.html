@@ -491,6 +491,18 @@
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
               <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
+                <div  style="width:35% padding:5px">
+                  <select class="d-flex flex-row gap-2 btn btn-outline-dark"  id="cadenceDropdown" onchange="updateBoxes(); calculateCadence();">
+                    <option value="300" selected>5 Minute</option>
+                    <option value="600" selected>10 Minute</option>
+                    <option value="900" selected>15 Minute</option>
+                    <option value="1800" selected>30 Minute</option>
+                    <option value="3600" selected>1 Hour </option>
+                    <option value="86400">1 Day</option>
+                    <option value="604800">1 Week</option>
+                    <option value="2419200">1 Month</option>
+                  </select>
+                </div>
                   <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
                   <input type="number" id="dayCadence" name="dayCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);calculateCadence();">
                   <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
@@ -508,6 +520,13 @@
                       if (inputField.value > maximum) {
                           inputField.value = maximum;
                       }
+                    }
+                    function updateBoxes() {
+                      var secondsTotal = document.getElementById('cadenceDropdown').value;
+                      var days = document.getElementById('dayCadence').value = Math.floor(secondsTotal/86400);
+                      var hours = document.getElementById('hourCadence').value = Math.floor((secondsTotal-days * 86400)/3600);
+                      var minutes = document.getElementById('minuteCadence').value = Math.floor((secondsTotal - days * 86400 - hours * 3600)/60);
+                      document.getElementById('secondCadence').value = secondsTotal  - days * 86400 - hours * 3600 - minutes * 60;
                     }
                     function calculateCadence() {
                       const dayCadenceInput = document.getElementById('dayCadence');
@@ -559,6 +578,18 @@
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
                 <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%;">
+                  <div  style="width:35% padding:5px">
+                    <select class="d-flex flex-row gap-2 btn btn-outline-dark"  id="offsetDropdown" onchange="updateOffsetBoxes(); calculateOffset();">
+                      <option value="300" selected>5 Minute</option>
+                      <option value="600" selected>10 Minute</option>
+                      <option value="900" selected>15 Minute</option>
+                      <option value="1800" selected>30 Minute</option>
+                      <option value="3600" selected>1 Hour</option>
+                      <option value="14400" selected>4 Hours</option>
+                      <option value="28800" selected>8 Hours</option>
+                      <option value="43200" selected>12 Hours</option>
+                    </select>
+                  </div>
                     <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
                     <input type="number" id="hourOffset" name="hourOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 30%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateOffset();">
                     <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
@@ -567,6 +598,12 @@
                     <input type="number" id="secondOffset" name="secondOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 30%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
                     {{ newRelayStream.offset(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="108000", style="display:none;", id="offset") }}
                     <script>
+                      function updateOffsetBoxes() {
+                        var secondsTotal = document.getElementById('offsetDropdown').value;
+                        var hours = document.getElementById('hourOffset').value = Math.floor((secondsTotal)/3600);
+                        var minutes = document.getElementById('minuteOffset').value = Math.floor((secondsTotal - hours * 3600)/60);
+                        document.getElementById('secondOffset').value = secondsTotal - hours * 3600 - minutes * 60;
+                      }
                       function calculateOffset() {
                         const hourOffsetInput = document.getElementById('hourOffset');
                         const minuteOffsetInput = document.getElementById('minuteOffset');
@@ -617,7 +654,7 @@
     <!--#endregion -->
     <!--#region step2  -->
     <div class="form-container bg-gradient-dark" id="step2_metadata">
-      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
+      <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">URL & Metadata</p>
@@ -664,7 +701,7 @@
     <!--#endregion -->
     <!--#region step3  -->
     <div class="form-container bg-gradient-dark" id="step3_extraction">
-      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
+      <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Extraction</p>
@@ -691,7 +728,7 @@
     <!--#endregion -->
     <!--#region step4  -->
     <div class="form-container bg-gradient-dark" id="step4_history">
-      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
+      <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Datastream History</p>
@@ -787,7 +824,7 @@
     <!--#endregion -->
     <!--#region step5  -->
     <div class="form-container bg-gradient-dark" id="step5_review">
-      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
+      <button id="btnCloseForm" class="close-button">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Review before submitting</p>
@@ -844,17 +881,7 @@
   <p>Enter the full web address (URI) of the data stream, which includes the base URL and any additional details, like https://finance.yahoo.com/bitcoin?key=supersecretkey.</p>
 </div>
 <div class="info_msg_target hidden" id="popover-cont" style="z-index: 1;">
-  <p>Specify the target key for the data stream, typically used when the stream is a JSON object with key-value pairs.
-    <br>Example:
-    <br>For this JSON
-    <i>
-      <br>Bitcoin {
-        <br><span>&nbsp;&nbsp;&nbsp;&nbsp;</span>value:"10.00"
-      <br>}
-    </i>
-    <br>Put in this target
-    <br><i>Bitcoin.value</i>
-  </p>
+  <p>Specify the target key for the data stream, typically used when the stream is a JSON object with key-value pairs.</p>
 </div>
 <div class="info_msg_datatype hidden" id="popover-cont" style="z-index: 1;">
   <p>Specify the data type of the stream, such as 'float,' 'int'.</p>
@@ -1257,7 +1284,24 @@
     event.preventDefault();
     const activePopup = document.querySelector('.form-container.active');
     const nextPopup = document.getElementById(popup_id);
-    canMoveToNext = checkRequired(currentPage);
+    canMoveToNext = false;
+    canMoveToNextList = checkRequired(currentPage);
+    indexOfFalse = -1;
+    i = 0;
+    do{
+      if(canMoveToNextList[i]){
+        canMoveToNext = true;
+        console.log('set true');
+      }
+      else{
+        canMoveToNext = false;
+        indexOfFalse = i;
+        console.log('set false');
+        break;
+      }
+      
+      i++;
+    }while(i <= canMoveToNextList.length - 1);
     if (canMoveToNext){
       if (activePopup) {
         activePopup.classList.remove('active');
@@ -1267,13 +1311,8 @@
         nextPopup.classList.add('active');
       }
     }
-    else {
-      if (currentPage == 'step1_desc'){
-        alert('Required Field ' + '\'Name\'' + ' is empty!')
-      }
-      else if (currentPage == 'step2_metadata'){
-        alert('Required Field ' + '\'Url\'' + ' is empty!')
-      }
+    else if (indexOfFalse != -1){
+      alert('Required Field ' + (indexOfFalse + 1) + ' is empty!')
     }
   }
 
@@ -1363,15 +1402,37 @@
   }
 
   function checkRequired(currentPage){
-    requiredFilled = false;
+    requiredFilled = [];
     if(currentPage == 'step1_desc'){
-      requiredFilled = checkElement('name');      
+      requiredFilled[0] = checkElement('name');
+      requiredFilled[1] = checkElement('dayCadence');
+      requiredFilled[2] = checkElement('hourCadence');
+      requiredFilled[3] = checkElement('minuteCadence');
+      requiredFilled[4] = checkElement('secondCadence');
+      if (
+        requiredFilled[1] == true ||
+        requiredFilled[2] == true ||
+        requiredFilled[3] == true ||
+        requiredFilled[4] == true
+      ){
+        requiredFilled[1] = true;
+        requiredFilled[2] = true;
+        requiredFilled[3] = true;
+        requiredFilled[4] = true;
+      }
+      
     }
     else if(currentPage == 'step2_metadata'){
-      requiredFilled = checkElement('url');
+      requiredFilled[0] = checkElement('url');
     }
-    else {
-      requiredFilled = true;
+    else if(currentPage == 'step3_extraction'){
+      requiredFilled = [true];
+    }
+    else if(currentPage == 'step4_history'){
+      requiredFilled = [true];
+    }
+    else if(currentPage == 'step5_review'){
+      requiredFilled = [true];
     }
     return requiredFilled;
   }
