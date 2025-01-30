@@ -1247,24 +1247,7 @@
     event.preventDefault();
     const activePopup = document.querySelector('.form-container.active');
     const nextPopup = document.getElementById(popup_id);
-    canMoveToNext = false;
-    canMoveToNextList = checkRequired(currentPage);
-    indexOfFalse = -1;
-    i = 0;
-    do{
-      if(canMoveToNextList[i]){
-        canMoveToNext = true;
-        console.log('set true');
-      }
-      else{
-        canMoveToNext = false;
-        indexOfFalse = i;
-        console.log('set false');
-        break;
-      }
-      
-      i++;
-    }while(i <= canMoveToNextList.length - 1);
+    canMoveToNext = checkRequired(currentPage);
     if (canMoveToNext){
       if (activePopup) {
         activePopup.classList.remove('active');
@@ -1274,8 +1257,13 @@
         nextPopup.classList.add('active');
       }
     }
-    else if (indexOfFalse != -1){
-      alert('Required Field ' + (indexOfFalse + 1) + ' is empty!')
+    else {
+      if (currentPage == 'step1_desc'){
+        alert('Required Field ' + '\'Name\'' + ' is empty!')
+      }
+      else if (currentPage == 'step2_metadata'){
+        alert('Required Field ' + '\'Url\'' + ' is empty!')
+      }
     }
   }
 
@@ -1365,37 +1353,15 @@
   }
 
   function checkRequired(currentPage){
-    requiredFilled = [];
+    requiredFilled = false;
     if(currentPage == 'step1_desc'){
-      requiredFilled[0] = checkElement('name');
-      requiredFilled[1] = checkElement('dayCadence');
-      requiredFilled[2] = checkElement('hourCadence');
-      requiredFilled[3] = checkElement('minuteCadence');
-      requiredFilled[4] = checkElement('secondCadence');
-      if (
-        requiredFilled[1] == true ||
-        requiredFilled[2] == true ||
-        requiredFilled[3] == true ||
-        requiredFilled[4] == true
-      ){
-        requiredFilled[1] = true;
-        requiredFilled[2] = true;
-        requiredFilled[3] = true;
-        requiredFilled[4] = true;
-      }
-      
+      requiredFilled = checkElement('name');      
     }
     else if(currentPage == 'step2_metadata'){
-      requiredFilled[0] = checkElement('url');
+      requiredFilled = checkElement('url');
     }
-    else if(currentPage == 'step3_extraction'){
-      requiredFilled = [true];
-    }
-    else if(currentPage == 'step4_history'){
-      requiredFilled = [true];
-    }
-    else if(currentPage == 'step5_review'){
-      requiredFilled = [true];
+    else {
+      requiredFilled = true;
     }
     return requiredFilled;
   }
