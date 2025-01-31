@@ -484,9 +484,20 @@
           {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
         </div>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
+          <div style="display: flex; padding-top: 15px; height: 40px;">
             <label class="text-white" for="">Interval (required)</label>
             <span class="form_hint_interval">&nbsp;?</span>
+            <span style="flex-grow: 1;"></span>
+            <label class="text-white" style="font-size: 12px; padding-top: 3px;">Custom&nbsp;</label>
+            <input type="checkbox" id="intervalEditCheckbox">
+            <script>
+              document.getElementById('intervalEditCheckbox').addEventListener('change', function() {
+                document.getElementById('dayCadence').disabled = !this.checked;
+                document.getElementById('hourCadence').disabled = !this.checked;
+                document.getElementById('minuteCadence').disabled = !this.checked;
+                document.getElementById('secondCadence').disabled = !this.checked;
+              })
+            </script>
           </div>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
@@ -504,13 +515,13 @@
                   </select>
                 </div>
                   <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
-                  <input type="number" id="dayCadence" name="dayCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);calculateCadence();">
+                  <input disabled type="number" id="dayCadence" name="dayCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);calculateCadence();">
                   <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
-                  <input type="number" id="hourCadence" name="hourCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateCadence();">
+                  <input disabled type="number" id="hourCadence" name="hourCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateCadence();">
                   <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
-                  <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
+                  <input disabled type="number" id="minuteCadence" name="minuteCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
                   <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
-                  <input type="number" id="secondCadence" name="secondCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
+                  <input disabled type="number" id="secondCadence" name="secondCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
                   {{ newRelayStream.cadence(size=32, class_="tight form-control" +(" dark-colors" if darkmode else ""), placeholder="3600", style="display:none;", id="cadence") }}
                   <script>
                     function enforceIntegerValue(inputField, minimum, maximum) {
@@ -571,9 +582,19 @@
         </div>
 
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
+          <div style="display: flex; padding-top: 15px; height: 40px;">
             <label class="text-white" for="">Offset</label>
             <span class="form_hint_offset">&nbsp;?</span>
+            <span style="flex-grow: 1;"></span>
+            <label class="text-white" style="font-size: 12px; padding-top: 3px;">Custom&nbsp;</label>
+            <input type="checkbox" id="offsetEditCheckbox">
+            <script>
+              document.getElementById('offsetEditCheckbox').addEventListener('change', function() {
+                document.getElementById('hourOffset').disabled = !this.checked;
+                document.getElementById('minuteOffset').disabled = !this.checked;
+                document.getElementById('secondOffset').disabled = !this.checked;
+              })
+            </script>
           </div>
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" style="width: 100%;">
@@ -592,11 +613,11 @@
                   </div>
                     <span style="width: 40%;"></span>
                     <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
-                    <input type="number" id="hourOffset" name="hourOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateOffset();">
+                    <input disabled type="number" id="hourOffset" name="hourOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateOffset();">
                     <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
-                    <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
+                    <input disabled type="number" id="minuteOffset" name="minuteOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
                     <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
-                    <input type="number" id="secondOffset" name="secondOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
+                    <input disabled type="number" id="secondOffset" name="secondOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
                     {{ newRelayStream.offset(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="108000", style="display:none;", id="offset") }}
                     <script>
                       function updateOffsetBoxes() {
