@@ -471,7 +471,7 @@
     {{ newRelayStream.csrf_token }}
     <!--#region step1  -->
     <div class="form-container bg-gradient-dark" id="step1_desc">
-      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Name & Descriptions</p>
@@ -683,7 +683,7 @@
     <!--#endregion -->
     <!--#region step2  -->
     <div class="form-container bg-gradient-dark" id="step2_metadata">
-      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">URL & Metadata</p>
@@ -730,7 +730,7 @@
     <!--#endregion -->
     <!--#region step3  -->
     <div class="form-container bg-gradient-dark" id="step3_extraction">
-      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Extraction</p>
@@ -757,7 +757,7 @@
     <!--#endregion -->
     <!--#region step4  -->
     <div class="form-container bg-gradient-dark" id="step4_history">
-      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Datastream History</p>
@@ -853,7 +853,7 @@
     <!--#endregion -->
     <!--#region step5  -->
     <div class="form-container bg-gradient-dark" id="step5_review">
-      <button id="btnCloseForm" class="close-button" style="border: none">X</button>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
       <h1 class="text-white">Create a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Review before submitting</p>
@@ -874,11 +874,9 @@
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
           <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step5_review')">Prev</button>
             <div class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; grid-column: 5/5;">
-              <div class="input-group">
-                {% if darkmode %}
-                  {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateCreateJs()) showWorking();") }}
-                {% else %}
-                  {{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateCreateJs()) showWorking();") }}
+              <div class="input-group" onclick="">
+                {% if darkmode %} {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateCreateJs()) showWorking();") }}
+                {% else %} {{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateCreateJs()) showWorking();") }}
                 {% endif %}
               </div>
           </div>
