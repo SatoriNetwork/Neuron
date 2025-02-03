@@ -3,7 +3,7 @@ import asyncio
 from satorilib.datamanager import DataServer
 
 async def runServerForever():
-    server = DataServer('0.0.0.0', 24602, "../../data")
+    server = DataServer('0.0.0.0', 24602)
     await server.startServer()
     await asyncio.Future()  
 
