@@ -5,6 +5,7 @@ import json
 import random
 import threading
 from queue import Queue
+import asyncio
 import pandas as pd
 from satorilib.concepts.structs import (
     StreamId,
@@ -31,6 +32,9 @@ from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
 from satorilib.datamanager import DataClient
+from satorilib.datamanager import DataServerApi
+# from Lib.satorilib.datamanager import DataClient
+# from Lib.satorilib.datamanager import DataServerApi 
 from satorilib.utils import generateUUID
 
 def getStart():
@@ -99,6 +103,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relayValidation: ValidateRelayStream
         self.dataServerIp: str =  ''
         self.dataClient: Union[DataClient, None] = None
+        self.isConnectedToServer: bool = False
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -623,25 +628,34 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     
     
     async def connectToDataServer(self):
-        try:
-            self.dataServerIp = config.get().get('server ip', '0.0.0.0')
+
+        async def initiateServerConnection() -> bool:
+            ''' local neuron client authorization '''
+
             self.dataClient = DataClient(self.dataServerIp)
-            await self.dataClient.sendRequest(
-                        self.dataServerIp, 
-                        method='initiate-server-connection')
-            logging.info("Successfully connected to Server Ip at :", self.dataServerIp, color="green")
-        except Exception as e:
-            logging.error("Error connecting to server ip in config : ", e)
-            try:
-                self.dataServerIp = self.start.server.getPublicIp().text.split()[-1] # TODO : is this correct?
-                self.dataClient = DataClient(self.dataServerIp)
-                await self.dataClient.sendRequest(
-                        self.dataServerIp, 
-                        method='initiate-server-connection')
+            response = await self.dataClient.isLocalNeuronClient()
+            # if response.status == DataServerApi.statusSuccess.value:
+            if False:
                 logging.info("Successfully connected to Server Ip at :", self.dataServerIp, color="green")
+                return True
+            raise Exception(response.senderMsg)
+        
+        while not self.isConnectedToServer:
+            try:
+                self.dataServerIp = config.get().get('server ip', '0.0.0.0')
+                if await initiateServerConnection():
+                    self.isConnectedToServer = True
             except Exception as e:
-                logging.error("Failed to find a valid Server Ip : ", e)
-                # TODO : maybe retry in an hour or when we are provided with a valid server Ip
+                logging.error("Error connecting to server ip in config : ", e)
+                try:
+                    self.dataServerIp = self.start.server.getPublicIp().text.split()[-1] # TODO : is this correct?
+                    if await initiateServerConnection():
+                        self.isConnectedToServer = True
+                except Exception as e:
+                    logging.error("Failed to find a valid Server Ip : ", e)
+                    logging.info("Retrying connection in 1 hour...")
+                    self.isConnectedToServer = False
+                    await asyncio.sleep(60*60)
 
     async def sharePubSubInfo(self):
 
@@ -674,13 +688,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         async def _sendPubSubMapping( mappingDict: dict):
             """ send pub-sub mapping with peer informations to the DataServer """
             try:
-                await self.dataClient.sendRequest(
-                    self.dataServerIp,
-                    uuid=mappingDict,
-                    method='send-pubsub-map'
-                )
+                response = await self.dataClient.setPubsubMap(mappingDict)
+                if response.status == DataServerApi.statusSuccess.value:
+                    logging.debug(response.senderMsg, print=True)
+                else:
+                    raise Exception(response.senderMsg)
             except Exception as e:
-                logging.error(f"Failed to send pub-sub mapping {e}")
+                logging.error(f"Failed to set pub-sub mapping, {e}")
 
         pubSubMapping = matchPubSub()
         await _sendPubSubMapping(pubSubMapping)
