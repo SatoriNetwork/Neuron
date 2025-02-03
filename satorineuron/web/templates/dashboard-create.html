@@ -466,7 +466,7 @@
 <p id="learn_output3"></p>
 
 <div class="form-popup-bg" id="create_ds_popup">
-  <form action="/register_stream" method="POST">
+  <form action="/register_stream" method="POST" id="relayForm"
     {{ newRelayStream.hidden_tag() }}
     {{ newRelayStream.csrf_token }}
     <!--#region step1  -->
@@ -876,8 +876,10 @@
           <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step5_review')">Prev</button>
             <div class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; grid-column: 5/5;">
               <div class="input-group" onclick="">
-                {% if darkmode %} {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateCreateJs()) showWorking();") }}
-                {% else %} {{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateCreateJs()) showWorking();") }}
+                {% if darkmode %} 
+                  {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
+                {% else %} 
+                  {{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
                 {% endif %}
               </div>
           </div>
@@ -1574,21 +1576,23 @@
     }
 
     target = target || 'Close';
-    return `function postRequestHook(response) {
-        /**
-         * Called and given the response each time the endpoint for this data stream is hit.
-         * Returns the value of the observation as a number.
-         * If an empty string is returned, the observation is not relayed to the network.
-         */
-        if (response.text !== '') {
-            try {
-                return parseFloat(response.json()${generateDrill()});
-            } catch (e) {
-                return null;
-            }
-        }
-        return null;
-    }`;
+    return `def postRequestHook(response: 'requests.Response'):
+    '''
+    Called and given the response each time the endpoint for this data stream is hit.
+    Returns the value of the observation as a string, integer, or double.
+    If an empty string is returned, the observation is not relayed to the network.
+    '''
+    if response.text != '':
+        return float(response.json()${generateDrill()})
+    return None`;
 }
 </script>
+<div>
+  {% if toEdit %}
+    <script>
+        openForm();
+        $(".form-popup-bg").addClass("is-visible");
+    </script>
+  {% endif %}
+</div>
 {% endblock %}
