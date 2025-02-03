@@ -628,14 +628,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     
     
     async def connectToDataServer(self):
+        ''' connect to server, retry if failed '''
 
         async def initiateServerConnection() -> bool:
             ''' local neuron client authorization '''
 
             self.dataClient = DataClient(self.dataServerIp)
             response = await self.dataClient.isLocalNeuronClient()
-            # if response.status == DataServerApi.statusSuccess.value:
-            if False:
+            if response.status == DataServerApi.statusSuccess.value:
                 logging.info("Successfully connected to Server Ip at :", self.dataServerIp, color="green")
                 return True
             raise Exception(response.senderMsg)
