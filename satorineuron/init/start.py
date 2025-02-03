@@ -33,9 +33,6 @@ from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
 from satorilib.datamanager import DataClient
 from satorilib.datamanager import DataServerApi
-# from Lib.satorilib.datamanager import DataClient
-# from Lib.satorilib.datamanager import DataServerApi 
-from satorilib.utils import generateUUID
 
 def getStart():
     """returns StartupDag singleton"""
@@ -636,7 +633,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.dataClient = DataClient(self.dataServerIp)
             response = await self.dataClient.isLocalNeuronClient()
             if response.status == DataServerApi.statusSuccess.value:
-                logging.info("Successfully connected to Server Ip at :", self.dataServerIp, color="green")
+                logging.info("Local Neuron successfully connected to Server Ip at :", self.dataServerIp, color="green")
                 return True
             raise Exception(response.senderMsg)
         
@@ -658,6 +655,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     await asyncio.sleep(60*60)
 
     async def sharePubSubInfo(self):
+        ''' set Pub-Sub mapping in the authorized server '''
 
         def matchPubSub() -> dict:
             ''' match related pub/sub stream and return dictionary with pub-sub mapping '''
