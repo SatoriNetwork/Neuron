@@ -879,9 +879,9 @@
             <div class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; grid-column: 5/5;">
               <div class="input-group" onclick="">
                 {% if darkmode %} 
-                  {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
+                  {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", style_="color: #344767;", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
                 {% else %} 
-                  {{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
+                  {{ newRelayStream.submit(size=32, class_="tight form-control", style_="color: #344767;", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
                 {% endif %}
               </div>
           </div>
