@@ -305,6 +305,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.checkin()
         await self.connectToDataServer()
         await self.sharePubSubInfo()
+        # TODO : subscribe here
         self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()

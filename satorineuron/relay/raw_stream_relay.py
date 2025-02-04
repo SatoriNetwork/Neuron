@@ -145,9 +145,9 @@ class RawStreamRelayEngine(Cached):
         })
         try:
             await start.dataClient.passDataToServer(
-                start.dataServerIp, 
                 uuid=stream.streamId.uuid,
-                data=dataForServer
+                data=dataForServer,
+                isSub=True # TODO : confirm this
             )
         except Exception as e:
             logging.error('Unable to send to Server: ', e)
