@@ -314,6 +314,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.isDebug:
             return
         self.startRelay()
+        await asyncio.Event().wait()
         # await self.buildEngine()
         
         time.sleep(60 * 60 * 24)
@@ -708,10 +709,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 peerHost=self.dataServerIp,
                 uuid=v['publicationUuid'],
                 callback=self.handlePredictionData)
-            logging.debug(response.senderMsg, color='cyan')
+            logging.info('Subscribed', response.senderMsg, color='green')
     
     async def handlePredictionData(self, subscription: Subscription, message: Message):
-        print(message.to_dict(True))
+        logging.info('Subscribtion Message',message.to_dict(True), color='green')
         # if message.status != DataServerApi.statusInactiveStream:
         #     print(message.data)
         #     # self.appendNewData(message.data)
