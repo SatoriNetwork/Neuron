@@ -31,8 +31,7 @@ from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
-from satorilib.datamanager import DataClient
-from satorilib.datamanager import DataServerApi
+from satorilib.datamanager import DataClient, DataServerApi, Message, Subscription
 
 def getStart():
     """returns StartupDag singleton"""
@@ -109,6 +108,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
+        self.pubSubMapping: dict = {}
         self.streamDisplay: list = []
         self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
@@ -305,7 +305,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.checkin()
         await self.connectToDataServer()
         await self.sharePubSubInfo()
-        # TODO : subscribe here
+        await self.SubscribeToEngineUpdates()
         self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
@@ -314,7 +314,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.isDebug:
             return
         self.startRelay()
-        await self.buildEngine()
+        # await self.buildEngine()
         
         time.sleep(60 * 60 * 24)
 
@@ -655,11 +655,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     self.isConnectedToServer = False
                     await asyncio.sleep(60*60)
 
+
     async def sharePubSubInfo(self):
         ''' set Pub-Sub mapping in the authorized server '''
 
-        def matchPubSub() -> dict:
-            ''' match related pub/sub stream and return dictionary with pub-sub mapping '''
+        def matchPubSub():
+            ''' matchs related pub/sub stream '''
             streamPairs = StreamPairs(
                 self.subscriptions,
                 StartupDag.predictionStreams(self.publications))
@@ -672,7 +673,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 pub.streamId.uuid: {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
                 for pub in self.publications
             }
-            return {
+            self.pubSubMapping = {
                 sub_uuid: {
                     'publicationUuid': pub_uuid,
                     'dataStreamSubscribers': subInfo[sub_uuid]['subscribers'],
@@ -684,10 +685,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             }
 
 
-        async def _sendPubSubMapping( mappingDict: dict):
+        async def _sendPubSubMapping():
             """ send pub-sub mapping with peer informations to the DataServer """
             try:
-                response = await self.dataClient.setPubsubMap(mappingDict)
+                response = await self.dataClient.setPubsubMap(self.pubSubMapping)
                 if response.status == DataServerApi.statusSuccess.value:
                     logging.debug(response.senderMsg, print=True)
                 else:
@@ -695,8 +696,33 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             except Exception as e:
                 logging.error(f"Failed to set pub-sub mapping, {e}")
 
-        pubSubMapping = matchPubSub()
-        await _sendPubSubMapping(pubSubMapping)
+        matchPubSub()
+        await _sendPubSubMapping()
+    
+
+    async def SubscribeToEngineUpdates(self):
+        ''' local neuron client subscribes to engine predication data '''
+
+        for k, v in self.pubSubMapping.items():
+            response = await self.dataClient.subscribe(
+                peerHost=self.dataServerIp,
+                uuid=v['publicationUuid'],
+                callback=self.handlePredictionData)
+            logging.debug(response.senderMsg, color='cyan')
+    
+    async def handlePredictionData(self, subscription: Subscription, message: Message):
+        print(message.to_dict(True))
+        # if message.status != DataServerApi.statusInactiveStream:
+        #     print(message.data)
+        #     # self.appendNewData(message.data)
+        #     # self.pauseAll()
+        #     # await self.producePrediction() 
+        #     # self.resumeAll()
+        # else:
+
+            # await self._sendInactive(message)
+            # self.isConnectedToPublisher = False
+            # await self.init2() 
 
 
     def startRelay(self):
