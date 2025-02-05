@@ -1406,6 +1406,18 @@ def modelUpdates():
             #     str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
             yield "data: " + str(StreamOverviews.demo()).replace("'", '"') + "\n\n"
 
+        # part of the new datamanager
+        # have to co-relate with stream UUID
+        def whatToDoWithPredictionData(predictionDict: json):
+            value_dict = json.loads(predictionDict['data'])['value']
+            date_time = list(value_dict.keys())[0]
+            value = list(value_dict.values())[0]
+            print(f"Date time: {date_time}")
+            print(f"Value: {value}")
+
+        start.predictionProduced.subscribe(
+                lambda x: whatToDoWithPredictionData(x) if x is not None else None)
+
     return Response(update(), mimetype='text/event-stream')
 
 

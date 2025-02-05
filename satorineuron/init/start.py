@@ -32,6 +32,7 @@ from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
 from satorilib.datamanager import DataClient, DataServerApi, Message, Subscription
+from reactivex.subject import BehaviorSubject
 
 def getStart():
     """returns StartupDag singleton"""
@@ -109,6 +110,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.pubSubMapping: dict = {}
+        self.predictionProduced: BehaviorSubject = BehaviorSubject(None)
         self.streamDisplay: list = []
         self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
@@ -713,18 +715,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     
     async def handlePredictionData(self, subscription: Subscription, message: Message):
         logging.info('Subscribtion Message',message.to_dict(True), color='green')
-        # if message.status != DataServerApi.statusInactiveStream:
-        #     print(message.data)
-        #     # self.appendNewData(message.data)
-        #     # self.pauseAll()
-        #     # await self.producePrediction() 
-        #     # self.resumeAll()
-        # else:
-
-            # await self._sendInactive(message)
-            # self.isConnectedToPublisher = False
-            # await self.init2() 
-
+        self.predictionProduced.on_next(message.to_dict(True))
 
     def startRelay(self):
         def append(streams: list[Stream]):

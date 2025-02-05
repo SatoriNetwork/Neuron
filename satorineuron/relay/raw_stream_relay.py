@@ -16,6 +16,7 @@ from satorilib.concepts.structs import Stream, StreamId
 from satorilib.disk import Cached
 from satorilib.disk.cache import CachedResult
 from satorilib import logging
+from satorilib.datamanager import DataServerApi
 import asyncio
 import pandas as pd
 
@@ -138,19 +139,18 @@ class RawStreamRelayEngine(Cached):
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
             data, timestamp, print=True)
         start = getStart()
-        # TODO : make sure if we dont have to call await start.connectToDataServer()
-        dataForServer = pd.Dataframe({
-            'date_time': [timestamp],
-            'value': [data]
-        })
+        dataForServer = pd.Dataframe({'value': [data]
+                                      },index=[timestamp])
         try:
-            await start.dataClient.passDataToServer(
+            response = await start.dataClient.insertStreamData(
                 uuid=stream.streamId.uuid,
                 data=dataForServer,
-                isSub=True # TODO : confirm this
+                isSub=True 
             )
+            if response.status != DataServerApi.statusSuccess:
+                raise Exception(response.senderMsg)
         except Exception as e:
-            logging.error('Unable to send to Server: ', e)
+            logging.error('Unable to set data: ', e)
         start.publish(
             topic=stream.streamId.topic(),
             data=data,
