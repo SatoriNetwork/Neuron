@@ -518,13 +518,13 @@
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" id="dayCadenceDiv" style="width: 100%; display: none;">
               <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%; height: 30px;">
                 <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
-                <input disabled type="number" id="dayCadence" name="dayCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);calculateCadence();">
+                <input type="number" id="dayCadence" name="dayCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);calculateCadence();">
                 <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
-                <input disabled type="number" id="hourCadence" name="hourCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateCadence();">
+                <input type="number" id="hourCadence" name="hourCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateCadence();">
                 <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
-                <input disabled type="number" id="minuteCadence" name="minuteCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
+                <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
                 <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
-                <input disabled type="number" id="secondCadence" name="secondCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
+                <input type="number" id="secondCadence" name="secondCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
                 {{ newRelayStream.cadence(size=32, class_="tight form-control" +(" dark-colors" if darkmode else ""), placeholder="3600", style="display:none;", id="cadence") }}
                 <script>
                   function enforceIntegerValue(inputField, minimum, maximum) {
