@@ -58,14 +58,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def create(
         cls, 
         *args,
-        env: str = "dev",
+        env: str = 'dev',
         runMode: str = None,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
         urlSynergy: str = None,
         isDebug: bool = False,
-    ) -> "StartupDag":
+    ) -> 'StartupDag':
+        '''Factory method to create and initialize StartupDag asynchronously'''
         startupDag = cls(
             *args,
             env=env,
@@ -80,7 +81,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def __init__(
         self,
         *args,
-        env: str = "dev",
+        env: str = 'dev',
         runMode: str = None,
         urlServer: str = None,
         urlMundo: str = None,
@@ -123,6 +124,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relayValidation: ValidateRelayStream
         self.dataServerIp: str =  ''
         self.dataClient: Union[DataClient, None] = None
+        self.isConnectedToServer: bool = False
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -328,14 +330,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.setRewardAddress()
         await self.connectToDataServer()
         await self.sharePubSubInfo()
-        await self.populateData() #TODO
+        # await self.populateData() #TODO
         await self.SubscribeToEngineUpdates()
         self.subConnect()
         self.pubsConnect()
         if self.isDebug:
             return
         self.startRelay()
-        self.stayConnectedForever() 
+        asyncio.create_task(self.stayConnectedForever())
+        # await asyncio.Event().wait()
+        print('here')
 
     async def engine_necessary(self):
         """Below are what is necessary for the Engine to start building"""
@@ -662,15 +666,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 return True
             raise Exception(response.senderMsg)
         
-        while not self.dataClient.isConnected():
+        # while not self.dataClient.isConnected():
+        while not self.isConnectedToServer:
             try:
                 self.dataServerIp = config.get().get('server ip', '0.0.0.0')
-                await initiateServerConnection()
+                if await initiateServerConnection():
+                    self.isConnectedToServer = True
+                    return True
             except Exception as e:
                 logging.error("Error connecting to server ip in config : ", e)
                 try:
                     self.dataServerIp = self.server.getPublicIp().text.split()[-1] 
-                    await initiateServerConnection()
+                    if await initiateServerConnection():
+                        self.isConnectedToServer = True
+                        return True
                 except Exception as e:
                     logging.error("Failed to find a valid Server Ip : ", e)
                     logging.info("Retrying connection in 10 seconds...")
@@ -681,6 +690,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         while True:
             await asyncio.sleep(30)
             if not self.dataClient.isConnected():
+                self.isConnectedToServer = False
                 await self.connectToDataServer()
                 # should we manage all our other connections here too?
                 # pubsub 

@@ -39,6 +39,7 @@ from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateH
 from satorineuron.web import forms
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
+import asyncio
 logging.info(f'version: {VERSION}', print=True)
 
 
@@ -85,7 +86,8 @@ else:
 ###############################################################################
 while True:
     try:
-        start = StartupDag.create(
+        # Run the async creation directly in the main thread
+        start = asyncio.run(StartupDag.create(
             env=ENV,
             runMode=config.get().get('run mode', os.environ.get('RUNMODE')),
             # TODO: notice the dev mode is the same as prod for now, we should
@@ -120,7 +122,7 @@ while True:
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
-            isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
+            isDebug=sys.argv[1] if len(sys.argv) > 1 else False))
 
         # start.buildEngine()
         # threading.Thread(target=start.start, daemon=True).start()
