@@ -85,7 +85,7 @@ else:
 ###############################################################################
 while True:
     try:
-        start = StartupDag(
+        start = StartupDag.create(
             env=ENV,
             runMode=config.get().get('run mode', os.environ.get('RUNMODE')),
             # TODO: notice the dev mode is the same as prod for now, we should
