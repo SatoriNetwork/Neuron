@@ -34,7 +34,7 @@
 
 </style>
 
-<div id="bridge-for-testing" class="row mb-0" style='padding-bottom:1rem;display:none;'><br id="bridgebr">
+<div id="bridge-for-testing" class="row mb-0" style='padding-bottom:1rem;display:block;'><br id="bridgebr">
   <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="row" style='padding-left:2rem;padding-right:2rem;'>
@@ -56,7 +56,7 @@
           </div>
         </div>
       </div>
-      <div id="bridgeContent" class="collapse hide">
+      <div id="bridgeContent" class="collapse show">
         <div style="padding-left: 2.5rem; padding-right:2.5rem;">
           <p class="test-sm">How to bridge SATORI from Evrmore to Base:
             <br> • <b>Burn</b>: This SATORI will be burned forever.
@@ -102,9 +102,15 @@
             <div class="custom-checkbox mb-3">
               <input type="checkbox" id="acceptBridgeTOS" onchange="toggleBridgeSubmitButton()">
               <label for="acceptBridgeTOS" class="form-check-label {% if darkmode %}dark-colors{% endif %}">
+                <!--
                 I accept the <a href="http://195.26.255.217/legal/user-agreement" target="_blank" style="padding-left:5px;"> user agreement</a>,
                 <a href="http://195.26.255.217/legal/privacy-policy" target="_blank" style="padding-left:5px;"> privacy policy</a>, and
                 <a href="http://195.26.255.217/legal/risk-disclosure" target="_blank" style="padding-left:5px;"> risk disclosure</a>.
+                -->
+                I accept the <a href="/static/legal/eula.txt" target="_blank" style="padding-left:5px;"> user agreement</a>,
+                <a href="/static/legal/terms-of-service.txt" target="_blank" style="padding-left:5px;"> terms of service</a>,
+                <a href="/static/legal/privacy-policy" target="_blank" style="padding-left:5px;"> privacy policy</a>, and
+                <a href="/static/legal/disclaimer.txt" target="_blank" style="padding-left:5px;"> risk disclosure</a>.
               </label>
               <p id="acceptBridgeTOSDescription" class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;color:red;"></p>
             </div>
@@ -123,7 +129,6 @@
             <p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
               Transaction fees will be paid during the send process. They typically amount to no more than 0.25 {% if network=='main' %}EVR{% else %}RVN{% endif %}. If there isn't enough EVR available the transaction fee will be {{ ('%.8f' | format(wallet.mundoFee)).rstrip('0').rstrip('.') }} SATORI.<br><br>
               A fee of {{ ('%.8f' | format(wallet.bridgeFee)).rstrip('0').rstrip('.') }} SATORI is charged for this transaction.<br><br>
-              powered by BurnBridge
             </p>
           </center>
         </div>

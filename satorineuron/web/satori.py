@@ -776,7 +776,6 @@ def stakeCheck():
 @userInteracted
 @authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
-    # return sendSatoriTransactionUsing(start.getWallet(), network, 'wallet')
     result = sendSatoriTransactionUsing(
         start.getWallet(), network, 'wallet')
     if isinstance(result, str) and len(result) == 64:
@@ -925,7 +924,7 @@ def bridgeSatoriTransactionUsing(
             return 'Vault is encrypted, please unlock it and try again.'
 
         if bridgeForm['bridgeAmount'] > myWallet.maxBridgeAmount:
-            return 'Bridge Failed: too much satori, please try again with less than 100 Satori.'
+            return f'Bridge Failed: too much satori, please try again with less than {myWallet.maxBridgeAmount} Satori.'
 
         # should I send a transaction or send a partial?
         transactionResult = myWallet.typicalNeuronBridgeTransaction(
@@ -1679,7 +1678,14 @@ def decryptVault():
 @userInteracted
 @authRequired
 def vaultMainTest(network: str = 'main'):
-    return vault()
+    return theVault()
+
+
+@app.route('/vault', methods=['GET', 'POST'])
+@userInteracted
+@authRequired
+def vault():
+    return theVault()
 
 
 def presentVaultPasswordForm():
@@ -1692,10 +1698,7 @@ def presentVaultPasswordForm():
     return passwordForm
 
 
-@app.route('/vault', methods=['GET', 'POST'])
-@userInteracted
-@authRequired
-def vault():
+def theVault():
 
     def acceptSubmittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
@@ -1720,6 +1723,7 @@ def vault():
         #claimResult = start.server.setEthAddress(account.address)
         myWallet = start.getWallet()
         try:
+            myWallet.get()
             alias = myWallet.alias or start.server.getWalletAlias()
         except Exception as e:
             alias = None
