@@ -5,6 +5,7 @@ import json
 import random
 import threading
 from queue import Queue
+from eth_account import Account
 from satorilib.concepts.structs import (
     StreamId,
     Stream,
@@ -27,6 +28,7 @@ from satorineuron.init.tag import LatestTag, Version
 from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
+from satorineuron.structs import start
 from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
 
@@ -49,6 +51,9 @@ class SingletonMeta(type):
 
 class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     """a DAG of startup tasks."""
+
+    _holdingBalanceBase_cache = None
+    _holdingBalanceBase_timestamp = 0  
 
     def __init__(
         self,
@@ -183,6 +188,104 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             + (self.vault.balance.amount if self.vault is not None else 0),
             8)
         return self._holdingBalance
+    
+ #  api basescan version
+ #  @property
+ #   def holdingBalanceBase(self) -> float:
+ #       """
+ #       Get Satori from Base 5 min interval
+ #       """
+ #       import requests
+ #       current_time = time.time()
+ #       cache_timeout = 300  # 5 min exp
+ #       if self._holdingBalanceBase_cache is not None and (current_time - self._holdingBalanceBase_timestamp) < cache_timeout:
+ #           return self._holdingBalanceBase_cache
+ #       eth_address = self.vault.ethAddress
+ #       #base_api_url = "https://api.basescan.org/api"
+ #       params = {
+ #           "module": "account",
+ #           "action": "tokenbalance",
+ #           "contractaddress": "0xc1c37473079884CbFCf4905a97de361FEd414B2B",
+ #           "address": eth_address,
+ #           "tag": "latest",
+ #           "apikey": "xxx"
+ #       }
+ #       try:
+ #           response = requests.get(base_api_url, params=params)
+ #           response.raise_for_status()
+ #           data = response.json()
+ #           if data.get("status") == "1":
+ #               token_balance = int(data.get("result", 0)) / (10 ** 18)
+ #               self._holdingBalanceBase_cache = token_balance
+ #               self._holdingBalanceBase_timestamp = current_time
+ #               print(f"Connecting to Base node OK")
+ #               return token_balance
+ #           else:
+ #               print(f"Error API: {data.get('message', 'Unknown Error')}")
+ #               return 0
+ #       except requests.RequestException as e:
+ #           print(f"Error connecting to API: {e}")
+ #           return 0       
+
+    @property
+    def holdingBalanceBase(self) -> float:
+        """
+        Get Satori from Base with 5-minute interval cache
+        """
+        import requests
+        import time
+
+        current_time = time.time()
+        cache_timeout = 300  # 5 min exp
+        if self._holdingBalanceBase_cache is not None and (current_time - self._holdingBalanceBase_timestamp) < cache_timeout:
+            return self._holdingBalanceBase_cache
+        eth_address = self.vault.ethAddress  
+        base_api_url = "https://base-mainnet.g.alchemy.com/v2/wdwSzh0cONBj81_XmHWvODOBq-wuQiAi"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": "alchemy_getTokenBalances",
+            "params": [
+                eth_address,
+                ["0xc1c37473079884CbFCf4905a97de361FEd414B2B"]  
+            ],
+            "id": 1
+        }
+        headers = {"Content-Type": "application/json"}
+        try:
+            response = requests.post(base_api_url, json=payload, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            if "result" in data and "tokenBalances" in data["result"]:
+                balance_hex = data["result"]["tokenBalances"][0]["tokenBalance"]
+                token_balance = int(balance_hex, 16) / (10 ** 18)  
+                self._holdingBalanceBase_cache = token_balance
+                self._holdingBalanceBase_timestamp = current_time
+                print(f"Connecting to Base node OK")
+                return token_balance
+            else:
+                print(f"API Error: Unexpected response format")
+                return 0
+        except requests.RequestException as e:
+            print(f"Error connecting to API: {e}")
+            return 0
+
+    @property
+    def ethaddressforward(self) -> str:
+        eth_address = self.vault.ethAddress
+        if eth_address:
+            return eth_address
+        else:
+        #    print("Ethereum address not found")
+            return ""
+    @property
+    def evrvaultaddressforward(self) -> str:
+        evrvaultaddress = self.details.wallet.get('vaultaddress', '')
+        if evrvaultaddress:
+            return evrvaultaddress
+        else:
+        #    print("EVR Vault address not found")
+            return ""
+
 
     def setupWalletManager(self):
         self.walletVaultManager = WalletVaultManager(
