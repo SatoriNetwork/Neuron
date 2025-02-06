@@ -320,19 +320,22 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def networkIsTest(self, network: str = None) -> bool:
         return network.lower().strip() in ("testnet", "test", "ravencoin", "rvn")
 
+    async def dataServerFinalize(self):
+        await self.sharePubSubInfo()
+        await self.populateData()
+        await self.SubscribeToEngineUpdates()
+
     async def start(self):
         """start the satori engine."""
         await self.connectToDataServer()
         asyncio.create_task(self.stayConnectedForever())
+        await self.dataServerFinalize()
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
         self.setRewardAddress()
-        await self.sharePubSubInfo()
-        await self.populateData()
-        await self.SubscribeToEngineUpdates()
         self.subConnect()
         self.pubsConnect()
         if self.isDebug:
@@ -672,6 +675,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     key=signature.decode() + "|" + self.oracleKey))
     
     
+    @property
+    def isConnectedToServer(self):
+        if hasattr(self, 'dataClient') and self.dataClient is not None:
+            return self.dataClient.isConnected()
+        return False
+
     async def connectToDataServer(self):
         ''' connect to server, retry if failed '''
 
@@ -687,32 +696,29 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         
         waitingPeriod = 10
         
-        # while not self.dataClient.isConnected():
         while not self.isConnectedToServer:
             try:
                 self.dataServerIp = config.get().get('server ip', '0.0.0.0')
                 if await initiateServerConnection():
-                    self.isConnectedToServer = True
                     return True
             except Exception as e:
                 # logging.error("Error connecting to server ip in config : ", e)
                 try:
                     self.dataServerIp = self.server.getPublicIp().text.split()[-1] 
                     if await initiateServerConnection():
-                        self.isConnectedToServer = True
                         return True
                 except Exception as e:
                     logging.warning(f'Failed to find a valid Server Ip, retrying in {waitingPeriod}')
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(waitingPeriod)
 
     async def stayConnectedForever(self):
         ''' alternative to await asyncio.Event().wait() '''
         while True:
             await asyncio.sleep(30)
-            if not self.dataClient.isConnected():
-                self.isConnectedToServer = False
-                # await self.connectToDataServer()
-                await self.start()
+            if not self.isConnectedToServer:
+                await self.connectToDataServer()
+                await self.dataServerFinalize()
+                #await self.start()
                 # should we manage all our other connections here too?
                 # pubsub 
                 # electrumx
@@ -790,8 +796,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.data[matchedStreamUuid]['predictionData'],
             pd.DataFrame({
             'index': [timestamp],
-            'value': [ParsedData['value'][timestamp]]
-            'hash': 'random' # TODO: what about hashing
+            'value': [ParsedData['value'][timestamp]],
+            'hash': 'random' # TODO: do we care about the hashing column for the UI
         }).set_index('index')
         ])
         
