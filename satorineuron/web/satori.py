@@ -813,9 +813,7 @@ def bridgeSatoriTransactionFromVault(network: str = 'main'):
     if not OfacServer.requestPermission():
         return redirect('/vault/main')
     if start.vault is not None and not start.vault.isEncrypted:
-        from satorilib.wallet.ethereum.wallet import EthereumWallet
-        account = EthereumWallet.generateAccount(start.vault._entropy)
-        setEthAddressResult = start.server.setEthAddress(account.address)
+        setEthAddressResult = start.server.setEthAddress(start.vault.ethaddress)
         logging.debug(f'setEthAddressResult: {setEthAddressResult}', color='blue')
     else:
         flash('please unlock your vault first')
@@ -837,9 +835,7 @@ def bridgeSatoriTransactionFromVault(network: str = 'main'):
 @authRequired
 def setEthAddress():
     if start.vault is not None and not start.vault.isEncrypted:
-        from satorilib.wallet.ethereum.wallet import EthereumWallet
-        account = EthereumWallet.generateAccount(start.vault._entropy)
-        setEthAddressResult = start.server.setEthAddress(account.address)
+        setEthAddressResult = start.server.setEthAddress(start.vault.ethaddress)
         logging.debug(f'setEthAddressResult: {setEthAddressResult}', color='blue')
     if setEthAddressResult[0]:
         return 'OK', 200
@@ -1718,8 +1714,7 @@ def theVault():
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
         # start.workingUpdates.put('downloading balance...')
-        from satorilib.wallet.ethereum.wallet import EthereumWallet
-        account = EthereumWallet.generateAccount(start.vault._entropy)
+        account = start.vault.account
         #claimResult = start.server.setEthAddress(account.address)
         myWallet = start.getWallet()
         try:

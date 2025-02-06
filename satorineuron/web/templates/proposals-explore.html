@@ -595,6 +595,189 @@ function updateProposalDetails(proposal, isUnapproved = false) {
     // Fetch and display current votes
     fetchProposalVotes(proposal);
 }
+  function submitVote(id, vote) {
+    console.log(`Submitting vote: proposal_id=${id}, vote=${vote}`);
+    fetch('/proposals/vote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            proposal_id: String(id),
+            vote: vote
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Server response:', data);
+        if (data.status === 'success') {
+            console.log('Vote submitted successfully');
+            disableVoteButtons(id);
+            showVotedMessage(id, 'Your vote has been recorded.');
+            sleep(2000).then(() => {
+              //location.reload();
+              fetchProposalVotes(chosenProposal);
+              //disableVoteButtons(id);
+              updateProposalDetails(chosenProposal);
+              enableVoteButtons(id);
+            });
+        } else {
+            throw new Error(data.message || 'Unknown error');
+        }
+    })
+    .catch((error) => {
+        console.error('Vote failed:', error.message);
+        displayErrorMessage('Failed to submit vote: ' + error.message);
+    });
+  }
+
+  function updateProposalDetails(proposal, isUnapproved = false) {
+    const proposalDetails = document.getElementById('proposal-details');
+    proposalDetails.innerHTML = '';
+
+    if (!proposal || typeof proposal.id === 'undefined') {
+        console.error('Invalid proposal data:', proposal);
+        return;
+    }
+
+    chosenProposal = proposal;
+
+    const detailDiv = document.createElement('div');
+    detailDiv.id = `proposal-${proposal.id}`;
+    detailDiv.className = 'proposal-detail';
+    detailDiv.style.display = 'block';
+
+    // Parse options handling different formats
+    let options;
+    try {
+        options = proposal.options;
+        if (typeof options === 'string') {
+            options = JSON.parse(options);
+            // Handle double-encoded JSON
+            if (typeof options === 'string') {
+                options = JSON.parse(options);
+            }
+        }
+        if (!Array.isArray(options)) {
+            options = [options];
+        }
+        options = options.map(opt => typeof opt === 'object' ? opt.option : opt);
+    } catch (e) {
+        console.error('Error parsing options:', e);
+        options = ["For", "Against"];
+    }
+
+    const formattedDescription = proposal.description.replace(/\n/g, '<br>');
+    const imageHtml = proposal.image_url
+        ? `<img src="${proposal.image_url}" alt="${proposal.title}">`
+        : `<img src="https://ateressi.sirv.com/iStock-173770914.jpg" alt="Placeholder Image">`;
+
+    let expirationDate = new Date(proposal.expires);
+    expirationDate.setDate(expirationDate.getDate() - 1);
+    let dayBeforeExpiration = expirationDate.toLocaleDateString();
+
+    const totalSatori = (chosenProposalVotes || []).reduce((sum, vote) => sum + (vote?.satori || 0), 0);
+
+    let voteOptionsHtml = options.map(option => {
+        const optionSatori = (chosenProposalVotes || [])
+            .filter(vote => vote?.vote === option)
+            .reduce((sum, vote) => sum + (vote?.satori || 0), 0);
+
+        const percentage = totalSatori > 0 ? ((optionSatori / totalSatori) * 100).toFixed(2) : 0;
+        console.log(percentage);
+        return `
+            <div class="vote-option" data-vote="${option}">
+                <div class="input-group input-group-outline is-filled">
+                    <input class="tight form-control vote-btn"
+                           id="submit"
+                           name="submit"
+                           size="32"
+                           type="submit"
+                           value="${option}"
+                           onfocus="focused(this)"
+                           onfocusout="defocused(this)">
+                </div>
+                <div class="vote-percentage" id="${option.toLowerCase()}-percentage-${proposal.id}">${percentage}%</div>
+            </div>
+        `;
+    }).join('');
+
+
+    let approveButtons = '';
+    if (isUnapproved && canApprove) {
+        approveButtons = `
+            <div class="text-center mt-3">
+                <button class="btn btn-success mr-2" onclick="approveProposal(${proposal.id}, true)">
+                    Approve
+                </button>
+                <button class="btn btn-danger" onclick="approveProposal(${proposal.id}, false)">
+                    Disapprove
+                </button>
+            </div>
+        `;
+    }
+
+    detailDiv.innerHTML = `
+        <div class="proposal-card">
+            <div class="proposal-card-header">
+                <h4 class="text-center">${proposal.title}</h4>
+            </div>
+            <div class="proposal-card-body">
+                <div class="image-placeholder">
+                    ${imageHtml}
+                </div>
+                <div class="row proposal-info mb-2">
+                    <div class="col-xl-3 col-sm-3 mb-xl-0">
+                        <dt>Expires</dt>
+                        <dd>${dayBeforeExpiration}</dd>
+                    </div>
+                    <div class="col-xl-3 col-sm-3 mb-xl-0">
+                        <dt>Estimated Cost</dt>
+                        <dd>${proposal.cost}</dd>
+                    </div>
+                </div>
+                <div class="row proposal-info mb-5">
+                    <div class="col-xl-12 col-sm-12 mb-xl-0">
+                        <dt>Description</dt>
+                        <dd style="white-space: pre-line;">${formattedDescription}</dd>
+                    </div>
+                </div>
+                <div id="vote-options-${proposal.id}" class="vote-options">
+                    ${voteOptionsHtml}
+                </div>
+                ${approveButtons}
+                <div class="text-center mt-3">
+                    <button class="btn btn-primary btn-sm" onclick="getCsvVotes()">
+                        Generate CSV
+                    </button>
+                </div>
+                <span id="voted-message-${proposal.id}" class="proposal-voted-message" style="display: none;"></span>
+            </div>
+        </div>
+    `;
+
+    proposalDetails.appendChild(detailDiv);
+
+    const voteButtons = detailDiv.querySelectorAll('.vote-btn');
+    voteButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            submitVote(proposal.id, button.value);
+        });
+    });
+
+    // Fetch and display current votes
+    fetchProposalVotes(proposal);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function focused(element) {
     element.parentElement.classList.add('is-focused');
 }
@@ -684,7 +867,7 @@ function checkApprovalRights() {
             }
         })
         .catch(error => {
-            console.error('Error checking approval rights:', error);
+            //console.error('Error checking approval rights:', error);
             document.getElementById('unapproved-proposals-section').style.display = 'none';
         });
 }
@@ -753,32 +936,32 @@ function approveProposal(id, approve) {
     });
 }
 
-function fetchProposalVotes(proposal) {
-    if (!proposal || !proposal.id) {
-        console.error('Invalid proposal object:', proposal);
-        return;
-    }
+//function fetchProposalVotes(proposal) {
+//    if (!proposal || !proposal.id) {
+//        console.error('Invalid proposal object:', proposal);
+//        return;
+//    }
 
-    fetch(`/proposal/votes/get/${proposal.id}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                updateVoteCounts(proposal.id, data.votes);
+//    fetch(`/proposal/votes/get/${proposal.id}`)
+//        .then(response => response.json())
+//        .then(data => {
+//            if (data.status === 'success') {
+//                updateVoteCounts(proposal.id, data.votes);
 
-                if (data.disable_voting) {
-                    disableVoteButtons(proposal.id);
-                    showVotedMessage(proposal.id, 'Voting is closed for this proposal');
-                } else if (data.user_has_voted) {
-                    showVotedMessage(proposal.id, `You have voted: ${data.user_voted}`);
-                }
-            } else {
-                throw new Error(data.message || 'Failed to fetch vote data');
-            }
-        })
-        .catch(error => {
-            console.error('Unable to fetch vote counts:', error);
-        });
-}
+//                if (data.disable_voting) {
+//                    disableVoteButtons(proposal.id);
+//                    showVotedMessage(proposal.id, 'Voting is closed for this proposal');
+//                } else if (data.user_has_voted) {
+//                    showVotedMessage(proposal.id, `You have voted: ${data.user_voted}`);
+//                }
+//            } else {
+//                throw new Error(data.message || 'Failed to fetch vote data');
+//            }
+//        })
+//        .catch(error => {
+//            console.error('Unable to fetch vote counts:', error);
+//        });
+//}
 function disableVoteButtons(id) {
     const buttons = document.querySelectorAll(`#proposal-${id} .vote-btn`);
     buttons.forEach(button => {
