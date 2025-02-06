@@ -331,7 +331,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.checkin()
         self.setRewardAddress()
         await self.sharePubSubInfo()
-        # await self.populateData() #TODO
+        await self.populateData() #TODO
         await self.SubscribeToEngineUpdates()
         self.subConnect()
         self.pubsConnect()
@@ -509,7 +509,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return True
         return False
 
-    def populateData(self) -> bool:
+    async def populateData(self) -> bool:
         """rehashes my published hashes"""
 
         # TODO: instead of all this, just get the data from the server, save it
@@ -521,9 +521,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #       self.cachedDatastreams = {streamId: dataframe}
         #       self.correlatedDatastreams = {prediction streamId: [primary subscription, secondary subscriptions...]}
 
-        self.correlatedDatastreams = {
-            k: {'publicationUuid': v['publicationUuid'], 'supportiveUuid':  []} 
-            for k, v in self.pubSubMapping.items()}
             
             
 
@@ -675,7 +672,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     self.isConnectedToServer = True
                     return True
             except Exception as e:
-                logging.error("Error connecting to server ip in config : ", e)
+                # logging.error("Error connecting to server ip in config : ", e)
                 try:
                     self.dataServerIp = self.server.getPublicIp().text.split()[-1] 
                     if await initiateServerConnection():
@@ -717,6 +714,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.pubSubMapping = {
                 sub_uuid: {
                     'publicationUuid': pub_uuid,
+                    'supportiveUuid':[],
                     'dataStreamSubscribers': subInfo[sub_uuid]['subscribers'],
                     'dataStreamPublishers': subInfo[sub_uuid]['publishers'],
                     'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'],
