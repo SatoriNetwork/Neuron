@@ -338,8 +338,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.startRelay()
         asyncio.create_task(self.stayConnectedForever())
-        # await asyncio.Event().wait()
-        print('here')
+        await asyncio.Event().wait()
 
     async def engine_necessary(self):
         """Below are what is necessary for the Engine to start building"""
