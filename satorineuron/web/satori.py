@@ -199,6 +199,21 @@ def getResp(resp: Union[dict, None] = None) -> dict:
     except Exception as e:
         logging.debug(e)
         holdingBalance = 0
+    try:
+        holdingBalanceBase = start.holdingBalanceBase
+    except Exception as e:
+        logging.debug(e)
+        holdingBalanceBase = 0
+    try:
+        ethaddressforward = start.ethaddressforward
+    except Exception as e:
+        logging.debug(e)
+        ethaddressforward = 0
+    try:
+        evrvaultaddressforward = start.evrvaultaddressforward
+    except Exception as e:
+        logging.debug(e)
+        evrvaultaddressforward = 0
     return {
         'version': VERSION,
         'lockEnabled': isActuallyLocked(),
@@ -209,6 +224,9 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'darkmode': darkmode,
         'title': 'Satori',
         'holdingBalance': holdingBalance,
+        'holdingBalanceBase': holdingBalanceBase,
+        'ethaddressforward': ethaddressforward,
+        'evrvaultaddressforward': evrvaultaddressforward,
         **(resp or {})}
 
 
@@ -1178,6 +1196,7 @@ def dashboard():
         #     if start.engine is not None else [])  # StreamOverviews.demo()
         streamOverviews = [stream for stream in start.streamDisplay]
         holdingBalance = start.holdingBalance
+        holdingBalanceBase = start.holdingBalanceBase
         stakeStatus = holdingBalance >= constants.stakeRequired or (
             start.details.wallet.get('rewardaddress', None) not in [
                 None,
