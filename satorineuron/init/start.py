@@ -322,13 +322,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     async def start(self):
         """start the satori engine."""
+        await self.connectToDataServer()
+        asyncio.create_task(self.stayConnectedForever())
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
         self.setRewardAddress()
-        await self.connectToDataServer()
         await self.sharePubSubInfo()
         # await self.populateData() #TODO
         await self.SubscribeToEngineUpdates()
@@ -337,7 +338,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.isDebug:
             return
         self.startRelay()
-        asyncio.create_task(self.stayConnectedForever())
         await asyncio.Event().wait()
 
     async def engine_necessary(self):
@@ -665,6 +665,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 return True
             raise Exception(response.senderMsg)
         
+        waitingPeriod = 10
+        
         # while not self.dataClient.isConnected():
         while not self.isConnectedToServer:
             try:
@@ -680,8 +682,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         self.isConnectedToServer = True
                         return True
                 except Exception as e:
-                    logging.error("Failed to find a valid Server Ip : ", e)
-                    logging.info("Retrying connection in 10 seconds...")
+                    logging.warning(f'Failed to find a valid Server Ip, retrying in {waitingPeriod}')
                     await asyncio.sleep(10)
 
     async def stayConnectedForever(self):
@@ -690,7 +691,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             await asyncio.sleep(30)
             if not self.dataClient.isConnected():
                 self.isConnectedToServer = False
-                await self.connectToDataServer()
+                # await self.connectToDataServer()
+                await self.start()
                 # should we manage all our other connections here too?
                 # pubsub 
                 # electrumx
