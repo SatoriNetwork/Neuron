@@ -124,7 +124,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relayValidation: ValidateRelayStream
         self.dataServerIp: str =  ''
         self.dataClient: Union[DataClient, None] = None
-        self.isConnectedToServer: bool = False
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -329,7 +328,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """start the satori engine."""
         await self.connectToDataServer()
         asyncio.create_task(self.stayConnectedForever())
-        await self.dataServerFinalize()
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
@@ -338,10 +336,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.setRewardAddress()
         self.subConnect()
         self.pubsConnect()
+        await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
         if self.isDebug:
             return
         self.startRelay()
-        await asyncio.Event().wait()
+        await asyncio.Event().wait() # probably place this at the end of satori.py?
 
     async def engine_necessary(self):
         """Below are what is necessary for the Engine to start building"""
@@ -513,24 +512,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return False
 
     async def populateData(self):
-        """rehashes my published hashes"""
-
-        # TODO: instead of all this, just get the data from the server, save it
-        #       in memory here. 
-        #       types of datastreams:
-        #           subscription vs publication
-        #           - subscription: primary (real-world data I consume then predict) vs secondary (real-world data I consume to help me make better predictions)
-        #           - publication: primary (real-world data I produce) vs secondary (predictions I produce)
-        #       self.cachedDatastreams = {streamId: dataframe}
-        #       self.correlatedDatastreams = {prediction streamId: [primary subscription, secondary subscriptions...]}
-
+        """ save real and prediction data in neuron """
         for streamUuid in self.pubSubMapping.keys():
             realDataDf = None
             predictionDataDf = None
             try:
                 realData = await self.dataClient.getLocalStreamData(streamUuid)
-                if realData.status == DataServerApi.statusSuccess.value and realData.data:
-                    realDataDf = pd.read_json(StringIO(realData.data), orient='split')
+                if realData.status == DataServerApi.statusSuccess.value and isinstance(realData.data, pd.DataFrame):
+                    realDataDf = realData.data
                 else:
                     raise Exception(realData.senderMsg)
             except Exception as e:
@@ -538,8 +527,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 pass
             try:
                 predictionData = await self.dataClient.getLocalStreamData(self.pubSubMapping[streamUuid]['publicationUuid'])
-                if predictionData.status == DataServerApi.statusSuccess.value and predictionData.data:
-                    predictionDataDf = pd.read_json(StringIO(predictionData.data), orient='split')
+                if predictionData.status == DataServerApi.statusSuccess.value and isinstance(predictionData.data, pd.DataFrame):
+                    predictionDataDf = predictionData.data
                 else:
                     raise Exception(predictionData.senderMsg)
             except Exception as e:
@@ -549,16 +538,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 'realData': realDataDf if realDataDf is not None else pd.DataFrame([]),
                 'predictionData': predictionDataDf if predictionDataDf is not None else pd.DataFrame([])
             }
-
-        # def validateCache(cache: disk.Cache):
-        #     success, _ = cache.validateAllHashes()
-        #     if not success:
-        #         cache.saveHashes()
-
-        # for stream in set(self.publications):
-        #     cache = self.cacheOf(stream.id)
-        #     self.asyncThread.runAsync(cache, task=validateCache)
-        # return True
 
     @staticmethod
     def predictionStreams(streams: list[Stream]):
@@ -777,9 +756,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             logging.info('Subscribed', response.senderMsg, color='green')
     
     async def handlePredictionData(self, subscription: Subscription, message: Message):
-        # TODO: we shouldn't give the ui streamOverview, it should pull from our
-        #       raw datasets.
-
+        
         def findMatchingStreamUuid(pubUuid) -> str:
             for key in self.pubSubMapping.keys():
                 if pubUuid == self.pubSubMapping[key]['publicationUuid']:
@@ -787,23 +764,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         
         logging.info('Subscribtion Message',message.to_dict(True), color='green')
         matchedStreamUuid = findMatchingStreamUuid(message.uuid)
-        print(len(self.data[matchedStreamUuid]['predictionData']))
-
-        ParsedData = json.loads(message.data)
-        timestamp = list(ParsedData['value'].keys())[0]
-
         self.data[matchedStreamUuid]['predictionData'] = pd.concat([
             self.data[matchedStreamUuid]['predictionData'],
-            pd.DataFrame({
-            'index': [timestamp],
-            'value': [ParsedData['value'][timestamp]],
-            'hash': 'random' # TODO: do we care about the hashing column for the UI
-        }).set_index('index')
+            message.data
         ])
-        
-        print('After')
-        print(len(self.data[matchedStreamUuid]['predictionData']))
-        print(self.data[matchedStreamUuid]['predictionData'])
 
 
     def startRelay(self):
