@@ -190,13 +190,13 @@
 
   function setStakingOffer() {
     function validateStakingOffer(offer) {
-      const value = parseInt(offer, 10);
+      const value = parseFloat(offer);
       // Allow empty input
       if (isNaN(value)) {
           return true;
       }
       // Allow 0 or values 10 and above
-      if (value !== 0 && value < 10) {
+      if (value !== 0 && value < 1) {
           document.getElementById("addStakingOffer").value = ''; // Clear invalid input
           return false;
       }
