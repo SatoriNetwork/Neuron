@@ -236,7 +236,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         import time
 
         current_time = time.time()
-        cache_timeout = 300  # 5 min exp
+        cache_timeout = 60 * 5
         if self._holdingBalanceBase_cache is not None and (current_time - self._holdingBalanceBase_timestamp) < cache_timeout:
             return self._holdingBalanceBase_cache
         eth_address = self.vault.ethAddress  
