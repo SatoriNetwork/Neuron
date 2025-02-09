@@ -10,19 +10,19 @@
         </div>
         <div class="text-center pt-1" style="padding-top:2rem !important;">
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">
-            {{ (holdingBalance | default(0)) + (holdingBalanceBase | default(0)) }}
+            {{ ((holdingBalance | default(0)) + (holdingBalanceBase | default(0))) | round(2) }}
           </h4>
           <p class="text-sm text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
         </div>
         <div class="text-center mt-2 d-flex justify-content-between px-3">
           <a href="https://evr.cryptoscope.io/address/?address={{evrvaultaddressforward}}", target='_blank'>
           <span class="text-xs text-uppercase font-weight-bold {% if darkmode %}dark-colors{% endif %}">
-            Satori on EVR: <br>{{ holdingBalance | default(0) }}
+            Satori on EVR: <br>{{ holdingBalance | default(0) | round(2) }}
           </span>
           </a>
           <a href="https://basescan.org/address/{{ethaddressforward}}#tokentxns", target='_blank'>
           <span class="text-xs text-uppercase font-weight-bold {% if darkmode %}dark-colors{% endif %}">
-            Satori on Base: <br>{{ holdingBalanceBase | default(0) }}
+            Satori on Base: <br>{{ holdingBalanceBase | default(0) | round(2) }}
           </span>
         </a>
         </div>
