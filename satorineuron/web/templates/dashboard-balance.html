@@ -1,4 +1,63 @@
 {% block content %}
+  <style>
+    .hidden-balance {
+      opacity: 0;
+      transition: opacity 0.1s ease-in-out;
+    }
+
+    .show-balance {
+      opacity: 1 !important;
+    }
+  </style>
+
+  <div class="col-xl-3 col-lg-3 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
+        <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl mt-n4 position-absolute" style="width:84px !important;">
+          <i class="material-icons opacity-10">wallet<i class="material-icons opacity-10">lock</i></i>
+        </div>
+        <div class="text-end pt-1" style="display:block;">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Holdings</h4>
+        </div>
+        <button class="btn btn-link w-100 text-center {% if darkmode %}dark-colors{% endif %}"
+                style="padding-top:1.5rem; margin-bottom:0rem; text-transform: none; font-size: 1.2rem; cursor: pointer; border: none; background: none;"
+                type="button"
+                data-toggle="collapse"
+                data-target="#balancesDetails"
+                aria-expanded="false"
+                aria-controls="balancesDetails"
+                onclick="toggleBalanceDetails()">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">
+            {{ (holdingBalance | default(0)) + (holdingBalanceBase | default(0)) }}
+          </h4>
+          <p class="text-sm text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
+        </button>
+        <div id="balancesDetails" class="collapse hide">
+          <div id="balances" class="text-center mt-2 d-flex" style="justify-content: space-evenly; transition: opacity 0.1s ease-in-out;">
+            <a href="https://evr.cryptoscope.io/address/?address={{evrvaultaddressforward}}" target='_blank'>
+              <p class="text-xs text-uppercase {% if darkmode %}dark-colors{% endif %}" style="font-weight: 400 !important;margin-bottom:0px;line-height: .5rem;">
+                {{ holdingBalance | default(0) }}
+              </p>
+              <p class="text-xs text-uppercase {% if darkmode %}dark-colors{% endif %}" style="font-weight: 300 !important;">
+                Evrmore
+              </p>
+            </a>
+            <a href="https://basescan.org/address/{{ethaddressforward}}#tokentxns" target='_blank'>
+              <p class="text-xs text-uppercase {% if darkmode %}dark-colors{% endif %}" style="font-weight: 400 !important;margin-bottom:0px;line-height: .5rem;">
+                {{ holdingBalanceBase | default(0) }}
+              </p>
+              <p class="text-xs text-uppercase {% if darkmode %}dark-colors{% endif %}" style="font-weight: 300 !important;">
+                Base
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer p-1"></div>
+    </div>
+  </div>
+
+<!--
   <div class="col-xl-3 col-lg-3 col-sm-12 mb-xl-0 mb-4">
     <div class="card  {% if darkmode %}dark-colors{% endif %}" style="height: 200px;">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
@@ -8,27 +67,71 @@
         <div class="text-end pt-1" style="display:block;">
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Holdings</h4>
         </div>
-        <div class="text-center pt-1" style="padding-top:2rem !important;">
+        <div class="text-center pt-1" id="mainBalance" style="padding-top:1.5rem !important; cursor: pointer;">
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">
             {{ (holdingBalance | default(0)) + (holdingBalanceBase | default(0)) }}
           </h4>
           <p class="text-sm text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
         </div>
-        <div class="text-center mt-2 d-flex justify-content-between px-3">
-          <a href="https://evr.cryptoscope.io/address/?address={{evrvaultaddressforward}}", target='_blank'>
-          <span class="text-xs text-uppercase font-weight-bold {% if darkmode %}dark-colors{% endif %}">
-            Satori on EVR: <br>{{ holdingBalance | default(0) }}
-          </span>
+        <div class="text-center mt-2 d-flex hidden-balance" id="balances", style="justify-content: space-evenly;">
+          <a href="https://evr.cryptoscope.io/address/?address={{evrvaultaddressforward}}" target='_blank'>
+            <p class="text-xs text-uppercase {% if darkmode %}dark-colors{% endif %}" style="font-weight: 400 !important;margin-bottom:0px;line-height: .5rem;">
+              {{ holdingBalance | default(0) }}
+            </p>
+            <p class="text-xs text-uppercase {% if darkmode %}dark-colors{% endif %}" style="font-weight: 300 !important;">
+              Evrmore
+            </p>
           </a>
-          <a href="https://basescan.org/address/{{ethaddressforward}}#tokentxns", target='_blank'>
-          <span class="text-xs text-uppercase font-weight-bold {% if darkmode %}dark-colors{% endif %}">
-            Satori on Base: <br>{{ holdingBalanceBase | default(0) }}
-          </span>
-        </a>
+          <a href="https://basescan.org/address/{{ethaddressforward}}#tokentxns" target='_blank'>
+            <p class="text-xs text-uppercase {% if darkmode %}dark-colors{% endif %}" style="font-weight: 400 !important;margin-bottom:0px;line-height: .5rem;">
+              {{ holdingBalanceBase | default(0) }}
+            </p>
+            <p class="text-xs text-uppercase {% if darkmode %}dark-colors{% endif %}" style="font-weight: 300 !important;">
+              Base
+            </p>
+          </a>
         </div>
       </div>
       <div class="card-footer p-1">
       </div>
     </div>
   </div>
+  -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const mainBalance = document.getElementById("mainBalance");
+      const balances = document.getElementById("balances");
+
+      let isClicked = false;
+
+      mainBalance.addEventListener("mouseover", function () {
+        if (!isClicked) {
+          balances.classList.add("show-balance");
+        }
+      });
+
+      mainBalance.addEventListener("mouseout", function () {
+        if (!isClicked) {
+          balances.classList.remove("show-balance");
+        }
+      });
+
+      mainBalance.addEventListener("click", function () {
+        isClicked = !isClicked;
+        if (isClicked) {
+          balances.classList.add("show-balance");
+        } else {
+          balances.classList.remove("show-balance");
+        }
+      });
+    });
+    function toggleBalanceDetails() {
+      const balances = document.getElementById("balances");
+      if (balances.classList.contains("show-balance")) {
+        balances.classList.remove("show-balance");
+      } else {
+        balances.classList.show("show-balance");
+      }
+    }
+  </script>
 {% endblock %}
