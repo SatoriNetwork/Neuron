@@ -1,7 +1,7 @@
 {% extends "basic.html" %}
 {% block content %}
   {% if vaultOpened %}
-    {% if holdingBalance == 0 %}
+  {% if (holdingBalance + holdingBalanceBase) == 0 %}
       {% include 'dashboard-welcome.html' %}
     {% endif %}
     {% include 'dashboard-top.html' %}

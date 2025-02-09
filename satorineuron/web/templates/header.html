@@ -60,9 +60,38 @@
           </a>-->
         </li>
         <!-- Balance -->
-        <li class="nav-item pe-2 d-flex align-items-center">
-          <span id="getSatori" style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;"> Satori: {{ holdingBalance | default('Unloaded')}}</span>
+        
+        <li class="nav-item dropdown pe-2 d-flex align-items-center" id="satoriDropdown">
+          <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonSatori" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">account_balance_wallet</i>
+            <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Satori: {{ (holdingBalance | default(0)) + (holdingBalanceBase | default(0)) }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButtonSatori">
+            <li class="mb-2">
+              <a class="dropdown-item border-radius-md" href="https://evr.cryptoscope.io/address/?address={{evrvaultaddressforward}}" target="_blank">
+                <div class="d-flex py-1">
+                  <div class="d-flex flex-column justify-content-center">
+                    <h6 class="text-sm font-weight-normal mb-1">
+                      <span class="font-weight-bold">Satori EVR:</span> {{ holdingBalance | default(0) }}
+                    </h6>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li class="mb-2">
+              <a class="dropdown-item border-radius-md" href="https://basescan.org/address/{{ethaddressforward}}#tokentxns" target="_blank">
+                <div class="d-flex py-1">
+                  <div class="d-flex flex-column justify-content-center">
+                    <h6 class="text-sm font-weight-normal mb-1">
+                      <span class="font-weight-bold">Satori Base:</span> {{ holdingBalanceBase | default(0) }}
+                    </h6>
+                  </div>
+                </div>
+              </a>
+            </li>
+          </ul>
         </li>
+                                                        
         <li class="nav-item dropdown pe-2 d-flex align-items-center">
           <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonPower" data-bs-toggle="dropdown" aria-expanded="false">
             <!--<i class="fa fa-play cursor-pointer"></i>-->

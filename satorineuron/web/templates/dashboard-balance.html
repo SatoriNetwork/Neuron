@@ -8,9 +8,23 @@
         <div class="text-end pt-1" style="display:block;">
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Holdings</h4>
         </div>
-        <div class="text-center pt-1" style="padding-top:3rem !important;">
-          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ holdingBalance }}</h4>
-          <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
+        <div class="text-center pt-1" style="padding-top:2rem !important;">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">
+            {{ (holdingBalance | default(0)) + (holdingBalanceBase | default(0)) }}
+          </h4>
+          <p class="text-sm text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
+        </div>
+        <div class="text-center mt-2 d-flex justify-content-between px-3">
+          <a href="https://evr.cryptoscope.io/address/?address={{evrvaultaddressforward}}", target='_blank'>
+          <span class="text-xs text-uppercase font-weight-bold {% if darkmode %}dark-colors{% endif %}">
+            Satori on EVR: <br>{{ holdingBalance | default(0) }}
+          </span>
+          </a>
+          <a href="https://basescan.org/address/{{ethaddressforward}}#tokentxns", target='_blank'>
+          <span class="text-xs text-uppercase font-weight-bold {% if darkmode %}dark-colors{% endif %}">
+            Satori on Base: <br>{{ holdingBalanceBase | default(0) }}
+          </span>
+        </a>
         </div>
       </div>
       <div class="card-footer p-1">
