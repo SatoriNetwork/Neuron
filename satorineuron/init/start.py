@@ -28,7 +28,6 @@ from satorineuron.init.tag import LatestTag, Version
 from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
-from satorineuron.structs import start
 from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
 
@@ -197,7 +196,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
  #       """
  #       import requests
  #       current_time = time.time()
- #       cache_timeout = 300  # 5 min exp
+ #       cache_timeout = 60 * 5
  #       if self._holdingBalanceBase_cache is not None and (current_time - self._holdingBalanceBase_timestamp) < cache_timeout:
  #           return self._holdingBalanceBase_cache
  #       eth_address = self.vault.ethAddress
