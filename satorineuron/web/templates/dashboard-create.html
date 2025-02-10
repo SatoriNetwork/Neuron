@@ -1,5 +1,7 @@
 {% block content %}
-<div id='CreateDataStream', class="row mb-4">
+
+<div id='CreateDataStream' , class="row mb-4">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
@@ -9,7 +11,7 @@
               <div class="col-lg-10 col-10">
                 <h6 class="{% if darkmode %}dark-colors{% endif %}">Create Oracle Datastream</h6>
                 <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
-                  Fill out the form to published a new primary datastream to the Satori Network
+                  Fill out the form to publish a new primary datastream to the Satori Network
                 </p>
               </div>
               <div class="col-lg-2 col-2">
@@ -19,44 +21,48 @@
                   </p>-->
                   <a href="{{ url_for('static', filename='download/satori_datastream_form.csv') }}" target="_blank">
                     <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
-                      <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_download</i>
+                      <i class="material-icons {% if darkmode %}dark-text{% endif %}"
+                        style="font-size: 28px;">file_download</i>
                     </button>
                   </a>
-                  <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" type="file" id="csvDatastreamFile" name="file" accept=".csv" style="display:none;">
-                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" type="submit" onclick="document.getElementById('csvDatastreamFile').click();">
-                    <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 28px;">file_upload</i>
+                  <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" type="file"
+                    id="csvDatastreamFile" name="file" accept=".csv" style="display:none;">
+                  <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" type="submit"
+                    onclick="document.getElementById('csvDatastreamFile').click();">
+                    <i class="material-icons {% if darkmode %}dark-text{% endif %}"
+                      style="font-size: 28px;">file_upload</i>
                   </button>
                   <script>
                     const fileDatastreamInput = document.getElementById('csvDatastreamFile');
                     fileDatastreamInput.addEventListener('change', () => {
-                        const file = fileDatastreamInput.files[0];
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        showWorking();
-                        var working_output = document.getElementById("working_message");
-                        var working_update = new EventSource("/working_updates");
-                        working_update.onmessage = function (e) {
-                          console.log(e.data);
-                          working_output.innerHTML = e.data;
-                        };
-                        fetch('/upload_datastream_csv', {
-                            method: 'POST',
-                            body: formData
-                        })
+                      const file = fileDatastreamInput.files[0];
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      showWorking();
+                      var working_output = document.getElementById("working_message");
+                      var working_update = new EventSource("/working_updates");
+                      working_update.onmessage = function (e) {
+                        console.log(e.data);
+                        working_output.innerHTML = e.data;
+                      };
+                      fetch('/upload_datastream_csv', {
+                        method: 'POST',
+                        body: formData
+                      })
                         .then(response => {
                           console.log(response.status);
                           console.log(response.text);
-                          if (response.ok){
+                          if (response.ok) {
                             console.log('show success message?');
                           } else {
                             console.log('show failure message?');
                           }
                           hideWorking();
                           working_update.close();
-                          fetch('/working_updates_end', {method: 'GET'});
+                          fetch('/working_updates_end', { method: 'GET' });
                         })
                         .catch(error => {
-                            console.error('Error:', error);
+                          console.error('Error:', error);
                         });
                     });
                   </script>
@@ -88,8 +94,8 @@
       </div>
       <div class="card-body px-0 pb-2">
         <div style="padding: 1.25rem;">
-          <form action="/register_stream" method="POST">
-            {{ newRelayStream.hidden_tag() }}
+<!--#region main  -->
+          <!--{{ newRelayStream.hidden_tag() }}
             {{ newRelayStream.csrf_token }}
             <div class="row">
               <div class="col-xl-1 col-sm-2 mb-xl-2 mb-2" onmouseover="nameDescription();">
@@ -328,7 +334,7 @@
                   <div class="input-group input-group-outline">
                     <div class='{% if darkmode %}dark-colors{% else %}{%endif%} tight form-control'>
 
-                      <!--<form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">not needed for input field</form>-->
+                      <!<form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">not needed for input field</form>>
                       <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" type="file" id="csvHistoryFile" name="file" accept=".csv">
                       <script>
                         //const form = document.getElementById('uploadForm');
@@ -434,63 +440,1055 @@
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="row">
-              <div class="col-xl-12 col-sm-12">
-                <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
-                  <div class="input-group input-group-outline" onclick="">
-                    {% if darkmode %}{{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", onclick="if(validateCreateJs()) showWorking();") }}
-                    {% else %}{{ newRelayStream.submit(size=32, class_="tight form-control", onclick="if(validateCreateJs()) showWorking();") }}
-                    {% endif %}
-                  </div>
-                </div>
+            </div>-->
+<!--#endregion -->
+          <div class="row">
+            <div class="col-xl-12 col-sm-12">
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
+                <button class="flex-row btn btn-outline-dark" style="width: 100%" id="btnOpenForm" onclick="openForm()"> Create Oracle
+                  Datastream
+                  <!--{% if darkmode %}{{ newRelayStream.submit(size=32, class_="tight form-control dark-colors"  ) }}
+                    {% else %}{{ newRelayStream.submit(size=32, class_="tight form-control") }}
+                    {% endif %}-->
+                </button>
               </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+
 <p id="learn_output"></p>
 <p id="learn_output2"></p>
 <p id="learn_output3"></p>
 
+<div class="form-popup-bg" id="create_ds_popup">
+  <form action="/register_stream" method="POST" id="relayForm"
+    {{ newRelayStream.hidden_tag() }}
+    {{ newRelayStream.csrf_token }}
+    <!-- # region step1  -->
+    <div class="form-container bg-gradient-dark" id="step1_desc">
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
+      <h1 class="text-white">Create a Datastream</h1>
+      <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">Name & Descriptions</p>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">Name (required)</label>
+            <span class="form_hint_name">&nbsp;?</span>
+            <!-- <span class="material-icons form_hint" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</span> -->
+          </div>
+          {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
+        </div>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px; height: 40px;">
+            <label class="text-white" for="">Interval (required)</label>
+            <span class="form_hint_interval">&nbsp;?</span>
+            <span style="flex-grow: 1;"></span>
+            <label class="text-white" style="font-size: 12px; padding-top: 3px;">Custom&nbsp;</label>
+            <input type="checkbox" id="intervalEditCheckbox">
+            <script>
+              document.getElementById('intervalEditCheckbox').addEventListener('change', function() {
+                document.getElementById('cadenceDropdownDiv').style.display = !this.checked ? 'block':'none';
+
+                document.getElementById('dayCadenceDiv').style.display = !this.checked ? 'none':'block';
+              })
+            </script>
+          </div>
+          <div class="row">
+            <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" id="cadenceDropdownDiv" style="width: 100%;">
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%; height: 30px;">
+                <div  style="width:35%; padding:5px">
+                  <select class="d-flex flex-row gap-2 btn btn-outline-dark"  id="cadenceDropdown" style="background-color: white;" onchange="updateBoxes(); calculateCadence();">
+                    <option value="300">5 Minute</option>
+                    <option value="600" selected>10 Minute</option>
+                    <option value="900">15 Minute</option>
+                    <option value="1800">30 Minute</option>
+                    <option value="3600">1 Hour </option>
+                    <option value="86400">1 Day</option>
+                    <option value="604800">1 Week</option>
+                    <option value="2419200">1 Month</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" id="dayCadenceDiv" style="width: 100%; display: none;">
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%; height: 30px;">
+                <span style="font-size: xx-small;display: flex;align-items: center;">days</span>
+                <input type="number" id="dayCadence" name="dayCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=3650 oninput="enforceIntegerValue(this, 0, 3650);calculateCadence();">
+                <span style="font-size: xx-small;display: flex;align-items: center;">hours</span>
+                <input type="number" id="hourCadence" name="hourCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateCadence();">
+                <span style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
+                <input type="number" id="minuteCadence" name="minuteCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
+                <span style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
+                <input type="number" id="secondCadence" name="secondCadence" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateCadence();">
+                {{ newRelayStream.cadence(size=32, class_="tight form-control" +(" dark-colors" if darkmode else ""), placeholder="3600", style="display:none;", id="cadence") }}
+                <script>
+                  function enforceIntegerValue(inputField, minimum, maximum) {
+                    if (inputField.value < minimum) {
+                      inputField.value = minimum;
+                    }
+                    if (inputField.value > maximum) {
+                        inputField.value = maximum;
+                    }
+                  }
+                  function updateBoxes() {
+                    var secondsTotal = document.getElementById('cadenceDropdown').value;
+                    var days = document.getElementById('dayCadence').value = Math.floor(secondsTotal/86400);
+                    var hours = document.getElementById('hourCadence').value = Math.floor((secondsTotal-days * 86400)/3600);
+                    var minutes = document.getElementById('minuteCadence').value = Math.floor((secondsTotal - days * 86400 - hours * 3600)/60);
+                    document.getElementById('secondCadence').value = secondsTotal  - days * 86400 - hours * 3600 - minutes * 60;
+                  }
+                  function calculateCadence() {
+                    const dayCadenceInput = document.getElementById('dayCadence');
+                    const hourCadenceInput = document.getElementById('hourCadence');
+                    const minuteCadenceInput = document.getElementById('minuteCadence');
+                    const secondCadenceInput = document.getElementById('secondCadence');
+                    var seconds = (dayCadenceInput.value*24*60*60) + (hourCadenceInput.value*60*60) + (minuteCadenceInput.value*60) + (secondCadenceInput.value*1)
+                    if (seconds >= 60) {
+                      document.getElementById('cadence').value = seconds;
+                    } else {
+                      document.getElementById('cadence').value = 60;
+                    }
+                  }
+                  function showCadence() {
+                    const dayCadenceInput = document.getElementById('dayCadence');
+                    const hourCadenceInput = document.getElementById('hourCadence');
+                    const minuteCadenceInput = document.getElementById('minuteCadence');
+                    const secondCadenceInput = document.getElementById('secondCadence');
+                    var seconds = document.getElementById('cadence').value;
+                    const daySeconds = Math.floor(seconds/24/60/60);
+                    if (daySeconds > 0) {
+                      dayCadenceInput.value = daySeconds;
+                      seconds = seconds - (daySeconds*24*60*60);
+                    }
+                    const hourSeconds = Math.floor(seconds/60/60);
+                    if (hourSeconds > 0) {
+                      hourCadenceInput.value = hourSeconds;
+                      seconds = seconds - (hourSeconds*60*60);
+                    }
+                    const minuteSeconds = Math.floor(seconds/60);
+                    if (minuteSeconds > 0) {
+                      minuteCadenceInput.value = minuteSeconds;
+                      seconds = seconds - (minuteSeconds*60);
+                    }
+                    secondCadenceInput.value = seconds;
+                  }
+                  updateBoxes();
+                  showCadence();
+                </script>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px; height: 40px;">
+            <label class="text-white" for="">Offset</label>
+            <span class="form_hint_offset">&nbsp;?</span>
+            <span style="flex-grow: 1;"></span>
+            <label class="text-white" style="font-size: 12px; padding-top: 3px;">Custom&nbsp;</label>
+            <input type="checkbox" id="offsetEditCheckbox">
+            <script>
+              document.getElementById('offsetEditCheckbox').addEventListener('change', function() {
+
+                document.getElementById('offsetDropdownDiv').style.display = !this.checked ? 'block':'none';
+
+                document.getElementById('offsetDiv').style.display = !this.checked ? 'none':'block';
+              })
+            </script>
+          </div>
+          <div class="row">
+            <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" id="offsetDropdownDiv" style="width: 100%;">
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%; height: 30px;">
+                <div style="width:35%; padding:5px">
+                    <select class="d-flex flex-row gap-2 btn btn-outline-dark"  id="offsetDropdown" style="background-color: white;" onchange="updateOffsetBoxes(); calculateOffset();">
+                      <option value="0" selected>0 Minute</option>
+                      <option value="300">5 Minute</option>
+                      <option value="600">10 Minute</option>
+                      <option value="900">15 Minute</option>
+                      <option value="1800">30 Minute</option>
+                      <option value="3600">1 Hour</option>
+                      <option value="14400">4 Hours</option>
+                      <option value="28800">8 Hours</option>
+                      <option value="43200">12 Hours</option>
+                    </select>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" id="offsetDiv" style="width: 100%; display: none;">
+              <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%; height: 30px;">
+                <span id="hourOffsetLabel" style="font-size: xx-small;display: flex;align-items: center;">hours</span>
+                <input type="number" id="hourOffset" name="hourOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=24 oninput="enforceIntegerValue(this, 0, 24);calculateOffset();">
+                <span id="minuteOffsetLabel" style="font-size: xx-small;display: flex;align-items: center;">minutes</span>
+                <input type="number" id="minuteOffset" name="minuteOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
+                <span id="secondOffsetLabel" style="font-size: xx-small;display: flex;align-items: center;">seconds</span>
+                <input type="number" id="secondOffset" name="secondOffset" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="margin-left:4px;margin-right:12px; width: 25%;" min=0 max=60 oninput="enforceIntegerValue(this, 0, 60);calculateOffset();">
+                {{ newRelayStream.offset(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="108000", style="display:none;", id="offset") }}
+                <script>
+                  function updateOffsetBoxes() {
+                    var secondsTotal = document.getElementById('offsetDropdown').value;
+                    var hours = document.getElementById('hourOffset').value = Math.floor((secondsTotal)/3600);
+                    var minutes = document.getElementById('minuteOffset').value = Math.floor((secondsTotal - hours * 3600)/60);
+                    document.getElementById('secondOffset').value = secondsTotal - hours * 3600 - minutes * 60;
+                  }
+                  function calculateOffset() {
+                    const hourOffsetInput = document.getElementById('hourOffset');
+                    const minuteOffsetInput = document.getElementById('minuteOffset');
+                    const secondOffsetInput = document.getElementById('secondOffset');
+                    document.getElementById('offset').value = (hourOffsetInput.value*60*60) + (minuteOffsetInput.value*60) + (secondOffsetInput.value*1);
+                  }
+                  function showOffset() {
+                    const hourOffsetInput = document.getElementById('hourOffset');
+                    const minuteOffsetInput = document.getElementById('minuteOffset');
+                    const secondOffsetInput = document.getElementById('secondOffset');
+                    var seconds = document.getElementById('offset').value;
+                    const hourSeconds = Math.floor(seconds/60/60);
+                    if (hourSeconds > 0) {
+                      hourOffsetInput.value = hourSeconds;
+                      seconds = seconds - (hourSeconds*60*60);
+                    }
+                    const minuteSeconds = Math.floor(seconds/60);
+                    if (minuteSeconds > 0) {
+                      minuteOffsetInput.value = minuteSeconds;
+                      seconds = seconds - (minuteSeconds*60);
+                    }
+                    secondOffsetInput.value = seconds;
+                  }
+                  updateOffsetBoxes();
+                  showOffset();
+                </script>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">Tags</label>
+            <span class="form_hint_tags">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.tags(size=32, class_="tight form-control"+(" dark-colors" if darkmode else ""), placeholder="bitcoin, 1hr") }}
+        </div>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">Description</label>
+            <span class="form_hint_desc">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step1_desc')">Next</button>
+        </div>
+    </div>
+    <!--#endregion -->
+    <!--#region step2  -->
+    <div class="form-container bg-gradient-dark" id="step2_metadata">
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
+      <h1 class="text-white">Create a Datastream</h1>
+      <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">URL & Metadata</p>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">URL (required)</label>
+            <span class="form_hint_url">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.url(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin") }}
+        </div>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">URI</label>
+            <span class="form_hint_uri">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.uri(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
+        </div>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">Data Type</label>
+            <span class="form_hint_datatype">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.datatype(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="float") }}
+        </div>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">Headers</label>
+            <span class="form_hint_headers">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.headers(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
+        </div>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">Payload</label>
+            <span class="form_hint_payload">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step1_desc', event, 'step2_metadata')">Prev</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step3_extraction', event, 'step2_metadata')">Next</button>
+        </div>
+    </div>
+    <!--#endregion -->
+    <!--#region step3  -->
+    <div class="form-container bg-gradient-dark" id="step3_extraction">
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
+      <h1 class="text-white">Create a Datastream</h1>
+      <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">Extraction</p>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">Target</label>
+            <span class="form_hint_target">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Close") }}
+        </div>
+        <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="hookCreation()">Generate</button>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">Extraction Script</label>
+            <span class="form_hint_extraction">&nbsp;?</span>
+          </div>
+          {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step3_extraction')">Prev</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step3_extraction')">Next</button>
+        </div>
+    </div>
+    <!--#endregion -->
+    <!--#region step4  -->
+    <div class="form-container bg-gradient-dark" id="step4_history">
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
+      <h1 class="text-white">Create a Datastream</h1>
+      <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">Datastream History</p>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;">
+            <label class="text-white" for="">History</label>
+            <span class="form_hint_history">&nbsp;?</span>
+          </div>
+          </div>
+              <div class='{% if darkmode %}dark-colors{% else %}{%endif%} tight form-control'>
+                <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data"></form>
+                <input class="tight form-control {% if darkmode %}dark-colors{% endif %}" type="file" id="csvHistoryFile" name="file" accept=".csv">
+                <script>
+                  //const form = document.getElementById('uploadForm');
+                  const historyFileInput = document.getElementById('csvHistoryFile');
+                  historyFileInput.addEventListener('change', () => {
+                      const file = historyFileInput.files[0];
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      fetch('/upload_history_csv', {
+                          method: 'POST',
+                          body: formData
+                      })
+                      .then(response => response.text())
+                      .then(data => {
+                        console.log(data);  // Optional: Display response from the server
+                        if (data == "Successful upload."){
+                          var historyCode = document.getElementById('historyCode');
+                          historyCode.value = historyCode.value || (
+"class GetHistory(object):"+
+"\n    '''"+
+"\n    supplies the history of the datastream"+
+"\n    one observation at a time (getNext, isDone)"+
+"\n    or all at once (getAll)"+
+"\n    '''"+
+"\n"+
+"\n    def __init__(self):"+
+"\n        pass"+
+"\n"+
+"\n    def getNext(self):"+
+"\n        '''"+
+"\n        should return a value or a list of two values,"+
+"\n        the first being the time in UTC as a string of the observation,"+
+"\n        the second being the observation value"+
+"\n        '''"+
+"\n        return None"+
+"\n"+
+"\n    def isDone(self):"+
+"\n        ''' returns true when there are no more observations to supply '''"+
+"\n        return None"+
+"\n"+
+"\n    def getAll(self):"+
+"\n        ''' "+
+"\n        if getAll returns a list or pandas DataFrame"+
+"\n        then getNext is never called."+
+"\n        csv history sourced from ______"+
+"\n        index assumed to be the first column if there are 2"+
+"\n        '''"+
+"\n        import re"+
+"\n        import pandas as pd"+
+"\n        import datetime as dt"+
+"\n        df = pd.read_csv('/Satori/Neuron/uploaded/history.csv')"+
+"\n        # if the csv is just a list of values (oldest should be first)"+
+"\n        if len(df.columns) == 1:"+
+"\n            now = str(dt.datetime.utcnow())"+
+"\n            df.index = [now for _ in range(len(df))]"+
+"\n            return df"+
+"\n        # if the csv has two columns the first should be a datetime in the format:"+
+"\n        # YYYY-MM-DD HH:MM:SS.000000"+
+"\n        elif len(df.columns) == 2:"+
+"\n            df = pd.read_csv('/Satori/Neuron/uploaded/history.csv', index_col=0)"+
+"\n            # if only YYYY-MM-DD are provide, add 0s"+
+"\n            if re.search(r'^\d{4}-\d{2}-\d{2}$', df.index[0]):"+
+"\n                df.index = [f'{d} 00:00:00.000000' for d in df.index]"+
+"\n            df.index.name = None"+
+"\n            return df"+
+"\n        # otherwise just try to use what is given"+
+"\n        return df"+
+"\n");
+                        }
+                      })
+                      .catch(error => {
+                          console.error('Error:', error);
+                      });
+                  });
+                </script>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+                <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step3_extraction', event, 'step4_history')">Prev</button>
+                <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step5_review', event, 'step4_history')">Next</button>
+              </div>
+    </div>
+    <!--#endregion -->
+    <!--#region step5  -->
+    <div class="form-container bg-gradient-dark" id="step5_review">
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
+      <h1 class="text-white">Create a Datastream</h1>
+      <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
+      <p class="text-white">Review before submitting</p>
+        <div class="form-group">
+          <label class="text-white" for="">Review</label>
+          <h4 class="text-white">Name & Descriptions</h4>
+          <p class="form-control" id="reviewPage1" type="text" style="padding: 5px; color: black;"></p>
+
+          <h4 class="text-white">URL & Metadata</h4>
+          <p class="form-control" id="reviewPage2" type="text" style="padding: 5px; color: black;"></p>
+
+          <h4 class="text-white">Extraction</h4>
+          <p class="form-control" id="reviewPage3" type="text" style="padding: 5px; color: black;"></p>
+
+          <h4 class="text-white">History</h4>
+          <p class="form-control" id="reviewPage4" type="text" style="padding: 5px; color: black;"></p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step5_review')">Prev</button>
+            <div class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; grid-column: 5/5;">
+              <div class="input-group" onclick="">
+                {% if darkmode %}
+                  {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", style_="color: #344767;", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
+                {% else %}
+                  {{ newRelayStream.submit(size=32, class_="tight form-control", style_="color: #344767;", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
+                {% endif %}
+              </div>
+          </div>
+        </div>
+    </div>
+    <!--#endregion -->
+  </form>
+</div>
+<!--#region hints text-->
+<div class="info_msg_name hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter a unique name for the data stream. Special characters are not allowed.</p>
+</div>
+<div class="info_msg_interval hidden" id="popover-cont" style="z-index: 1;">
+  <p>Set the time interval between data points, specifying how often the endpoint should be called to collect data.</p>
+</div>
+<div class="info_msg_offset hidden" id="popover-cont" style="z-index: 1;">
+  <p>The time offset from UTC to start data collection. For example, with a 1-hour interval and a 3-hour offset, data collection starts at 3 AM UTC.</p>
+</div>
+<div class="info_msg_tags hidden" id="popover-cont" style="z-index: 1;">
+  <p> Enter a list of tags, separated by commas, to describe the data stream.</p>
+</div>
+<div class="info_msg_desc hidden" id="popover-cont" style="z-index: 1;">
+  <p>A short, human-readable summary of the data stream.</p>
+</div>
+<div class="info_msg_url hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter the base URL of the data stream, such as https://finance.yahoo.com/bitcoin.</p>
+</div>
+<div class="info_msg_uri hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter the full web address (URI) of the data stream, which includes the base URL and any additional details, like https://finance.yahoo.com/bitcoin?key=supersecretkey.</p>
+</div>
+<div class="info_msg_target hidden" id="popover-cont" style="z-index: 1;">
+  <p>Specify the target key for the data stream, typically used when the stream is a JSON object with key-value pairs.
+    <br>Example:
+    <br>For this JSON
+    <i>
+      <br>Bitcoin {
+        <br><span>&nbsp;&nbsp;&nbsp;&nbsp;</span>value:"10.00"
+      <br>}
+    </i>
+    <br>Put in this target
+    <br><i>Bitcoin.value</i>
+  </p>
+</div>
+<div class="info_msg_datatype hidden" id="popover-cont" style="z-index: 1;">
+  <p>Specify the data type of the stream, such as 'float,' 'int'.</p>
+</div>
+<div class="info_msg_headers hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter the request headers, which provide additional information for the data stream.</p>
+</div>
+<div class="info_msg_payload hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter the data (payload) sent with the request, typically in JSON or another format, that contains the information for the data stream.</p>
+</div>
+<div class="info_msg_extraction hidden" id="popover-cont" style="z-index: 1;">
+  <p>Enter a Python function that intercepts the response before it's sent out, allowing you to filter the data by a specific key (target). <br />WARNING: This code runs without security measures, so ensure you understand its function before submitting.</p>
+</div>
+<div class="info_msg_history hidden" id="popover-cont" style="z-index: 1;">
+  <p>Upload a CSV file with two columns: timestamps (in YYYY-MM-DD HH:MM:SS.000000 format) and their corresponding values.</p>
+</div>
+<!--#endregion-->
+
+<script>
+  //Popover Hints Script
+  $(document).ready(function () {
+    $('[data-bs-toggle="popover"]').popover(); // Initialize all popovers
+});
+//#region step1 hints
+  //Name Hint
+  $(function(){
+    $(".form_hint_name").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_name").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //Interval Hint
+  $(function(){
+    $(".form_hint_interval").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_interval").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //Offset Hint
+  $(function(){
+    $(".form_hint_offset").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_offset").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //Tags Hint
+  $(function(){
+    $(".form_hint_tags").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_tags").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //Description Hint
+  $(function(){
+    $(".form_hint_desc").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_desc").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //#endregion
+  //#region step2 hints
+    //URL Hint
+    $(function(){
+    $(".form_hint_url").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_url").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+    //URI Hint
+    $(function(){
+    $(".form_hint_uri").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_uri").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+    //Target Hint
+    $(function(){
+    $(".form_hint_target").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_target").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+    //Data Type Hint
+    $(function(){
+    $(".form_hint_datatype").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_datatype").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+    //Headers Hint
+    $(function(){
+    $(".form_hint_headers").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_headers").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+    //Payload Hint
+    $(function(){
+    $(".form_hint_payload").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_payload").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //#endregion
+  //#region step3 extraction
+    //Extraction Hint
+    $(function(){
+    $(".form_hint_extraction").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_extraction").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //#endregion
+  //#region step4 history
+    //extraction Hint
+    $(function(){
+    $(".form_hint_history").popover({
+        html : true,
+        trigger:'manual',
+        placement:'top',
+        content: function() {
+          return $(".info_msg_history").html();
+        }
+    }).on("mouseenter",function(){
+      console.log("hint moused over");
+      var _this = this;
+      $(this).popover("show");
+      $(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+    }).on("mouseleave", function () {
+      console.log("hint moused left");
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide")
+            }
+        }, 100);
+  });
+  });
+  //#endregion
+</script>
+<script>
+  function openForm() {
+    const popup_initial = document.getElementById('step1_desc');
+    popup_initial.classList.add('active');
+  }
+  function closeForm() {
+    $(".form-popup-bg").removeClass("is-visible");
+  }
+
+  $(document).ready(function ($) {
+    /* Contact Form Interactions */
+    $("#btnOpenForm").on("click", function (event) {
+      event.preventDefault();
+      $(".form-popup-bg").addClass("is-visible");
+    });
+
+    //close popup when clicking x or off popup
+    $(".form-popup-bg").on("click", function (event) {
+      if ($(event.target).is("#btnCloseForm")) {
+        event.preventDefault();
+        $(this).removeClass("is-visible");
+        $(this).find('.form-container').removeClass("active");
+      }
+    });
+  });
+  function navPopup(popup_id, event, currentPage){
+    if(popup_id == 'step5_review'){
+      populateReview();
+    }
+    event.preventDefault();
+    const activePopup = document.querySelector('.form-container.active');
+    const nextPopup = document.getElementById(popup_id);
+    canMoveToNext = checkRequired(currentPage);
+    if (canMoveToNext){
+      if (activePopup) {
+        activePopup.classList.remove('active');
+      }
+
+      if (nextPopup) {
+        nextPopup.classList.add('active');
+      }
+    }
+    else {
+      if (currentPage == 'step1_desc'){
+        alert('Required Field ' + '\'Name\'' + ' is empty!')
+      }
+      else if (currentPage == 'step2_metadata'){
+        alert('Required Field ' + '\'Url\'' + ' is empty!')
+      }
+    }
+  }
+
+  function populateReview(){
+    reviewPage1TextField = document.getElementById('reviewPage1');
+    reviewPage2TextField = document.getElementById('reviewPage2');
+    reviewPage3TextField = document.getElementById('reviewPage3');
+    reviewPage4TextField = document.getElementById('reviewPage4');
+
+    // #region page 1 info
+    streamName = document.getElementById('name').value;
+    dayCadence = document.getElementById('dayCadence').value != '' ? document.getElementById('dayCadence').value : "00";
+    hourCadence = document.getElementById('hourCadence').value != '' ? document.getElementById('hourCadence').value : "00";
+    minuteCadence = document.getElementById('minuteCadence').value != '' ? document.getElementById('minuteCadence').value : "00";
+    secondCadence = document.getElementById('secondCadence').value != '' ? document.getElementById('secondCadence').value : "00";
+    hourOffset = document.getElementById('hourOffset').value != '' ? document.getElementById('hourOffset').value : "00";
+    minuteOffset = document.getElementById('minuteOffset').value != '' ? document.getElementById('minuteOffset').value : "00";
+    secondOffset = document.getElementById('secondOffset').value != '' ? document.getElementById('secondOffset').value : "00";
+    tags = document.getElementById('tags').value;
+    description = document.getElementById('description').value;
+    if (description == ''){
+      description = 'No description.';
+    }
+    // #endregion
+
+    // #region page 2 info
+    url = document.getElementById('url').value;
+    uri = document.getElementById('uri').value;
+    if (uri == ''){
+      uri = 'No uri.';
+    }
+
+    target = document.getElementById('target').value;
+    if (target == ''){
+      target = 'No target.';
+    }
+
+    dataType = document.getElementById('datatype').value;
+    if (dataType == ''){
+      dataType = 'No data type.';
+    }
+
+    headers = document.getElementById('headers').value;
+    if (headers == ''){
+      headers = 'No headers.';
+    }
+
+    payload = document.getElementById('payload').value;
+    if (payload == ''){
+      payload = 'No payload.';
+    }
+    // #endregion
+
+    extraction = document.getElementById('hook').value;
+    if (extraction == ''){
+      extraction = 'No extraction.';
+    }
+
+    historyFile = "No file selected.";
+    try{
+      historyFile = document.getElementById('csvHistoryFile').files.item(0).name;
+    }catch(error){
+      historyFile = "No file selected.";
+      console.log(error);
+    }
+
+    reviewPage1TextField.innerHTML =
+    ` Name: ${streamName} <br>
+      Interval (dd:hh:mm:ss): ${dayCadence}:${hourCadence}:${minuteCadence}:${secondCadence} <br>
+      Offset (hh:mm:ss): ${hourOffset}:${minuteOffset}:${secondOffset} <br>
+      Tags: ${tags} <br>
+      Description: ${description}
+    `;
+
+    reviewPage2TextField.innerHTML =
+    ` URL: ${url} <br>
+      URI: ${uri} <br>
+      Data Type: ${dataType} <br>
+      Headers: ${headers} <br>
+      Payload: ${payload}
+    `;
+    reviewPage3TextField.innerHTML =
+    ` Target: ${target} <br>
+      ${extraction} <br>
+    `;
+    reviewPage4TextField.innerHTML = `File: ${historyFile}`;
+  }
+
+  function checkRequired(currentPage){
+    requiredFilled = false;
+    if(currentPage == 'step1_desc'){
+      requiredFilled = checkElement('name');
+    }
+    else if(currentPage == 'step2_metadata'){
+      requiredFilled = checkElement('url');
+    }
+    else {
+      requiredFilled = true;
+    }
+    return requiredFilled;
+  }
+
+  function checkElement(elementId){
+    input = document.getElementById(elementId);
+    if (input.value.length == 0)
+    {
+      return false;
+    }
+    return true;
+  }
+</script>
+
 <script>
   function shorten(x) {
     if (x.length > 25) {
-      return x.substring(0,15) + '...';
+      return x.substring(0, 15) + '...';
     }
     return x;
-	}
+  }
 
-	function validateCreateJs() {
-		/// this validation() method is always false:
-		//console.log("{ { newRelayStream.validate() } }");
-		//return "{ { newRelayStream.validate() } }" == "True";
+  function validateCreateJs() {
+    /// this validation() method is always false:
+    //console.log("{ { newRelayStream.validate() } }");
+    //return "{ { newRelayStream.validate() } }" == "True";
 
-		/// so we're using js to validate the required fields manually:
-		return (
-			document.getElementById("name").value != "" &&
-			document.getElementById("cadence").value >= 60 &&
-			document.getElementById("url").value.startsWith("http") &&
-      (document.getElementById("offset").value== '' || document.getElementById("offset").value < 86400)
+    /// so we're using js to validate the required fields manually:
+    return (
+      document.getElementById("name").value != "" &&
+      document.getElementById("cadence").value >= 60 &&
+      document.getElementById("url").value.startsWith("http") &&
+      (document.getElementById("offset").value == '' || document.getElementById("offset").value < 86400)
       // don't require uri, if blank it'll automatically populate from url
-			//  && document.getElementById("uri").value.startsWith("http")
-      );
-	}
+      //  && document.getElementById("uri").value.startsWith("http")
+    );
+  }
 </script>
 <script>
-	function deleteRelayStream(name, target) {
-		console.log('DELETE');
-		console.log(name);
-		console.log(target);
-	}
+  function deleteRelayStream(name, target) {
+    console.log('DELETE');
+    console.log(name);
+    console.log(target);
+  }
 </script>
 <script>
   function defaultMessage() {
-    document.getElementById("helpArea").innerHTML = "";
+    //document.getElementById("helpArea").innerHTML = "";
   }
   defaultMessage();
   function nameDescription() {
@@ -549,9 +1547,55 @@
     document.getElementById("helpArea1").innerHTML = "History (private)";
     document.getElementById("helpArea").innerHTML = "A python class that gathers the history of this datastream before making the datastream publicly available. <br />NOTE: Gathering the history can take a long time, so if you see a spinner for a long time please be patient. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly what the code does before you submit this form.";
   }
-  async function hookCreation()  {
-    const response = await fetch('http://127.0.0.1:24601/hook/' + document.getElementById("target").value);
+  async function hookCreationAsync() {
+    const response = await fetch('/hook/' + document.getElementById("target").value);
     document.getElementById("hook").value = await response.text();
   }
+  function hookCreation() {
+    event.preventDefault();
+    const response = generateHookFromTarget(document.getElementById("target").value);
+    document.getElementById("hook").value = response;
+  }
+
+  function generateHookFromTarget(target = '') {
+    /**
+     * Creates a function that drills down into a JSON object according to a path.
+     */
+    function replaceLastOccurrence(inputStr, oldSubstring, newSubstring) {
+        const lastIndex = inputStr.lastIndexOf(oldSubstring);
+        if (lastIndex !== -1) {
+            return inputStr.substring(0, lastIndex) + newSubstring + inputStr.substring(lastIndex + oldSubstring.length);
+        }
+        return inputStr;
+    }
+
+    function generateDrill() {
+        const parts = target.split('.');
+        return replaceLastOccurrence(
+            parts.map(part => `get("${part}", {})`).join('.'));
+    }
+
+    target = target || 'Close';
+    return `def postRequestHook(response: 'requests.Response'):
+    '''
+    Called and given the response each time the endpoint for this data stream is hit.
+    Returns the value of the observation as a string, integer, or double.
+    If an empty string is returned, the observation is not relayed to the network.
+    '''
+    if response.text != '':
+        try:
+            return float(response.json().${generateDrill()})
+        except Exception as e:
+            return None
+    return None`;
+}
 </script>
+<div>
+  {% if toEdit %}
+    <script>
+        openForm();
+        $(".form-popup-bg").addClass("is-visible");
+    </script>
+  {% endif %}
+</div>
 {% endblock %}

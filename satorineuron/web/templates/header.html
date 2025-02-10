@@ -185,7 +185,7 @@
           </ul>
         </li>
         {% endif %}
-        <li class="nav-item dropdown pe-2 d-flex align-items-center">
+        <li class="nav-item pe-2 d-flex align-items-center">
           <a href="#" class="nav-link text-body p-0" id="dropdownMenuButtonBackup" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="material-icons cursor-pointer" style="vertical-align:text-bottom;">file_download</i>
             <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 600; line-height: 1.1; font-size: 1rem; margin-left: 0.1rem; margin-right: 0.1rem;">Backup</span>
@@ -448,19 +448,5 @@
         console.log(response.text);
       }).catch(error => console.error('Error:', error));
     }
-</script>
-<script>
-  window.onload = function() {
-    document.getElementById("getSatori").innerHTML = getSatori();
-  }
-
-  function getSatori(){
-    try{
-      return "Satori: " + wallet.balance.amount
-    }
-    catch (TypeError) {
-      return "Unable to load Satori";
-    }
-  }
 </script>
     <!-- End Navbar -->

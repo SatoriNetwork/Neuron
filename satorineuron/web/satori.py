@@ -51,6 +51,7 @@ logging.logging.getLogger('werkzeug').setLevel(logging.logging.ERROR)
 debug = True
 darkmode = False
 firstRun = True
+toEditStream = False
 badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
@@ -974,7 +975,6 @@ def registerStream():
     global forms
     global badForm
     forms = importlib.reload(forms)
-
     def acceptSubmittion(newRelayStream):
         # done: we should register this stream and
         # todo: save the uri, headers, payload, and hook to a config manifest file.
@@ -1024,6 +1024,8 @@ def editStream(topic=None):
     import importlib
     global forms
     global badForm
+    global toEditStream
+    toEditStream = True
     forms = importlib.reload(forms)
     try:
         badForm = [
@@ -1035,6 +1037,7 @@ def editStream(topic=None):
         # cannot reproduce, maybe it's in the middle of reconnecting?
         pass
     # return redirect('/dashboard#:~:text=Create%20Data%20Stream')
+
     return redirect('/dashboard#CreateDataStream')
 
 
@@ -1203,6 +1206,9 @@ def dashboard():
                 start.details.wallet.get('address'),
                 start.details.wallet.get('vaultaddress')]
             if start.details is not None else 0)
+        global toEditStream
+        temp_toEditStream = toEditStream  # Store current state before resetting
+        toEditStream = False
         return render_template('dashboard.html', **getResp({
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
@@ -1219,6 +1225,7 @@ def dashboard():
             'configOverrides': config.get(),
             'paused': start.paused,
             'newRelayStream': present_stream_form(),
+            'toEdit': temp_toEditStream,
             'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
             'quote': getRandomQuote(),
             'relayStreams':  # example stream +
@@ -1280,6 +1287,7 @@ def dashboard():
             'vaultOpened': False,
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
+
 
 
 
@@ -1571,46 +1579,49 @@ def wallet(network: str = 'main'):
         alias = None
     start.wallet.get()
     start.wallet.getReadyToSend()
-    if config.get().get('wallet lock'):
-        if request.method == 'POST':
-            acceptSubmittion(forms.VaultPassword(formdata=request.form))
-        if start.vault is not None and not start.vault.isEncrypted:
-            return render_template('wallet-page.html', **getResp({
-                'title': 'Wallet',
-                'walletIcon': 'wallet',
-                'proxyParent': start.rewardAddress,
-                'vaultIsSetup': start.vault is not None,
-                'unlocked': True,
-                'walletlockEnabled': True,
-                'network': network,
-                'image': getQRCode(start.wallet.address),
-                'wallet': start.wallet,
-                'exampleAlias': getRandomName(),
-                'alias': alias,
-                'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    #if config.get().get('wallet lock'):
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+
+    if start.vault is not None and not start.vault.isEncrypted:
         return render_template('wallet-page.html', **getResp({
             'title': 'Wallet',
             'walletIcon': 'wallet',
             'proxyParent': start.rewardAddress,
             'vaultIsSetup': start.vault is not None,
-            'unlocked': False,
+            'vaultOpened': True,
+            'walletlockEnabled': True,
+            'network': network,
+            'image': getQRCode(start.wallet.address),
+            'wallet': start.wallet,
+            'exampleAlias': getRandomName(),
+            'alias': alias,
+            'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
+            'vaultPasswordForm': presentVaultPasswordForm()}))
+    else:
+        return render_template('wallet-page.html', **getResp({
+            'title': 'Wallet',
+            'walletIcon': 'wallet',
+            'proxyParent': start.rewardAddress,
+            'vaultIsSetup': start.vault is not None,
+            'vaultOpened': False,
             'walletlockEnabled': True,
             'network': network,
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
-    return render_template('wallet-page.html', **getResp({
-        'title': 'Wallet',
-        'walletIcon': 'wallet',
-        'proxyParent': start.rewardAddress,
-        'vaultIsSetup': start.vault is not None,
-        'unlocked': True,
-        'walletlockEnabled': False,
-        'network': network,
-        'image': getQRCode(start.wallet.address),
-        'wallet': start.wallet,
-        'exampleAlias': getRandomName(),
-        'alias': alias,
-        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    #return render_template('wallet-page.html', **getResp({
+        #'title': 'Wallet',
+        #'walletIcon': 'wallet',
+        #'proxyParent': start.rewardAddress,
+        # 'vaultIsSetup': start.vault is not None,
+        # 'unlocked': True,
+        # 'walletlockEnabled': False,
+        # 'network': network,
+        # 'image': getQRCode(start.wallet.address),
+        # 'wallet': start.wallet,
+        # 'exampleAlias': getRandomName(),
+        # 'alias': alias,
+        # 'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
 def getQRCode(value: str) -> str:
@@ -1752,6 +1763,7 @@ def theVault():
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
+            'walletBalance': start.wallet.balance.amount,
             'offer': start.details.wallet.get('offer', 0),
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,

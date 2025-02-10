@@ -72,7 +72,7 @@
                       </div>
                     {% endif %}
                     <div id="observations">
-                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }});">stacked_line_chart</i>
+                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }}, stream['stream']);">stacked_line_chart</i>
                     </div>
                   </div>
                 </td>
@@ -119,7 +119,7 @@
   <div id="observationsModal" class="modal" style="display: none;">
     <div id="modal-content" class="modal-content" style="position: relative;padding: 1rem;border-radius: 8px;background-color: #fff;max-height: 90vh;margin-top: 3rem;max-width: 150vh;margin-left: auto;margin-right: auto;">
       <div class="d-flex" style="align-items:center; justify-content:space-between">
-        <h4>Real-World vs Average Predictions</h4>
+        <h4 id="streamName"></h4>
         <i class="material-icons opacity-10" class="close" onclick="closeModal()" style="cursor:pointer">cancel</i>
       </div>
 
@@ -163,6 +163,8 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.2.0/chartjs-plugin-zoom.min.js"></script>
 <script type="text/javascript">
   const darkmode = {{ 'true' if darkmode else 'false' }};
   let storedStreams = {{ allStreams|tojson }};
@@ -465,7 +467,7 @@
                 </div>`
             }
             <div id="observations">
-              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id});">stacked_line_chart</i>
+              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}' );">stacked_line_chart</i>
             </div>
           </div>
         </td>
@@ -535,6 +537,7 @@
 
     const ctx = graphCanvas.getContext('2d');
 
+    Chart.register(ChartZoom);
     const chartData = {
       labels: [],
       datasets: [
@@ -608,7 +611,28 @@
             },
           },
         },
+        zoom: {
+          limits: {
+            y: {min: null, max: null},
+            x: {min: 0, max: null},
+          },
+          pan: {
+            enabled: true,
+            mode: 'xy',
+            threshold: 10
+          },
+          zoom: {
+            
+            wheel: {
+              enabled: true
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'xy',
+          }
       },
+      }
     };
 
     if (observationsChart) {
@@ -625,13 +649,22 @@
       const endIndex = Math.min(currentIndex + chunkSize, totalPoints);
       observationsChart.data.labels.push(...combinedTimes.slice(currentIndex, endIndex));
       observationsChart.data.datasets[0].data.push(...observationValues.slice(currentIndex, endIndex));
-      const realLow = Math.min(observationValues)*.8;
-      const realHigh = Math.max(observationValues)*1.25;
+      const realLow = Math.min(...observationValues)*.8;
+      const realHigh = Math.max(...observationValues)*1.25;
       observationsChart.data.datasets[1].data.push(
         ...predictionValues.slice(currentIndex, endIndex).map(value =>
           value === 0 || value < realLow || value > realHigh ? null : value
         )
       );
+
+      //calculate bounds for zoom.  
+      const BoundLow = Math.min(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *0.98;
+      const BoundHigh = Math.max(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *1.02;
+      //set the new bounds
+      observationsChart.options.plugins.zoom.limits.y.min = BoundLow;
+      observationsChart.options.plugins.zoom.limits.y.max = BoundHigh;
+      observationsChart.options.plugins.zoom.limits.x.max = endIndex;
+
       observationsChart.update();
 
       currentIndex += chunkSize;
@@ -741,16 +774,21 @@
 
     renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
   }
+  var mostRecentName;
   var mostRecentStreamId;
   // Show Observations Modal with observations list and graph for value vs time
-  function showObservations(streamId) {
+  function showObservations(streamId, streamName) {
+    mostRecentName = streamName;
+    
     mostRecentStreamId = streamId;
     const observationsBody = document.getElementById('observationsBody');
     const graphContainer = document.getElementById('observationsGraphContainer');
     const graphCanvas = document.getElementById('observationsGraph');
     const modelContent = document.getElementById('modal-content');
     const observationTable = document.getElementById('observation-table');
+    const nameOfStream = document.getElementById('streamName');
 
+    nameOfStream.innerHTML = "Stream: " + mostRecentName;
     // Show observation modal
     document.getElementById('observationsModal').style.display = 'block';
     graphContainer.style.display = 'none';
@@ -792,7 +830,7 @@
           observationTable.style.display = 'block';
           observationTable.style.height = "calc(100% - 350px)";
           observationTable.style.overflowY = "scroll";
-
+          
           // Render a graph
           parsedObservations.sort((a, b) => new Date(a.ts) - new Date(b.ts));
           showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody);
@@ -814,6 +852,10 @@
         updateStreamDisplay(displayStreams, darkmode);
         updatePaginationButtons(filteredStreams.length);
         document.body.classList.add('no-scroll');  // Disable scroll on main content
+        graphContainer.addEventListener('wheel', (event) => {
+          event.stopPropagation(); // Prevent scroll event for zoom effecting the main content.
+        }, { passive: false });
+
       }
     })
     .catch(error => {
@@ -825,7 +867,7 @@
   }
 
   function ReRenderGraph(){
-    showObservations(mostRecentStreamId)
+    showObservations(mostRecentStreamId, mostRecentName);
   }
 
   // Close Modal
