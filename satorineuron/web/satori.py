@@ -1563,7 +1563,7 @@ def wallet(network: str = 'main'):
     #if config.get().get('wallet lock'):
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
-    
+
     if start.vault is not None and not start.vault.isEncrypted:
         return render_template('wallet-page.html', **getResp({
             'title': 'Wallet',
