@@ -38,7 +38,7 @@
                 aria-expanded="false"
                 aria-controls="balancesDetails">
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">
-            {{ (holdingBalance | default(0)) + (holdingBalanceBase | default(0)) }}
+            {{ ((holdingBalance | default(0)) + (holdingBalanceBase | default(0))) | round(2) }}
           </h4>
           <p class="text-sm text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
         </button>
