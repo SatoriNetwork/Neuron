@@ -88,7 +88,7 @@
               </p>
               <p id="helpArea1" class="mb-0 text-sm"></p>
               <p id="helpArea" class="mb-0 text-sm"></p>
-            </div> 
+            </div>
           </div>
         </div>
       </div>
@@ -469,7 +469,7 @@
   <form action="/register_stream" method="POST" id="relayForm"
     {{ newRelayStream.hidden_tag() }}
     {{ newRelayStream.csrf_token }}
-    <!--#region step1  -->
+    <!-- # region step1  -->
     <div class="form-container bg-gradient-dark" id="step1_desc">
       <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
       <h1 class="text-white">Create a Datastream</h1>
@@ -493,7 +493,7 @@
             <script>
               document.getElementById('intervalEditCheckbox').addEventListener('change', function() {
                 document.getElementById('cadenceDropdownDiv').style.display = !this.checked ? 'block':'none';
-                
+
                 document.getElementById('dayCadenceDiv').style.display = !this.checked ? 'none':'block';
               })
             </script>
@@ -596,7 +596,7 @@
               document.getElementById('offsetEditCheckbox').addEventListener('change', function() {
 
                 document.getElementById('offsetDropdownDiv').style.display = !this.checked ? 'block':'none';
-                
+
                 document.getElementById('offsetDiv').style.display = !this.checked ? 'none':'block';
               })
             </script>
@@ -878,9 +878,9 @@
           <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step4_history', event, 'step5_review')">Prev</button>
             <div class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; grid-column: 5/5;">
               <div class="input-group" onclick="">
-                {% if darkmode %} 
+                {% if darkmode %}
                   {{ newRelayStream.submit(size=32, class_="tight form-control dark-colors", style_="color: #344767;", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
-                {% else %} 
+                {% else %}
                   {{ newRelayStream.submit(size=32, class_="tight form-control", style_="color: #344767;", onclick="if(validateCreateJs()) { showWorking(); document.getElementById('relayForm').submit(); }") }}
                 {% endif %}
               </div>
@@ -973,7 +973,7 @@
             }
         }, 100);
   });
-  });  
+  });
   //Interval Hint
   $(function(){
     $(".form_hint_interval").popover({
@@ -1105,7 +1105,7 @@
             }
         }, 100);
   });
-  });  
+  });
     //URI Hint
     $(function(){
     $(".form_hint_uri").popover({
@@ -1131,7 +1131,7 @@
             }
         }, 100);
   });
-  });  
+  });
     //Target Hint
     $(function(){
     $(".form_hint_target").popover({
@@ -1157,7 +1157,7 @@
             }
         }, 100);
   });
-  });  
+  });
     //Data Type Hint
     $(function(){
     $(".form_hint_datatype").popover({
@@ -1183,7 +1183,7 @@
             }
         }, 100);
   });
-  });  
+  });
     //Headers Hint
     $(function(){
     $(".form_hint_headers").popover({
@@ -1209,7 +1209,7 @@
             }
         }, 100);
   });
-  });  
+  });
     //Payload Hint
     $(function(){
     $(".form_hint_payload").popover({
@@ -1235,7 +1235,7 @@
             }
         }, 100);
   });
-  });  
+  });
   //#endregion
   //#region step3 extraction
     //Extraction Hint
@@ -1263,7 +1263,7 @@
             }
         }, 100);
   });
-  });  
+  });
   //#endregion
   //#region step4 history
     //extraction Hint
@@ -1291,7 +1291,7 @@
             }
         }, 100);
   });
-  });  
+  });
   //#endregion
 </script>
 <script>
@@ -1384,7 +1384,7 @@
     if (dataType == ''){
       dataType = 'No data type.';
     }
-    
+
     headers = document.getElementById('headers').value;
     if (headers == ''){
       headers = 'No headers.';
@@ -1395,7 +1395,7 @@
       payload = 'No payload.';
     }
     // #endregion
-    
+
     extraction = document.getElementById('hook').value;
     if (extraction == ''){
       extraction = 'No extraction.';
@@ -1409,7 +1409,7 @@
       console.log(error);
     }
 
-    reviewPage1TextField.innerHTML = 
+    reviewPage1TextField.innerHTML =
     ` Name: ${streamName} <br>
       Interval (dd:hh:mm:ss): ${dayCadence}:${hourCadence}:${minuteCadence}:${secondCadence} <br>
       Offset (hh:mm:ss): ${hourOffset}:${minuteOffset}:${secondOffset} <br>
@@ -1424,7 +1424,7 @@
       Headers: ${headers} <br>
       Payload: ${payload}
     `;
-    reviewPage3TextField.innerHTML = 
+    reviewPage3TextField.innerHTML =
     ` Target: ${target} <br>
       ${extraction} <br>
     `;
@@ -1434,7 +1434,7 @@
   function checkRequired(currentPage){
     requiredFilled = false;
     if(currentPage == 'step1_desc'){
-      requiredFilled = checkElement('name');      
+      requiredFilled = checkElement('name');
     }
     else if(currentPage == 'step2_metadata'){
       requiredFilled = checkElement('url');
@@ -1448,10 +1448,10 @@
   function checkElement(elementId){
     input = document.getElementById(elementId);
     if (input.value.length == 0)
-    { 
-      return false; 
-    }  	
-    return true; 
+    {
+      return false;
+    }
+    return true;
   }
 </script>
 
@@ -1548,7 +1548,7 @@
     document.getElementById("helpArea").innerHTML = "A python class that gathers the history of this datastream before making the datastream publicly available. <br />NOTE: Gathering the history can take a long time, so if you see a spinner for a long time please be patient. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly what the code does before you submit this form.";
   }
   async function hookCreationAsync() {
-    const response = await fetch('http://127.0.0.1:24601/hook/' + document.getElementById("target").value);
+    const response = await fetch('/hook/' + document.getElementById("target").value);
     document.getElementById("hook").value = await response.text();
   }
   function hookCreation() {
@@ -1572,9 +1572,7 @@
     function generateDrill() {
         const parts = target.split('.');
         return replaceLastOccurrence(
-            parts.map(part => `["${part}"]`).join('?.'), 
-            '?.["', '?.["' // Adjusting to avoid trailing undefined cases
-        );
+            parts.map(part => `get("${part}", {})`).join('.'));
     }
 
     target = target || 'Close';
@@ -1585,7 +1583,10 @@
     If an empty string is returned, the observation is not relayed to the network.
     '''
     if response.text != '':
-        return float(response.json()${generateDrill()})
+        try:
+            return float(response.json().${generateDrill()})
+        except Exception as e:
+            return None
     return None`;
 }
 </script>
