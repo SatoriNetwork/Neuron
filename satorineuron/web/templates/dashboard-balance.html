@@ -38,7 +38,7 @@
                 aria-expanded="false"
                 aria-controls="balancesDetails">
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">
-            {{ ((holdingBalance | default(0)) + (holdingBalanceBase | default(0))) | round(2) }}
+            {{ "%.3f"|format(((holdingBalance | default(0)) + (holdingBalanceBase | default(0))) | round(3)) }}
           </h4>
           <p class="text-sm text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
         </button>
@@ -46,7 +46,7 @@
           <div id="balances" class="text-center mt-2 d-flex" style="justify-content: space-evenly; transition: opacity 0.1s ease-in-out;">
             <a href="https://evr.cryptoscope.io/address/?address={{evrvaultaddressforward}}" target='_blank'>
               <p class="text-xs {% if darkmode %}dark-colors{% endif %}" style="font-weight: 400 !important;margin-bottom:.5rem;line-height: .5rem;">
-                {{ holdingBalance | default(0) }}
+                {{ "%.3f"|format(holdingBalance | default(0) | round(3)) }}
               </p>
               <p class="text-xs {% if darkmode %}dark-colors{% endif %}" style="font-weight: 300 !important;">
                 on Evrmore
@@ -54,7 +54,7 @@
             </a>
             <a href="https://basescan.org/address/{{ethaddressforward}}#tokentxns" target='_blank'>
               <p class="text-xs {% if darkmode %}dark-colors{% endif %}" style="font-weight: 400 !important;margin-bottom:.5rem;line-height: .5rem;">
-                {{ holdingBalanceBase | default(0) }}
+                {{ "%.3f"|format(holdingBalanceBase | default(0) | round(3)) }}
               </p>
               <p class="text-xs {% if darkmode %}dark-colors{% endif %}" style="font-weight: 300 !important;">
                 on Base
