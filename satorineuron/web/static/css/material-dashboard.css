@@ -2590,8 +2590,8 @@ progress {
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5rem;
-  color: #495057;
-  background-color: transparent;
+  color: #acb1b5;
+  background-color: #fff;
   background-clip: padding-box;
   border: 1px solid #d2d6da;
   -webkit-appearance: none;
@@ -2613,7 +2613,7 @@ progress {
 }
 .form-control:focus {
   color: #495057;
-  background-color: transparent;
+  background-color: #acb1b5;
   border-color: transparent;
   outline: 0;
   box-shadow: none;
@@ -6257,7 +6257,7 @@ textarea.form-control-lg {
 }
 
 .popover {
-  --bs-popover-zindex: 1060;
+  --bs-popover-zindex: 100060;
   --bs-popover-max-width: 276px;
   --bs-popover-font-size: 0.75rem;
   --bs-popover-bg: #fff;
