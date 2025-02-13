@@ -2,39 +2,46 @@
 
 
 <!--<footer class="footer py-3 gradient-45deg-xiketic-purple " style="position:fixed;bottom:0;width:inherit;padding-right: 260px; z-index:999; margin-left: -20px;">-->
-<footer class="mobile-footer py-3 fixed-start bg-gradient-dark{% if darkmode %}-reverse dark-version{% endif %}" style="position:fixed;bottom:0;z-index:999;width:-webkit-fill-available;margin-right:0rem;">
+<footer class="mobile-footer py-3 fixed-start bg-gradient-dark{% if darkmode %}-reverse dark-version{% endif %}" style="position:fixed;bottom:0;z-index:999;width:-webkit-fill-available;margin-left: -30px;">
   
 <!-- indent: style="position:fixed;bottom:0;width:inherit;padding-right:300px;z-index:-999;"-->
   <div class="row" style="align-self: center;">
-    <div class="col-xl-2-5 col-sm-2-5 col-xs-2-5" style="padding-right: 0px !important;padding-left: 0px !important;">
+    <div class="col-xl-2 col-sm-2 col-xs-2" style="padding-right: 0px !important;padding-left: 0px !important;">
       <a class="border-0 icon icon-md icon-shape border-radius-xl d-flex align-items-center justify-content-center {{ 'active bg-gradient-primary-reverse' if title=='Dashboard' or title=='Satori' else '' }}" style="margin-left:auto;margin-right:auto;" href="{{ url_for('dashboard') }}" onclick="showWorking();">
         <div class="text-white text-center" style="margin-top:0.25rem;">
           <i class="material-icons text-sm opacity-10" title="Dashboard">dashboard</i>
         </div>
       </a>
     </div>
-    <div class="col-xl-2-5 col-sm-2-5 col-xs-2-5" style="padding-right: 0px !important;padding-left: 0px !important;">
+    <div class="col-xl-2 col-sm-2 col-xs-2" style="padding-right: 0px !important;padding-left: 0px !important;">
       <a class="border-0 icon icon-md icon-shape border-radius-xl d-flex align-items-center justify-content-center {{ 'active bg-gradient-primary-reverse' if title=='Vault' else '' }}" style="margin-left:auto;margin-right:auto;" href="{{ url_for('vault') }}" onclick="showWorking();">
         <div class="text-white text-center" style="margin-top:0.25rem;">
           <i class="material-icons text-sm opacity-10" title="Lock">lock</i>
         </div>
       </a>
     </div>
-    <div class="col-xl-2-5 col-sm-2-5 col-xs-2-5" style="padding-right: 0px !important;padding-left: 0px !important;">
+    <div class="col-xl-2 col-sm-2 col-xs-2" style="padding-right: 0px !important;padding-left: 0px !important;">
+      <a class="border-0 icon icon-md icon-shape border-radius-xl d-flex align-items-center justify-content-center {{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}" style="margin-left:auto;margin-right:auto;" href="{{ url_for('wallet', network='main') }}" onclick="showWorking();">
+        <div class="text-white text-center" style="margin-top:0.25rem;">
+          <i class="material-icons text-sm opacity-10" title="Wallet">wallet</i>
+        </div>
+      </a>
+    </div>
+    <div class="col-xl-2 col-sm-2 col-xs-2" style="padding-right: 0px !important;padding-left: 0px !important;">
       <a class="border-0 icon icon-md icon-shape border-radius-xl d-flex align-items-center justify-content-center {{ 'active bg-gradient-primary-reverse' if title=='Vote' else '' }}" style="margin-left:auto;margin-right:auto;" href="{{ url_for('vote') }}" onclick="showWorking();">
         <div class="text-white text-center" style="margin-top:0.25rem;">
           <i class="material-icons text-sm opacity-10" title="Thumb_up">thumb_up</i>
         </div>
       </a>
     </div>
-    <div class="col-xl-2-5 col-sm-2-5 col-xs-2-5" style="padding-right: 0px !important;padding-left: 0px !important;">
+    <div class="col-xl-2 col-sm-2 col-xs-2" style="padding-right: 0px !important;padding-left: 0px !important;">
       <a class="border-0 icon icon-md icon-shape border-radius-xl d-flex align-items-center justify-content-center {{ 'active bg-gradient-primary-reverse' if title=='Streams' else '' }}" style="margin-left:auto;margin-right:auto;" href="{{ url_for('streams') }}" onclick="showWorking();">
         <div class="text-white text-center" style="margin-top:0.25rem;">
           <i class="material-icons text-sm opacity-10" title="Public">public</i>
         </div>
       </a>
     </div>
-    <div class="col-xl-2-5 col-sm-2-5 col-xs-2-5" style="padding-right: 0px !important;padding-left: 0px !important;">
+    <div class="col-xl-2 col-sm-2 col-xs-2" style="padding-right: 0px !important;padding-left: 0px !important;">
       <a class="border-0 icon icon-md icon-shape border-radius-xl d-flex align-items-center justify-content-center {{ 'active bg-gradient-primary-reverse' if title=='Proposals' else '' }}" style="margin-left:auto;margin-right:auto;" href="{{ url_for('proposals') }}" onclick="showWorking();">
         <div class="text-white text-center" style="margin-top:0.25rem;">
           <i class="material-icons text-sm opacity-10" title="Ballot">ballot</i>

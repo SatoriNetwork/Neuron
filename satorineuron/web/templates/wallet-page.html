@@ -1,6 +1,6 @@
 {% extends "basic.html" %}
 {% block content %}
-  {% if unlocked %}
+  {% if vaultOpened %}
     <div id='balancebr'></div>
     {% include 'wallet-functions.html' %}
     <br id="aliasbr">
@@ -14,7 +14,7 @@
     <br id="metadatabr">
     {% include 'wallet-meta.html' %}
     {% include 'footer-on-front.html' %}
-    {% else %}
+  {% else %}
     {% include 'wallet-lock.html' %}
   {% endif %}
 {% endblock %}
