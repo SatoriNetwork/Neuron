@@ -1147,3 +1147,8 @@ input:checked + .slider:before {
 .hidden {
   display: none;
 }
+
+.padding-left-right-5 {
+  padding-left: 5px;
+  padding-right: 5px;
+}

@@ -1240,17 +1240,10 @@ def dashboard():
             if start.relay is not None else []),
 
             'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'):
-        '''
-        called and given the response each time
-        the endpoint for this data stream is hit.
-        returns the value of the observation
-        as a string, integer or double.
-        if empty string is returned the observation
-        is not relayed to the network.
-        '''
+        ''' extracts data from the response. '''
         if response.text != '':
-            return float(response.json().get('Close', -1.0))
-        return -1.0
+            return float(response.json().get('data', None))
+        return None
         """,
             'placeholderGetHistory': """class GetHistory(object):
         '''
