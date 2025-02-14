@@ -680,7 +680,7 @@
           {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
-          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step1_desc')">Next</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="calculateCadence();calculateOffset();navPopup('step2_metadata', event, 'step1_desc')">Next</button>
         </div>
     </div>
     <!--#endregion -->
@@ -1559,36 +1559,46 @@
 
   function generateHookFromTarget(target = '') {
     /**
-     * Creates a function that drills down into a JSON object according to a path.
+     * This function takes a path like "price[0].usd[1]" and returns a Python-safe
+     * expression like r["price"][0]["usd"][1].
+     *
+     * If something doesn't exist or isn't the correct type (dict vs. list),
+     * an exception may occur — which is caught by try/except in the final code.
      */
-    function replaceLastOccurrence(inputStr, oldSubstring, newSubstring) {
-        const lastIndex = inputStr.lastIndexOf(oldSubstring);
-        if (lastIndex !== -1) {
-            return inputStr.substring(0, lastIndex) + newSubstring + inputStr.substring(lastIndex + oldSubstring.length);
+    function generateDrillExpression(path) {
+      // e.g. "price[0].usd[1]" -> ["price", "[0]", "usd", "[1]"]
+      const parts = path.match(/(\[[^\]]*\]|[^.\[\]]+)/g) || [];
+
+      // Build up something like: r["price"][0]["usd"][1]
+      let expr = 'r';
+      for (const part of parts) {
+        if (part.startsWith('[')) {
+          // e.g. "[0]" remains [0]
+          expr += part;
+        } else {
+          // e.g. "price" -> ["price"]
+          expr += `["${part}"]`;
         }
-        return inputStr;
+      }
+      return expr;
     }
 
-    function generateDrill() {
-        const parts = target.split('.');
-        return replaceLastOccurrence(
-            parts.map(part => `get("${part}", {})`).join('.'));
-    }
+    const drillExpr = generateDrillExpression(target);
 
-    target = target || 'Close';
     return `def postRequestHook(response: 'requests.Response'):
-    '''
-    Called and given the response each time the endpoint for this data stream is hit.
-    Returns the value of the observation as a string, integer, or double.
-    If an empty string is returned, the observation is not relayed to the network.
-    '''
-    if response.text != '':
-        try:
-            return float(response.json().${generateDrill()})
-        except Exception as e:
-            return None
-    return None`;
-}
+      '''
+      Called and given the response each time the endpoint for this data stream is hit.
+      Returns the value of the observation as a string, integer, or double.
+      If an empty string is returned, the observation is not relayed to the network.
+      '''
+      if response.text != '':
+          try:
+              r = response.json()
+              return float(${drillExpr})
+          except Exception:
+              return None
+      return None`;
+  }
 </script>
 <div>
   {% if toEdit %}
