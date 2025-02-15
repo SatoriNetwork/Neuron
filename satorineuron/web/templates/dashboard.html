@@ -5,8 +5,6 @@
       {% include 'dashboard-welcome.html' %}
     {% endif %}
     {% include 'dashboard-top.html' %}
-    <!--<br id='invitebr'>
-    include 'dashboard-invite.html' move into balances next to wallet eventually-->
     <!--br id='rankbr'>
     include 'dashboard-rank.html'-->
     <!--br id='extrasbr'>
@@ -19,13 +17,11 @@
     {% endif %}
     <br id='createbr'>
     {% include 'dashboard-create.html' %}
+    <br id='invitebr'>
+    {% include 'dashboard-invite.html'%}
     {% include 'dashboard-eula.html' %}
     {% include 'footer-on-front.html' %}
   {% else %}
     {% include 'dashboard-lock.html' %}
   {% endif %}
 {% endblock %}
-
-
-
-

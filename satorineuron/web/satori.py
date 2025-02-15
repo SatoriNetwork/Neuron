@@ -97,10 +97,10 @@ while True:
                 'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
+                #'prod': 'https://stage.satorinet.io'}[ENV],
                 # 'prod': 'https://central.satorinet.io'}[ENV],
                 # 'prod': 'http://24.199.113.168'}[ENV], # c
-                #'prod': 'http://137.184.38.160'}[ENV],  # n
+                'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
                 'local': 'https://mundo.satorinet.io',
@@ -1200,7 +1200,7 @@ def dashboard():
         streamOverviews = [stream for stream in start.streamDisplay]
         holdingBalance = start.holdingBalance
         holdingBalanceBase = start.holdingBalanceBase
-        stakeStatus = holdingBalance >= constants.stakeRequired or (
+        stakeStatus = holdingBalance + holdingBalanceBase  >= constants.stakeRequired or (
             start.details.wallet.get('rewardaddress', None) not in [
                 None,
                 start.details.wallet.get('address'),
@@ -1219,6 +1219,7 @@ def dashboard():
             'miningMode': start.miningMode,
             'miningDisplay': 'none',
             'proxyDisplay': 'none',
+            'invitedBy': start.invitedBy,
             'stakeRequired': constants.stakeRequired,
             'streamOverviews': streamOverviews,
             'engineVersion': start.engineVersion,
@@ -1986,6 +1987,15 @@ def removeProxyChild(address: str, id: int):
         return result, 200
     return f'Failed stakeProxyRemove: {result}', 400
 
+@app.route('/invited/by/<address>', methods=['GET'])
+@userInteracted
+@authRequired
+def invitedBy(address: str):
+    success, result = start.server.invitedBy(address)
+    if success:
+        start.setInvitedBy(address)
+        return result, 200
+    return f'Failed invitedBy: {result}', 400
 
 @app.route('/vote', methods=['GET', 'POST'])
 @userInteracted
