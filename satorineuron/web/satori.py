@@ -1758,6 +1758,7 @@ def theVault():
             'wallet': start.vault,
             'walletBalance': start.wallet.balance.amount,
             'offer': start.details.wallet.get('offer', 0),
+            'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
@@ -1777,6 +1778,7 @@ def theVault():
         'stakeRequired': constants.stakeRequired,
         'wallet': start.vault,
         'offer': start.details.wallet.get('offer', 0),
+        'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
         'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
         'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
@@ -1938,6 +1940,14 @@ def proxyParentStatus():
         return result, 200
     return f'Failed stakeProxyChildren: {result}', 400
 
+@app.route('/pool/size/set/<amount>', methods=['GET'])
+@authRequired
+def setPoolSize(amount: float):
+    success, result = start.server.setPoolSize(amount)
+    if success:
+        start.details.wallet['pool_stake_limit'] = amount
+        return result, 200
+    return f'Failed setPoolSize: {result}', 400
 
 @app.route('/pool/worker/reward/set/<percent>', methods=['GET'])
 @authRequired
