@@ -14,6 +14,7 @@ from satorilib.concepts.structs import (
     StreamOverview)
 from satorilib import disk
 from satorilib.wallet import EvrmoreWallet
+from satorilib.wallet.evrmore.identity import EvrmoreIdentity 
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
@@ -133,6 +134,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
         self.pubSubMapping: dict = {}
+        self.identity: EvrmoreIdentity = EvrmoreIdentity(config.walletPath('wallet.yaml'))
         self.data: dict[str, dict[pd.DataFrame, pd.DataFrame]] = {}
         self.streamDisplay: list = []
         self.udpQueue: Queue = Queue()  # TODO: remove
@@ -664,21 +666,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' connect to server, retry if failed '''
 
         async def authenticate() -> bool:
-            response = await self.dataClient.authenticate()
+            response = await self.dataClient.authenticate(islocal='neuron')
             if response.status == DataServerApi.statusSuccess.value:
+                logging.info("Local Neuron successfully connected to Server Ip at :", self.dataServerIp, color="green")
                 return True
             return False
 
         async def initiateServerConnection() -> bool:
             ''' local neuron client authorization '''
-            self.dataClient = DataClient(self.dataServerIp, identity=EvrmoreIdentity(config.walletPath('wallet.yaml')))
-            if await authenticate():
-                response = await self.dataClient.isLocalNeuronClient()
-                if response.status == DataServerApi.statusSuccess.value:
-                    logging.info("Local Neuron successfully connected to Server Ip at :", self.dataServerIp, color="green")
-                    return True
-                # raise Exception(response.senderMsg)
-            return False
+            self.dataClient = DataClient(self.dataServerIp, identity=self.identity)
+            return await authenticate()
         
         waitingPeriod = 10
         
