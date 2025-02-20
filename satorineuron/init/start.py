@@ -723,6 +723,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 pub.streamId.uuid: {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
                 for pub in self.publications
             }
+            ## this must at least run on the local server
+            # add in a new subInfo and pubInfo for our mock data stream using ip address and port of the mock remote neuron server
+
+            ## this must at least run on the remote server
+            # create and run a thread that publishes some fake data `def pubfake():
+            #start.publish(
+            #topic=modckstream.streamId.topic(),
+            #data=123,
+            #observationTime=timestamp,
+            #observationHash=observationHash,
+            #toCentral=True,
+            #isPrediction=False)`
+
             self.pubSubMapping = {
                 sub_uuid: {
                     'publicationUuid': pub_uuid,
