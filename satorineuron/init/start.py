@@ -324,7 +324,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def dataServerFinalize(self):
         await self.sharePubSubInfo()
         await self.populateData()
-        await self.SubscribeToEngineUpdates()
+        await self.subscribeToEngineUpdates()
 
     async def start(self):
         """start the satori engine."""
@@ -778,7 +778,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         matchPubSub()
         await _sendPubSubMapping()
     
-    async def SubscribeToEngineUpdates(self):
+    async def subscribeToEngineUpdates(self):
         ''' local neuron client subscribes to engine predication data '''
 
         for k, v in self.pubSubMapping.items():
@@ -786,10 +786,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 peerHost=self.dataServerIp,
                 uuid=v['publicationUuid'],
                 callback=self.handlePredictionData)
-            logging.info('Subscribed', response.senderMsg, color='green')
+            if response.status == DataServerApi.statusSuccess.value:
+                logging.info('Subscribed', response.senderMsg, color='green')
+            else:
+                logging.warning('Failed to Subscribe: ', response.senderMsg )
+                await asyncio.sleep(10)
+                await self.subscribeToEngineUpdates()
+
     
     async def handlePredictionData(self, subscription: Subscription, message: Message):
-        
+
         def findMatchingStreamUuid(pubUuid) -> str:
             for key in self.pubSubMapping.keys():
                 if pubUuid == self.pubSubMapping[key]['publicationUuid']:
