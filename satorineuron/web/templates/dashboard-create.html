@@ -466,8 +466,8 @@
     {{ newRelayStream.csrf_token }}
     <!-- # region step1  -->
     <div class="form-container bg-gradient-dark" id="step1_desc">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Name & Descriptions</p>
         <div class="form-group">
@@ -685,8 +685,8 @@
     <!--#endregion -->
     <!--#region step2  -->
     <div class="form-container bg-gradient-dark" id="step2_metadata">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">URL & Metadata</p>
         <div class="form-group">
@@ -755,8 +755,8 @@
     <!--#endregion -->
     <!--#region step3  -->
     <div class="form-container bg-gradient-dark" id="step3_extraction">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Extraction</p>
         <div class="form-group">
@@ -782,8 +782,8 @@
     <!--#endregion -->
     <!--#region step4  -->
     <div class="form-container bg-gradient-dark" id="step4_history">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Datastream History</p>
         <div class="form-group">
@@ -878,8 +878,8 @@
     <!--#endregion -->
     <!--#region step5  -->
     <div class="form-container bg-gradient-dark" id="step5_review">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Review before submitting</p>
         <div class="form-group">

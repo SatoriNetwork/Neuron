@@ -1040,6 +1040,27 @@ def editStream(topic=None):
 
     return redirect('/dashboard#CreateDataStream')
 
+@app.route('/clear_stream', methods=['GET'])
+@userInteracted
+@authRequired
+def clearEditStream(topic=None):
+    # name,target,cadence,offset,datatype,description,tags,url,uri,headers,payload,hook
+    import importlib
+    global forms
+    global badForm
+    global toEditStream
+    toEditStream = False
+    forms = importlib.reload(forms)
+    try:
+        badForm = {}
+    except IndexError:
+        # on rare occasions
+        # IndexError: list index out of range
+        # cannot reproduce, maybe it's in the middle of reconnecting?
+        pass
+    # return redirect('/dashboard#:~:text=Create%20Data%20Stream')
+    return 'ok', 200
+
 
 # @app.route('/remove_stream/<source>/<stream>/<target>/', methods=['GET'])
 # def removeStream(source=None, stream=None, target=None):
@@ -1209,6 +1230,7 @@ def dashboard():
         global toEditStream
         temp_toEditStream = toEditStream  # Store current state before resetting
         toEditStream = False
+        newRelayStream = present_stream_form()
         return render_template('dashboard.html', **getResp({
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
@@ -1225,7 +1247,8 @@ def dashboard():
             'engineVersion': start.engineVersion,
             'configOverrides': config.get(),
             'paused': start.paused,
-            'newRelayStream': present_stream_form(),
+            'modifyStream': newRelayStream.name.data != '',
+            'newRelayStream': newRelayStream,
             'toEdit': temp_toEditStream,
             'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
             'quote': getRandomQuote(),
