@@ -671,10 +671,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.engineVersion == 'v2':
             self.aiengine: satoriengine.veda.engine.Engine = (
                 satoriengine.veda.engine.Engine(
-                    streams=self.subscriptions, pubstreams=self.publications)
+                    streams=self.subscriptions,
+                    pubStreams=self.publications)
             )
             self.aiengine.predictionProduced.subscribe(
                 lambda x: handleNewPrediction(x) if x is not None else None)
+
+    def addToEngine(self, stream: Stream, publication: Stream):
+        if self.aiengine is not None:
+            self.aiengine.addStream(stream, publication)
 
     def subConnect(self):
         """establish a random pubsub connection used only for subscribing"""
