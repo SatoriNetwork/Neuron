@@ -98,8 +98,6 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
-                # 'prod': 'https://central.satorinet.io'}[ENV],
-                # 'prod': 'http://24.199.113.168'}[ENV], # c
                 #'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
@@ -1885,14 +1883,13 @@ def stakeForAddress(address: str):
 def lendToAddress(address: str):
     if start.vault is None:
         return '', 200
-    # the network portion should be whatever network I'm on.
-    network = 'main'
     vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
     success, result = start.server.lendToAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
+        vaultAddress=vault.address,
         address=address)
     if success:
         return 'OK', 200
