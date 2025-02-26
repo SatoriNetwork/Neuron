@@ -515,31 +515,32 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     async def populateData(self):
         """ save real and prediction data in neuron """
-        for streamUuid in self.pubSubMapping.keys():
-            realDataDf = None
-            predictionDataDf = None
-            try:
-                realData = await self.dataClient.getLocalStreamData(streamUuid)
-                if realData.status == DataServerApi.statusSuccess.value and isinstance(realData.data, pd.DataFrame):
-                    realDataDf = realData.data
-                else:
-                    raise Exception(realData.senderMsg)
-            except Exception as e:
-                # logging.error(e)
-                pass
-            try:
-                predictionData = await self.dataClient.getLocalStreamData(self.pubSubMapping[streamUuid]['publicationUuid'])
-                if predictionData.status == DataServerApi.statusSuccess.value and isinstance(predictionData.data, pd.DataFrame):
-                    predictionDataDf = predictionData.data
-                else:
-                    raise Exception(predictionData.senderMsg)
-            except Exception as e:
-                # logging.error(e)
-                pass
-            self.data[streamUuid] = {
-                'realData': realDataDf if realDataDf is not None else pd.DataFrame([]),
-                'predictionData': predictionDataDf if predictionDataDf is not None else pd.DataFrame([])
-            }
+        for k in self.pubSubMapping.keys():
+            if k != 'transferProtocol':
+                realDataDf = None
+                predictionDataDf = None
+                try:
+                    realData = await self.dataClient.getLocalStreamData(k)
+                    if realData.status == DataServerApi.statusSuccess.value and isinstance(realData.data, pd.DataFrame):
+                        realDataDf = realData.data
+                    else:
+                        raise Exception(realData.senderMsg)
+                except Exception as e:
+                    # logging.error(e)
+                    pass
+                try:
+                    predictionData = await self.dataClient.getLocalStreamData(self.pubSubMapping[k]['publicationUuid'])
+                    if predictionData.status == DataServerApi.statusSuccess.value and isinstance(predictionData.data, pd.DataFrame):
+                        predictionDataDf = predictionData.data
+                    else:
+                        raise Exception(predictionData.senderMsg)
+                except Exception as e:
+                    # logging.error(e)
+                    pass
+                self.data[k] = {
+                    'realData': realDataDf if realDataDf is not None else pd.DataFrame([]),
+                    'predictionData': predictionDataDf if predictionDataDf is not None else pd.DataFrame([])
+                }
 
     @staticmethod
     def predictionStreams(streams: list[Stream]):
@@ -733,7 +734,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
             subInfo['009bb819-b737-55f5-b4d7-d851316eceae'] = {
                 'subscribers':[],
-                'publishers':['159.65.144.150'],
+                'publishers':['188.166.4.120'],
             }
 
             pubInfo['03efefc1-944c-5b02-8861-936bade65c00'] = {
@@ -741,16 +742,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 'publishers':[],
             }
 
+            # End of testing
 
-            ## this must at least run on the remote server
-            # create and run a thread that publishes some fake data `def pubfake():
-            #start.publish(
-            #topic=modckstream.streamId.topic(),
-            #data=123,
-            #observationTime=timestamp,
-            #observationHash=observationHash,
-            #toCentral=True,
-            #isPrediction=False)`
 
             self.pubSubMapping = {
                 sub_uuid: {
@@ -763,6 +756,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
+            self.pubSubMapping['transferProtocol'] = config.get().get('transfer protocol', 'pubsub')
 
         async def _sendPubSubMapping():
             """ send pub-sub mapping with peer informations to the DataServer """
@@ -782,23 +776,24 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' local neuron client subscribes to engine predication data '''
 
         for k, v in self.pubSubMapping.items():
-            response = await self.dataClient.subscribe(
-                peerHost=self.dataServerIp,
-                uuid=v['publicationUuid'],
-                callback=self.handlePredictionData)
-            if response.status == DataServerApi.statusSuccess.value:
-                logging.info('Subscribed', response.senderMsg, color='green')
-            else:
-                logging.warning('Failed to Subscribe: ', response.senderMsg )
-                await asyncio.sleep(10)
-                await self.subscribeToEngineUpdates()
+            if k!= 'transferProtocol':
+                response = await self.dataClient.subscribe(
+                    peerHost=self.dataServerIp,
+                    uuid=v['publicationUuid'],
+                    callback=self.handlePredictionData)
+                if response.status == DataServerApi.statusSuccess.value:
+                    logging.info('Subscribed', response.senderMsg, color='green')
+                else:
+                    logging.warning('Failed to Subscribe: ', response.senderMsg )
+                    await asyncio.sleep(10)
+                    await self.subscribeToEngineUpdates()
 
     
     async def handlePredictionData(self, subscription: Subscription, message: Message):
 
         def findMatchingStreamUuid(pubUuid) -> str:
             for key in self.pubSubMapping.keys():
-                if pubUuid == self.pubSubMapping[key]['publicationUuid']:
+                if pubUuid == self.pubSubMapping.get(key, {}).get('publicationUuid'):
                     return key
         
         logging.info('Subscribtion Message',message.to_dict(True), color='green')
