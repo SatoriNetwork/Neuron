@@ -672,7 +672,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.aiengine: satoriengine.veda.engine.Engine = (
                 satoriengine.veda.engine.Engine(
                     streams=self.subscriptions,
-                    pubStreams=self.publications)
+                    pubstreams=self.publications)
             )
             self.aiengine.predictionProduced.subscribe(
                 lambda x: handleNewPrediction(x) if x is not None else None)
