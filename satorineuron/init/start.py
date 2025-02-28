@@ -516,7 +516,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def populateData(self):
         """ save real and prediction data in neuron """
         for k in self.pubSubMapping.keys():
-            if k != 'transferProtocol':
+            if k != 'transferProtocolFlag':
                 realDataDf = None
                 predictionDataDf = None
                 try:
@@ -729,18 +729,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             ## this must at least run on the local server
             # add in a new subInfo and pubInfo for our mock data stream using ip address and port of the mock remote neuron server
 
-            subInfo = {}
-            pubInfo = {}
+            # subInfo = {}
+            # pubInfo = {}
 
-            subInfo['009bb819-b737-55f5-b4d7-d851316eceae'] = {
-                'subscribers':[],
-                'publishers':['188.166.4.120'],
-            }
+            # subInfo['009bb819-b737-55f5-b4d7-d851316eceae'] = {
+            #     'subscribers':[],
+            #     'publishers':['188.166.4.120'],
+            # }
 
-            pubInfo['03efefc1-944c-5b02-8861-936bade65c00'] = {
-                'subscribers':[],
-                'publishers':[],
-            }
+            # pubInfo['03efefc1-944c-5b02-8861-936bade65c00'] = {
+            #     'subscribers':[],
+            #     'publishers':[],
+            # }
 
             # End of testing
 
@@ -756,7 +756,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
-            self.pubSubMapping['transferProtocol'] = config.get().get('transfer protocol', 'pubsub')
+            transferProtocolFlag = config.get().get('transfer protocol', 'pubsub') 
+            self.pubSubMapping['transferProtocolFlag'] = self.key if transferProtocolFlag == 'pubsub' else None
 
         async def _sendPubSubMapping():
             """ send pub-sub mapping with peer informations to the DataServer """
@@ -776,7 +777,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' local neuron client subscribes to engine predication data '''
 
         for k, v in self.pubSubMapping.items():
-            if k!= 'transferProtocol':
+            if k!= 'transferProtocolFlag':
                 response = await self.dataClient.subscribe(
                     peerHost=self.dataServerIp,
                     uuid=v['publicationUuid'],
