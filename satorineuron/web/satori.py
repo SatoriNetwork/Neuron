@@ -26,6 +26,7 @@ from werkzeug.utils import secure_filename
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
+from flask_socketio import SocketIO, emit
 from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
 from satorilib.concepts import constants
 from satorilib.wallet.wallet import TransactionFailure
@@ -55,6 +56,7 @@ firstRun = True
 badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
+
 updateTime = 0
 updateQueue = Queue()
 timeout = 1
@@ -65,6 +67,7 @@ CORS(app, origins=[{
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])
+socketio = SocketIO(app)
 
 fail2ban_dir = config.get().get("fail2ban_log", None)
 if fail2ban_dir:
@@ -140,6 +143,19 @@ while True:
         traceback.print_exc()
         logging.error(f'Exception in app startup: {e}', color='red')
         time.sleep(30)
+
+
+###############################################################################
+## Socket Endpoints ###########################################################
+###############################################################################
+# from app import socketio  # Ensure you're using the same instance
+# # Emit to all clients (broadcast=True) or target a specific room/namespace if needed.
+# socketio.emit('update_value', {'value': data}, broadcast=True)
+
+@socketio.on('connect')
+def handle_connect():
+    print("Client connected")
+    emit('update_value', {'value': 'Connected!'})
 
 ###############################################################################
 ## Functions ##################################################################

@@ -21,40 +21,50 @@
   </head>
   {% endblock %}
   <body class="g-sidenav-show {% if darkmode %}bg-gray-900{% else %}bg-gray-200{% endif %}">
-	<div id="working" class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="display: none;">
-		<div class="container-for-center vertical-center" style="padding-left: 0px;">
-		  {% if darkmode %}<img src="{{ url_for('static', filename='img/loading_dark.gif') }}" class="loadingThingy">{% else %}<img src="{{ url_for('static', filename='img/loading_light.gif') }}" class="loadingThingy">{% endif %}
+    <div id="working" class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="display: none;">
+      <div class="container-for-center vertical-center" style="padding-left: 0px;">
+        {% if darkmode %}<img src="{{ url_for('static', filename='img/loading_dark.gif') }}" class="loadingThingy">{% else %}<img src="{{ url_for('static', filename='img/loading_light.gif') }}" class="loadingThingy">{% endif %}
+      </div>
+      <div id="working_messages" class="container-for-center vertical-center" style="padding-left: 0px;position: relative;margin-left: 12%;margin-top: 20%;"><p id="working_message"></p></div>
     </div>
-    <div id="working_messages" class="container-for-center vertical-center" style="padding-left: 0px;position: relative;margin-left: 12%;margin-top: 20%;"><p id="working_message"></p></div>
-	</div>
-  <!--{ % include 'loader.html' %}-->
-  <!--{ % include 'header.html' % }-->
-  {% include 'nav-side.html' %}
-  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-    {% include 'header.html' %}
-    <div class="container-fluid py-4">
-      {% include 'flash.html' %}
-      {% block content %}
-      {% endblock %}
-      <!--{ % include 'footer.html' % }-->
+    <!--{ % include 'loader.html' %}-->
+    <!--{ % include 'header.html' % }-->
+    {% include 'nav-side.html' %}
+    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+      {% include 'header.html' %}
+      <div class="container-fluid py-4">
+        {% include 'flash.html' %}
+        {% block content %}
+        {% endblock %}
+        <!--{ % include 'footer.html' % }-->
 
-    </div>
-    {% include 'footer-nav.html' %}
-  </main>
-  <!--{ % include 'settings.html' % }-->
-  {% include 'scripts.html' %}
-	<script>
-		function showWorking() {
-			document.getElementById("working").style.display = "block";
-      return true;
-		}
-		function hideWorking() {
-			document.getElementById("working").style.display = "none";
-      return true;
-		}
-    function isFocused(element) {
-      return document.activeElement === element;
-    }
-	</script>
+      </div>
+      {% include 'footer-nav.html' %}
+    </main>
+    <!--{ % include 'settings.html' % }-->
+    {% include 'scripts.html' %}
+    <script>
+      function showWorking() {
+        document.getElementById("working").style.display = "block";
+        return true;
+      }
+      function hideWorking() {
+        document.getElementById("working").style.display = "none";
+        return true;
+      }
+      function isFocused(element) {
+        return document.activeElement === element;
+      }
+      /// replaced by socket.io (see scripts.html)
+      //var socket = new WebSocket("ws://yourserver:8765");
+      //socket.onmessage = function(event) {
+      //    var data = JSON.parse(event.data);
+      //    document.getElementById("value").innerText = data.value;
+      //};
+      //socket.onclose = function() {
+      //    console.log("WebSocket disconnected, attempting to reconnect...");
+      //    setTimeout(() => location.reload(), 5000); // Simple reconnect strategy
+      //};
+    </script>
   </body>
 </html>
