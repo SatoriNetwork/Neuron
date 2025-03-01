@@ -26,8 +26,7 @@ def processRelayCsv(start: 'StartupDag', df: pd.DataFrame):
         statuses.append(status)
         # start.workingUpdates.on_next(
         #    f"{data['stream']}{data['target']} - {'success' if status == 200 else msg}")
-        start.workingUpdates.put(
-            f"{data['stream']}{data['target']} - {'success' if status == 200 else msg}")
+        start.addWorkingUpdate(f"{data['stream']}{data['target']} - {'success' if status == 200 else msg}")
     failures = [str(i) for i, s in enumerate(statuses) if s != 200]
     if len(failures) == 0:
         start.checkin()

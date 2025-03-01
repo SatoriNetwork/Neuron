@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union
+from typing import Union, Callable
 import threading
 from queue import Queue
 from reactivex.subject import BehaviorSubject
@@ -39,6 +39,23 @@ class RunMode(Enum):
         # Return the corresponding Enum value
         return mapping.get(runMode, cls.normal)
 
+class UiEndpoint(Enum):
+    connectionStatus = 1
+    modelUpdate = 2
+    workingUpdate = 3
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def name(self):
+        if self == UiEndpoint.connectionStatus:
+            return 'connection-status'
+        if self == UiEndpoint.modelUpdate:
+            return 'model-updates'
+        if self == UiEndpoint.workingUpdate:
+            return 'working-updates'
+        return 'unknown'
 
 class StartupDagStruct(object):
     ''' a DAG of startup tasks. '''
@@ -47,6 +64,7 @@ class StartupDagStruct(object):
         self,
         env: str = None,
         runMode: RunMode = False,
+        sendToUI: Callable = None,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -55,14 +73,13 @@ class StartupDagStruct(object):
     ):
         self.env = env
         self.runMode = None
-        self.workingUpdates: Queue = None
+        sendToUI = sendToUI or (lambda x: None)
         self.chatUpdates: Queue = None
-        self.connectionsStatusQueue: Queue = None
         self.latestConnectionStatus: dict = None
         self.env: str = None
         self.urlServer: str = None
         self.urlMundo: str = None
-        self.urlPubsubs: [str] = None
+        self.urlPubsubs: list[str] = None
         self.urlSynergy: str = None
         self.paused: bool = None
         self.pauseThread: Union[threading.Thread, None] = None
@@ -182,3 +199,9 @@ class StartupDagStruct(object):
 
     def performStakeCheck(self):
         ''' check the stake status '''
+
+    def addWorkingUpdate(self, data: str):
+        ''' tell ui we are working on something '''
+
+    def addModelUpdate(self, data: dict):
+        ''' tell ui about model changes '''

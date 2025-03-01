@@ -38,6 +38,7 @@ from satorineuron import VERSION, MOTTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
+from satorineuron.structs.start import UiEndpoint
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
 import asyncio
@@ -67,7 +68,7 @@ CORS(app, origins=[{
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])
-socketio = SocketIO(app)
+
 
 fail2ban_dir = config.get().get("fail2ban_log", None)
 if fail2ban_dir:
@@ -83,6 +84,21 @@ if fail2ban_dir:
 else:
     fail_log = None
 
+socketio = SocketIO(app)
+
+def sendToUI(
+    event: Union[str, UiEndpoint],
+    data: Union[str, dict],
+    broadcast:bool=True,
+    **kwargs,
+):
+    if not isinstance(data, str):
+        data = (
+            str(data)
+            .replace("'", '"')
+            .replace(': True', ': true')
+            .replace(': False', ': false'))
+    socketio.emit(str(event), data, broadcast=broadcast, **kwargs)
 
 ###############################################################################
 ## Startup ####################################################################
@@ -93,6 +109,7 @@ while True:
         start = asyncio.run(StartupDag.create(
             env=ENV,
             runMode=config.get().get('run mode', os.environ.get('RUNMODE')),
+            sendToUI=sendToUI,
             # TODO: notice the dev mode is the same as prod for now, we should
             #       have separate servers or run locally for dev mode
             urlServer={
@@ -151,11 +168,123 @@ while True:
 # from app import socketio  # Ensure you're using the same instance
 # # Emit to all clients (broadcast=True) or target a specific room/namespace if needed.
 # socketio.emit('update_value', {'value': data}, broadcast=True)
+# # run functions in the background with socketio - typically a loop that emits
+# socketio.start_background_task(send_connection_status)
+
+#@app.route('/connections-status')
+#def connectionsStatus():
+#    def update():
+#        while True:
+#            yield "data: " + str(start.connectionsStatusQueue.get()).replace("'", '"').replace(': True', ': true').replace(': False', ': false') + "\n\n"
+#
+#    return Response(update(), mimetype='text/event-stream')
 
 @socketio.on('connect')
 def handle_connect():
     print("Client connected")
     emit('update_value', {'value': 'Connected!'})
+
+#@app.route('/model-updates')
+#def modelUpdates():
+#    def update():
+#
+#        def on_next(model, x):
+#            global updateQueue
+#            if x is not None:
+#                overview = model.overview()
+#                # logging.debug('Yielding', overview.values, color='yellow')
+#                updateQueue.put(
+#                    "data: " + str(overview).replace("'", '"') + "\n\n")
+#
+#        global updateTime
+#        global updateQueue
+#        listeners = []
+#        import time
+#        thisThreadsTime = time.time()
+#        updateTime = thisThreadsTime
+#        if start.engine is not None:
+#            for model in start.engine.models:
+#                # logging.debug('model', model.dataset.dropna(
+#                # ).iloc[-20:].loc[:, (model.variable.source, model.variable.author, model.variable.stream, model.variable.target)], color='yellow')
+#                listeners.append(
+#                    model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model)))
+#            while True:
+#                data = updateQueue.get()
+#                if thisThreadsTime != updateTime:
+#                    return Response('data: redundantCall\n\n', mimetype='text/event-stream')
+#                yield data
+#        else:
+#            # logging.debug('yeilding once', len(
+#            #     str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
+#            yield "data: " + str(StreamOverviews.demo()).replace("'", '"') + "\n\n"
+#
+#        # part of the new datamanager
+#        # have to co-relate with stream UUID
+#        def whatToDoWithPredictionData(predictionDict: json):
+#            value_dict = json.loads(predictionDict['data'])['value']
+#            date_time = list(value_dict.keys())[0]
+#            value = list(value_dict.values())[0]
+#            print(f"Date time: {date_time}")
+#            print(f"Value: {value}")
+#
+#        start.predictionProduced.subscribe(
+#                lambda x: whatToDoWithPredictionData(x) if x is not None else None)
+#
+#    return Response(update(), mimetype='text/event-stream')
+
+def subscribe_model_updates():
+    def on_next(model, x):
+        if x is not None:
+            overview = model.overview()
+            # Emit the model update event to connected clients.
+            socketio.emit('model_update', overview, broadcast=True)
+
+    if start.engine is not None:
+        for model in start.engine.models:
+            # Subscribe to updates for each model.
+            model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model))
+    else:
+        # For demo purposes, emit a demo overview.
+        socketio.emit('model_update', StreamOverviews.demo(), broadcast=True)
+
+#@app.route('/working_updates')
+#def workingUpdates():
+#    def update():
+#        try:
+#            yield 'data: \n\n'
+#            # messages = []
+#            # listeners = []
+#            # listeners.append(start.workingUpdates.subscribe(
+#            #    lambda x: messages.append(x) if x is not None else None))
+#            while True:
+#                msg = start.workingUpdates.get()
+#                if msg == 'working_updates_end':
+#                    break
+#                yield "data: " + str(msg).replace("'", '"') + "\n\n"
+#                # time.sleep(1)
+#                # if len(messages) > 0:
+#                #    msg = messages.pop(0)
+#                #    if msg == 'working_updates_end':
+#                #        break
+#                #    yield "data: " + str(msg).replace("'", '"') + "\n\n"
+#        except Exception as e:
+#            logging.error('working_updates error:', e, print=True)
+#
+#    # import time
+#    return Response(update(), mimetype='text/event-stream')
+
+def send_working_updates():
+    try:
+        while True:
+            msg = start.workingUpdates.get()
+            if msg == 'working_updates_end':
+                # Optionally, notify clients the updates have ended.
+                socketio.emit('working_update_end', {'msg': msg}, broadcast=True)
+                break
+            socketio.emit('working_update', msg, broadcast=True)
+            socketio.sleep(0.1)
+    except Exception as e:
+        logging.error('working_updates error:', e)
 
 ###############################################################################
 ## Functions ##################################################################
@@ -1438,38 +1567,12 @@ def modelUpdates():
 
     return Response(update(), mimetype='text/event-stream')
 
-
-@app.route('/working_updates')
-def workingUpdates():
-    def update():
-        try:
-            yield 'data: \n\n'
-            # messages = []
-            # listeners = []
-            # listeners.append(start.workingUpdates.subscribe(
-            #    lambda x: messages.append(x) if x is not None else None))
-            while True:
-                msg = start.workingUpdates.get()
-                if msg == 'working_updates_end':
-                    break
-                yield "data: " + str(msg).replace("'", '"') + "\n\n"
-                # time.sleep(1)
-                # if len(messages) > 0:
-                #    msg = messages.pop(0)
-                #    if msg == 'working_updates_end':
-                #        break
-                #    yield "data: " + str(msg).replace("'", '"') + "\n\n"
-        except Exception as e:
-            logging.error('working_updates error:', e, print=True)
-
-    # import time
-    return Response(update(), mimetype='text/event-stream')
-
-
+# this was used with SSE to tell us when to stop listening for updates...
+# not it's not necessary I think.
 @app.route('/working_updates_end')
 def workingUpdatesEnd():
     # start.workingUpdates.on_next('working_updates_end')
-    start.workingUpdates.put('working_updates_end')
+    start.addWorkingUpdate('working_updates_end')
     return 'ok', 200
 
 

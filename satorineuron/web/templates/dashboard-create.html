@@ -34,11 +34,16 @@
                         formData.append('file', file);
                         showWorking();
                         var working_output = document.getElementById("working_message");
-                        var working_update = new EventSource("/working_updates");
-                        working_update.onmessage = function (e) {
-                          console.log(e.data);
-                          working_output.innerHTML = e.data;
-                        };
+                        //var working_update = new EventSource("/working_updates");
+                        //working_update.onmessage = function (e) {
+                        //  console.log(e.data);
+                        //  working_output.innerHTML = e.data;
+                        //};
+                        // Listen for the "working_updates" event from the server
+                        socket.on('working_updates', function(data) {
+                          console.log(data);
+                          working_output.innerHTML = data;
+                        });
                         fetch('/upload_datastream_csv', {
                             method: 'POST',
                             body: formData
@@ -53,7 +58,7 @@
                           }
                           hideWorking();
                           working_update.close();
-                          fetch('/working_updates_end', {method: 'GET'});
+                          //fetch('/working_updates_end', {method: 'GET'});
                         })
                         .catch(error => {
                             console.error('Error:', error);

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Callable
 import os
 import time
 import json
@@ -14,7 +14,7 @@ from satorilib.concepts.structs import (
     StreamOverview)
 from satorilib import disk
 from satorilib.wallet import EvrmoreWallet
-from satorilib.wallet.evrmore.identity import EvrmoreIdentity 
+from satorilib.wallet.evrmore.identity import EvrmoreIdentity
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
@@ -30,7 +30,7 @@ from satorineuron.init.tag import LatestTag, Version
 from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
-from satorineuron.structs.start import RunMode, StartupDagStruct
+from satorineuron.structs.start import RunMode, UiEndpoint, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
 from satorilib.datamanager import DataClient, DataServerApi, Message, Subscription
 from io import StringIO
@@ -38,9 +38,6 @@ from io import StringIO
 def getStart():
     """returns StartupDag singleton"""
     return StartupDag()
-
-
-# engine_start = StartupDag()
 
 
 class SingletonMeta(type):
@@ -57,10 +54,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @classmethod
     async def create(
-        cls, 
+        cls,
         *args,
         env: str = 'dev',
         runMode: str = None,
+        sendToUI: Callable = None,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -72,6 +70,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             *args,
             env=env,
             runMode=runMode,
+            sendToUI=sendToUI,
             urlServer=urlServer,
             urlMundo=urlMundo,
             urlPubsubs=urlPubsubs,
@@ -84,6 +83,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         *args,
         env: str = 'dev',
         runMode: str = None,
+        sendToUI: Callable = None,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -96,17 +96,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.watchForVersionUpdates()
         self.env = env
         self.runMode = RunMode.choose(runMode)
+        sendToUI = sendToUI or (lambda x: None)
         logging.info(f'mode: {self.runMode.name}', print=True)
         self.userInteraction = time.time()
         self.walletVaultManager: WalletVaultManager
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
-        # self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
         # self.chatUpdates: BehaviorSubject = BehaviorSubject(None)
-        self.workingUpdates: Queue = Queue()
         self.chatUpdates: Queue = Queue()
         # dictionary of connection statuses {ConnectionTo: bool}
-        self.connectionsStatusQueue: Queue = Queue()
         self.latestConnectionStatus: dict = {}
         self.urlServer: str = urlServer
         self.urlMundo: str = urlMundo
@@ -183,7 +181,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #        break
         #    time.sleep(60 * 15)
 
-        # TODO: after pubsubmap is provided to the data server, 
+        # TODO: after pubsubmap is provided to the data server,
         #       get the data for each datastream, grab all (optimize later)
         #       subscribe to everything, add the data to our in memory datasets
         #       (that updates the ui)
@@ -400,7 +398,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.latestConnectionStatus = {
             **self.latestConnectionStatus,
             **{connTo.name: status}}
-        self.connectionsStatusQueue.put(self.latestConnectionStatus)
+        self.sendToUI(UiEndpoint.connectionStatus, self.latestConnectionStatus)
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
@@ -655,8 +653,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     pubkey=self.wallet.publicKey + ":publishing",
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
-    
-    
+
+
     @property
     def isConnectedToServer(self):
         if hasattr(self, 'dataClient') and self.dataClient is not None:
@@ -677,9 +675,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             ''' local neuron client authorization '''
             self.dataClient = DataClient(self.dataServerIp, identity=self.identity)
             return await authenticate()
-        
+
         waitingPeriod = 10
-        
+
         while not self.isConnectedToServer:
             try:
                 self.dataServerIp = config.get().get('server ip', '0.0.0.0')
@@ -688,7 +686,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             except Exception as e:
                 # logging.error("Error connecting to server ip in config : ", e)
                 try:
-                    self.dataServerIp = self.server.getPublicIp().text.split()[-1] 
+                    self.dataServerIp = self.server.getPublicIp().text.split()[-1]
                     if await initiateServerConnection():
                         return True
                 except Exception as e:
@@ -704,7 +702,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 await self.dataServerFinalize()
                 #await self.start()
                 # should we manage all our other connections here too?
-                # pubsub 
+                # pubsub
                 # electrumx
 
     async def sharePubSubInfo(self):
@@ -756,7 +754,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
-            transferProtocolFlag = config.get().get('transfer protocol', 'pubsub') 
+            transferProtocolFlag = config.get().get('transfer protocol', 'pubsub')
             self.pubSubMapping['transferProtocolFlag'] = self.key if transferProtocolFlag == 'pubsub' else None
 
         async def _sendPubSubMapping():
@@ -772,7 +770,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
         matchPubSub()
         await _sendPubSubMapping()
-    
+
     async def subscribeToEngineUpdates(self):
         ''' local neuron client subscribes to engine predication data '''
 
@@ -789,14 +787,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     await asyncio.sleep(10)
                     await self.subscribeToEngineUpdates()
 
-    
+
     async def handlePredictionData(self, subscription: Subscription, message: Message):
 
         def findMatchingStreamUuid(pubUuid) -> str:
             for key in self.pubSubMapping.keys():
                 if pubUuid == self.pubSubMapping.get(key, {}).get('publicationUuid'):
                     return key
-        
+
         logging.info('Subscribtion Message',message.to_dict(True), color='green')
         matchedStreamUuid = findMatchingStreamUuid(message.uuid)
         self.data[matchedStreamUuid]['predictionData'] = pd.concat([
@@ -826,6 +824,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relay.run()
         logging.info("started relay engine", color="green")
 
+    def addWorkingUpdate(self, data: str):
+        ''' tell ui we are working on something '''
+        self.sendToUI(UiEndpoint.workingUpdate, data)
+
+    def addModelUpdate(self, data: dict):
+        ''' tell ui about model changes '''
+        self.sendToUI(UiEndpoint.modelUpdate, data)
+
     def populateStreamDisplay(self):
 
         def streamDisplayer(subsription: Stream):
@@ -835,7 +841,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 prediction="",
                 values=[],
                 predictions=[])
-        
+
         self.streamDisplay = [
             streamDisplayer(subscription)
             for subscription in self.subscriptions]

@@ -55,16 +55,20 @@
       function isFocused(element) {
         return document.activeElement === element;
       }
-      /// replaced by socket.io (see scripts.html)
-      //var socket = new WebSocket("ws://yourserver:8765");
-      //socket.onmessage = function(event) {
-      //    var data = JSON.parse(event.data);
-      //    document.getElementById("value").innerText = data.value;
-      //};
-      //socket.onclose = function() {
-      //    console.log("WebSocket disconnected, attempting to reconnect...");
-      //    setTimeout(() => location.reload(), 5000); // Simple reconnect strategy
-      //};
+
+      /// Socket.IO connection ///
+      var socket = io();
+      socket.on('connect', function() {
+        console.log('Socket.IO connected!');
+      });
+      // Define your custom event listeners
+      socket.on('update_value', function(data) {
+        console.log('Socket.IO response!', data.value);
+        //document.getElementById("value").innerText = data.value;
+      });
+      socket.on('disconnect', function() {
+        console.log('Socket.IO disconnected. It will attempt to reconnect automatically.');
+      });
     </script>
   </body>
 </html>
