@@ -573,6 +573,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     stream_display.predictions = [
                         value
                         for value in streamForecast.predictionHistory.value]
+                    self.addModelUpdate(stream_display)
             logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId}', color='blue')
             # self.server.publish( # TODO : fix this for the new datamanager
             #     topic=streamForecast.predictionStreamId.topic(),
@@ -828,7 +829,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' tell ui we are working on something '''
         self.sendToUI(UiEndpoint.workingUpdate, data)
 
-    def addModelUpdate(self, data: dict):
+    def addModelUpdate(self, data: StreamOverview):
         ''' tell ui about model changes '''
         self.sendToUI(UiEndpoint.modelUpdate, data)
 

@@ -181,68 +181,68 @@ def handle_connect():
     print("Client connected")
     emit('update_value', {'value': 'Connected!'})
 
-#@app.route('/model-updates')
-#def modelUpdates():
-#    def update():
+# @app.route('/model-updates')
+# def modelUpdates():
+#     def update():
 #
-#        def on_next(model, x):
-#            global updateQueue
-#            if x is not None:
-#                overview = model.overview()
-#                # logging.debug('Yielding', overview.values, color='yellow')
-#                updateQueue.put(
-#                    "data: " + str(overview).replace("'", '"') + "\n\n")
+#         def on_next(model, x):
+#             global updateQueue
+#             if x is not None:
+#                 overview = model.overview()
+#                 # logging.debug('Yielding', overview.values, color='yellow')
+#                 updateQueue.put(
+#                     "data: " + str(overview).replace("'", '"') + "\n\n")
 #
-#        global updateTime
-#        global updateQueue
-#        listeners = []
-#        import time
-#        thisThreadsTime = time.time()
-#        updateTime = thisThreadsTime
-#        if start.engine is not None:
-#            for model in start.engine.models:
-#                # logging.debug('model', model.dataset.dropna(
-#                # ).iloc[-20:].loc[:, (model.variable.source, model.variable.author, model.variable.stream, model.variable.target)], color='yellow')
-#                listeners.append(
-#                    model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model)))
-#            while True:
-#                data = updateQueue.get()
-#                if thisThreadsTime != updateTime:
-#                    return Response('data: redundantCall\n\n', mimetype='text/event-stream')
-#                yield data
-#        else:
-#            # logging.debug('yeilding once', len(
-#            #     str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
-#            yield "data: " + str(StreamOverviews.demo()).replace("'", '"') + "\n\n"
+#         global updateTime
+#         global updateQueue
+#         listeners = []
+#         import time
+#         thisThreadsTime = time.time()
+#         updateTime = thisThreadsTime
+#         if start.engine is not None:
+#             for model in start.engine.models:
+#                 # logging.debug('model', model.dataset.dropna(
+#                 # ).iloc[-20:].loc[:, (model.variable.source, model.variable.author, model.variable.stream, model.variable.target)], color='yellow')
+#                 listeners.append(
+#                     model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model)))
+#             while True:
+#                 data = updateQueue.get()
+#                 if thisThreadsTime != updateTime:
+#                     return Response('data: redundantCall\n\n', mimetype='text/event-stream')
+#                 yield data
+#         else:
+#             # logging.debug('yeilding once', len(
+#             #     str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
+#             yield "data: " + str(StreamOverviews.demo()).replace("'", '"') + "\n\n"
 #
-#        # part of the new datamanager
-#        # have to co-relate with stream UUID
-#        def whatToDoWithPredictionData(predictionDict: json):
-#            value_dict = json.loads(predictionDict['data'])['value']
-#            date_time = list(value_dict.keys())[0]
-#            value = list(value_dict.values())[0]
-#            print(f"Date time: {date_time}")
-#            print(f"Value: {value}")
+#         # part of the new datamanager
+#         # have to co-relate with stream UUID
+#         def whatToDoWithPredictionData(predictionDict: json):
+#             value_dict = json.loads(predictionDict['data'])['value']
+#             date_time = list(value_dict.keys())[0]
+#             value = list(value_dict.values())[0]
+#             print(f"Date time: {date_time}")
+#             print(f"Value: {value}")
 #
-#        start.predictionProduced.subscribe(
-#                lambda x: whatToDoWithPredictionData(x) if x is not None else None)
+#         start.predictionProduced.subscribe(
+#                 lambda x: whatToDoWithPredictionData(x) if x is not None else None)
 #
-#    return Response(update(), mimetype='text/event-stream')
+#     return Response(update(), mimetype='text/event-stream')
 
-def subscribe_model_updates():
-    def on_next(model, x):
-        if x is not None:
-            overview = model.overview()
-            # Emit the model update event to connected clients.
-            socketio.emit('model-update', overview, broadcast=True)
-
-    if start.engine is not None:
-        for model in start.engine.models:
-            # Subscribe to updates for each model.
-            model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model))
-    else:
-        # For demo purposes, emit a demo overview.
-        socketio.emit('model-update', StreamOverviews.demo(), broadcast=True)
+# def subscribe_model_updates():
+#     def on_next(model, x):
+#         if x is not None:
+#             overview = model.overview()
+#             # Emit the model update event to connected clients.
+#             socketio.emit('model-update', overview, broadcast=True)
+#
+#     if start.engine is not None:
+#         for model in start.engine.models:
+#             # Subscribe to updates for each model.
+#             model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model))
+#     else:
+#         # For demo purposes, emit a demo overview.
+#         socketio.emit('model-update', StreamOverviews.demo(), broadcast=True)
 
 ###############################################################################
 ## Functions ##################################################################
