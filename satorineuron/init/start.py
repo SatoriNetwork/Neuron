@@ -320,6 +320,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return network.lower().strip() in ("testnet", "test", "ravencoin", "rvn")
 
     async def dataServerFinalize(self):
+        transferProtocol = await self.determineTransferProtocol()
+        # TODO: do something with this transfer protocol:
+        #       should we support just p2p-limited or (p2p-limited and pubsub)?
         await self.sharePubSubInfo()
         await self.populateData()
         await self.subscribeToEngineUpdates()
@@ -705,6 +708,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 # should we manage all our other connections here too?
                 # pubsub
                 # electrumx
+
+    async def determineTransferProtocol(self) -> str:
+        return config.get().get(
+            'transfer protocol',
+            'pubsub' if self.server.loopbackCheck() else 'p2p')
+
 
     async def sharePubSubInfo(self):
         ''' set Pub-Sub mapping in the authorized server '''
