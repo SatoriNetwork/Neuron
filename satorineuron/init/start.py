@@ -517,7 +517,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def populateData(self):
         """ save real and prediction data in neuron """
         for k in self.pubSubMapping.keys():
-            if k != 'transferProtocolFlag':
+            if k != 'transferProtocol':
                 realDataDf = None
                 predictionDataDf = None
                 try:
@@ -681,7 +681,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return await authenticate()
 
         waitingPeriod = 10
-
         while not self.isConnectedToServer:
             try:
                 self.dataServerIp = config.get().get('server ip', '0.0.0.0')
@@ -696,6 +695,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 except Exception as e:
                     logging.warning(f'Failed to find a valid Server Ip, retrying in {waitingPeriod}')
                     await asyncio.sleep(waitingPeriod)
+        #return False?
 
     async def stayConnectedForever(self):
         ''' alternative to await asyncio.Event().wait() '''
@@ -710,6 +710,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 # electrumx
 
     async def determineTransferProtocol(self) -> str:
+        '''
+        determine the transfer protocol to be used for data transfer
+        default: p2p
+        p2p - use the data server and data clients
+        p2p-proactive
+            - use the data server and data clients.
+            - connect to my subscribers, send them the data streams they want.
+                - need endpoints to know my subscribers...
+                - sync historic datasets?
+        pubsub
+            - use the pubsub connection to subscribe to data streams.
+            - does not include pub
+        '''
         return config.get().get(
             'transfer protocol',
             'pubsub' if self.server.loopbackCheck() else 'p2p')
@@ -764,8 +777,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
-            transferProtocolFlag = config.get().get('transfer protocol', 'pubsub')
-            self.pubSubMapping['transferProtocolFlag'] = self.key if transferProtocolFlag == 'pubsub' else None
+            transferProtocol = self.determineTransferProtocol()
+            self.pubSubMapping['transferProtocol'] = transferProtocol
+            if transferProtocol == 'pubsub':
+                self.pubSubMapping['transferProtocolPayload'] = self.key
+            elif transferProtocol == 'p2p-proactive':
+                success, mySubscribers = self.server.getSubscribers()
+                if success:
+                    self.pubSubMapping['transferProtocolPayload'] = mySubscribers #list of dictionaries, should be string?
+                else:
+                    self.pubSubMapping['transferProtocolPayload'] = []
+            else:
+                self.pubSubMapping['transferProtocolPayload'] = None
 
         async def _sendPubSubMapping():
             """ send pub-sub mapping with peer informations to the DataServer """
@@ -785,7 +808,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' local neuron client subscribes to engine predication data '''
 
         for k, v in self.pubSubMapping.items():
-            if k!= 'transferProtocolFlag':
+            if k!= 'transferProtocol':
                 response = await self.dataClient.subscribe(
                     peerHost=self.dataServerIp,
                     uuid=v['publicationUuid'],
