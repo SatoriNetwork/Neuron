@@ -19,18 +19,20 @@ def check_ipv6_capability():
         socket.has_ipv6 = False
         socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         results["socket_support"] = True
-        print("Socket IPv6 support: Available")
+        # print("Socket IPv6 support: Available")
     except (socket.error, AttributeError):
-        print("Socket IPv6 support: Not available")
+        pass
+        # print("Socket IPv6 support: Not available")
 
     try:
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         s.connect(("::1", 0))
         s.close()
         results["loopback_available"] = True
-        print("IPv6 loopback: Available")
+        # print("IPv6 loopback: Available")
     except (socket.error, OSError):
-        print("IPv6 loopback: Not available")
+        pass
+        # print("IPv6 loopback: Not available")
     
     system = platform.system().lower()
     
@@ -39,24 +41,26 @@ def check_ipv6_capability():
             output = subprocess.check_output(["ip", "-6", "addr"], 
                                             stderr=subprocess.STDOUT,
                                             universal_newlines=True)
-            if "inet6" in output:
-                print("IPv6 addresses configured: Yes")
-            else:
-                print("IPv6 addresses configured: No")
+            # if "inet6" in output:
+            #     print("IPv6 addresses configured: Yes")
+            # else:
+            #     print("IPv6 addresses configured: No")
         except (subprocess.SubprocessError, FileNotFoundError):
-            print("Couldn't check IPv6 configuration via 'ip' command")
+            pass
+            # print("Couldn't check IPv6 configuration via 'ip' command")
     
     elif system == "windows":
         try:
             output = subprocess.check_output(["ipconfig"], 
                                             stderr=subprocess.STDOUT,
                                             universal_newlines=True)
-            if "IPv6 Address" in output:
-                print("IPv6 addresses configured: Yes")
-            else:
-                print("IPv6 addresses configured: No")
+            # if "IPv6 Address" in output:
+            #     print("IPv6 addresses configured: Yes")
+            # else:
+            #     print("IPv6 addresses configured: No")
         except subprocess.SubprocessError:
-            print("Couldn't check IPv6 configuration via 'ipconfig' command")
+            pass
+            # print("Couldn't check IPv6 configuration via 'ipconfig' command")
     
     try:
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
@@ -64,14 +68,16 @@ def check_ipv6_capability():
         s.connect(("2001:4860:4860::8888", 53))
         s.close()
         results["external_connectivity"] = True
-        print("External IPv6 connectivity: Available")
+        # print("External IPv6 connectivity: Available")
     except (socket.error, OSError):
-        print("External IPv6 connectivity: Not available")
+        pass
+        # print("External IPv6 connectivity: Not available")
     
     return results
 
 async def runServerForever():
     ipv6 = False
+    # print("Checking IPv6 capability")
     results = check_ipv6_capability()
     if results["socket_support"] and results["loopback_available"]:
         ipv6 = True
