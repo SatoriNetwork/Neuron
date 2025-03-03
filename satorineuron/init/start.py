@@ -717,7 +717,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         p2p-proactive
             - use the data server and data clients.
             - connect to my subscribers, send them the data streams they want.
-                - need endpoints to know my subscribers...
                 - sync historic datasets?
         pubsub
             - use the pubsub connection to subscribe to data streams.
@@ -725,7 +724,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         '''
         return config.get().get(
             'transfer protocol',
-            'pubsub' if self.server.loopbackCheck() else 'p2p')
+            'p2p' if self.server.loopbackCheck() else 'p2p-proactive')
 
 
     async def sharePubSubInfo(self):
