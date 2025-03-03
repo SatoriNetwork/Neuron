@@ -724,7 +724,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         '''
         return config.get().get(
             'transfer protocol',
-            'p2p' if self.server.loopbackCheck() else 'p2p-proactive')
+            'p2p' if self.server.loopbackCheck() else 'p2p-proactive') # TODO: is self.server.loopbackCheck() an async function?  
+                                                                        # only then should this function be async
 
 
     async def sharePubSubInfo(self):
@@ -776,15 +777,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
-            transferProtocol = self.determineTransferProtocol()
+            transferProtocol = self.determineTransferProtocol() # TODO if async use await
             self.pubSubMapping['transferProtocol'] = transferProtocol
             if transferProtocol == 'pubsub':
                 self.pubSubMapping['transferProtocolPayload'] = self.key
             elif transferProtocol == 'p2p-proactive':
                 success, mySubscribers = self.server.getSubscribers()
+                subscriberIps = [ subDict.get('ip') for subDict in mySubscribers ]
                 if success:
-                    self.pubSubMapping['transferProtocolPayload'] = mySubscribers #list of dictionaries, should be string?
+                    self.pubSubMapping['transferProtocolPayload'] = subscriberIps 
                 else:
+                    logging.warning("Subscriber information not available")
                     self.pubSubMapping['transferProtocolPayload'] = []
             else:
                 self.pubSubMapping['transferProtocolPayload'] = None
