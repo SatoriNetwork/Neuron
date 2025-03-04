@@ -155,10 +155,10 @@
                         const minuteCadenceInput = document.getElementById('minuteCadence');
                         const secondCadenceInput = document.getElementById('secondCadence');
                         var seconds = (dayCadenceInput.value*24*60*60) + (hourCadenceInput.value*60*60) + (minuteCadenceInput.value*60) + (secondCadenceInput.value*1)
-                        if (seconds >= 60) {
+                        if (seconds >= 60*10) {
                           document.getElementById('cadence').value = seconds;
                         } else {
-                          document.getElementById('cadence').value = 60;
+                          document.getElementById('cadence').value = 60*10;
                         }
                       }
                       function showCadence() {
@@ -478,7 +478,7 @@
 		/// so we're using js to validate the required fields manually:
 		return (
 			document.getElementById("name").value != "" &&
-			document.getElementById("cadence").value >= 60 &&
+			document.getElementById("cadence").value >= 60*10 &&
 			document.getElementById("url").value.startsWith("http") &&
       (document.getElementById("offset").value== '' || document.getElementById("offset").value < 86400)
       // don't require uri, if blank it'll automatically populate from url
