@@ -325,6 +325,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #       should we support just p2p-limited or (p2p-limited and pubsub)?
         await self.sharePubSubInfo()
         await self.populateData()
+        await self.subscribeToRawData()
         await self.subscribeToEngineUpdates()
 
     async def start(self):
@@ -804,6 +805,22 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         matchPubSub()
         await _sendPubSubMapping()
 
+    async def subscribeToRawData(self):
+        ''' local neuron client subscribes to engine predication data '''
+
+        for k in self.pubSubMapping.items():
+            if k!= 'transferProtocol' and k!= 'transferProtocolPayload':
+                response = await self.dataClient.subscribe(
+                    peerHost=self.dataServerIp,
+                    uuid=k,
+                    callback=self.handleRawData)
+                if response.status == DataServerApi.statusSuccess.value:
+                    logging.debug('Subscribed to Raw Data', response.senderMsg, color='green')
+                else:
+                    logging.warning('Failed to Subscribe: ', response.senderMsg )
+                    # await asyncio.sleep(10)
+                    # await self.subscribeToRawData()
+
     async def subscribeToEngineUpdates(self):
         ''' local neuron client subscribes to engine predication data '''
 
@@ -814,12 +831,25 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     uuid=v['publicationUuid'],
                     callback=self.handlePredictionData)
                 if response.status == DataServerApi.statusSuccess.value:
-                    logging.info('Subscribed', response.senderMsg, color='green')
+                    logging.debug('Subscribed to Prediction Data', response.senderMsg, color='green')
                 else:
                     logging.warning('Failed to Subscribe: ', response.senderMsg )
-                    await asyncio.sleep(10)
-                    await self.subscribeToEngineUpdates()
+                    # await asyncio.sleep(10)
+                    # await self.subscribeToEngineUpdates()
 
+    async def handleRawData(self, subscription: Subscription, message: Message):
+
+        def findMatchingStreamUuid(subUuid) -> str:
+            for key in self.pubSubMapping.keys():
+                if subUuid == self.pubSubMapping.get(key):
+                    return key
+
+        logging.info('Raw Data Subscribtion Message',message.to_dict(True), color='green')
+        matchedStreamUuid = findMatchingStreamUuid(message.uuid)
+        self.data[matchedStreamUuid]['realData'] = pd.concat([
+            self.data[matchedStreamUuid]['realData'],
+            message.data
+        ])
 
     async def handlePredictionData(self, subscription: Subscription, message: Message):
 
@@ -828,13 +858,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if pubUuid == self.pubSubMapping.get(key, {}).get('publicationUuid'):
                     return key
 
-        logging.info('Subscribtion Message',message.to_dict(True), color='green')
+        logging.info('Prediction Data Subscribtion Message',message.to_dict(True), color='green')
         matchedStreamUuid = findMatchingStreamUuid(message.uuid)
         self.data[matchedStreamUuid]['predictionData'] = pd.concat([
             self.data[matchedStreamUuid]['predictionData'],
             message.data
         ])
-
 
     def startRelay(self):
         def append(streams: list[Stream]):
