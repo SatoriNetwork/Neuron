@@ -151,6 +151,7 @@ class RawStreamRelayEngine(Cached):
                 raise Exception(response.senderMsg)
         except Exception as e:
             logging.error('Unable to set data: ', e)
+        # if our ports are closed we also sent to ones
         start.publish(
             topic=stream.streamId.topic(),
             data=data,
