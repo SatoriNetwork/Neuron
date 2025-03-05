@@ -81,12 +81,14 @@ async def runServerForever():
     results = check_ipv6_capability()
     if results["socket_support"] and results["loopback_available"]:
         ipv6 = True
-
+    
     if ipv6:
         serverIpv6 = DataServer('::', 24602, EvrmoreIdentity(config.walletPath('wallet.yaml')))
+        config.add(data={'server ip': '::'})
         await serverIpv6.startServer()
     else:
         serverIpv4 = DataServer('0.0.0.0', 24602, EvrmoreIdentity(config.walletPath('wallet.yaml')))
+        config.add(data={'server ip': '0.0.0.0'})
         await serverIpv4.startServer()
 
     await asyncio.Future()  

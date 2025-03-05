@@ -320,7 +320,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return network.lower().strip() in ("testnet", "test", "ravencoin", "rvn")
 
     async def dataServerFinalize(self):
-        transferProtocol = self.determineTransferProtocol()
+        # transferProtocol = self.determineTransferProtocol()
         # TODO: do something with this transfer protocol:
         #       should we support just p2p-limited or (p2p-limited and pubsub)?
         await self.sharePubSubInfo()
@@ -710,7 +710,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 # pubsub
                 # electrumx
 
-    def determineTransferProtocol(self) -> str:
+    def determineTransferProtocol(self, ipAddr: str, port: int = 24602) -> str:
         '''
         determine the transfer protocol to be used for data transfer
         default: p2p
@@ -725,46 +725,33 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         '''
         return config.get().get(
             'transfer protocol',
-            'p2p' if self.server.loopbackCheck() else 'p2p-proactive') # TODO: we have to pass in our IP address
+            'p2p' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive') # TODO: we have to pass in our IP address
 
 
     async def sharePubSubInfo(self):
         ''' set Pub-Sub mapping in the authorized server '''
-
         def matchPubSub():
             ''' matchs related pub/sub stream '''
             streamPairs = StreamPairs(
                 self.subscriptions,
                 StartupDag.predictionStreams(self.publications))
             self.subscriptions, self.publications = streamPairs.get_matched_pairs()
+            subList = [sub.streamId.uuid for sub in self.subscriptions]
+            pubList = [pub.streamId.uuid for pub in self.publications]
+            _, fellowSubscribers = self.server.getStreamsSubscribers(subList)
+            success, mySubscribers = self.server.getStreamsSubscribers(pubList)
+            _, remotePublishers = self.server.getStreamsPublishers(subList)
+            _, meAsPublisher = self.server.getStreamsPublishers(pubList)
             subInfo = {
-                sub.streamId.uuid: {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
-                for sub in self.subscriptions
+                uuid: {'subscribers': fellowSubscribers[uuid] if uuid in fellowSubscribers else [], 
+                       'publishers': remotePublishers[uuid] if uuid in remotePublishers else []}
+                for uuid in subList
             }
             pubInfo = {
-                pub.streamId.uuid: {'subscribers':['6.9.6.9', '69.96'], 'publishers':['420.123', '123.23']}
-                for pub in self.publications
+                uuid: {'subscribers': mySubscribers[uuid] if uuid in mySubscribers else [], 
+                       'publishers': meAsPublisher[uuid] if uuid in meAsPublisher else []}
+                for uuid in pubList
             }
-
-            # Below for testing Purposes
-            ## this must at least run on the local server
-            # add in a new subInfo and pubInfo for our mock data stream using ip address and port of the mock remote neuron server
-
-            # subInfo = {}
-            # pubInfo = {}
-
-            # subInfo['009bb819-b737-55f5-b4d7-d851316eceae'] = {
-            #     'subscribers':[],
-            #     'publishers':['188.166.4.120'],
-            # }
-
-            # pubInfo['03efefc1-944c-5b02-8861-936bade65c00'] = {
-            #     'subscribers':[],
-            #     'publishers':[],
-            # }
-
-            # End of testing
-
 
             self.pubSubMapping = {
                 sub_uuid: {
@@ -772,22 +759,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     'supportiveUuid':[],
                     'dataStreamSubscribers': subInfo[sub_uuid]['subscribers'],
                     'dataStreamPublishers': subInfo[sub_uuid]['publishers'],
-                    'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'],
+                    'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'], # TODO: minus the rawdatastream out
                     'predictiveStreamPublishers': pubInfo[pub_uuid]['publishers']
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
-            transferProtocol = self.determineTransferProtocol() 
+            transferProtocol = self.determineTransferProtocol() # TODO: get my IP
             self.pubSubMapping['transferProtocol'] = transferProtocol
             if transferProtocol == 'pubsub':
                 self.pubSubMapping['transferProtocolPayload'] = self.key
             elif transferProtocol == 'p2p-proactive':
-                success, mySubscribers = self.server.getSubscribers()
                 if success:
-                    self.pubSubMapping['transferProtocolPayload'] = [ subDict.get('ip') for subDict in mySubscribers ] 
+                    self.pubSubMapping['transferProtocolPayload'] = mySubscribers
                 else:
-                    logging.warning("Subscriber information not available")
-                    self.pubSubMapping['transferProtocolPayload'] = []
+                    self.pubSubMapping['transferProtocolPayload'] = {}
             else:
                 self.pubSubMapping['transferProtocolPayload'] = None
 
