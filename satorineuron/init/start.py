@@ -808,7 +808,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def subscribeToRawData(self):
         ''' local neuron client subscribes to engine predication data '''
 
-        for k in self.pubSubMapping.items():
+        for k in self.pubSubMapping.keys():
             if k!= 'transferProtocol' and k!= 'transferProtocolPayload':
                 response = await self.dataClient.subscribe(
                     peerHost=self.dataServerIp,
