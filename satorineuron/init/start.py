@@ -458,6 +458,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60 * 60)
         self.ranOnce = True
         self.walletVaultManager.setupWalletAndVault()
+        #self.walletVaultManager.setupWalletAndVaultIdentities()
         self.setMiningMode()
         self.setEngineVersion()
         self.createRelayValidation()

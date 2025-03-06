@@ -9,7 +9,7 @@ from satorilib.wallet import EvrmoreWallet
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.common.structs import ConnectionTo
-
+# from satorilib.wallet.evrmore.identity import EvrmoreIdentity
 
 class WalletVaultManager():
     ''' Wallets Manager '''
@@ -166,6 +166,41 @@ class WalletVaultManager():
                 f'failed to open Vault: {str(e)}', color='red')
             raise e
 
+    #def _initializeWalletIdentity(self, force: bool = False) -> EvrmoreWallet:
+    #    if not force and self._wallet is not None:
+    #        return self._wallet
+    #    self._wallet = EvrmoreIdentity(config.walletPath('wallet.yaml'))
+    #    logging.info('initialized wallet', color='green')
+    #    return self._wallet
+    #
+    #def _initializeVaultIdentity(
+    #    self,
+    #    password: Union[str, None] = None,
+    #    create: bool = False,
+    #    force: bool = False,
+    #) -> Union[EvrmoreWallet, None]:
+    #    vaultPath = config.walletPath('vault.yaml')
+    #    if not os.path.exists(vaultPath) and not create:
+    #        return None
+    #    try:
+    #        if not force and isinstance(self._vault, EvrmoreWallet):
+    #            if (
+    #                self._vault.password is None
+    #                and isinstance(password, str)
+    #                and len(password) > 0
+    #            ):
+    #                self._vault.open(password)
+    #                return self._vault
+    #            elif password is None or self._vault.password == password:
+    #                return self._vault
+    #        self._vault = EvrmoreIdentity(vaultPath, password=password)
+    #        logging.info('initialized vault', color='green')
+    #        return self._vault
+    #    except Exception as e:
+    #        logging.error(
+    #            f'failed to open Vault: {str(e)}', color='red')
+    #        raise e
+
     def setupWalletAndVault(self, force: bool = False):
         if not self.electrumxCheck():
             self.createElectrumxConnection()
@@ -175,6 +210,13 @@ class WalletVaultManager():
             create=False,
             force=force)
         return self.setupSubscriptions()
+
+    #def setupWalletAndVaultIdentities(self, force: bool = False):
+    #    self._initializeWalletIdentity(force=force)
+    #    self._initializeVaultIdentity(
+    #        password=None,
+    #        create=False,
+    #        force=force)
 
     def getWallet(self, *args, **kwargs) -> EvrmoreWallet:
         if isinstance(self._wallet, EvrmoreWallet):
