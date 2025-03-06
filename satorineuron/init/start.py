@@ -726,7 +726,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         '''
         return config.get().get(
             'transfer protocol',
-            'p2p' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive') # TODO: we have to pass in our IP address
+            'p2p' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive')
 
 
     async def sharePubSubInfo(self):
@@ -744,12 +744,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             _, remotePublishers = self.server.getStreamsPublishers(subList)
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
             subInfo = {
-                uuid: {'subscribers': fellowSubscribers[uuid] if uuid in fellowSubscribers else [],
+                uuid: {'subscribers': fellowSubscribers[uuid] if uuid in fellowSubscribers else [], 
                        'publishers': remotePublishers[uuid] if uuid in remotePublishers else []}
                 for uuid in subList
             }
             pubInfo = {
-                uuid: {'subscribers': mySubscribers[uuid] if uuid in mySubscribers else [],
+                uuid: {'subscribers': mySubscribers[uuid] if uuid in mySubscribers else [], 
                        'publishers': meAsPublisher[uuid] if uuid in meAsPublisher else []}
                 for uuid in pubList
             }
@@ -760,12 +760,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     'supportiveUuid':[],
                     'dataStreamSubscribers': subInfo[sub_uuid]['subscribers'],
                     'dataStreamPublishers': subInfo[sub_uuid]['publishers'],
-                    'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'], # TODO: minus the rawdatastream out
+                    'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'],
                     'predictiveStreamPublishers': pubInfo[pub_uuid]['publishers']
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
-            transferProtocol = self.determineTransferProtocol() # TODO: get my IP
+            transferProtocol = self.determineTransferProtocol(next(iter(meAsPublisher.values()))[0], self.dataServerPort) 
             self.pubSubMapping['transferProtocol'] = transferProtocol
             if transferProtocol == 'pubsub':
                 self.pubSubMapping['transferProtocolPayload'] = self.key

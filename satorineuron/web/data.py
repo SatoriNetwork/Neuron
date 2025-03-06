@@ -82,7 +82,7 @@ async def runServerForever():
     if results["socket_support"] and results["loopback_available"]:
         ipv6 = True
 
-    serverPort = int(config.get().get('server port', 24602))
+    serverPort = int(config.get().get('server port', 24600))
     if ipv6:
         serverIpv6 = DataServer('::', serverPort, EvrmoreIdentity(config.walletPath('wallet.yaml')))
         config.add(data={'server ip': '::'})
