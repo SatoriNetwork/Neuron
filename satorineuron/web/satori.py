@@ -88,7 +88,7 @@ while True:
     try:
         start = StartupDag(
             env=ENV,
-            runMode='worker',#config.get().get('run mode', os.environ.get('RUNMODE')),
+            runMode=config.get().get('run mode', os.environ.get('RUNMODE')),
             # TODO: notice the dev mode is the same as prod for now, we should
             #       have separate servers or run locally for dev mode
             urlServer={
@@ -97,8 +97,8 @@ while True:
                 'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                #'prod': 'https://stage.satorinet.io'}[ENV],
-                'prod': 'http://137.184.38.160'}[ENV],  # n
+                'prod': 'https://stage.satorinet.io'}[ENV],
+                #'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
                 'local': 'https://mundo.satorinet.io',
