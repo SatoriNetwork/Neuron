@@ -122,6 +122,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.dataServerIp: str =  ''
+        self.dataServerPort: Union[int, None] =  None
         self.dataClient: Union[DataClient, None] = None
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
@@ -678,13 +679,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
         async def initiateServerConnection() -> bool:
             ''' local neuron client authorization '''
-            self.dataClient = DataClient(self.dataServerIp, identity=self.identity)
+            self.dataClient = DataClient(self.dataServerIp, self.dataServerPort, identity=self.identity)
             return await authenticate()
 
         waitingPeriod = 10
         while not self.isConnectedToServer:
             try:
                 self.dataServerIp = config.get().get('server ip', '0.0.0.0')
+                self.dataServerPort = int(config.get().get('server port', 24602))
                 if await initiateServerConnection():
                     return True
             except Exception as e:
