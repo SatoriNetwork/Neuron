@@ -381,22 +381,21 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def startWorker(self):
         """start the satori engine."""
         logging.info("running in worker mode", color="blue")
+        await self.connectToDataServer()
+        asyncio.create_task(self.stayConnectedForever())
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
-        self.setEngineVersion()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
         self.setRewardAddress()
-        self.populateData()
-        # self.startSynergyEngine()
         self.subConnect()
         self.pubsConnect()
+        await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
         if self.isDebug:
             return
         self.startRelay()
-        #self.buildEngine()
-        time.sleep(60 * 60 * 24)
+        await asyncio.Event().wait() # probably place this at the end of satori.py?
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
