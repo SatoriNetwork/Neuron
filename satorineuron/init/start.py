@@ -95,7 +95,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # TODO: test and turn on with new installer
         # self.watchForVersionUpdates()
         self.env = env
-        self.runMode = RunMode.choose(runMode)
+        self.runMode = RunMode.choose(runMode or config.get().get('mode', None))
         self.sendToUI = sendToUI or (lambda x: None)
         logging.info(f'mode: {self.runMode.name}', print=True)
         self.userInteraction = time.time()
@@ -744,12 +744,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             _, remotePublishers = self.server.getStreamsPublishers(subList)
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
             subInfo = {
-                uuid: {'subscribers': fellowSubscribers[uuid] if uuid in fellowSubscribers else [], 
+                uuid: {'subscribers': fellowSubscribers[uuid] if uuid in fellowSubscribers else [],
                        'publishers': remotePublishers[uuid] if uuid in remotePublishers else []}
                 for uuid in subList
             }
             pubInfo = {
-                uuid: {'subscribers': mySubscribers[uuid] if uuid in mySubscribers else [], 
+                uuid: {'subscribers': mySubscribers[uuid] if uuid in mySubscribers else [],
                        'publishers': meAsPublisher[uuid] if uuid in meAsPublisher else []}
                 for uuid in pubList
             }
@@ -765,7 +765,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
-            transferProtocol = self.determineTransferProtocol(next(iter(meAsPublisher.values()))[0], self.dataServerPort) 
+            transferProtocol = self.determineTransferProtocol(next(iter(meAsPublisher.values()))[0], self.dataServerPort)
             self.pubSubMapping['transferProtocol'] = transferProtocol
             if transferProtocol == 'pubsub':
                 self.pubSubMapping['transferProtocolPayload'] = self.key
