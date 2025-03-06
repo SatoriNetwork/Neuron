@@ -94,7 +94,7 @@ def sendToUI(
             .replace("'", '"')
             .replace(': True', ': true')
             .replace(': False', ': false'))
-    socketio.emit(str(event), data, broadcast=broadcast, **kwargs)
+    socketio.emit(str(event), data, **kwargs)
 
 ###############################################################################
 ## Startup ####################################################################
