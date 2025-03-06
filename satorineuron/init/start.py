@@ -96,7 +96,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.watchForVersionUpdates()
         self.env = env
         self.runMode = RunMode.choose(runMode)
-        sendToUI = sendToUI or (lambda x: None)
+        self.sendToUI = sendToUI or (lambda x: None)
         logging.info(f'mode: {self.runMode.name}', print=True)
         self.userInteraction = time.time()
         self.walletVaultManager: WalletVaultManager
@@ -745,12 +745,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             _, remotePublishers = self.server.getStreamsPublishers(subList)
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
             subInfo = {
-                uuid: {'subscribers': fellowSubscribers[uuid] if uuid in fellowSubscribers else [], 
+                uuid: {'subscribers': fellowSubscribers[uuid] if uuid in fellowSubscribers else [],
                        'publishers': remotePublishers[uuid] if uuid in remotePublishers else []}
                 for uuid in subList
             }
             pubInfo = {
-                uuid: {'subscribers': mySubscribers[uuid] if uuid in mySubscribers else [], 
+                uuid: {'subscribers': mySubscribers[uuid] if uuid in mySubscribers else [],
                        'publishers': meAsPublisher[uuid] if uuid in meAsPublisher else []}
                 for uuid in pubList
             }
