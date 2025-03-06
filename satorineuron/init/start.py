@@ -291,7 +291,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def setupWalletManager(self):
         self.walletVaultManager = WalletVaultManager(
             updateConnectionStatus=self.updateConnectionStatus,
-            persistent=self.runMode == RunMode.wallet)
+            persistent=self.runMode == RunMode.wallet,
+            useElectrumx=self.runMode != RunMode.worker)
         self.walletVaultManager.setup()
 
     def shutdownWallets(self):

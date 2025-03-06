@@ -28,10 +28,12 @@ class WalletVaultManager():
     def __init__(
         self,
         updateConnectionStatus: callable,
-        persistent: bool = False
+        persistent: bool = False,
+        useElectrumx:bool = True,
     ):
         self.persistent = persistent
         self.updateConnectionStatus = updateConnectionStatus
+        self.useElectrumx = useElectrumx
         self.electrumx: Electrumx = None
         self._wallet: Union[EvrmoreWallet, None] = None
         self._vault: Union[EvrmoreWallet, None] = None
@@ -77,7 +79,7 @@ class WalletVaultManager():
             self.reconnecting.start()
 
     def reconnectIfInactive(self):
-        if not self.electrumxCheck():
+        if not self.electrumxCheck() and self.useElectrumx:
             logging.info('wallet waking up, reconnecting...', color='yellow')
             return self.reconnect()
 
@@ -95,6 +97,8 @@ class WalletVaultManager():
         return False
 
     def createElectrumxConnection(self):
+        if not self.useElectrumx:
+            return
         try:
             self.electrumx = EvrmoreWallet.createElectrumxConnection(
                 hostPorts=config.get().get('electrumx servers'),
@@ -107,7 +111,7 @@ class WalletVaultManager():
                 e)
 
     def setupSubscriptions(self):
-        if self.electrumxCheck():
+        if self.electrumxCheck() and self.useElectrumx:
             # self.electrumx.api.subscribeToHeaders() # for testing
             if isinstance(self._wallet, EvrmoreWallet):
                 self._wallet.subscribeToScripthashActivity()
@@ -122,6 +126,7 @@ class WalletVaultManager():
         if not force and self._wallet is not None:
             return self._wallet
         self._wallet = EvrmoreWallet(
+            useElectrumx=self.useElectrumx,
             walletPath=config.walletPath('wallet.yaml'),
             reserve=0.25,
             isTestnet=False,
@@ -152,6 +157,7 @@ class WalletVaultManager():
                 elif password is None or self._vault.password == password:
                     return self._vault
             self._vault = EvrmoreWallet(
+                useElectrumx=self.useElectrumx,
                 walletPath=vaultPath,
                 reserve=0.25,
                 isTestnet=False,
@@ -202,14 +208,14 @@ class WalletVaultManager():
     #        raise e
 
     def setupWalletAndVault(self, force: bool = False):
-        if not self.electrumxCheck():
+        if not self.electrumxCheck() and self.useElectrumx:
             self.createElectrumxConnection()
         self._initializeWallet(force=force)
         self._initializeVault(
             password=str(config.get().get('vault password')),
             create=False,
             force=force)
-        return self.setupSubscriptions()
+        #return self.setupSubscriptions()
 
     #def setupWalletAndVaultIdentities(self, force: bool = False):
     #    self._initializeWalletIdentity(force=force)
