@@ -765,7 +765,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
-            transferProtocol = self.determineTransferProtocol(next(iter(meAsPublisher.values()))[0], self.dataServerPort)
+            transferProtocol = self.determineTransferProtocol(next(iter(meAsPublisher.values()))[0].split(':')[0], self.dataServerPort)
             self.pubSubMapping['transferProtocol'] = transferProtocol
             if transferProtocol == 'pubsub':
                 self.pubSubMapping['transferProtocolPayload'] = self.key
