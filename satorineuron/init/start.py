@@ -685,7 +685,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         while not self.isConnectedToServer:
             try:
                 self.dataServerIp = config.get().get('server ip', '0.0.0.0')
-                self.dataServerPort = int(config.get().get('server port', 24602))
+                self.dataServerPort = int(config.get().get('server port', 24600))
                 if await initiateServerConnection():
                     return True
             except Exception as e:
@@ -711,7 +711,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 # pubsub
                 # electrumx
 
-    def determineTransferProtocol(self, ipAddr: str, port: int = 24602) -> str:
+    def determineTransferProtocol(self, ipAddr: str, port: int = 24600) -> str:
         '''
         determine the transfer protocol to be used for data transfer
         default: p2p
