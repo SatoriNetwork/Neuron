@@ -1217,7 +1217,7 @@ def dashboard():
         #     [model.miniOverview() for model in start.engine.models]
         #     if start.engine is not None else [])  # StreamOverviews.demo()
         streamOverviews = [stream for stream in start.streamDisplay]
-        holdingBalance = start.holdingBalance
+        holdingBalance = start.refreshBalance()
         holdingBalanceBase = start.holdingBalanceBase
         stakeStatus = holdingBalance + holdingBalanceBase  >= constants.stakeRequired or (
             start.details.wallet.get('rewardaddress', None) not in [
@@ -1592,8 +1592,8 @@ def wallet(network: str = 'main'):
         alias = start.wallet.alias or start.server.getWalletAlias()
     except Exception as e:
         alias = None
-    start.wallet.get()
-    start.wallet.getReadyToSend()
+    start.refreshBalance(forVault=False)
+    start.refreshUnspents(forVault=False)
     #if config.get().get('wallet lock'):
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
@@ -1761,11 +1761,11 @@ def theVault():
         # start.workingUpdates.put('downloading balance...')
         account = start.vault.account
         #claimResult = start.server.setEthAddress(account.address)
-        myWallet = start.getWallet()
+        start.refreshBalance()
+        start.refreshUnspents(forWallet=False)
         try:
-            myWallet.get()
-            alias = myWallet.alias or start.server.getWalletAlias()
-        except Exception as e:
+            alias = start.wallet.alias or start.server.getWalletAlias()
+        except Exception as _:
             alias = None
         return render_template('vault.html', **getResp({
             'title': 'Vault',

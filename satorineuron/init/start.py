@@ -190,6 +190,32 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             8)
         return self._holdingBalance
 
+    def refreshBalance(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        if forWallet and isinstance(self.wallet, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.wallet.get).start()
+            else:
+                self.wallet.get()
+        if forVault and isinstance(self.vault, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.vault.get).start()
+            else:
+                self.vault.get()
+        return self.holdingBalance
+
+    def refreshUnspents(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        if forWallet and isinstance(self.wallet, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.wallet.getReadyToSend).start()
+            else:
+                self.wallet.getReadyToSend()
+        if forVault and isinstance(self.vault, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.vault.getReadyToSend).start()
+            else:
+                self.vault.getReadyToSend()
+        return self._holdingBalance
+
  #  api basescan version
  #  @property
  #   def holdingBalanceBase(self) -> float:
