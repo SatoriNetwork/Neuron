@@ -196,11 +196,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 threading.Thread(target=self.wallet.get).start()
             else:
                 self.wallet.get()
+            self.wallet.updateBalances()
         if forVault and isinstance(self.vault, EvrmoreWallet):
             if threaded:
                 threading.Thread(target=self.vault.get).start()
             else:
                 self.vault.get()
+            self.vault.updateBalances()
         return self.holdingBalance
 
     def refreshUnspents(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
@@ -534,6 +536,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             try:
                 self.details = CheckinDetails(
                     self.server.checkin(referrer=referrer))
+                logging.debug(self.details, color='teal')
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')

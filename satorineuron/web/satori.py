@@ -878,22 +878,25 @@ def sendSatoriTransactionUsing(
         def refreshWallet():
             time.sleep(10)
             myWallet.get()
+            myWallet.updateBalances()
             myWallet.getReadyToSend()
 
-        logging.debug('1', color='magenta')
-        myWallet.getReadyToSend()
+        logging.debug('balance one:', myWallet.balance.amount, myWallet.currency.amount, color='magenta')
+        if myWallet.shouldPullUnspents():
+            # we call this on page load, don't call unless balance has changed
+            myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
-        logging.debug('2', color='magenta')
+        logging.debug('balance two:', myWallet.balance.amount, myWallet.currency.amount, color='magenta')
         transactionResult = myWallet.typicalNeuronTransaction(
             sweep=sendSatoriForm['sweep'],
             amount=sendSatoriForm['amount'] or 0,
             address=sendSatoriForm['address'] or '',
             requestSimplePartialFn=start.server.requestSimplePartial,
             broadcastBridgeSimplePartialFn=start.server.broadcastSimplePartial)
-        refreshWallet()
         if not transactionResult.success:
             flash(f'unable to send Transaction: {transactionResult.msg}')
+            refreshWallet()
             return flash(transactionResult.msg)
         refreshWallet()
         return transactionResult.msg
