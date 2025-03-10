@@ -2905,7 +2905,8 @@ if __name__ == '__main__':
 
     # serve(app, host='0.0.0.0', port=config.get()['port'])
     app.run(
-        host='0.0.0.0',
+        #host='0.0.0.0',
+        host='::', #ipv6
         port=config.flaskPort(),
         threaded=True,
         debug=debug,
@@ -2917,3 +2918,17 @@ if __name__ == '__main__':
 # http://localhost:24601/
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
 # > python satori\web\app.py
+
+
+## possible - dual stack solution
+#import socket
+#from werkzeug.serving import run_simple
+#
+#def get_dual_stack_socket():
+#    sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+#    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+#    sock.bind(('::', config.flaskPort()))
+#    sock.listen(1)
+#    return sock
+#
+#run_simple('::', config.flaskPort(), app, threaded=True, request_handler=None, passthrough_errors=True, use_reloader=False)
