@@ -213,7 +213,7 @@ class WalletVaultManager():
         self._initializeWallet(force=force)
         self._initializeVault(
             password=str(config.get().get('vault password')),
-            create=True,
+            create=config.get().get('vault password') is not None,
             force=force)
         #return self.setupSubscriptions()
 
