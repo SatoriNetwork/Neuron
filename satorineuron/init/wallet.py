@@ -6,6 +6,7 @@ import threading
 from queue import Queue
 from satorilib.electrumx import Electrumx
 from satorilib.wallet import EvrmoreWallet
+from satorilib.wallet.concepts.balance import Balance
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.common.structs import ConnectionTo
@@ -127,16 +128,24 @@ class WalletVaultManager():
                 #self._vault.subscribe()
                 #self._vault.callTransactionHistory()
 
+    def balanceUpdatedCallback(self, evr: Balance, satori: Balance, kind: str):
+        ''' tell the UI '''
+        print(kind, 'evr balance', evr.amount)
+        print(kind, 'satori balance', satori.amount)
+        #import traceback
+        #traceback.print_stack()
+
     def _initializeWallet(self, force: bool = False) -> EvrmoreWallet:
         if not force and self._wallet is not None:
             return self._wallet
         self._wallet = EvrmoreWallet(
-            useElectrumx=self.useElectrumx,
             walletPath=config.walletPath('wallet.yaml'),
+            kind='wallet',
             reserve=0.25,
             isTestnet=False,
             electrumx=self.electrumx,
-            type='wallet')
+            useElectrumx=self.useElectrumx,
+            balanceUpdatedCallback=self.balanceUpdatedCallback)
         self._wallet()
         logging.info('initialized wallet', color='green')
         return self._wallet
@@ -162,13 +171,14 @@ class WalletVaultManager():
                 elif password is None or self._vault.password == password:
                     return self._vault
             self._vault = EvrmoreWallet(
-                useElectrumx=self.useElectrumx,
                 walletPath=vaultPath,
+                kind='vault',
                 reserve=0.25,
                 isTestnet=False,
                 password=password,
                 electrumx=self.electrumx,
-                type='vault')
+                useElectrumx=self.useElectrumx,
+                balanceUpdatedCallback=self.balanceUpdatedCallback)
             self._vault()
             logging.info('initialized vault', color='green')
             return self._vault
