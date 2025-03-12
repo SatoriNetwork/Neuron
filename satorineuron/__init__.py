@@ -8,7 +8,7 @@ logging.setup(level={
     'info': logging.INFO,
     'error': logging.ERROR,
     'critical': logging.CRITICAL,
-}[config.get().get('logging level', 'warning').lower()])
+}[config.get().get('logging level', 'info').lower()])
 
-VERSION = '0.3.9'
+VERSION = '0.3.11'
 MOTTO = 'Let your workings remain a mystery, just show people the results.'

@@ -52,7 +52,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     """a DAG of startup tasks."""
 
     _holdingBalanceBase_cache = None
-    _holdingBalanceBase_timestamp = 0  
+    _holdingBalanceBase_timestamp = 0
 
     def __init__(
         self,
@@ -115,6 +115,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBlockTime = time.time()
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
+        self.invitedBy: str = None
+        self.setInvitedBy()
         self.setEngineVersion()
         self.setupWalletManager()
         if not config.get().get("disable restart", False):
@@ -187,7 +189,35 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             + (self.vault.balance.amount if self.vault is not None else 0),
             8)
         return self._holdingBalance
-    
+
+    def refreshBalance(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        if forWallet and isinstance(self.wallet, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.wallet.get).start()
+            else:
+                self.wallet.get()
+            self.wallet.updateBalances()
+        if forVault and isinstance(self.vault, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.vault.get).start()
+            else:
+                self.vault.get()
+            self.vault.updateBalances()
+        return self.holdingBalance
+
+    def refreshUnspents(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        if forWallet and isinstance(self.wallet, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.wallet.getReadyToSend).start()
+            else:
+                self.wallet.getReadyToSend()
+        if forVault and isinstance(self.vault, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.vault.getReadyToSend).start()
+            else:
+                self.vault.getReadyToSend()
+        return self._holdingBalance
+
  #  api basescan version
  #  @property
  #   def holdingBalanceBase(self) -> float:
@@ -224,7 +254,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
  #               return 0
  #       except requests.RequestException as e:
  #           print(f"Error connecting to API: {e}")
- #           return 0       
+ #           return 0
 
     @property
     def holdingBalanceBase(self) -> float:
@@ -238,14 +268,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         cache_timeout = 60 * 5
         if self._holdingBalanceBase_cache is not None and (current_time - self._holdingBalanceBase_timestamp) < cache_timeout:
             return self._holdingBalanceBase_cache
-        eth_address = self.vault.ethAddress  
+        eth_address = self.vault.ethAddress
         base_api_url = "https://base-mainnet.g.alchemy.com/v2/wdwSzh0cONBj81_XmHWvODOBq-wuQiAi"
         payload = {
             "jsonrpc": "2.0",
             "method": "alchemy_getTokenBalances",
             "params": [
                 eth_address,
-                ["0xc1c37473079884CbFCf4905a97de361FEd414B2B"]  
+                ["0xc1c37473079884CbFCf4905a97de361FEd414B2B"]
             ],
             "id": 1
         }
@@ -256,7 +286,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             data = response.json()
             if "result" in data and "tokenBalances" in data["result"]:
                 balance_hex = data["result"]["tokenBalances"][0]["tokenBalance"]
-                token_balance = int(balance_hex, 16) / (10 ** 18)  
+                token_balance = int(balance_hex, 16) / (10 ** 18)
                 self._holdingBalanceBase_cache = token_balance
                 self._holdingBalanceBase_timestamp = current_time
                 print(f"Connecting to Base node OK")
@@ -289,7 +319,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def setupWalletManager(self):
         self.walletVaultManager = WalletVaultManager(
             updateConnectionStatus=self.updateConnectionStatus,
-            persistent=self.runMode == RunMode.wallet)
+            persistent=self.runMode == RunMode.wallet,
+            useElectrumx=self.runMode != RunMode.worker)
         self.walletVaultManager.setup()
 
     def shutdownWallets(self):
@@ -456,6 +487,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60 * 60)
         self.ranOnce = True
         self.walletVaultManager.setupWalletAndVault()
+        #self.walletVaultManager.setupWalletAndVaultIdentities()
         self.setMiningMode()
         self.setEngineVersion()
         self.createRelayValidation()
@@ -504,6 +536,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             try:
                 self.details = CheckinDetails(
                     self.server.checkin(referrer=referrer))
+                if self.details.get('sponsor') is not None:
+                    self.setInvitedBy(self.details.get('sponsor'))
+                #logging.debug(self.details, color='teal')
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
@@ -669,10 +704,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.engineVersion == 'v2':
             self.aiengine: satoriengine.veda.engine.Engine = (
                 satoriengine.veda.engine.Engine(
-                    streams=self.subscriptions, pubstreams=self.publications)
+                    streams=self.subscriptions,
+                    pubstreams=self.publications)
             )
             self.aiengine.predictionProduced.subscribe(
                 lambda x: handleNewPrediction(x) if x is not None else None)
+
+    def addToEngine(self, stream: Stream, publication: Stream):
+        if self.aiengine is not None:
+            self.aiengine.addStream(stream, publication)
 
     def subConnect(self):
         """establish a random pubsub connection used only for subscribing"""
@@ -918,6 +958,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engineVersion = version if version in ['v1', 'v2'] else default
         config.add(data={'engine version': self.engineVersion})
         return self.engineVersion
+
+    def setInvitedBy(self, address: Union[str, None] = None) -> str:
+        address = (address or config.get().get('invited by:', address))
+        if address:
+            self.invitedBy = address
+            config.add(data={'invited by': self.invitedBy})
+        return self.invitedBy
 
     def poolAccepting(self, status: bool):
         success, result = self.server.poolAccepting(status)

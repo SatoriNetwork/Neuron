@@ -126,7 +126,7 @@ CMD ["bash", "./start_from_image.sh"]
 
 #### automatic fast slow build:
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:previous
-# docker tag satorinet/satorineuron:latest satorinet/satorineuron:0.3.5
+# docker tag satorinet/satorineuron:latest satorinet/satorineuron:0.3.9
 ## fast
 # docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
 # docker pull satorinet/satorineuron:test

@@ -98,8 +98,6 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
-                # 'prod': 'https://central.satorinet.io'}[ENV],
-                # 'prod': 'http://24.199.113.168'}[ENV], # c
                 #'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
@@ -880,22 +878,25 @@ def sendSatoriTransactionUsing(
         def refreshWallet():
             time.sleep(10)
             myWallet.get()
+            myWallet.updateBalances()
             myWallet.getReadyToSend()
 
-        logging.debug('1', color='magenta')
-        myWallet.getReadyToSend()
+        logging.debug('balance one:', myWallet.balance.amount, myWallet.currency.amount, color='magenta')
+        if myWallet.shouldPullUnspents():
+            # we call this on page load, don't call unless balance has changed
+            myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
-        logging.debug('2', color='magenta')
+        logging.debug('balance two:', myWallet.balance.amount, myWallet.currency.amount, color='magenta')
         transactionResult = myWallet.typicalNeuronTransaction(
             sweep=sendSatoriForm['sweep'],
             amount=sendSatoriForm['amount'] or 0,
             address=sendSatoriForm['address'] or '',
             requestSimplePartialFn=start.server.requestSimplePartial,
             broadcastBridgeSimplePartialFn=start.server.broadcastSimplePartial)
-        refreshWallet()
         if not transactionResult.success:
             flash(f'unable to send Transaction: {transactionResult.msg}')
+            refreshWallet()
             return flash(transactionResult.msg)
         refreshWallet()
         return transactionResult.msg
@@ -1039,6 +1040,27 @@ def editStream(topic=None):
     # return redirect('/dashboard#:~:text=Create%20Data%20Stream')
 
     return redirect('/dashboard#CreateDataStream')
+
+@app.route('/clear_stream', methods=['GET'])
+@userInteracted
+@authRequired
+def clearEditStream(topic=None):
+    # name,target,cadence,offset,datatype,description,tags,url,uri,headers,payload,hook
+    import importlib
+    global forms
+    global badForm
+    global toEditStream
+    toEditStream = False
+    forms = importlib.reload(forms)
+    try:
+        badForm = {}
+    except IndexError:
+        # on rare occasions
+        # IndexError: list index out of range
+        # cannot reproduce, maybe it's in the middle of reconnecting?
+        pass
+    # return redirect('/dashboard#:~:text=Create%20Data%20Stream')
+    return 'ok', 200
 
 
 # @app.route('/remove_stream/<source>/<stream>/<target>/', methods=['GET'])
@@ -1198,9 +1220,9 @@ def dashboard():
         #     [model.miniOverview() for model in start.engine.models]
         #     if start.engine is not None else [])  # StreamOverviews.demo()
         streamOverviews = [stream for stream in start.streamDisplay]
-        holdingBalance = start.holdingBalance
+        holdingBalance = start.refreshBalance()
         holdingBalanceBase = start.holdingBalanceBase
-        stakeStatus = holdingBalance >= constants.stakeRequired or (
+        stakeStatus = holdingBalance + holdingBalanceBase  >= constants.stakeRequired or (
             start.details.wallet.get('rewardaddress', None) not in [
                 None,
                 start.details.wallet.get('address'),
@@ -1209,6 +1231,7 @@ def dashboard():
         global toEditStream
         temp_toEditStream = toEditStream  # Store current state before resetting
         toEditStream = False
+        newRelayStream = present_stream_form()
         return render_template('dashboard.html', **getResp({
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
@@ -1219,12 +1242,14 @@ def dashboard():
             'miningMode': start.miningMode,
             'miningDisplay': 'none',
             'proxyDisplay': 'none',
+            'invitedBy': start.invitedBy,
             'stakeRequired': constants.stakeRequired,
             'streamOverviews': streamOverviews,
             'engineVersion': start.engineVersion,
             'configOverrides': config.get(),
             'paused': start.paused,
-            'newRelayStream': present_stream_form(),
+            'modifyStream': newRelayStream.name.data != '',
+            'newRelayStream': newRelayStream,
             'toEdit': temp_toEditStream,
             'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
             'quote': getRandomQuote(),
@@ -1240,17 +1265,10 @@ def dashboard():
             if start.relay is not None else []),
 
             'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'):
-        '''
-        called and given the response each time
-        the endpoint for this data stream is hit.
-        returns the value of the observation
-        as a string, integer or double.
-        if empty string is returned the observation
-        is not relayed to the network.
-        '''
+        ''' extracts data from the response. '''
         if response.text != '':
-            return float(response.json().get('Close', -1.0))
-        return -1.0
+            return float(response.json().get('data', None))
+        return None
         """,
             'placeholderGetHistory': """class GetHistory(object):
         '''
@@ -1577,8 +1595,8 @@ def wallet(network: str = 'main'):
         alias = start.wallet.alias or start.server.getWalletAlias()
     except Exception as e:
         alias = None
-    start.wallet.get()
-    start.wallet.getReadyToSend()
+    start.refreshBalance(forVault=False)
+    start.refreshUnspents(forVault=False)
     #if config.get().get('wallet lock'):
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
@@ -1746,11 +1764,11 @@ def theVault():
         # start.workingUpdates.put('downloading balance...')
         account = start.vault.account
         #claimResult = start.server.setEthAddress(account.address)
-        myWallet = start.getWallet()
+        start.refreshBalance()
+        start.refreshUnspents(forWallet=False)
         try:
-            myWallet.get()
-            alias = myWallet.alias or start.server.getWalletAlias()
-        except Exception as e:
+            alias = start.wallet.alias or start.server.getWalletAlias()
+        except Exception as _:
             alias = None
         return render_template('vault.html', **getResp({
             'title': 'Vault',
@@ -1765,6 +1783,7 @@ def theVault():
             'wallet': start.vault,
             'walletBalance': start.wallet.balance.amount,
             'offer': start.details.wallet.get('offer', 0),
+            'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
@@ -1784,6 +1803,7 @@ def theVault():
         'stakeRequired': constants.stakeRequired,
         'wallet': start.vault,
         'offer': start.details.wallet.get('offer', 0),
+        'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
         'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
         'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
@@ -1866,14 +1886,13 @@ def stakeForAddress(address: str):
 def lendToAddress(address: str):
     if start.vault is None:
         return '', 200
-    # the network portion should be whatever network I'm on.
-    network = 'main'
     vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
     success, result = start.server.lendToAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
+        vaultAddress=vault.address,
         address=address)
     if success:
         return 'OK', 200
@@ -1945,6 +1964,14 @@ def proxyParentStatus():
         return result, 200
     return f'Failed stakeProxyChildren: {result}', 400
 
+@app.route('/pool/size/set/<amount>', methods=['GET'])
+@authRequired
+def setPoolSize(amount: float):
+    success, result = start.server.setPoolSize(amount)
+    if success:
+        start.details.wallet['pool_stake_limit'] = amount
+        return result, 200
+    return f'Failed setPoolSize: {result}', 400
 
 @app.route('/pool/worker/reward/set/<percent>', methods=['GET'])
 @authRequired
@@ -1983,6 +2010,15 @@ def removeProxyChild(address: str, id: int):
         return result, 200
     return f'Failed stakeProxyRemove: {result}', 400
 
+@app.route('/invited/by/<address>', methods=['GET'])
+@userInteracted
+@authRequired
+def invitedBy(address: str):
+    success, result = start.server.invitedBy(address)
+    if success:
+        start.setInvitedBy(address)
+        return result, 200
+    return f'Failed invitedBy: {result}', 400
 
 @app.route('/vote', methods=['GET', 'POST'])
 @userInteracted
@@ -2869,7 +2905,8 @@ if __name__ == '__main__':
 
     # serve(app, host='0.0.0.0', port=config.get()['port'])
     app.run(
-        host='0.0.0.0',
+        #host='0.0.0.0',
+        host='::', #ipv6
         port=config.flaskPort(),
         threaded=True,
         debug=debug,
@@ -2881,3 +2918,17 @@ if __name__ == '__main__':
 # http://localhost:24601/
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
 # > python satori\web\app.py
+
+
+## possible - dual stack solution
+#import socket
+#from werkzeug.serving import run_simple
+#
+#def get_dual_stack_socket():
+#    sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+#    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+#    sock.bind(('::', config.flaskPort()))
+#    sock.listen(1)
+#    return sock
+#
+#run_simple('::', config.flaskPort(), app, threaded=True, request_handler=None, passthrough_errors=True, use_reloader=False)

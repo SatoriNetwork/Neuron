@@ -55,6 +55,48 @@
             <p id='addStakingAddressConfirmation'></p>
           </div>
         </div>
+        <!-- though this solution is more dynamic it still suffers from the same problem that closing the pool suffers from:
+         namely, people already in the pool can increase their staking power to go over the limit... not sure we should release this feature.
+         it seems the better thing to do is just an eventual rewrite when we move this functionality to our chain...
+         the checking functionality in /stake/lend/to/address id disabled, everything else is live...
+         nor was this functionality added to the automatic assignment of workers, though that one is naturally already limited anyway.
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}" style="margin-left:1rem;margin-right:1rem;display: block;">
+          Pool Size
+          <br>
+          You may limit the amount of stake able to join the pool.
+          <br><br>
+        </p>
+        <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem; display: flex;'>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <center>
+              <p id="poolSizeLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;">
+                Pool Size:
+              </p>
+            </center>
+          </div>
+          <div class="col-xl-6 col-sm-6 mb-xl-0">
+            <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+              <div class="d-flex px-3 py-1" style="padding-right: 1rem; margin-left:auto; margin-right: auto;">
+                <div class="input-group input-group-outline">
+                  <input
+                    id="poolSize"
+                    name="poolSize"
+                    class="tight form-control {% if darkmode %}dark-colors{% endif %}"
+                    style="text-align: center;"
+                    maxLength="7"
+                    required=""
+                    placeholder="{{ pool_stake_limit }}"
+                    value="{{ pool_stake_limit }}"
+                    type="number"
+                    onKeyPress="checkEnterForPoolSize(event)">
+                </div>
+              </div>
+            </h6>
+          </div>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <p id='poolSizeConfirmation'></p>
+          </div>
+        </div>-->
         <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}" style="margin-left:1rem;margin-right:1rem;display: block;">
           To automatically pull workers from the network, make an offer to reward them below.
           <br>
@@ -152,6 +194,15 @@
     }
   }
 
+  function checkEnterForPoolSize(event){
+    if (isFocused(document.querySelector('#poolSize'))) {
+      document.getElementById("poolSizeConfirmation").innerHTML = '';
+      if (event.key === "Enter" || event.keyCode === 13) {
+        console.log('enter detected');
+        setPoolSize();
+      }
+    }
+  }
 
   function checkEnterForStakingOffer(event){
     if (isFocused(document.querySelector('#addStakingOffer'))) {
@@ -188,6 +239,46 @@
     });
   }
 
+  function setPoolSize() {
+    function validatePoolSize(offer) {
+      const value = parseFloat(offer);
+      // Allow empty input
+      if (isNaN(value)) {
+          return true;
+      }
+      // Allow 0 or values 10 and above
+      if (value >= 0 && value < 5000000) {
+          document.getElementById("poolSize").value = ''; // Clear invalid input
+          return false;
+      }
+      return true;
+    }
+    offer = document.getElementById("poolSize").value;
+    if (!validatePoolSize(offer)){
+      return;
+    }
+    fetch('/pool/size/set/' + offer, { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+    })
+    .then(text => {
+      if (text == 'OK') {
+        document.getElementById("poolSizeConfirmation").innerHTML = 'Saved!';
+        getProxyParentStatus();
+      } else {
+        console.log(text);
+        document.getElementById("poolSizeConfirmation").innerHTML = 'Unable to save.';
+      }
+    }).catch(error => {
+      document.getElementById("poolSizeConfirmation").innerHTML = 'Unable to save.';
+      console.error('Error:', error);
+    });
+  }
+
   function setStakingOffer() {
     function validateStakingOffer(offer) {
       const value = parseFloat(offer);
@@ -202,7 +293,6 @@
       }
       return true;
     }
-
     offer = document.getElementById("addStakingOffer").value;
     if (!validateStakingOffer(offer)){
       return;

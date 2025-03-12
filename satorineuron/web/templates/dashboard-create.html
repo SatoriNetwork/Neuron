@@ -1,6 +1,6 @@
 {% block content %}
 
-<div id='CreateDataStream' , class="row mb-4">
+<div id='CreateDataStream', class="row">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
@@ -69,7 +69,7 @@
                 </div>
               </div>
             </div>
-            <div class="pt-3 px-3" style="height:100px;">
+            <div class="pt-3 px-3" style="height:100px;display:none;">
               <p id="ErrorArea" class="mb-0 text-sm">
                 {% if newRelayStream.errors %}
                 <ul class="errors">
@@ -156,10 +156,10 @@
                         const minuteCadenceInput = document.getElementById('minuteCadence');
                         const secondCadenceInput = document.getElementById('secondCadence');
                         var seconds = (dayCadenceInput.value*24*60*60) + (hourCadenceInput.value*60*60) + (minuteCadenceInput.value*60) + (secondCadenceInput.value*1)
-                        if (seconds >= 60) {
+                        if (seconds >= 60*10) {
                           document.getElementById('cadence').value = seconds;
                         } else {
-                          document.getElementById('cadence').value = 60;
+                          document.getElementById('cadence').value = 60*10;
                         }
                       }
                       function showCadence() {
@@ -460,40 +460,34 @@
   </div>
 </div>
 
-
-<p id="learn_output"></p>
-<p id="learn_output2"></p>
-<p id="learn_output3"></p>
-
-<div class="form-popup-bg" id="create_ds_popup">
+<div id="create_ds_popup" class="form-popup-bg" >
   <form action="/register_stream" method="POST" id="relayForm"
     {{ newRelayStream.hidden_tag() }}
     {{ newRelayStream.csrf_token }}
     <!-- # region step1  -->
     <div class="form-container bg-gradient-dark" id="step1_desc">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Name & Descriptions</p>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
-            <label class="text-white" for="">Name (required)</label>
-            <span class="form_hint_name">&nbsp;?</span>
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
+            <label class="text-white" for="">Name *</label>
+            <span class="form_hint_name"><i class="material-icons">help_outline</i></span>
             <!-- <span class="material-icons form_hint" src="{{ url_for('static', filename='download/info-icon.svg') }}" alt="help" style="font-size: 20px;">info_icon</span> -->
           </div>
           {{ newRelayStream.name(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="BTC1HR") }}
         </div>
         <div class="form-group">
           <div style="display: flex; padding-top: 15px; height: 40px;">
-            <label class="text-white" for="">Interval (required)</label>
-            <span class="form_hint_interval">&nbsp;?</span>
+            <label class="text-white" for="">Interval *&nbsp;&nbsp;</label>
+            <span class="form_hint_interval"><i class="material-icons">help_outline</i></span>
             <span style="flex-grow: 1;"></span>
             <label class="text-white" style="font-size: 12px; padding-top: 3px;">Custom&nbsp;</label>
             <input type="checkbox" id="intervalEditCheckbox">
             <script>
               document.getElementById('intervalEditCheckbox').addEventListener('change', function() {
                 document.getElementById('cadenceDropdownDiv').style.display = !this.checked ? 'block':'none';
-
                 document.getElementById('dayCadenceDiv').style.display = !this.checked ? 'none':'block';
               })
             </script>
@@ -501,13 +495,12 @@
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" id="cadenceDropdownDiv" style="width: 100%;">
               <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%; height: 30px;">
-                <div  style="width:35%; padding:5px">
+                <div  style="width:35%; padding-top:5px">
                   <select class="d-flex flex-row gap-2 btn btn-outline-dark"  id="cadenceDropdown" style="background-color: white;" onchange="updateBoxes(); calculateCadence();">
-                    <option value="300">5 Minute</option>
-                    <option value="600" selected>10 Minute</option>
+                    <option value="600">10 Minute</option>
                     <option value="900">15 Minute</option>
                     <option value="1800">30 Minute</option>
-                    <option value="3600">1 Hour </option>
+                    <option value="3600" selected>1 Hour </option>
                     <option value="86400">1 Day</option>
                     <option value="604800">1 Week</option>
                     <option value="2419200">1 Month</option>
@@ -548,10 +541,10 @@
                     const minuteCadenceInput = document.getElementById('minuteCadence');
                     const secondCadenceInput = document.getElementById('secondCadence');
                     var seconds = (dayCadenceInput.value*24*60*60) + (hourCadenceInput.value*60*60) + (minuteCadenceInput.value*60) + (secondCadenceInput.value*1)
-                    if (seconds >= 60) {
+                    if (seconds >= 60*10) {
                       document.getElementById('cadence').value = seconds;
                     } else {
-                      document.getElementById('cadence').value = 60;
+                      document.getElementById('cadence').value = 60*10;
                     }
                   }
                   function showCadence() {
@@ -587,16 +580,14 @@
 
         <div class="form-group">
           <div style="display: flex; padding-top: 15px; height: 40px;">
-            <label class="text-white" for="">Offset</label>
-            <span class="form_hint_offset">&nbsp;?</span>
+            <label class="text-white" for="">Offset&nbsp;&nbsp;</label>
+            <span class="form_hint_offset"><i class="material-icons">help_outline</i></span>
             <span style="flex-grow: 1;"></span>
             <label class="text-white" style="font-size: 12px; padding-top: 3px;">Custom&nbsp;</label>
             <input type="checkbox" id="offsetEditCheckbox">
             <script>
               document.getElementById('offsetEditCheckbox').addEventListener('change', function() {
-
                 document.getElementById('offsetDropdownDiv').style.display = !this.checked ? 'block':'none';
-
                 document.getElementById('offsetDiv').style.display = !this.checked ? 'none':'block';
               })
             </script>
@@ -604,7 +595,7 @@
           <div class="row">
             <div class="col-xl-5 col-sm-4 mb-xl-4 mb-4" id="offsetDropdownDiv" style="width: 100%;">
               <div class="d-flex px-3 py-1" style="padding: 1px !important; width: 100%; height: 30px;">
-                <div style="width:35%; padding:5px">
+                <div style="width:35%; padding-top:5px">
                     <select class="d-flex flex-row gap-2 btn btn-outline-dark"  id="offsetDropdown" style="background-color: white;" onchange="updateOffsetBoxes(); calculateOffset();">
                       <option value="0" selected>0 Minute</option>
                       <option value="300">5 Minute</option>
@@ -666,64 +657,94 @@
           </div>
         </div>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
+            <label class="text-white" for="">Data Type</label>
+            <span class="form_hint_datatype"><i class="material-icons">help_outline</i></span>
+          </div>
+          {{ newRelayStream.datatype(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="float") }}
+        </div>
+        <div class="form-group">
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
             <label class="text-white" for="">Tags</label>
-            <span class="form_hint_tags">&nbsp;?</span>
+            <span class="form_hint_tags"><i class="material-icons">help_outline</i></span>
           </div>
           {{ newRelayStream.tags(size=32, class_="tight form-control"+(" dark-colors" if darkmode else ""), placeholder="bitcoin, 1hr") }}
         </div>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
             <label class="text-white" for="">Description</label>
-            <span class="form_hint_desc">&nbsp;?</span>
+            <span class="form_hint_desc"><i class="material-icons">help_outline</i></span>
           </div>
           {{ newRelayStream.description(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Price (OHLC) of Bitcoin at 1 hour intervals, offset from UTC time by 3 hours.") }}
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
-          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="navPopup('step2_metadata', event, 'step1_desc')">Next</button>
+          <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="calculateCadence();calculateOffset();navPopup('step2_metadata', event, 'step1_desc')">Next</button>
         </div>
     </div>
     <!--#endregion -->
     <!--#region step2  -->
     <div class="form-container bg-gradient-dark" id="step2_metadata">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">URL & Metadata</p>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
-            <label class="text-white" for="">URL (required)</label>
-            <span class="form_hint_url">&nbsp;?</span>
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
+            <label class="text-white" for="">URL *</label>
+            <span class="form_hint_url"><i class="material-icons">help_outline</i></span>
           </div>
           {{ newRelayStream.url(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin") }}
         </div>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
             <label class="text-white" for="">URI</label>
-            <span class="form_hint_uri">&nbsp;?</span>
+            <span class="form_hint_uri"><i class="material-icons">help_outline</i></span>
           </div>
-          {{ newRelayStream.uri(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey") }}
+          <div id="uriCheckbox" style="display: flex; padding-top: 0px;margin-left:5px; height: 40px;">
+            <input type="checkbox" id="uriEditCheckbox" style="width: 25px;height: 25px;">
+            <label class="text-white" style="font-size: 15px;padding-left: 10px;">Add (if this url requires secret keys)</label>
+            <script>
+              document.getElementById('uriEditCheckbox').addEventListener('change', function() {
+                document.getElementById('uriCheckbox').style.display = !this.checked ? 'block':'none';
+                document.getElementById('uri').style.display = !this.checked ? 'none':'block';
+              })
+            </script>
+          </div>
+          {{ newRelayStream.uri(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="https://finance.yahoo.com/bitcoin?key=supersecretkey", style="display:none;") }}
         </div>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
-            <label class="text-white" for="">Data Type</label>
-            <span class="form_hint_datatype">&nbsp;?</span>
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
+            <label class="text-white form_hint_headers" for="">Headers</label>
+            <span class="form_hint_headers"><i class="material-icons">help_outline</i></span>
           </div>
-          {{ newRelayStream.datatype(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="float") }}
+          <div id="headersCheckbox" style="display: flex; padding-top: 0px;margin-left:5px; height: 40px;">
+            <input type="checkbox" id="headersEditCheckbox" style="width: 25px;height: 25px;">
+            <label class="text-white" style="font-size: 15px;padding-left: 10px;">Add (if this url requires headers)</label>
+            <script>
+              document.getElementById('headersEditCheckbox').addEventListener('change', function() {
+                document.getElementById('headersCheckbox').style.display = !this.checked ? 'block':'none';
+                document.getElementById('headers').style.display = !this.checked ? 'none':'block';
+              })
+            </script>
+          </div>
+          {{ newRelayStream.headers(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json", style="display:none;") }}
         </div>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
-            <label class="text-white" for="">Headers</label>
-            <span class="form_hint_headers">&nbsp;?</span>
-          </div>
-          {{ newRelayStream.headers(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
-        </div>
-        <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
             <label class="text-white" for="">Payload</label>
-            <span class="form_hint_payload">&nbsp;?</span>
+            <span class="form_hint_payload"><i class="material-icons">help_outline</i></span>
           </div>
-          {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json") }}
+          <div id="payloadCheckbox" style="display: flex; padding-top: 0px;margin-left:5px; height: 40px;">
+            <input type="checkbox" id="payloadEditCheckbox" style="width: 25px;height: 25px;">
+            <label class="text-white" style="font-size: 15px;padding-left: 10px;">Add (if this url requires a payload)</label>
+            <script>
+              document.getElementById('payloadEditCheckbox').addEventListener('change', function() {
+                document.getElementById('payloadCheckbox').style.display = !this.checked ? 'block':'none';
+                document.getElementById('payload').style.display = !this.checked ? 'none':'block';
+              })
+            </script>
+          </div>
+          {{ newRelayStream.payload(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Accept: application/json", style="display:none;") }}
         </div>
         <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
           <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px; flex: 1;" onclick="navPopup('step1_desc', event, 'step2_metadata')">Prev</button>
@@ -733,22 +754,22 @@
     <!--#endregion -->
     <!--#region step3  -->
     <div class="form-container bg-gradient-dark" id="step3_extraction">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Extraction</p>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
             <label class="text-white" for="">Target</label>
-            <span class="form_hint_target">&nbsp;?</span>
+            <span class="form_hint_target"><i class="material-icons">help_outline</i></span>
           </div>
-          {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="Close") }}
+          {{ newRelayStream.target(size=32, class_="tight form-control" + (" dark-colors" if darkmode else ""), placeholder="data.key") }}
         </div>
         <button class="flex-row btn btn-outline-dark" style="background-color: white; margin-top: 20px;" onclick="hookCreation()">Generate</button>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
             <label class="text-white" for="">Extraction Script</label>
-            <span class="form_hint_extraction">&nbsp;?</span>
+            <span class="form_hint_extraction"><i class="material-icons">help_outline</i></span>
           </div>
           {{ newRelayStream.hook(size=32, class_="tight form-control input-tall code-placeholder" + (" dark-colors" if darkmode else ""), placeholder=placeholderPostRequestHook )}}
         </div>
@@ -760,14 +781,14 @@
     <!--#endregion -->
     <!--#region step4  -->
     <div class="form-container bg-gradient-dark" id="step4_history">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Datastream History</p>
         <div class="form-group">
-          <div style="display: flex; padding-top: 15px;">
+          <div style="display: flex; padding-top: 15px;justify-content: space-between;">
             <label class="text-white" for="">History</label>
-            <span class="form_hint_history">&nbsp;?</span>
+            <span class="form_hint_history"><i class="material-icons">help_outline</i></span>
           </div>
           </div>
               <div class='{% if darkmode %}dark-colors{% else %}{%endif%} tight form-control'>
@@ -856,8 +877,8 @@
     <!--#endregion -->
     <!--#region step5  -->
     <div class="form-container bg-gradient-dark" id="step5_review">
-      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;">X</button>
-      <h1 class="text-white">Create a Datastream</h1>
+      <button id="btnCloseForm" class="close-button" style="border: none; font-size: 25px;" onclick="fetch('/clear_stream')">X</button>
+      <h1 class="text-white">{{ "Modify" if modifyStream else "Create" }} a Datastream</h1>
       <p class="text-white">Fill out the form to publish a new primary datastream to the Satori Network</p>
       <p class="text-white">Review before submitting</p>
         <div class="form-group">
@@ -916,13 +937,26 @@
   <p>Specify the target key for the data stream, typically used when the stream is a JSON object with key-value pairs.
     <br>Example:
     <br>For this JSON
-    <i>
-      <br>Bitcoin {
-        <br><span>&nbsp;&nbsp;&nbsp;&nbsp;</span>value:"10.00"
+    <code>
+      <br>{
+        <br><span>&nbsp;</span>Bitcoin: {
+          <br><span>&nbsp;&nbsp;</span>price: 1
+        <br><span>&nbsp;</span>}
       <br>}
-    </i>
-    <br>Put in this target
-    <br><i>Bitcoin.value</i>
+    </code>
+    <br>To extract the value put in this target
+    <br><b>Bitcoin.price</b>
+  </p>
+  <p>If the JSON structure contains lists you can references them like so
+    <code>
+      <br>{
+        <br><span>&nbsp;</span>Bitcoin: {
+          <br><span>&nbsp;&nbsp;</span>prices: [10,11,12,13]
+        <br><span>&nbsp;</span>}
+      <br>}
+    </code>
+    <br>To extract the first value in the list, 10, put in this target:
+    <br><b>Bitcoin.prices[0]</b>
   </p>
 </div>
 <div class="info_msg_datatype hidden" id="popover-cont" style="z-index: 1;">
@@ -1471,7 +1505,7 @@
     /// so we're using js to validate the required fields manually:
     return (
       document.getElementById("name").value != "" &&
-      document.getElementById("cadence").value >= 60 &&
+      document.getElementById("cadence").value >= 60*10 &&
       document.getElementById("url").value.startsWith("http") &&
       (document.getElementById("offset").value == '' || document.getElementById("offset").value < 86400)
       // don't require uri, if blank it'll automatically populate from url
@@ -1559,36 +1593,42 @@
 
   function generateHookFromTarget(target = '') {
     /**
-     * Creates a function that drills down into a JSON object according to a path.
+     * This function takes a path like "price[0].usd[1]" and returns a Python-safe
+     * expression like r["price"][0]["usd"][1].
+     *
+     * If something doesn't exist or isn't the correct type (dict vs. list),
+     * an exception may occur — which is caught by try/except in the final code.
      */
-    function replaceLastOccurrence(inputStr, oldSubstring, newSubstring) {
-        const lastIndex = inputStr.lastIndexOf(oldSubstring);
-        if (lastIndex !== -1) {
-            return inputStr.substring(0, lastIndex) + newSubstring + inputStr.substring(lastIndex + oldSubstring.length);
+    function generateDrillExpression(path) {
+      // e.g. "price[0].usd[1]" -> ["price", "[0]", "usd", "[1]"]
+      const parts = path.match(/(\[[^\]]*\]|[^.\[\]]+)/g) || [];
+
+      // Build up something like: r["price"][0]["usd"][1]
+      let expr = 'r';
+      for (const part of parts) {
+        if (part.startsWith('[')) {
+          // e.g. "[0]" remains [0]
+          expr += part;
+        } else {
+          // e.g. "price" -> ["price"]
+          expr += `["${part}"]`;
         }
-        return inputStr;
+      }
+      return expr;
     }
 
-    function generateDrill() {
-        const parts = target.split('.');
-        return replaceLastOccurrence(
-            parts.map(part => `get("${part}", {})`).join('.'));
-    }
+    const drillExpr = generateDrillExpression(target);
 
-    target = target || 'Close';
     return `def postRequestHook(response: 'requests.Response'):
-    '''
-    Called and given the response each time the endpoint for this data stream is hit.
-    Returns the value of the observation as a string, integer, or double.
-    If an empty string is returned, the observation is not relayed to the network.
-    '''
-    if response.text != '':
-        try:
-            return float(response.json().${generateDrill()})
-        except Exception as e:
-            return None
-    return None`;
-}
+      ''' extracts data from the response. '''
+      if response.text != '':
+          try:
+              r = response.json()
+              return float(${drillExpr})
+          except Exception:
+              return None
+      return None`;
+  }
 </script>
 <div>
   {% if toEdit %}
