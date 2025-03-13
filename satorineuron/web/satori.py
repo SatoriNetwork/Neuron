@@ -1595,8 +1595,8 @@ def wallet(network: str = 'main'):
         alias = start.wallet.alias or start.server.getWalletAlias()
     except Exception as e:
         alias = None
-    start.refreshBalance(forVault=False)
-    start.refreshUnspents(forVault=False)
+    start.refreshBalance(forVault=False, threaded=False)
+    start.refreshUnspents(forVault=False, threaded=True)
     #if config.get().get('wallet lock'):
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
@@ -1764,8 +1764,8 @@ def theVault():
         # start.workingUpdates.put('downloading balance...')
         account = start.vault.account
         #claimResult = start.server.setEthAddress(account.address)
-        start.refreshBalance()
-        start.refreshUnspents(forWallet=False)
+        start.refreshBalance(forWallet=False, threaded=False)
+        start.refreshUnspents(forWallet=False, threaded=True)
         try:
             alias = start.wallet.alias or start.server.getWalletAlias()
         except Exception as _:

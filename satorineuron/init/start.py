@@ -191,18 +191,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self._holdingBalance
 
     def refreshBalance(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        print('refreshing balance')
         if forWallet and isinstance(self.wallet, EvrmoreWallet):
             if threaded:
                 threading.Thread(target=self.wallet.get).start()
             else:
                 self.wallet.get()
-            self.wallet.updateBalances()
         if forVault and isinstance(self.vault, EvrmoreWallet):
             if threaded:
                 threading.Thread(target=self.vault.get).start()
             else:
                 self.vault.get()
-            self.vault.updateBalances()
         return self.holdingBalance
 
     def refreshUnspents(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):

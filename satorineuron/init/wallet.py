@@ -53,7 +53,7 @@ class WalletVaultManager():
     def setup(self):
         WalletVaultManager.performMigrationBackup("wallet")
         WalletVaultManager.performMigrationBackup("vault")
-        self.createElectrumxConnection()
+        #self.createElectrumxConnection()
 
     def disconnect(self):
         if isinstance(self.electrumx, Electrumx):
@@ -68,7 +68,7 @@ class WalletVaultManager():
         else:
             #import traceback
             #traceback.print_stack()
-            self.createElectrumxConnection()
+            #self.createElectrumxConnection()
             self._wallet.electrumx = self.electrumx
             if self._vault is not None:
                 self._vault.electrumx = self.electrumx
@@ -223,8 +223,8 @@ class WalletVaultManager():
     #        raise e
 
     def setupWalletAndVault(self, force: bool = False):
-        if not self.electrumxCheck() and self.useElectrumx:
-            self.createElectrumxConnection()
+        #if not self.electrumxCheck() and self.useElectrumx:
+        #    self.createElectrumxConnection()
         self._initializeWallet(force=force)
         self._initializeVault(
             password=str(config.get().get('vault password')),
