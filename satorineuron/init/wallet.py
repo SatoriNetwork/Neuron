@@ -76,13 +76,13 @@ class WalletVaultManager():
     def userInteracted(self):
         self.userInteraction = time.time()
         # thread so we don't make the user wait for the reconnect
-        if (
-            self.reconnecting is None or (
-                isinstance(self.reconnecting, threading.Thread) and
-                not self.reconnecting.is_alive())
-        ):
-            self.reconnecting = threading.Thread(target=self.reconnectIfInactive)
-            self.reconnecting.start()
+        #if (
+        #    self.reconnecting is None or (
+        #        isinstance(self.reconnecting, threading.Thread) and
+        #        not self.reconnecting.is_alive())
+        #):
+        #    self.reconnecting = threading.Thread(target=self.reconnectIfInactive)
+        #    self.reconnecting.start()
 
     def reconnectIfInactive(self):
         if not self.electrumxCheck() and self.useElectrumx:
