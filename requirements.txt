@@ -70,7 +70,7 @@ websocket-client==1.4.2 # not sure if we need this
 websockets==10.4 # import websocket; websocket.WebSocket()
 
 # needed for Synergy connection
-python-socketio[client]==5.11.2
+#python-socketio[client]==5.11.2
 
 ## no need at this time:
 # needed for chat use
