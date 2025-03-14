@@ -151,7 +151,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.setPublicDataManagerPort()
         self.invitedBy: str = None
         self.setInvitedBy()
-        self.rewardAddress: str = None
+        self.configRewardAddress: str = None
         self.setRewardAddress()
         self.setEngineVersion()
         self.setupWalletManager()
@@ -573,8 +573,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 ):
                     self.server.setDataManagerPort(self.publicDataManagerPort)
                 #logging.debug(self.details, color='teal')
-                if self.details.get('rewardaddress') != self.rewardAddress:
-                    if self.rewardAddress is not None:
+                if self.details.get('rewardaddress') != self.configRewardAddress:
+                    if self.configRewardAddress is not None:
                         self.setRewardAddress(globally=True)
                     else:
                         self.setRewardAddress(address=self.details.get('rewardaddress'))
@@ -659,20 +659,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             len(address) == 34 and
             address.startswith('E')
         ):
-            self.rewardAddress = address
+            self.configRewardAddress = address
             config.add(data={'reward address': address})
         else:
-            self.rewardAddress: str = str(config.get().get('reward address', ''))
+            self.configRewardAddress: str = str(config.get().get('reward address', ''))
         if (
             globally and
             self.env in ['prod', 'local'] and
-            len(self.rewardAddress) == 34 and
-            self.rewardAddress.startswith('E')
+            len(self.configRewardAddress) == 34 and
+            self.configRewardAddress.startswith('E')
         ):
             self.server.setRewardAddress(
-                signature=self.wallet.sign(self.rewardAddress),
+                signature=self.wallet.sign(self.configRewardAddress),
                 pubkey=self.wallet.publicKey,
-                address=self.rewardAddress)
+                address=self.configRewardAddress)
             return True
         return False
 
