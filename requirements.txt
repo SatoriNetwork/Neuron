@@ -7,6 +7,7 @@ setuptools==65.6.3 # 56.0.0
 flask_cors==4.0.0
 
 # needed for websocket connection to ui
+python-socketio>=5.12.0 # flask-socketio==5.5.1 depends on python-socketio
 flask-socketio==5.5.1
 
 # needed for engine
