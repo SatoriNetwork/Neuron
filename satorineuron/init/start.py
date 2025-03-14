@@ -147,6 +147,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBlockTime = time.time()
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
+        self.publicDataManagerPort = 24600
+        self.setPublicDataManagerPort()
         self.invitedBy: str = None
         self.setInvitedBy()
         self.setEngineVersion()
@@ -566,6 +568,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     self.setInvitedBy(self.details.get('sponsor'))
                 elif self.invitedBy is not None:
                     self.server.invitedBy(self.invitedBy)
+                if (
+                    self.details.get('data_manager_port') in (None, 24600)
+                    and  self.publicDataManagerPort not in (None, 24600)
+                ):
+                    self.server.setDataManagerPort(self.publicDataManagerPort)
                 #logging.debug(self.details, color='teal')
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
@@ -1226,6 +1233,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.invitedBy = address
             config.add(data={'invited by': self.invitedBy})
         return self.invitedBy
+
+    def setPublicDataManagerPort(self, port: Union[int, None] = None) -> int:
+        port = (port or config.get().get('public data manager port:', port))
+        if port:
+            self.publicDataManagerPort = port
+            config.add(data={'public data manager port': self.publicDataManagerPort})
+        return self.publicDataManagerPort
 
     def poolAccepting(self, status: bool):
         success, result = self.server.poolAccepting(status)

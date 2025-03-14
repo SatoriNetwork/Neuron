@@ -29,9 +29,9 @@ RUN apt-get update && \
 ## File system setup
 ARG BRANCH_FLAG=main
 RUN mkdir /Satori && \
-    cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Synapse.git && \
+    cd /Satori && git clone -b main https://github.com/SatoriNetwork/Synapse.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
-    cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Wallet.git && \
+    cd /Satori && git clone -b main https://github.com/SatoriNetwork/Wallet.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Engine.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Neuron.git && \
     cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
@@ -151,3 +151,7 @@ CMD ["bash", "./start_from_image.sh"]
 
 # Scott
 # docker run --rm -it --name satorineuron -p 24601:24601 -v C:\GitHub\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
+
+
+# docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=p2p -t satorinet/satorineuron:p2p         --push .
+# docker pull satorinet/satorineuron:p2p
