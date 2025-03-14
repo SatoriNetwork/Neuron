@@ -911,21 +911,24 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             success, mySubscribers = self.server.getStreamsSubscribers(pubList)
             _, remotePublishers = self.server.getStreamsPublishers(subList)
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
+
             subInfo = {
-                uuid: {'subscribers': fellowSubscribers[uuid] if uuid in fellowSubscribers else [],
-                       'publishers': remotePublishers[uuid] if uuid in remotePublishers else []}
+                uuid: {
+                    'subscribers': fellowSubscribers.get(uuid, []),
+                    'publishers': remotePublishers.get(uuid, [])}
                 for uuid in subList
             }
             pubInfo = {
-                uuid: {'subscribers': mySubscribers[uuid] if uuid in mySubscribers else [],
-                       'publishers': meAsPublisher[uuid] if uuid in meAsPublisher else []}
+                uuid: {
+                    'subscribers': mySubscribers.get(uuid, []),
+                    'publishers': meAsPublisher.get(uuid, [])}
                 for uuid in pubList
             }
 
             self.pubSubMapping = {
                 sub_uuid: {
                     'publicationUuid': pub_uuid,
-                    'supportiveUuid':[],
+                    'supportiveUuid': [],
                     'dataStreamSubscribers': subInfo[sub_uuid]['subscribers'],
                     'dataStreamPublishers': subInfo[sub_uuid]['publishers'],
                     'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'],
@@ -933,15 +936,24 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 }
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
-            transferProtocol = self.determineTransferProtocol(next(iter(meAsPublisher.values()))[0].split(':')[0], self.dataServerPort)
+
+            # Handle empty `meAsPublisher` case
+            if not meAsPublisher:
+                logging.error("meAsPublisher is empty. Using default transfer protocol.")
+                transferProtocol = 'p2p-proactive' # a good usecase for 'pubsub'?
+            else:
+                first_publisher_value = next(iter(meAsPublisher.values()), [])
+                if not first_publisher_value:
+                    logging.error("First publisher value is empty. Using default transfer protocol.")
+                    transferProtocol = 'p2p-proactive' # a good usecase for 'pubsub'?
+                else:
+                    transferProtocol = self.determineTransferProtocol(
+                        first_publisher_value[0].split(':')[0], self.dataServerPort)
             self.pubSubMapping['transferProtocol'] = transferProtocol
             if transferProtocol == 'pubsub':
                 self.pubSubMapping['transferProtocolPayload'] = self.key
             elif transferProtocol == 'p2p-proactive':
-                if success:
-                    self.pubSubMapping['transferProtocolPayload'] = mySubscribers
-                else:
-                    self.pubSubMapping['transferProtocolPayload'] = {}
+                self.pubSubMapping['transferProtocolPayload'] = mySubscribers if success else {}
             else:
                 self.pubSubMapping['transferProtocolPayload'] = None
 
