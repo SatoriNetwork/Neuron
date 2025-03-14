@@ -541,10 +541,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     self.server.invitedBy(self.invitedBy)
                 #logging.debug(self.details, color='teal')
                 if self.details.get('rewardaddress') != self.configRewardAddress:
-                    if self.configRewardAddress is not None:
-                        self.setRewardAddress(globally=True)
-                    else:
+                    if self.configRewardAddress is None:
                         self.setRewardAddress(address=self.details.get('rewardaddress'))
+                    else:
+                        self.setRewardAddress(globally=True)
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
