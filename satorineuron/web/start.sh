@@ -9,5 +9,6 @@ if [ "$HEADLESS" = "True" ]; then
     echo "Running in headless mode"
     python headless.py
 else
+    # python data.py # run DataManager app in the background
     python app.py
 fi

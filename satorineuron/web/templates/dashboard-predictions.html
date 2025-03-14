@@ -571,8 +571,9 @@
     },
   });
   var table_output = document.getElementById("updating_table");
-  var table_update = new EventSource("/model-updates");
-  table_update.onmessage = function (e) {
+  //var table_update = new EventSource("/model-updates");
+  //table_update.onmessage = function (e) {
+  socket.on('model-updates', function(data) {
     function viewOnClick(streamOverview) {
       return function () {
         scrollOrJumpTo('predictionsbr');
@@ -581,12 +582,12 @@
         //setData(chartTwo, streamOverview.errs);
       }
     }
-    if (e.data == "close") {
+    if (data == "close") {
       table_update.close();
-    } else if (e.data == "redundantCall") {
+    } else if (data == "redundantCall") {
       console.log('redundantCalled');
     } else {
-      let streamOverview = JSON.parse(e.data);
+      let streamOverview = JSON.parse(data);
       console.log('streamOverview');
       console.log(streamOverview);
       console.log(streamOverview.predictions);
@@ -659,7 +660,7 @@
       //      </div>
       //    </td>`;
     }
-  };
+  });
   function predictionOrEmptyString(p) {
     if (p == 'null') {
       return '';

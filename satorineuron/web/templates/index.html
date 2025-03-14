@@ -35,7 +35,7 @@
       </div>
     </div>
   </div>
-  
+
   <div class="col-xl-6 col-sm-6">
     <div class="card">
       <div class="card-header p-3 pt-2">
@@ -110,7 +110,7 @@
           <div class="col-lg-6 col-7">
             <h6>Predictions</h6>
             <p class="text-sm mb-0">
-              Streams published by this Satori Neuron 
+              Streams published by this Satori Neuron
             </p>
           </div>
         </div>
@@ -128,7 +128,7 @@
               </tr>
             </thead>
             <tbody id="updating_table">
-              
+
             </tbody>
           </table>
         </div>
@@ -388,19 +388,16 @@
     },
   });
   var loading_output = document.getElementById("updating_loading");
-  var loading_update = new EventSource("/loading-progress");
-  loading_update.onmessage = function (e) {
-    if (e.data == "close") {
+  //var loading_update = new EventSource("/loading-progress");
+  //loading_update.onmessage = function (e) {
+  socket.on('updating_loading', function(data) {
+    if (data == "close") {
       loading_update.close();
       window.location.replace("{{url_for('dashboard')}}");
     } else {
-      loading_output.innerHTML = e.data;
+      loading_output.innerHTML = data;
     }
-  }
+  });
 </script>
 
 {% endblock %}
-
-
-
-

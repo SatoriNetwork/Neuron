@@ -7,13 +7,13 @@
           <div class="col-lg-10 col-10">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
             <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
-            Primary datastreams published by this Satori Neuron 
+            Primary datastreams published by this Satori Neuron
             </p>
           </div>
           <div class="col-lg-2 col-2">
             <div class="row-container">
               <!--<p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}" style="text-align: end;/* border-bottom: inset; */font-weight: 600;">
-                CSV: 
+                CSV:
               </p>-->
               <a href="{{ url_for('relayCsv', filename='download/satori_relay_datastreams_export.csv') }}" target="_blank">
                 <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
@@ -50,7 +50,7 @@
                   console.log('show failure message?');
                 }
                 hideWorking();
-                fetch('/working_updates_end', {method: 'GET'});
+                //fetch('/working_updates_end', {method: 'GET'});
               })
               .catch(error => {
                   console.error('Error:', error);
@@ -200,7 +200,7 @@
                       {% if existingRelayStream['uri'] != existingRelayStream['url'] %}
                         {% if existingRelayStream['uri']|length > 33 %} {{ existingRelayStream['uri'][0:30] + '...' }}
                         {% else %} {{ existingRelayStream['uri'] }}
-                        {% endif %} 
+                        {% endif %}
                       {% endif %}
                     </h6>
                   </div>
@@ -241,7 +241,7 @@
                     </h6>
                   </div>
                 </td>
-              </tr> 
+              </tr>
               {% endfor %}
             </tbody>
           </table>

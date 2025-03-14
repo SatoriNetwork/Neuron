@@ -4,48 +4,47 @@
 
 # run with:
 # sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
-import datetime as dt
-from satorilib.utils.time import timestampToSeconds, secondsToTimestamp
-from flask_cors import CORS
-from typing import Union
-from functools import wraps, partial
-import shutil
 import os
 import sys
 import json
+import time
+import shutil
 import random
 import secrets
-import time
+import asyncio
 import traceback
-import threading
-import pandas as pd
-from logging.handlers import RotatingFileHandler
 from queue import Queue
+from typing import Union
+from functools import wraps, partial
+from logging.handlers import RotatingFileHandler
+import pandas as pd
 from werkzeug.utils import secure_filename
 # from waitress import serve  # necessary ?
 from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
-from flask import Response, stream_with_context, render_template_string
-from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
+from flask import Response, render_template_string
+from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 from satorilib.concepts import constants
-from satorilib.wallet.wallet import TransactionFailure
-from satorilib.utils.time import timeToSeconds, nowStr
-from satorilib.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
 from satorilib.utils import getRandomName, getRandomQuote
-from satorisynapse import Envelope, Signal
+from satorilib.utils.time import timeToSeconds
+from satorilib.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.wallet.wallet import TransactionFailure
 from satorineuron import VERSION, MOTTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
 from satorineuron.web import forms
+from satorineuron.structs.start import UiEndpoint
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
-logging.info(f'version: {VERSION}', print=True)
 
 
 ###############################################################################
 ## Globals ####################################################################
 ###############################################################################
 
+logging.info(f'version: {VERSION}', print=True)
 logging.logging.getLogger('werkzeug').setLevel(logging.logging.ERROR)
 
 debug = True
@@ -55,6 +54,7 @@ toEditStream = False
 badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
+
 updateTime = 0
 updateQueue = Queue()
 timeout = 1
@@ -65,6 +65,7 @@ CORS(app, origins=[{
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])
+
 
 fail2ban_dir = config.get().get("fail2ban_log", None)
 if fail2ban_dir:
@@ -80,15 +81,33 @@ if fail2ban_dir:
 else:
     fail_log = None
 
+socketio = SocketIO(app)
+
+def sendToUI(
+    event: Union[str, UiEndpoint],
+    data: Union[str, dict],
+    broadcast:bool=True,
+    **kwargs,
+):
+    if not isinstance(data, str):
+        data = (
+            str(data)
+            .replace("'", '"')
+            .replace(': True', ': true')
+            .replace(': False', ': false'))
+    socketio.emit(str(event), data, **kwargs)
 
 ###############################################################################
 ## Startup ####################################################################
 ###############################################################################
+
 while True:
     try:
-        start = StartupDag(
+        # Run the async creation directly in the main thread
+        start = asyncio.run(StartupDag.create(
             env=ENV,
             runMode=config.get().get('run mode', os.environ.get('RUNMODE')),
+            sendToUI=sendToUI,
             # TODO: notice the dev mode is the same as prod for now, we should
             #       have separate servers or run locally for dev mode
             urlServer={
@@ -119,7 +138,7 @@ while True:
                 'dev': 'https://localhost:24602',
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
-            isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
+            isDebug=sys.argv[1] if len(sys.argv) > 1 else False))
 
         # start.buildEngine()
         # threading.Thread(target=start.start, daemon=True).start()
@@ -137,6 +156,92 @@ while True:
         traceback.print_exc()
         logging.error(f'Exception in app startup: {e}', color='red')
         time.sleep(30)
+
+
+###############################################################################
+## Socket Endpoints ###########################################################
+###############################################################################
+# from app import socketio  # Ensure you're using the same instance
+# # Emit to all clients (broadcast=True) or target a specific room/namespace if needed.
+# socketio.emit('update_value', {'value': data}, broadcast=True)
+# # run functions in the background with socketio - typically a loop that emits
+# socketio.start_background_task(send_connection_status)
+
+#@app.route('/connections-status')
+#def connectionsStatus():
+#    def update():
+#        while True:
+#            yield "data: " + str(start.connectionsStatusQueue.get()).replace("'", '"').replace(': True', ': true').replace(': False', ': false') + "\n\n"
+#
+#    return Response(update(), mimetype='text/event-stream')
+
+@socketio.on('connect')
+def handle_connect():
+    print("Client connected")
+    emit('update_value', {'value': 'Connected!'})
+
+# @app.route('/model-updates')
+# def modelUpdates():
+#     def update():
+#
+#         def on_next(model, x):
+#             global updateQueue
+#             if x is not None:
+#                 overview = model.overview()
+#                 # logging.debug('Yielding', overview.values, color='yellow')
+#                 updateQueue.put(
+#                     "data: " + str(overview).replace("'", '"') + "\n\n")
+#
+#         global updateTime
+#         global updateQueue
+#         listeners = []
+#         import time
+#         thisThreadsTime = time.time()
+#         updateTime = thisThreadsTime
+#         if start.engine is not None:
+#             for model in start.engine.models:
+#                 # logging.debug('model', model.dataset.dropna(
+#                 # ).iloc[-20:].loc[:, (model.variable.source, model.variable.author, model.variable.stream, model.variable.target)], color='yellow')
+#                 listeners.append(
+#                     model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model)))
+#             while True:
+#                 data = updateQueue.get()
+#                 if thisThreadsTime != updateTime:
+#                     return Response('data: redundantCall\n\n', mimetype='text/event-stream')
+#                 yield data
+#         else:
+#             # logging.debug('yeilding once', len(
+#             #     str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
+#             yield "data: " + str(StreamOverviews.demo()).replace("'", '"') + "\n\n"
+#
+#         # part of the new datamanager
+#         # have to co-relate with stream UUID
+#         def whatToDoWithPredictionData(predictionDict: json):
+#             value_dict = json.loads(predictionDict['data'])['value']
+#             date_time = list(value_dict.keys())[0]
+#             value = list(value_dict.values())[0]
+#             print(f"Date time: {date_time}")
+#             print(f"Value: {value}")
+#
+#         start.predictionProduced.subscribe(
+#                 lambda x: whatToDoWithPredictionData(x) if x is not None else None)
+#
+#     return Response(update(), mimetype='text/event-stream')
+
+# def subscribe_model_updates():
+#     def on_next(model, x):
+#         if x is not None:
+#             overview = model.overview()
+#             # Emit the model update event to connected clients.
+#             socketio.emit('model-update', overview, broadcast=True)
+#
+#     if start.engine is not None:
+#         for model in start.engine.models:
+#             # Subscribe to updates for each model.
+#             model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model))
+#     else:
+#         # For demo purposes, emit a demo overview.
+#         socketio.emit('model-update', StreamOverviews.demo(), broadcast=True)
 
 ###############################################################################
 ## Functions ##################################################################
@@ -565,8 +670,6 @@ def refresh():
 @userInteracted
 @authRequired
 def restart():
-    start.udpQueue.put(
-        Envelope(ip='', vesicle=Signal(restart=True)))  # TODO: remove
     start.restartQueue.put(1)
     html = (
         '<!DOCTYPE html>'
@@ -593,8 +696,6 @@ def restart():
 @userInteracted
 @authRequired
 def shutdown():
-    start.udpQueue.put(
-        Envelope(ip='', vesicle=Signal(shutdown=True)))  # TODO: remove
     start.restartQueue.put(0)
     html = (
         '<!DOCTYPE html>'
@@ -1358,127 +1459,11 @@ def pinDepinStream():
 
 @app.route('/connections-status/refresh', methods=['GET'])
 def connectionsStatusRefresh():
-    start.connectionsStatusQueue.put(start.latestConnectionStatus)
-    return str(start.latestConnectionStatus).replace("'", '"').replace(': True', ': true').replace(': False', ': false'), 200
-
-
-@app.route('/connections-status')
-def connectionsStatus():
-    def update():
-        while True:
-            yield "data: " + str(start.connectionsStatusQueue.get()).replace("'", '"').replace(': True', ': true').replace(': False', ': false') + "\n\n"
-
-    return Response(update(), mimetype='text/event-stream')
-
-
-# old way
-# @app.route('/model-updates')
-# def modelUpdates():
-#    def update():
-#        global updating
-#        if updating:
-#            yield 'data: []\n\n'
-#        logging.debug('modelUpdates', updating, color='yellow')
-#        updating = True
-#        streamOverviews = StreamOverviews(start.engine)
-#        logging.debug('streamOverviews', streamOverviews, color='yellow')
-#        listeners = []
-#        # listeners.append(start.engine.data.newData.subscribe(
-#        #    lambda x: streamOverviews.setIt() if x is not None else None))
-#        if start.engine is not None:
-#            logging.debug('start.engine is not None',
-#                          start.engine is not None, color='yellow')
-#            for model in start.engine.models:
-#                listeners.append(model.predictionUpdate.subscribe(
-#                    lambda x: streamOverviews.setIt() if x is not None else None))
-#            while True:
-#                logging.debug('in while loop', color='yellow')
-#                if streamOverviews.viewed:
-#                    logging.debug('NOT yeilding',
-#                                  streamOverviews.viewed, color='yellow')
-#                    time.sleep(60)
-#                else:
-#                    logging.debug('yeilding',
-#                                  str(streamOverviews.overview).replace("'", '"'), color='yellow')
-#                    # parse it out here?
-#                    yield "data: " + str(streamOverviews.overview).replace("'", '"') + "\n\n"
-#                    streamOverviews.setViewed()
-#        else:
-#            logging.debug('yeilding once', len(
-#                str(streamOverviews.demo).replace("'", '"')), color='yellow')
-#            yield "data: " + str(streamOverviews.demo).replace("'", '"') + "\n\n"
-#
-#    import time
-#    return Response(update(), mimetype='text/event-stream')
-@app.route('/model-updates')
-def modelUpdates():
-    def update():
-
-        def on_next(model, x):
-            global updateQueue
-            if x is not None:
-                overview = model.overview()
-                # logging.debug('Yielding', overview.values, color='yellow')
-                updateQueue.put(
-                    "data: " + str(overview).replace("'", '"') + "\n\n")
-
-        global updateTime
-        global updateQueue
-        listeners = []
-        import time
-        thisThreadsTime = time.time()
-        updateTime = thisThreadsTime
-        if start.engine is not None:
-            for model in start.engine.models:
-                # logging.debug('model', model.dataset.dropna(
-                # ).iloc[-20:].loc[:, (model.variable.source, model.variable.author, model.variable.stream, model.variable.target)], color='yellow')
-                listeners.append(
-                    model.privatePredictionUpdate.subscribe(on_next=partial(on_next, model)))
-            while True:
-                data = updateQueue.get()
-                if thisThreadsTime != updateTime:
-                    return Response('data: redundantCall\n\n', mimetype='text/event-stream')
-                yield data
-        else:
-            # logging.debug('yeilding once', len(
-            #     str(StreamOverviews.demo()).replace("'", '"')), color='yellow')
-            yield "data: " + str(StreamOverviews.demo()).replace("'", '"') + "\n\n"
-
-    return Response(update(), mimetype='text/event-stream')
-
-
-@app.route('/working_updates')
-def workingUpdates():
-    def update():
-        try:
-            yield 'data: \n\n'
-            # messages = []
-            # listeners = []
-            # listeners.append(start.workingUpdates.subscribe(
-            #    lambda x: messages.append(x) if x is not None else None))
-            while True:
-                msg = start.workingUpdates.get()
-                if msg == 'working_updates_end':
-                    break
-                yield "data: " + str(msg).replace("'", '"') + "\n\n"
-                # time.sleep(1)
-                # if len(messages) > 0:
-                #    msg = messages.pop(0)
-                #    if msg == 'working_updates_end':
-                #        break
-                #    yield "data: " + str(msg).replace("'", '"') + "\n\n"
-        except Exception as e:
-            logging.error('working_updates error:', e, print=True)
-
-    # import time
-    return Response(update(), mimetype='text/event-stream')
-
-
-@app.route('/working_updates_end')
-def workingUpdatesEnd():
-    # start.workingUpdates.on_next('working_updates_end')
-    start.workingUpdates.put('working_updates_end')
-    return 'ok', 200
+    return (
+        str(start.latestConnectionStatus)
+        .replace("'", '"')
+        .replace(': True', ': true')
+        .replace(': False', ': false')), 200
 
 
 @app.route('/chat', methods=['GET'])
@@ -2773,152 +2758,18 @@ def triggerRelay(topic: str = None):
     return redirect(url_for('dashboard'))
 
 ###############################################################################
-## Routes - subscription ######################################################
-###############################################################################
-
-# unused - we're not using any other networks yet, but when we do we can pass
-# their values to this and have it diseminate
-# @app.route('/subscription/update/', methods=['POST'])
-# def update():
-#    """
-#    returns nothing
-#    ---
-#    post:
-#      operationId: score
-#      requestBody:
-#        content:
-#          application/json:
-#            {
-#            "source-id": id,
-#            "stream-id": id,
-#            "observation-id": id,
-#            "content": {
-#                key: value
-#            }}
-#      responses:
-#        '200':
-#          json
-#    """
-#    ''' from streamr - datastream has a new observation
-#    upon a new observation of a datastream, the nodejs app will send this
-#    python flask app a message on this route. The flask app will then pass the
-#    message to the data manager, specifically the scholar (and subscriber)
-#    threads by adding it to the appropriate subject. (the scholar, will add it
-#    to the correct table in the database history, notifying the subscriber who
-#    will, if used by any current best models, notify that model's predictor
-#    thread via a subject that a new observation is available by providing the
-#    observation directly in the subject).
-#
-#    This app needs to create the DataManager, ModelManagers, and Learner in
-#    in order to have access to those objects. Specifically the DataManager,
-#    we need to be able to access it's BehaviorSubjects at data.newData
-#    so we can call .on_next() here to pass along the update got here from the
-#    Streamr LightClient, and trigger a new prediction.
-#    '''
-#    x = Observation.parse(request.json)
-#    start.engine.data.newData.on_next(x)
-#
-#    return request.json
-
-
-###############################################################################
-## Routes - history ###########################################################
-# we may be able to make these requests
-###############################################################################
-
-
-@app.route('/history/request')
-@authRequired
-def publsih():
-    ''' to streamr - create a new datastream to publish to '''
-    # todo: spoof a dataset response - random generated data, so that the
-    #       scholar can be built to ask for history and download it.
-    return render_template('unknown.html', **getResp())
-
-
-@app.route('/history')
-@authRequired
-def publsihMeta():
-    ''' to streamr - publish to a stream '''
-    return render_template('unknown.html', **getResp())
-
-###############################################################################
-## UDP communication ##########################################################
-###############################################################################
-
-
-@app.route('/synapse/ping', methods=['GET'])
-def synapsePing():
-    ''' tells p2p script we're up and running '''
-    # if start.wallet is None:
-    #    return 'fail', 400
-    # if start.synergy is not None:
-    #    return 'ready', 200
-    # return 'ok', 200
-    # if start.synergy is None:
-    #    return 'fail', 201
-    return 'ready', 200
-
-
-@app.route('/synapse/ports', methods=['GET'])
-def synapsePorts():
-    ''' receives data from udp relay '''
-    return str(start.peer.gatherChannels())
-
-
-@app.route('/synapse/stream')  # TODO: remove
-def synapseStream():
-    ''' here we listen for messages from the synergy engine '''
-
-    def event_stream():
-        while True:
-            message = start.udpQueue.get()  # TODO: remove
-            if isinstance(message, Envelope):
-                yield 'data:' + message.toJson + '\n\n'
-
-    return Response(
-        stream_with_context(event_stream()),
-        content_type='text/event-stream')
-
-
-@app.route('/synapse/message', methods=['POST'])
-def synapseMessage():
-    ''' receives data from udp relay '''
-    data = request.data
-    remoteIp = request.headers.get('remoteIp')
-    # remotePort = int(request.headers.get('remotePort')) #not needed at this time
-    # localPort = int(request.headers.get('localPort'))
-    if any(v is None for v in [remoteIp, data]):
-        return 'fail', 400
-    start.synergy.passMessage(remoteIp, message=data)
-    return 'ok', 200
-
-
-###############################################################################
 ## Entry ######################################################################
 ###############################################################################
 
 
 if __name__ == '__main__':
-    # if False:
-    #    spoofStreamer()
-
-    # serve(app, host='0.0.0.0', port=config.get()['port'])
     app.run(
         #host='0.0.0.0',
         host='::', #ipv6
         port=config.flaskPort(),
         threaded=True,
         debug=debug,
-        use_reloader=False)   # fixes run twice issue
-    # app.run(host='0.0.0.0', port=config.get()['port'], threaded=True)
-    # https://stackoverflow.com/questions/11150343/slow-requests-on-local-flask-server
-    # did not help
-
-# http://localhost:24601/
-# sudo nohup /app/anaconda3/bin/python app.py > /dev/null 2>&1 &
-# > python satori\web\app.py
-
+        use_reloader=False)
 
 ## possible - dual stack solution
 #import socket

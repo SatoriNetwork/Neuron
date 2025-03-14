@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Callable
 import os
 import time
 import json
@@ -6,6 +6,8 @@ import random
 import threading
 from queue import Queue
 from eth_account import Account
+import asyncio
+import pandas as pd
 from satorilib.concepts.structs import (
     StreamId,
     Stream,
@@ -13,6 +15,7 @@ from satorilib.concepts.structs import (
     StreamOverview)
 from satorilib import disk
 from satorilib.wallet import EvrmoreWallet
+from satorilib.wallet.evrmore.identity import EvrmoreIdentity
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
@@ -28,15 +31,14 @@ from satorineuron.init.tag import LatestTag, Version
 from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
-from satorineuron.structs.start import RunMode, StartupDagStruct
+from satorineuron.structs.start import RunMode, UiEndpoint, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
+from satorilib.datamanager import DataClient, DataServerApi, Message, Subscription
+from io import StringIO
 
 def getStart():
     """returns StartupDag singleton"""
     return StartupDag()
-
-
-# engine_start = StartupDag()
 
 
 class SingletonMeta(type):
@@ -54,11 +56,38 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     _holdingBalanceBase_cache = None
     _holdingBalanceBase_timestamp = 0
 
+    @classmethod
+    async def create(
+        cls,
+        *args,
+        env: str = 'dev',
+        runMode: str = None,
+        sendToUI: Callable = None,
+        urlServer: str = None,
+        urlMundo: str = None,
+        urlPubsubs: list[str] = None,
+        urlSynergy: str = None,
+        isDebug: bool = False,
+    ) -> 'StartupDag':
+        '''Factory method to create and initialize StartupDag asynchronously'''
+        startupDag = cls(
+            *args,
+            env=env,
+            runMode=runMode,
+            sendToUI=sendToUI,
+            urlServer=urlServer,
+            urlMundo=urlMundo,
+            urlPubsubs=urlPubsubs,
+            urlSynergy=urlSynergy,
+            isDebug=isDebug)
+        await startupDag.startFunction()
+
     def __init__(
         self,
         *args,
-        env: str = "dev",
+        env: str = 'dev',
         runMode: str = None,
+        sendToUI: Callable = None,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -70,18 +99,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # TODO: test and turn on with new installer
         # self.watchForVersionUpdates()
         self.env = env
-        self.runMode = RunMode.choose(runMode)
+        self.runMode = RunMode.choose(runMode or config.get().get('mode', None))
+        self.sendToUI = sendToUI or (lambda x: None)
         logging.info(f'mode: {self.runMode.name}', print=True)
         self.userInteraction = time.time()
         self.walletVaultManager: WalletVaultManager
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
-        # self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
         # self.chatUpdates: BehaviorSubject = BehaviorSubject(None)
-        self.workingUpdates: Queue = Queue()
         self.chatUpdates: Queue = Queue()
         # dictionary of connection statuses {ConnectionTo: bool}
-        self.connectionsStatusQueue: Queue = Queue()
         self.latestConnectionStatus: dict = {}
         self.urlServer: str = urlServer
         self.urlMundo: str = urlMundo
@@ -98,7 +125,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.ipfs: Ipfs = Ipfs()
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
-        self.server: SatoriServerClient
+        self.dataServerIp: str =  ''
+        self.dataServerPort: Union[int, None] =  None
+        self.dataClient: Union[DataClient, None] = None
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
@@ -107,6 +136,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
+        self.pubSubMapping: dict = {}
+        self.identity: EvrmoreIdentity = EvrmoreIdentity(config.walletPath('wallet.yaml'))
+        self.data: dict[str, dict[pd.DataFrame, pd.DataFrame]] = {}
         self.streamDisplay: list = []
         self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
@@ -119,11 +151,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.setInvitedBy()
         self.setEngineVersion()
         self.setupWalletManager()
-        if not config.get().get("disable restart", False):
-            self.restartThread = threading.Thread(
-                target=self.restartEverythingPeriodic,
-                daemon=True)
-            self.restartThread.start()
         self.restartQueue: Queue = Queue()
         self.restartQueueThread = threading.Thread(
             target=self.restartWithQueue,
@@ -138,21 +165,33 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         alreadySetup: bool = os.path.exists(config.walletPath("wallet.yaml"))
         if not alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
-        self.ranOnce = False
+        self.startFunction = self.start
         if self.runMode == RunMode.normal:
-            startFunction = self.start
+            self.startFunction = self.start
         elif self.runMode == RunMode.worker:
-            startFunction = self.startWorker
+            self.startFunction = self.startWorker
         elif self.runMode == RunMode.wallet:
-            startFunction = self.startWalletOnly
-        while True:
-            if self.asyncThread.loop is not None:
-                self.checkinThread = self.asyncThread.repeatRun(
-                    task=startFunction,
-                    interval=60 * 60 * 24 if alreadySetup else 60 * 60 * 12,
-                )
-                break
-            time.sleep(60 * 15)
+            self.startFunction = self.startWalletOnly
+        # TODO: this logic must be removed - auto restart functionality should
+        #       happen ouside neuron
+        if not config.get().get("disable restart", False):
+            self.restartThread = threading.Thread(
+                target=self.restartEverythingPeriodic,
+                daemon=True)
+            self.restartThread.start()
+        #while True:
+        #    if self.asyncThread.loop is not None:
+        #        self.checkinThread = self.asyncThread.repeatRun(
+        #            task=startFunction,
+        #            interval=60 * 60 * 24 if alreadySetup else 60 * 60 * 12,
+        #        )
+        #        break
+        #    time.sleep(60 * 15)
+
+        # TODO: after pubsubmap is provided to the data server,
+        #       get the data for each datastream, grab all (optimize later)
+        #       subscribe to everything, add the data to our in memory datasets
+        #       (that updates the ui)
 
     @property
     def walletOnlyMode(self) -> bool:
@@ -413,39 +452,35 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def networkIsTest(self, network: str = None) -> bool:
         return network.lower().strip() in ("testnet", "test", "ravencoin", "rvn")
 
-    def start(self):
+    async def dataServerFinalize(self):
+        # transferProtocol = self.determineTransferProtocol()
+        # TODO: do something with this transfer protocol:
+        #       should we support just p2p-limited or (p2p-limited and pubsub)?
+        await self.sharePubSubInfo()
+        await self.populateData()
+        await self.subscribeToRawData()
+        await self.subscribeToEngineUpdates()
+
+    async def start(self):
         """start the satori engine."""
-        # while True:
-        if self.ranOnce:
-            time.sleep(60 * 60)
-        self.ranOnce = True
-        if self.walletOnlyMode:
-            self.walletVaultManager.setupWalletAndVault()
-            self.createServerConn()
-            self.checkin()
-            logging.info("in WALLETONLYMODE")
-            return
+        await self.connectToDataServer()
+        asyncio.create_task(self.stayConnectedForever())
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
         self.setRewardAddress()
-        self.verifyCaches()
-        # self.startSynergyEngine()
         self.subConnect()
         self.pubsConnect()
+        await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
         if self.isDebug:
             return
         self.startRelay()
-        self.buildEngine()
-        time.sleep(60 * 60 * 24)
+        await asyncio.Event().wait() # probably place this at the end of satori.py?
 
-    def engine_necessary(self):
+    async def engine_necessary(self):
         """Below are what is necessary for the Engine to start building"""
-        if self.ranOnce:
-            time.sleep(60 * 60)
-        self.ranOnce = True
         if self.walletOnlyMode:
             self.walletVaultManager.setupWalletAndVault()
             self.createServerConn()
@@ -458,7 +493,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createServerConn()
         self.checkin()
         # self.setRewardAddress()
-        # self.verifyCaches()
+        # self.populateData()
         # self.startSynergyEngine()
         self.subConnect()
         # self.pubsConnect()
@@ -468,47 +503,39 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.buildEngine()
         time.sleep(60 * 60 * 24)
 
-    def startWalletOnly(self):
+    async def startWalletOnly(self):
         """start the satori engine."""
         logging.info("running in walletOnly mode", color="blue")
-        # while True:
-        if self.ranOnce:
-            time.sleep(60 * 60)
-        self.ranOnce = True
         self.walletVaultManager.setupWalletAndVault()
         self.createServerConn()
+        return
 
-    def startWorker(self):
+    async def startWorker(self):
         """start the satori engine."""
         logging.info("running in worker mode", color="blue")
-        # while True:
-        if self.ranOnce:
-            time.sleep(60 * 60)
-        self.ranOnce = True
+        await self.connectToDataServer()
+        asyncio.create_task(self.stayConnectedForever())
         self.walletVaultManager.setupWalletAndVault()
         #self.walletVaultManager.setupWalletAndVaultIdentities()
         self.setMiningMode()
-        self.setEngineVersion()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
         self.setRewardAddress()
-        self.verifyCaches()
-        # self.startSynergyEngine()
         self.subConnect()
         self.pubsConnect()
+        await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
         if self.isDebug:
             return
         self.startRelay()
-        self.buildEngine()
-        time.sleep(60 * 60 * 24)
+        await asyncio.Event().wait() # probably place this at the end of satori.py?
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
         self.latestConnectionStatus = {
             **self.latestConnectionStatus,
             **{connTo.name: status}}
-        self.connectionsStatusQueue.put(self.latestConnectionStatus)
+        self.sendToUI(UiEndpoint.connectionStatus, self.latestConnectionStatus)
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
@@ -626,18 +653,34 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return True
         return False
 
-    def verifyCaches(self) -> bool:
-        """rehashes my published hashes"""
-
-        def validateCache(cache: disk.Cache):
-            success, _ = cache.validateAllHashes()
-            if not success:
-                cache.saveHashes()
-
-        for stream in set(self.publications):
-            cache = self.cacheOf(stream.id)
-            self.asyncThread.runAsync(cache, task=validateCache)
-        return True
+    async def populateData(self):
+        """ save real and prediction data in neuron """
+        for k in self.pubSubMapping.keys():
+            if k != 'transferProtocol' and k != 'transferProtocolPayload':
+                realDataDf = None
+                predictionDataDf = None
+                try:
+                    realData = await self.dataClient.getLocalStreamData(k)
+                    if realData.status == DataServerApi.statusSuccess.value and isinstance(realData.data, pd.DataFrame):
+                        realDataDf = realData.data
+                    else:
+                        raise Exception(realData.senderMsg)
+                except Exception as e:
+                    # logging.error(e)
+                    pass
+                try:
+                    predictionData = await self.dataClient.getLocalStreamData(self.pubSubMapping[k]['publicationUuid'])
+                    if predictionData.status == DataServerApi.statusSuccess.value and isinstance(predictionData.data, pd.DataFrame):
+                        predictionDataDf = predictionData.data
+                    else:
+                        raise Exception(predictionData.senderMsg)
+                except Exception as e:
+                    # logging.error(e)
+                    pass
+                self.data[k] = {
+                    'realData': realDataDf if realDataDf is not None else pd.DataFrame([]),
+                    'predictionData': predictionDataDf if predictionDataDf is not None else pd.DataFrame([])
+                }
 
     @staticmethod
     def predictionStreams(streams: list[Stream]):
@@ -650,7 +693,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """filter down to prediciton publications"""
         return [s for s in streams if s.predicting is None]
 
-    def buildEngine(self):
+    async def buildEngine(self):
         """start the engine, it will run w/ what it has til ipfs is synced"""
 
         def streamDisplayer(subsription: Stream):
@@ -672,14 +715,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     stream_display.predictions = [
                         value
                         for value in streamForecast.predictionHistory.value]
-            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId.strId}', color='blue')
-            self.server.publish(
-                topic=streamForecast.predictionStreamId.jsonId,
-                data=streamForecast.forecast["pred"].iloc[0],
-                observationTime=streamForecast.observationTime,
-                observationHash=streamForecast.observationHash,
-                isPrediction=True,
-                useAuthorizedCall=self.version >= Version("0.2.6"))
+                    self.addModelUpdate(stream_display)
+            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId}', color='blue')
+            # self.server.publish( # TODO : fix this for the new datamanager
+            #     topic=streamForecast.predictionStreamId.topic(),
+            #     data=streamForecast.forecast["pred"].iloc[0],
+            #     observationTime=streamForecast.observationTime,
+            #     observationHash=streamForecast.observationHash,
+            #     isPrediction=True,
+            #     useAuthorizedCall=self.version >= Version("0.2.6"))
 
         # TODO: we will have to change this some day to a mapping between the
         #       publication (key) and all the supporting subscriptions (value)
@@ -704,9 +748,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #    logging.warning('Running in Local Mode.', color='green')
         if self.engineVersion == 'v2':
             self.aiengine: satoriengine.veda.engine.Engine = (
-                satoriengine.veda.engine.Engine(
-                    streams=self.subscriptions,
-                    pubstreams=self.publications)
+                await satoriengine.veda.engine.Engine.create()
             )
             self.aiengine.predictionProduced.subscribe(
                 lambda x: handleNewPrediction(x) if x is not None else None)
@@ -759,6 +801,198 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
 
+
+    @property
+    def isConnectedToServer(self):
+        if hasattr(self, 'dataClient') and self.dataClient is not None:
+            return self.dataClient.isConnected()
+        return False
+
+    async def connectToDataServer(self):
+        ''' connect to server, retry if failed '''
+
+        async def authenticate() -> bool:
+            response = await self.dataClient.authenticate(islocal='neuron')
+            if response.status == DataServerApi.statusSuccess.value:
+                logging.info("Local Neuron successfully connected to Server Ip at :", self.dataServerIp, color="green")
+                return True
+            return False
+
+        async def initiateServerConnection() -> bool:
+            ''' local neuron client authorization '''
+            self.dataClient = DataClient(self.dataServerIp, self.dataServerPort, identity=self.identity)
+            return await authenticate()
+
+        waitingPeriod = 10
+        while not self.isConnectedToServer:
+            try:
+                self.dataServerIp = config.get().get('server ip', '0.0.0.0')
+                self.dataServerPort = int(config.get().get('server port', 24600))
+                if await initiateServerConnection():
+                    return True
+            except Exception as e:
+                # logging.error("Error connecting to server ip in config : ", e)
+                try:
+                    self.dataServerIp = self.server.getPublicIp().text.split()[-1]
+                    if await initiateServerConnection():
+                        return True
+                except Exception as e:
+                    logging.warning(f'Failed to find a valid Server Ip, retrying in {waitingPeriod}')
+                    await asyncio.sleep(waitingPeriod)
+        #return False?
+
+    async def stayConnectedForever(self):
+        ''' alternative to await asyncio.Event().wait() '''
+        while True:
+            await asyncio.sleep(30)
+            if not self.isConnectedToServer:
+                await self.connectToDataServer()
+                await self.dataServerFinalize()
+                #await self.start()
+                # should we manage all our other connections here too?
+                # pubsub
+                # electrumx
+
+    def determineTransferProtocol(self, ipAddr: str, port: int = 24600) -> str:
+        '''
+        determine the transfer protocol to be used for data transfer
+        default: p2p
+        p2p - use the data server and data clients
+        p2p-proactive
+            - use the data server and data clients.
+            - connect to my subscribers, send them the data streams they want.
+                - sync historic datasets?
+        pubsub
+            - use the pubsub connection to subscribe to data streams.
+            - does not include pub
+        '''
+        return config.get().get(
+            'transfer protocol',
+            'p2p' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive')
+
+
+    async def sharePubSubInfo(self):
+        ''' set Pub-Sub mapping in the authorized server '''
+        def matchPubSub():
+            ''' matchs related pub/sub stream '''
+            streamPairs = StreamPairs(
+                self.subscriptions,
+                StartupDag.predictionStreams(self.publications))
+            self.subscriptions, self.publications = streamPairs.get_matched_pairs()
+            subList = [sub.streamId.uuid for sub in self.subscriptions]
+            pubList = [pub.streamId.uuid for pub in self.publications]
+            _, fellowSubscribers = self.server.getStreamsSubscribers(subList)
+            success, mySubscribers = self.server.getStreamsSubscribers(pubList)
+            _, remotePublishers = self.server.getStreamsPublishers(subList)
+            _, meAsPublisher = self.server.getStreamsPublishers(pubList)
+            subInfo = {
+                uuid: {'subscribers': fellowSubscribers[uuid] if uuid in fellowSubscribers else [],
+                       'publishers': remotePublishers[uuid] if uuid in remotePublishers else []}
+                for uuid in subList
+            }
+            pubInfo = {
+                uuid: {'subscribers': mySubscribers[uuid] if uuid in mySubscribers else [],
+                       'publishers': meAsPublisher[uuid] if uuid in meAsPublisher else []}
+                for uuid in pubList
+            }
+
+            self.pubSubMapping = {
+                sub_uuid: {
+                    'publicationUuid': pub_uuid,
+                    'supportiveUuid':[],
+                    'dataStreamSubscribers': subInfo[sub_uuid]['subscribers'],
+                    'dataStreamPublishers': subInfo[sub_uuid]['publishers'],
+                    'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'],
+                    'predictiveStreamPublishers': pubInfo[pub_uuid]['publishers']
+                }
+                for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
+            }
+            transferProtocol = self.determineTransferProtocol(next(iter(meAsPublisher.values()))[0].split(':')[0], self.dataServerPort)
+            self.pubSubMapping['transferProtocol'] = transferProtocol
+            if transferProtocol == 'pubsub':
+                self.pubSubMapping['transferProtocolPayload'] = self.key
+            elif transferProtocol == 'p2p-proactive':
+                if success:
+                    self.pubSubMapping['transferProtocolPayload'] = mySubscribers
+                else:
+                    self.pubSubMapping['transferProtocolPayload'] = {}
+            else:
+                self.pubSubMapping['transferProtocolPayload'] = None
+
+        async def _sendPubSubMapping():
+            """ send pub-sub mapping with peer informations to the DataServer """
+            try:
+                response = await self.dataClient.setPubsubMap(self.pubSubMapping)
+                if response.status == DataServerApi.statusSuccess.value:
+                    logging.debug(response.senderMsg, print=True)
+                else:
+                    raise Exception(response.senderMsg)
+            except Exception as e:
+                logging.error(f"Failed to set pub-sub mapping, {e}")
+
+        matchPubSub()
+        await _sendPubSubMapping()
+
+    async def subscribeToRawData(self):
+        ''' local neuron client subscribes to engine predication data '''
+
+        for k in self.pubSubMapping.keys():
+            if k!= 'transferProtocol' and k!= 'transferProtocolPayload':
+                response = await self.dataClient.subscribe(
+                    peerHost=self.dataServerIp,
+                    uuid=k,
+                    callback=self.handleRawData)
+                if response.status == DataServerApi.statusSuccess.value:
+                    logging.debug('Subscribed to Raw Data', response.senderMsg, color='green')
+                else:
+                    logging.warning('Failed to Subscribe: ', response.senderMsg )
+                    # await asyncio.sleep(10)
+                    # await self.subscribeToRawData()
+
+    async def subscribeToEngineUpdates(self):
+        ''' local neuron client subscribes to engine predication data '''
+
+        for k, v in self.pubSubMapping.items():
+            if k!= 'transferProtocol' and k!= 'transferProtocolPayload':
+                response = await self.dataClient.subscribe(
+                    peerHost=self.dataServerIp,
+                    uuid=v['publicationUuid'],
+                    callback=self.handlePredictionData)
+                if response.status == DataServerApi.statusSuccess.value:
+                    logging.debug('Subscribed to Prediction Data', response.senderMsg, color='green')
+                else:
+                    logging.warning('Failed to Subscribe: ', response.senderMsg )
+                    # await asyncio.sleep(10)
+                    # await self.subscribeToEngineUpdates()
+
+    async def handleRawData(self, subscription: Subscription, message: Message):
+
+        def findMatchingStreamUuid(subUuid) -> str:
+            for key in self.pubSubMapping.keys():
+                if subUuid == self.pubSubMapping.get(key):
+                    return key
+
+        logging.info('Raw Data Subscribtion Message',message.to_dict(True), color='green')
+        matchedStreamUuid = findMatchingStreamUuid(message.uuid)
+        self.data[matchedStreamUuid]['realData'] = pd.concat([
+            self.data[matchedStreamUuid]['realData'],
+            message.data
+        ])
+
+    async def handlePredictionData(self, subscription: Subscription, message: Message):
+
+        def findMatchingStreamUuid(pubUuid) -> str:
+            for key in self.pubSubMapping.keys():
+                if pubUuid == self.pubSubMapping.get(key, {}).get('publicationUuid'):
+                    return key
+
+        logging.info('Prediction Data Subscribtion Message',message.to_dict(True), color='green')
+        matchedStreamUuid = findMatchingStreamUuid(message.uuid)
+        self.data[matchedStreamUuid]['predictionData'] = pd.concat([
+            self.data[matchedStreamUuid]['predictionData'],
+            message.data
+        ])
+
     def startRelay(self):
         def append(streams: list[Stream]):
             relays = satorineuron.config.get("relay")
@@ -779,6 +1013,32 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relay = RawStreamRelayEngine(streams=append(self.publications))
         self.relay.run()
         logging.info("started relay engine", color="green")
+
+    def addWorkingUpdate(self, data: str):
+        ''' tell ui we are working on something '''
+        self.sendToUI(UiEndpoint.workingUpdate, data)
+
+    def addModelUpdate(self, data: StreamOverview):
+        ''' tell ui about model changes '''
+        self.sendToUI(UiEndpoint.modelUpdate, data)
+
+    def populateStreamDisplay(self):
+
+        def streamDisplayer(subsription: Stream):
+            return StreamOverview(
+                streamId=subsription.streamId,
+                value="",
+                prediction="",
+                values=[],
+                predictions=[])
+
+        self.streamDisplay = [
+            streamDisplayer(subscription)
+            for subscription in self.subscriptions]
+        self.streamDisplay = [
+            streamDisplayer(publication)
+            for publication in self.publications]
+
 
     def startSynergyEngine(self):
         """establish a synergy connection"""

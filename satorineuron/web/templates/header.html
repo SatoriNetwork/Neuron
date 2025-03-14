@@ -404,14 +404,15 @@
       //document.body.classList.toggle("dark-theme");
     }
   }
-  var updateConnectionsStatus = new EventSource("/connections-status");
-  updateConnectionsStatus.onmessage = function (e) {
-    if (e.data == "close") {
+  //var updateConnectionsStatus = new EventSource("/connections-status");
+  //updateConnectionsStatus.onmessage = function (e) {
+  socket.on('connections-status', function(data) {
+    if (data == "close") {
       updateConnectionsStatus.close();
-    } else if (e.data == "redundantCall") {
+    } else if (data == "redundantCall") {
       console.log('redundantCalled');
     } else {
-      let conns = JSON.parse(e.data);
+      let conns = JSON.parse(data);
       if (conns.electrumx) {
         document.getElementById("connectionElectrumx").style.color = '#548c2f';
       } else {
@@ -438,7 +439,7 @@
       //  document.getElementById("connectionP2p").style.color = 'maroon';
       //}
     }
-  };
+  });
   function refreshConnectionsStatus(connectionId) {
     document.getElementById(connectionId).style.color = 'grey';
 
