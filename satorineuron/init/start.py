@@ -537,6 +537,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     self.server.checkin(referrer=referrer))
                 if self.details.get('sponsor') is not None:
                     self.setInvitedBy(self.details.get('sponsor'))
+                elif self.invitedBy is not None:
+                    self.server.invitedBy(self.invitedBy)
                 #logging.debug(self.details, color='teal')
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
