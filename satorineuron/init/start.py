@@ -151,6 +151,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.setPublicDataManagerPort()
         self.invitedBy: str = None
         self.setInvitedBy()
+        self.latestObservationTime: str = 0
         self.configRewardAddress: str = None
         self.setRewardAddress()
         self.setEngineVersion()
@@ -446,6 +447,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             #    if ts > 0 and ts + 60*60*24 < time.time():
             #        self.server.removeStream(stream.streamId.jsonId)
             #        self.triggerRestart()
+            if self.latestObservationTime + 60*60*6 < time.time():
+                self.triggerRestart()
             if self.server.checkinCheck():
                 self.triggerRestart()  # should just be start()
 
