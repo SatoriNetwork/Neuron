@@ -1,4 +1,6 @@
 import json
+import time
+import copy
 from satorilib import logging
 from satorilib.utils import memory
 from satorilib.concepts import Observation, Stream
@@ -8,7 +10,6 @@ from satoriengine.model import metrics
 from satoriengine.managers.data import DataManager
 from satoriengine.managers.model import ModelManager
 from satoriengine.engine import Engine
-import copy
 
 
 def establishConnection(
@@ -45,6 +46,7 @@ def establishConnection(
                         print=True)
                     getStart().engine.data.newData.on_next(obs)
                     getStart().aiengine.newObservation.on_next(obs)
+                    getStart().latestObservationTime = time.time() #obs.observationTime
                 except json.JSONDecodeError:
                     logging.info('received unparsable message:', response, print=True)
             else:

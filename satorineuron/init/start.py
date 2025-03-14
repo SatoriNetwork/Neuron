@@ -116,6 +116,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
         self.invitedBy: str = None
+        self.latestObservationTime: float = 0
         self.setInvitedBy()
         self.configRewardAddress: str = None
         self.setRewardAddress()
@@ -405,8 +406,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             #    if ts > 0 and ts + 60*60*24 < time.time():
             #        self.server.removeStream(stream.streamId.jsonId)
             #        self.triggerRestart()
+            if self.latestObservationTime + 60*60*6 < time.time():
+                self.triggerRestart()
             if self.server.checkinCheck():
-                self.triggerRestart()  # should just be start()
+                self.triggerRestart()
 
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         """returns the reference to the cache of a stream"""
