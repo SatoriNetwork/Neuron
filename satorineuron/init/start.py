@@ -151,6 +151,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.setPublicDataManagerPort()
         self.invitedBy: str = None
         self.setInvitedBy()
+        self.rewardAddress: str = None
+        self.setRewardAddress()
         self.setEngineVersion()
         self.setupWalletManager()
         self.restartQueue: Queue = Queue()
@@ -472,7 +474,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        self.setRewardAddress()
         self.subConnect()
         self.pubsConnect()
         await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
@@ -494,7 +495,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.getVault()
         self.createServerConn()
         self.checkin()
-        # self.setRewardAddress()
         # self.populateData()
         # self.startSynergyEngine()
         self.subConnect()
@@ -523,7 +523,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        self.setRewardAddress()
         self.subConnect()
         self.pubsConnect()
         await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
@@ -574,6 +573,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 ):
                     self.server.setDataManagerPort(self.publicDataManagerPort)
                 #logging.debug(self.details, color='teal')
+                if self.details.get('rewardaddress') != self.rewardAddress:
+                    if self.rewardAddress is not None:
+                        self.setRewardAddress(globally=True)
+                    else:
+                        self.setRewardAddress(address=self.details.get('rewardaddress'))
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
@@ -645,18 +649,30 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             logging.warning(f"trying again in {x}")
             time.sleep(x)
 
-    def setRewardAddress(self) -> bool:
-        configRewardAddress: str = str(config.get().get("reward address", ""))
+    def setRewardAddress(
+        self,
+        address: Union[str, None] = None,
+        globally: bool = False
+    ) -> bool:
         if (
+            address and
+            len(address) == 34 and
+            address.startswith('E')
+        ):
+            self.rewardAddress = address
+            config.add(data={'reward address': address})
+        else:
+            self.rewardAddress: str = str(config.get().get('reward address', ''))
+        if (
+            globally and
             self.env in ['prod', 'local'] and
-            len(configRewardAddress) == 34 and
-            configRewardAddress.startswith('E') and
-            self.rewardAddress != configRewardAddress
+            len(self.rewardAddress) == 34 and
+            self.rewardAddress.startswith('E')
         ):
             self.server.setRewardAddress(
-                signature=self.wallet.sign(configRewardAddress),
+                signature=self.wallet.sign(self.rewardAddress),
                 pubkey=self.wallet.publicKey,
-                address=configRewardAddress)
+                address=self.rewardAddress)
             return True
         return False
 
