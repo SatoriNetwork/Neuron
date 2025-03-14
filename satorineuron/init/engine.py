@@ -1,4 +1,6 @@
 import json
+import copy
+import time
 from satorilib import logging
 from satorilib.utils import memory
 from satorilib.concepts import Observation, Stream
@@ -8,7 +10,6 @@ from satoriengine.model import metrics
 from satoriengine.managers.data import DataManager
 from satoriengine.managers.model import ModelManager
 from satoriengine.engine import Engine
-import copy
 
 
 def establishConnection(
