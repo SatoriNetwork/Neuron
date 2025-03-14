@@ -543,7 +543,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if self.details.get('rewardaddress') != self.rewardAddress:
                     if self.rewardAddress is not None:
                         self.setRewardAddress(globally=True)
-                    else
+                    else:
                         self.setRewardAddress(address=self.details.get('rewardaddress'))
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
