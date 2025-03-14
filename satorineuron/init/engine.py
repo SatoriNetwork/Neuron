@@ -45,6 +45,7 @@ def establishConnection(
                         print=True)
                     getStart().engine.data.newData.on_next(obs)
                     getStart().aiengine.newObservation.on_next(obs)
+                    getStart().latestObservationTime = time.time() #obs.observationTime
                 except json.JSONDecodeError:
                     logging.info('received unparsable message:', response, print=True)
             else:
