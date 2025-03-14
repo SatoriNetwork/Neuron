@@ -72,7 +72,7 @@
                       </div>
                     {% endif %}
                     <div id="observations">
-                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }});">stacked_line_chart</i>
+                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }}, stream['stream']);">stacked_line_chart</i>
                     </div>
                   </div>
                 </td>
@@ -119,7 +119,7 @@
   <div id="observationsModal" class="modal" style="display: none;">
     <div id="modal-content" class="modal-content" style="position: relative;padding: 1rem;border-radius: 8px;background-color: #fff;max-height: 90vh;margin-top: 3rem;max-width: 150vh;margin-left: auto;margin-right: auto;">
       <div class="d-flex" style="align-items:center; justify-content:space-between">
-        <h4>Real-World vs Average Predictions</h4>
+        <h4 id="streamName"></h4>
         <i class="material-icons opacity-10" class="close" onclick="closeModal()" style="cursor:pointer">cancel</i>
       </div>
 
@@ -131,26 +131,40 @@
       <div id="observationsGraphContainer" style="display: none; height: 300px; margin-bottom: 20px;">
         <canvas id="observationsGraph"></canvas>
       </div>
-
-      <div id="observation-table" style="display: none; overflow-y: scroll; height: calc(100% - 350px);">
-        <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-          <thead>
-            <tr>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
-              <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
-            </tr>
-          </thead>
-          <tbody id="observationsBody">
-            <!-- Observations will be populated here -->
-          </tbody>
-        </table>
+      <div  style="width:35% padding:5px">
+        <select class="d-flex flex-row gap-2 btn btn-outline-dark" xname="Intervals" id="ZoomValue" onchange="ReRenderGraph()">
+          <option value="5" selected>5 Minute</option>
+          <option value="10" selected>10 Minute</option>
+          <option value="15" selected>15 Minute</option>
+          <option value="30" selected>30 Minute</option>
+          <option value="60" selected>1 Hour </option>
+          <option value="1440">1 Day</option>
+          <option value="10080">1 Week</option>
+          <option value="40320">1 Month</option>
+        </select>
+      </div>
+        <div id="observation-table" style="display: none; overflow-y: scroll; height: calc(100% - 350px);">
+          <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
+                <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
+                <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
+              </tr>
+            </thead>
+            <tbody id="observationsBody">
+              <!-- Observations will be populated here -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.2.0/chartjs-plugin-zoom.min.js"></script>
 <script type="text/javascript">
   const darkmode = {{ 'true' if darkmode else 'false' }};
   let storedStreams = {{ allStreams|tojson }};
@@ -453,7 +467,7 @@
                 </div>`
             }
             <div id="observations">
-              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id});">stacked_line_chart</i>
+              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}' );">stacked_line_chart</i>
             </div>
           </div>
         </td>
@@ -517,13 +531,13 @@
     return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}, ${date.getFullYear()}`;
   }
 
-
   function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue, chunkSize = 100) {
     const totalPoints = combinedTimes.length;
     let currentIndex = 0;
 
     const ctx = graphCanvas.getContext('2d');
 
+    Chart.register(ChartZoom);
     const chartData = {
       labels: [],
       datasets: [
@@ -597,7 +611,28 @@
             },
           },
         },
+        zoom: {
+          limits: {
+            y: {min: null, max: null},
+            x: {min: 0, max: null},
+          },
+          pan: {
+            enabled: true,
+            mode: 'xy',
+            threshold: 10
+          },
+          zoom: {
+            
+            wheel: {
+              enabled: true
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'xy',
+          }
       },
+      }
     };
 
     if (observationsChart) {
@@ -614,27 +649,34 @@
       const endIndex = Math.min(currentIndex + chunkSize, totalPoints);
       observationsChart.data.labels.push(...combinedTimes.slice(currentIndex, endIndex));
       observationsChart.data.datasets[0].data.push(...observationValues.slice(currentIndex, endIndex));
-      const realLow = Math.min(observationValues)*.8;
-      const realHigh = Math.max(observationValues)*1.25;
+      const realLow = Math.min(...observationValues)*.8;
+      const realHigh = Math.max(...observationValues)*1.25;
       observationsChart.data.datasets[1].data.push(
         ...predictionValues.slice(currentIndex, endIndex).map(value =>
           value === 0 || value < realLow || value > realHigh ? null : value
         )
       );
+
+      //calculate bounds for zoom.  
+      const BoundLow = Math.min(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *0.98;
+      const BoundHigh = Math.max(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *1.02;
+      //set the new bounds
+      observationsChart.options.plugins.zoom.limits.y.min = BoundLow;
+      observationsChart.options.plugins.zoom.limits.y.max = BoundHigh;
+      observationsChart.options.plugins.zoom.limits.x.max = endIndex;
+
       observationsChart.update();
 
       currentIndex += chunkSize;
 
       if (currentIndex < totalPoints) {
         requestAnimationFrame(addChunk); // Schedule the next chunk
-
       }  else {
         // Add the future forecasting point as part of the predictions dataset
         const lastTimestamp = combinedTimes[combinedTimes.length - 1];
         const futureTimestamp = new Date(lastTimestamp);
         futureTimestamp.setMinutes(futureTimestamp.getMinutes() + 10); // Add 10 minutes to the last timestamp
-        const formattedFutureTimestamp = futureTimestamp.toISOString();
-
+        const formattedFutureTimestamp = futureTimestamp.toLocaleString('en-US');
         observationsChart.data.labels.push(formattedFutureTimestamp);
         observationsChart.data.datasets[1].data.push(futureForecastingObservationAvgValue);
         observationsChart.update();
@@ -668,7 +710,6 @@
 
           observationsChart.update();
         }, 0);
-
       }
     }
 
@@ -676,7 +717,7 @@
   }
 
 
-  function showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue) {
+  function showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody) {
     const ctx = graphCanvas.getContext('2d');
 
     // Helper: Round to nearest 10 minutes
@@ -684,11 +725,16 @@
         const msInTenMinutes = 10 * 60 * 1000;
         return new Date(Math.round(new Date(date).getTime() / msInTenMinutes) * msInTenMinutes);
     };
+    ZoomController = (date) => {
+      Zoom = document.getElementById("ZoomValue").value;
 
+      const msInOneMinute = 10 * 60 * 100 * Zoom;
+      return new Date(Math.round(new Date(date).getTime() / msInOneMinute) * msInOneMinute);
+  };
     // Process observations to group by 10-minute intervals
     const intervalsMap = new Map();
     parsedObservations.forEach((obs) => {
-        const roundedTime = roundToTenMinutes(obs.ts).toISOString();
+        const roundedTime = ZoomController(obs.ts).toLocaleString('en-US');
         if (!intervalsMap.has(roundedTime)) {
             intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
         }
@@ -696,6 +742,8 @@
         current.observationAvg += parseFloat(obs.value); // Use value for observations
         current.predictionAvg += parseFloat(obs.avg);   // Use avg for predictions
         current.count += 1;
+
+
     });
 
     // Prepare sorted data for the chart
@@ -709,18 +757,38 @@
         return data.predictionAvg / data.count; // Average prediction value
     });
 
+    iterator = combinedTimes.length-1;
+    combinedTimes.reverse().forEach(time => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${time}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observationValues[iterator]}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${predictionValues[iterator]}</td>
+      `;
+      observationsBody.appendChild(row);
+      iterator-=1;
+
+    });
+    combinedTimes.reverse();
+
+
     renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
-
   }
-
+  var mostRecentName;
+  var mostRecentStreamId;
   // Show Observations Modal with observations list and graph for value vs time
-  function showObservations(streamId) {
+  function showObservations(streamId, streamName) {
+    mostRecentName = streamName;
+    
+    mostRecentStreamId = streamId;
     const observationsBody = document.getElementById('observationsBody');
     const graphContainer = document.getElementById('observationsGraphContainer');
     const graphCanvas = document.getElementById('observationsGraph');
     const modelContent = document.getElementById('modal-content');
     const observationTable = document.getElementById('observation-table');
+    const nameOfStream = document.getElementById('streamName');
 
+    nameOfStream.innerHTML = "Stream: " + mostRecentName;
     // Show observation modal
     document.getElementById('observationsModal').style.display = 'block';
     graphContainer.style.display = 'none';
@@ -742,7 +810,7 @@
         if (parsedObservations.length === 0) {
           // modal container css changes
           modelContent.style.height = "300px"
-          // Graph container css changes
+          // Graph container css  changes
           graphContainer.style.display = 'none';
           // Table style css changes
           observationTable.style.display = 'block';
@@ -762,25 +830,32 @@
           observationTable.style.display = 'block';
           observationTable.style.height = "calc(100% - 350px)";
           observationTable.style.overflowY = "scroll";
-
+          
           // Render a graph
-          parsedObservations.sort((a, b) => new Date(a.time) - new Date(b.time));
-          showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue);
+          parsedObservations.sort((a, b) => new Date(a.ts) - new Date(b.ts));
+          showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody);
+          /*
           parsedObservations.reverse().forEach(observation => {
+            console.log(observation.time);
             const row = document.createElement('tr');
             row.innerHTML = `
-              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.time}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.ts}</td>
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.value}</td>
               <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.avg}</td>
             `;
             observationsBody.appendChild(row);
           });
+          */
         }
 
         document.getElementById('modalLoading').style.display = "none"
         updateStreamDisplay(displayStreams, darkmode);
         updatePaginationButtons(filteredStreams.length);
         document.body.classList.add('no-scroll');  // Disable scroll on main content
+        graphContainer.addEventListener('wheel', (event) => {
+          event.stopPropagation(); // Prevent scroll event for zoom effecting the main content.
+        }, { passive: false });
+
       }
     })
     .catch(error => {
@@ -789,6 +864,10 @@
       updatePaginationButtons(filteredStreams.length);
       showNotification("Failed to load observations", true);
     });
+  }
+
+  function ReRenderGraph(){
+    showObservations(mostRecentStreamId, mostRecentName);
   }
 
   // Close Modal

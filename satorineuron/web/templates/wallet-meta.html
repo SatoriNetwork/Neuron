@@ -1,6 +1,6 @@
 {% block content %}
 <div class="row mb-4">
-  <div class="col-lg-12 col-md-12 mb-md-0">
+  <div class="col-lg-7 col-md-7 mb-md-0">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
         <div class="row">
@@ -13,15 +13,15 @@
         </div>
       </div>
       <div class="card-body px-0 pb-2">
-        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}">
-          <pre>{{ wallet.showStats() }}</pre>
+        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}" style='padding-left: 1.5rem; padding-bottom: 1.5rem;padding-right: 1.5rem;'>
+          <code style="color:  lightslategrey;">
+            {{ wallet.showStats() }}
+          </code>
         </p>
       </div>
     </div>
   </div>
-</div>
-<div class="row">
-  <div class="col-lg-12 col-md-12 mb-md-0">
+  <div class="col-lg-5 col-md-5 mb-md-0">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
         <div class="row">
@@ -34,8 +34,8 @@
         </div>
       </div>
       <div class="card-body px-0 pb-2">
-        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}"  style='padding-left: 1.5rem; padding-bottom: 1.5rem;'>
-          <code>
+        <p class="text-md mb-0 {% if darkmode %}dark-colors{% endif %}" style='padding-left: 1.5rem; padding-bottom: 1.5rem;padding-right: 1.5rem;'>
+          <code style="color:  lightslategrey;">
           {{ wallet.banner }}
           </code>
         </p>
@@ -44,7 +44,3 @@
   </div>
 </div>
 {% endblock %}
-
-
-
-

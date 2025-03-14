@@ -1006,6 +1006,10 @@ progress {
     flex: 0 0 auto;
     width: 16.66666667%;
   }
+  .col-xs-2-5 {
+    flex: 0 0 auto;
+    width: 20%;
+  }
   .col-xs-3 {
     flex: 0 0 auto;
     width: 25%;
@@ -1231,6 +1235,10 @@ progress {
   .col-sm-2 {
     flex: 0 0 auto;
     width: 16.66666667%;
+  }
+  .col-sm-2-5 {
+    flex: 0 0 auto;
+    width: 20%;
   }
   .col-sm-3 {
     flex: 0 0 auto;
@@ -1907,6 +1915,10 @@ progress {
     flex: 0 0 auto;
     width: 16.66666667%;
   }
+  .col-xl-2-5 {
+    flex: 0 0 auto;
+    width: 20%;
+  }
   .col-xl-3 {
     flex: 0 0 auto;
     width: 25%;
@@ -2578,8 +2590,8 @@ progress {
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5rem;
-  color: #495057;
-  background-color: transparent;
+  color: #acb1b5;
+  background-color: #fff;
   background-clip: padding-box;
   border: 1px solid #d2d6da;
   -webkit-appearance: none;
@@ -2601,7 +2613,7 @@ progress {
 }
 .form-control:focus {
   color: #495057;
-  background-color: transparent;
+  background-color: #acb1b5;
   border-color: transparent;
   outline: 0;
   box-shadow: none;
@@ -6245,7 +6257,7 @@ textarea.form-control-lg {
 }
 
 .popover {
-  --bs-popover-zindex: 1060;
+  --bs-popover-zindex: 100060;
   --bs-popover-max-width: 276px;
   --bs-popover-font-size: 0.75rem;
   --bs-popover-bg: #fff;

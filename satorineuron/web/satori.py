@@ -50,6 +50,7 @@ logging.logging.getLogger('werkzeug').setLevel(logging.logging.ERROR)
 debug = True
 darkmode = False
 firstRun = True
+toEditStream = False
 badForm = {}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
@@ -116,8 +117,6 @@ while True:
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
                 'prod': 'https://stage.satorinet.io'}[ENV],
-                # 'prod': 'https://central.satorinet.io'}[ENV],
-                # 'prod': 'http://24.199.113.168'}[ENV], # c
                 #'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
@@ -299,6 +298,26 @@ def getFile(ext: str = '.csv') -> tuple[str, int, Union[None, 'FileStorage']]:
 
 
 def getResp(resp: Union[dict, None] = None) -> dict:
+    try:
+        holdingBalance = start.holdingBalance
+    except Exception as e:
+        logging.debug(e)
+        holdingBalance = 0
+    try:
+        holdingBalanceBase = start.holdingBalanceBase
+    except Exception as e:
+        logging.debug(e)
+        holdingBalanceBase = 0
+    try:
+        ethaddressforward = start.ethaddressforward
+    except Exception as e:
+        logging.debug(e)
+        ethaddressforward = 0
+    try:
+        evrvaultaddressforward = start.evrvaultaddressforward
+    except Exception as e:
+        logging.debug(e)
+        evrvaultaddressforward = 0
     return {
         'version': VERSION,
         'lockEnabled': isActuallyLocked(),
@@ -308,6 +327,10 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'paused': start.paused,
         'darkmode': darkmode,
         'title': 'Satori',
+        'holdingBalance': holdingBalance,
+        'holdingBalanceBase': holdingBalanceBase,
+        'ethaddressforward': ethaddressforward,
+        'evrvaultaddressforward': evrvaultaddressforward,
         **(resp or {})}
 
 
@@ -565,7 +588,7 @@ def import_wallet():
         return jsonify({'success': False, 'message': 'No wallet supplied'})
 
     walletPath = '/Satori/Neuron/wallet'
-    backupPath = f'/Satori/Neuron/wallet-backup-{time.time()}'
+    backupPath = f'/Satori/Neuron/wallet/wallet-backup-{time.time()}'
 
     try:
         # Ensure wallet service is stopped
@@ -574,14 +597,15 @@ def import_wallet():
         # Create a backup of the existing wallet
         if os.path.exists(walletPath):
             os.makedirs(backupPath, exist_ok=False)  # Ensure backupPath is new
-            print(-1)
-            shutil.copytree(walletPath, backupPath, dirs_exist_ok=True)
-            print(-2)
+            # Copy only files from walletPath into backupPath
+            for item in os.listdir(walletPath):
+                itemPath = os.path.join(walletPath, item)
+                if os.path.isfile(itemPath):
+                    shutil.copy2(itemPath, backupPath)
 
         # Save incoming files to a temporary path
         os.makedirs(walletPath, exist_ok=True)
         files = request.files.getlist('files')
-        print(0)
         for file in files:
             if file.filename.startswith('wallet/'):
                 filePath = os.path.join(walletPath, secure_filename(file.filename[7:]))
@@ -599,10 +623,13 @@ def import_wallet():
         logging.error(f"Error during wallet import, reverting: {str(e)}")
         # Restore from backup if it exists and is valid
         if os.path.exists(backupPath):
-            shutil.copytree(backupPath, walletPath, dirs_exist_ok=True)
-            #if os.path.exists(walletPath):
-            #    shutil.rmtree(walletPath, ignore_errors=True)
-            #shutil.move(backupPath, walletPath)
+            os.makedirs(walletPath, exist_ok=True)  # Ensure walletPath exists
+            for item in os.listdir(backupPath):
+                itemPath = os.path.join(backupPath, item)
+                targetPath = os.path.join(walletPath, item)
+                # Skip if target exists
+                if os.path.isfile(itemPath) and not os.path.exists(targetPath):
+                    shutil.copy2(itemPath, walletPath)
         else:
             logging.error("Backup missing or invalid. Wallet state might be compromised.")
         # Restart wallet service to maintain state
@@ -867,7 +894,6 @@ def stakeCheck():
 @userInteracted
 @authRequired
 def sendSatoriTransactionFromWallet(network: str = 'main'):
-    # return sendSatoriTransactionUsing(start.getWallet(), network, 'wallet')
     result = sendSatoriTransactionUsing(
         start.getWallet(), network, 'wallet')
     if isinstance(result, str) and len(result) == 64:
@@ -885,21 +911,53 @@ def sendSatoriTransactionFromVault(network: str = 'main'):
     return redirect(f'/vault/{network}')
 
 
+@app.route('/bridge/accept-tos', methods=['GET'])
+@userInteracted
+@authRequired
+def bridgeAcceptBurnBridgeTerms():
+    from satorilib.server.ofac import OfacServer
+    if OfacServer.acceptTerms():
+        if OfacServer.requestPermission():
+            return 'OK', 200
+        return 'error: please try again later.', 200
+    return 'FAIL', 200
+
+
 @app.route('/bridge_satori_transaction_from_vault/<network>', methods=['POST'])
 @userInteracted
 @authRequired
 def bridgeSatoriTransactionFromVault(network: str = 'main'):
-    # only support main network for this
-    greenlight, explain = start.ableToBridge()
-    if greenlight:
-        result = bridgeSatoriTransactionUsing(start.vault)
+    from satorilib.server.ofac import OfacServer
+    if not OfacServer.requestPermission():
+        return redirect('/vault/main')
+    if start.vault is not None and not start.vault.isEncrypted:
+        setEthAddressResult = start.server.setEthAddress(start.vault.ethaddress)
+        logging.debug(f'setEthAddressResult: {setEthAddressResult}', color='blue')
     else:
+        flash('please unlock your vault first')
+        return redirect('/vault/main')
+    greenlight, explain = start.ableToBridge()
+    if not greenlight:
         flash(explain)
         return redirect('/vault/main')
+    result = bridgeSatoriTransactionUsing(start.vault)
+    logging.debug(f'result: {result}', color='magenta')
+    flash(str(result))
     if isinstance(result, str) and len(result) == 64:
-        flash(str(result))
-        flash('Please wait. The bridge process can take up to 2 hours to complete.')
+        flash("Bridge process started successfully! We need to wait for some on-chain confirmations, it'll be done in an hour.")
     return redirect('/vault/main')
+
+
+@app.route('/set/eth/address', methods=['GET'])
+@userInteracted
+@authRequired
+def setEthAddress():
+    if start.vault is not None and not start.vault.isEncrypted:
+        setEthAddressResult = start.server.setEthAddress(start.vault.ethaddress)
+        logging.debug(f'setEthAddressResult: {setEthAddressResult}', color='blue')
+    if setEthAddressResult[0]:
+        return 'OK', 200
+    return 'failed', 500
 
 
 def sendSatoriTransactionUsing(
@@ -921,63 +979,28 @@ def sendSatoriTransactionUsing(
         def refreshWallet():
             time.sleep(10)
             myWallet.get()
+            myWallet.updateBalances()
             myWallet.getReadyToSend()
 
-        # doesn't respect the cooldown
-        #myWallet.getUnspentSignatures(force=True)
-        myWallet.getReadyToSend()
+        logging.debug('balance one:', myWallet.balance.amount, myWallet.currency.amount, color='magenta')
+        if myWallet.shouldPullUnspents():
+            # we call this on page load, don't call unless balance has changed
+            myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
-        try:
-            # logging.debug('sweep', sendSatoriForm['sweep'], color='magenta')
-            result = myWallet.typicalNeuronTransaction(
-                sweep=sendSatoriForm['sweep'],
-                amount=sendSatoriForm['amount'] or 0,
-                address=sendSatoriForm['address'] or '')
-            if result.msg == 'creating partial, need feeSatsReserved.':
-                responseJson = start.server.requestSimplePartial(
-                    network=network)
-                result = myWallet.typicalNeuronTransaction(
-                    sweep=sendSatoriForm['sweep'],
-                    amount=sendSatoriForm['amount'] or 0,
-                    address=sendSatoriForm['address'] or '',
-                    completerAddress=responseJson.get('completerAddress'),
-                    feeSatsReserved=responseJson.get('feeSatsReserved'),
-                    changeAddress=responseJson.get('changeAddress'),
-                )
-            if result is None:
-                flash('Send Failed: wait 10 minutes, refresh, and try again.')
-            elif result.success:
-                if (  # checking any on of these should suffice in theory...
-                    result.tx is not None and
-                    result.reportedFeeSats is not None and
-                    result.reportedFeeSats > 0 and
-                    result.msg == 'send transaction requires fee.'
-                ):
-                    r = start.server.broadcastSimplePartial(
-                        tx=result.tx,
-                        reportedFeeSats=result.reportedFeeSats,
-                        feeSatsReserved=responseJson.get('feeSatsReserved'),
-                        walletId=responseJson.get('partialId'),
-                        network=(
-                            'ravencoin' if start.networkIsTest(network)
-                            else 'evrmore'))
-                    refreshWallet()
-                    if r.text.startswith('{"code":1,"message":'):
-                        flash(f'Send Failed: {r.json().get("message")}')
-                    elif r.text != '':
-                        return r.text
-                    else:
-                        flash(
-                            'Send Failed: wait 10 minutes, refresh, and try again.')
-                else:
-                    return result.result
-            else:
-                flash(f'Send Failed: {result.msg}')
-        except TransactionFailure as e:
-            flash(f'Send Failed: {e}')
+        logging.debug('balance two:', myWallet.balance.amount, myWallet.currency.amount, color='magenta')
+        transactionResult = myWallet.typicalNeuronTransaction(
+            sweep=sendSatoriForm['sweep'],
+            amount=sendSatoriForm['amount'] or 0,
+            address=sendSatoriForm['address'] or '',
+            requestSimplePartialFn=start.server.requestSimplePartial,
+            broadcastBridgeSimplePartialFn=start.server.broadcastSimplePartial)
+        if not transactionResult.success:
+            flash(f'unable to send Transaction: {transactionResult.msg}')
+            refreshWallet()
+            return flash(transactionResult.msg)
         refreshWallet()
-        return result
+        return transactionResult.msg
 
     sendSatoriForm = forms.SendSatoriTransaction(formdata=request.form)
     sendForm = {}
@@ -1004,63 +1027,37 @@ def bridgeSatoriTransactionUsing(
     forms = importlib.reload(forms)
 
     def acceptSubmittion(bridgeForm: dict):
+        from satorilib.server.ofac import OfacServer
+
         def refreshWallet():
             time.sleep(4)
-            # doesn't respect the cooldown
-            myWallet.get(allWalletInfo=False)
+            myWallet.get()
 
+        logging.debug('burning?', color='magenta')
         # doesn't respect the cooldown
-        myWallet.getUnspentSignatures(force=True)
+        #myWallet.getUnspentSignatures(force=True)
+        myWallet.getReadyToSend()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
-        try:
-            # logging.debug('sweep', bridgeForm['sweep'], color='magenta')
-            result = myWallet.typicalNeuronBridgeTransaction(
-                amount=bridgeForm['bridgeAmount'] or 0,
-                ethAddress=bridgeForm['ethAddress'] or '')
-            if result.msg == 'creating partial, need feeSatsReserved.':
-                responseJson = start.server.requestSimplePartial(
-                    network='main')
-                result = myWallet.typicalNeuronBridgeTransaction(
-                    amount=bridgeForm['bridgeAmount'] or 0,
-                    address=bridgeForm['ethAddress'] or '',
-                    completerAddress=responseJson.get('completerAddress'),
-                    feeSatsReserved=responseJson.get('feeSatsReserved'),
-                    changeAddress=responseJson.get('changeAddress'))
-            if result is None:
-                flash('Send Failed: wait 10 minutes, refresh, and try again.')
-            elif result.success:
-                if (  # checking any on of these should suffice in theory...
-                    result.tx is not None and
-                    result.reportedFeeSats is not None and
-                    result.reportedFeeSats > 0 and
-                    result.msg == 'send transaction requires fee.'
-                ):
-                    r = start.server.broadcastBridgeSimplePartial(
-                        tx=result.tx,
-                        reportedFeeSats=result.reportedFeeSats,
-                        feeSatsReserved=responseJson.get('feeSatsReserved'),
-                        walletId=responseJson.get('partialId'),
-                        network=(
-                            'ravencoin' if start.networkIsTest('main')
-                            else 'evrmore'))
-                    if r.text.startswith('{"code":1,"message":'):
-                        flash(f'Send Failed: {r.json().get("message")}')
-                    elif r.text != '':
-                        return r.text
-                    else:
-                        flash(
-                            'Send Failed: wait 10 minutes, refresh, and try again.')
-                else:
-                    return result.result
-            else:
-                flash(f'Send Failed: {result.msg}')
-        except TransactionFailure as e:
-            flash(f'Send Failed: {e}')
+
+        if bridgeForm['bridgeAmount'] > myWallet.maxBridgeAmount:
+            return f'Bridge Failed: too much satori, please try again with less than {myWallet.maxBridgeAmount} Satori.'
+
+        # should I send a transaction or send a partial?
+        transactionResult = myWallet.typicalNeuronBridgeTransaction(
+            amount=bridgeForm['bridgeAmount'] or 0,
+            ethAddress=bridgeForm['ethAddress'] or '',
+            ofacReportedFn=OfacServer.reportTxid,
+            requestSimplePartialFn=start.server.requestSimplePartial,
+            broadcastBridgeSimplePartialFn=start.server.broadcastBridgeSimplePartial)
         refreshWallet()
-        return result
+        if not transactionResult.success:
+            flash('Bridge Failed: wait 10 minutes, refresh, and try again.')
+            return flash(transactionResult.msg)
+        return transactionResult.msg
 
     bridgeSatoriForm = forms.BridgeSatoriTransaction(formdata=request.form)
+    logging.debug('burning1',bridgeSatoriForm, color='magenta')
     bridgeForm = {}
     override = override or {}
     bridgeForm['bridgeAmount'] = override.get(
@@ -1069,7 +1066,7 @@ def bridgeSatoriTransactionUsing(
         'ethAddress', bridgeSatoriForm.ethAddress.data or '')
     print(bridgeSatoriForm, bridgeSatoriForm.bridgeAmount,
           bridgeSatoriForm.ethAddress)
-    # return acceptSubmittion(bridgeForm)
+    return acceptSubmittion(bridgeForm)
 
 
 @app.route('/register_stream', methods=['POST'])
@@ -1080,7 +1077,6 @@ def registerStream():
     global forms
     global badForm
     forms = importlib.reload(forms)
-
     def acceptSubmittion(newRelayStream):
         # done: we should register this stream and
         # todo: save the uri, headers, payload, and hook to a config manifest file.
@@ -1130,18 +1126,42 @@ def editStream(topic=None):
     import importlib
     global forms
     global badForm
+    global toEditStream
+    toEditStream = True
     forms = importlib.reload(forms)
     try:
         badForm = [
             s for s in start.relay.streams
-            if s.streamId.topic() == topic][0].asMap(noneToBlank=True)
+            if s.streamId.jsonId == topic][0].asMap(noneToBlank=True)
     except IndexError:
         # on rare occasions
         # IndexError: list index out of range
         # cannot reproduce, maybe it's in the middle of reconnecting?
         pass
     # return redirect('/dashboard#:~:text=Create%20Data%20Stream')
+
     return redirect('/dashboard#CreateDataStream')
+
+@app.route('/clear_stream', methods=['GET'])
+@userInteracted
+@authRequired
+def clearEditStream(topic=None):
+    # name,target,cadence,offset,datatype,description,tags,url,uri,headers,payload,hook
+    import importlib
+    global forms
+    global badForm
+    global toEditStream
+    toEditStream = False
+    forms = importlib.reload(forms)
+    try:
+        badForm = {}
+    except IndexError:
+        # on rare occasions
+        # IndexError: list index out of range
+        # cannot reproduce, maybe it's in the middle of reconnecting?
+        pass
+    # return redirect('/dashboard#:~:text=Create%20Data%20Stream')
+    return 'ok', 200
 
 
 # @app.route('/remove_stream/<source>/<stream>/<target>/', methods=['GET'])
@@ -1220,15 +1240,20 @@ def removeStreamByPost():
 ###############################################################################
 ## Routes - dashboard #########################################################
 ###############################################################################
-
+@app.route('/logout', methods=['GET', 'POST'])
+@closeVault
+def logOut():
+    return render_template('dashboard.html', **getResp({
+        'vaultOpened': False,
+        'vaultPasswordForm': presentVaultPasswordForm(),
+    }))
 
 @app.route('/')
 @app.route('/home', methods=['GET'])
 @app.route('/index', methods=['GET'])
-@app.route('/dashboard', methods=['GET'])
+@app.route('/dashboard', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
-@closeVault
 @authRequired
 def dashboard():
     '''
@@ -1283,93 +1308,106 @@ def dashboard():
         newRelayStream.history.data = badForm.get('history', '')
         return newRelayStream
 
+    def acceptSubmittion(passwordForm):
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+
     # exampleStream = [Stream(streamId=StreamId(source='satori', author='self', stream='streamName', target='target'), cadence=3600, offset=0, datatype=None, description='example datastream', tags='example, raw', url='https://www.satorineuron.com', uri='https://www.satorineuron.com', headers=None, payload=None, hook=None, ).asMap(noneToBlank=True)]
-    global firstRun
-    theFirstRun = firstRun
-    firstRun = False
-    # streamOverviews = (
-    #     [model.miniOverview() for model in start.engine.models]
-    #     if start.engine is not None else [])  # StreamOverviews.demo()
-    streamOverviews = [stream for stream in start.streamDisplay]
-    holdingBalance = start.holdingBalance
-    stakeStatus = holdingBalance >= 5 or (
-        start.details.wallet.get('rewardaddress', None) not in [
-            None,
-            start.details.wallet.get('address'),
-            start.details.wallet.get('vaultaddress')]
-        if start.details is not None else 0)
-    return render_template('dashboard.html', **getResp({
-        'firstRun': theFirstRun,
-        'wallet': start.wallet,
-        # instead of this make chain single source of truth
-        # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
-        'stakeStatus': stakeStatus,
-        'miningMode': start.miningMode and stakeStatus,
-        'miningDisplay': 'none',
-        'proxyDisplay': 'none',
-        'stakeRequired': constants.stakeRequired,
-        'holdingBalance': holdingBalance,
-        'streamOverviews': streamOverviews,
-        'engineVersion': start.engineVersion,
-        'configOverrides': config.get(),
-        'paused': start.paused,
-        'newRelayStream': present_stream_form(),
-        'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
-        'quote': getRandomQuote(),
-        'relayStreams':  # example stream +
-        ([
-            {
-                **stream.asMap(noneToBlank=True),
-                **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
-                **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
-                **{'cadenceStr': deduceCadenceString(stream.cadence)},
-                **{'offsetStr': deduceOffsetString(stream.offset)}}
-            for stream in start.relay.streams]
-         if start.relay is not None else []),
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+    if start.vault is not None and not start.vault.isEncrypted:
+        # streamOverviews = (
+        #     [model.miniOverview() for model in start.engine.models]
+        #     if start.engine is not None else [])  # StreamOverviews.demo()
+        streamOverviews = [stream for stream in start.streamDisplay]
+        holdingBalance = start.refreshBalance()
+        holdingBalanceBase = start.holdingBalanceBase
+        stakeStatus = holdingBalance + holdingBalanceBase  >= constants.stakeRequired or (
+            start.details.wallet.get('rewardaddress', None) not in [
+                None,
+                start.details.wallet.get('address'),
+                start.details.wallet.get('vaultaddress')]
+            if start.details is not None else 0)
+        global toEditStream
+        temp_toEditStream = toEditStream  # Store current state before resetting
+        toEditStream = False
+        newRelayStream = present_stream_form()
+        return render_template('dashboard.html', **getResp({
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'wallet': start.wallet,
+            # instead of this make chain single source of truth
+            # 'stakeStatus': start.stakeStatus or holdingBalance >= 5
+            'stakeStatus': stakeStatus,
+            'miningMode': start.miningMode,
+            'miningDisplay': 'none',
+            'proxyDisplay': 'none',
+            'invitedBy': start.invitedBy,
+            'stakeRequired': constants.stakeRequired,
+            'streamOverviews': streamOverviews,
+            'engineVersion': start.engineVersion,
+            'configOverrides': config.get(),
+            'paused': start.paused,
+            'modifyStream': newRelayStream.name.data != '',
+            'newRelayStream': newRelayStream,
+            'toEdit': temp_toEditStream,
+            'shortenFunction': lambda x: x[0:15] + '...' if len(x) > 18 else x,
+            'quote': getRandomQuote(),
+            'relayStreams':  # example stream +
+            ([
+                {
+                    **stream.asMap(noneToBlank=True),
+                    **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
+                    **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
+                    **{'cadenceStr': deduceCadenceString(stream.cadence)},
+                    **{'offsetStr': deduceOffsetString(stream.offset)}}
+                for stream in start.relay.streams]
+            if start.relay is not None else []),
 
-        'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'):
-    '''
-    called and given the response each time
-    the endpoint for this data stream is hit.
-    returns the value of the observation
-    as a string, integer or double.
-    if empty string is returned the observation
-    is not relayed to the network.
-    '''
-    if response.text != '':
-        return float(response.json().get('Close', -1.0))
-    return -1.0
-""",
-        'placeholderGetHistory': """class GetHistory(object):
-    '''
-    supplies the history of the data stream
-    one observation at a time (getNext, isDone)
-    or all at once (getAll)
-    '''
-    def __init__(self):
-        pass
-
-    def getNext(self):
-        '''
-        should return a value or a list of two values,
-        the first being the time in UTC as a string of the observation,
-        the second being the observation value
-        '''
+            'placeholderPostRequestHook': """def postRequestHook(response: 'requests.Response'):
+        ''' extracts data from the response. '''
+        if response.text != '':
+            return float(response.json().get('data', None))
         return None
-
-    def isDone(self):
-        ''' returns true when there are no more observations to supply '''
-        return None
-
-    def getAll(self):
+        """,
+            'placeholderGetHistory': """class GetHistory(object):
         '''
-        if getAll returns a list or pandas DataFrame
-        then getNext is never called
+        supplies the history of the data stream
+        one observation at a time (getNext, isDone)
+        or all at once (getAll)
         '''
-        return None
+        def __init__(self):
+            pass
 
-""",
-    }))
+        def getNext(self):
+            '''
+            should return a value or a list of two values,
+            the first being the time in UTC as a string of the observation,
+            the second being the observation value
+            '''
+            return None
+
+        def isDone(self):
+            ''' returns true when there are no more observations to supply '''
+            return None
+
+        def getAll(self):
+            '''
+            if getAll returns a list or pandas DataFrame
+            then getNext is never called
+            '''
+            return None
+
+        """,
+        }))
+    else:
+        return render_template('dashboard.html', **getResp({
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
+
+
 
 
 @app.route('/fetch/wallet/stats/daily', methods=['GET'])
@@ -1528,7 +1566,6 @@ def updateWalletAlias(network: str = 'main', alias: str = ''):
 @app.route('/wallet/<network>', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
-@closeVault
 @authRequired
 def wallet(network: str = 'main'):
 
@@ -1543,46 +1580,51 @@ def wallet(network: str = 'main'):
         alias = start.wallet.alias or start.server.getWalletAlias()
     except Exception as e:
         alias = None
-    if config.get().get('wallet lock'):
-        if request.method == 'POST':
-            acceptSubmittion(forms.VaultPassword(formdata=request.form))
-        if start.vault is not None and not start.vault.isEncrypted:
-            return render_template('wallet-page.html', **getResp({
-                'title': 'Wallet',
-                'walletIcon': 'wallet',
-                'proxyParent': start.rewardAddress,
-                'vaultIsSetup': start.vault is not None,
-                'unlocked': True,
-                'walletlockEnabled': True,
-                'network': network,
-                'image': getQRCode(start.wallet.address),
-                'wallet': start.wallet,
-                'exampleAlias': getRandomName(),
-                'alias': alias,
-                'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    start.refreshBalance(forVault=False, threaded=False)
+    start.refreshUnspents(forVault=False, threaded=True)
+    #if config.get().get('wallet lock'):
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+
+    if start.vault is not None and not start.vault.isEncrypted:
         return render_template('wallet-page.html', **getResp({
             'title': 'Wallet',
             'walletIcon': 'wallet',
             'proxyParent': start.rewardAddress,
             'vaultIsSetup': start.vault is not None,
-            'unlocked': False,
+            'vaultOpened': True,
+            'walletlockEnabled': True,
+            'network': network,
+            'image': getQRCode(start.wallet.address),
+            'wallet': start.wallet,
+            'exampleAlias': getRandomName(),
+            'alias': alias,
+            'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
+            'vaultPasswordForm': presentVaultPasswordForm()}))
+    else:
+        return render_template('wallet-page.html', **getResp({
+            'title': 'Wallet',
+            'walletIcon': 'wallet',
+            'proxyParent': start.rewardAddress,
+            'vaultIsSetup': start.vault is not None,
+            'vaultOpened': False,
             'walletlockEnabled': True,
             'network': network,
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
-    return render_template('wallet-page.html', **getResp({
-        'title': 'Wallet',
-        'walletIcon': 'wallet',
-        'proxyParent': start.rewardAddress,
-        'vaultIsSetup': start.vault is not None,
-        'unlocked': True,
-        'walletlockEnabled': False,
-        'network': network,
-        'image': getQRCode(start.wallet.address),
-        'wallet': start.wallet,
-        'exampleAlias': getRandomName(),
-        'alias': alias,
-        'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
+    #return render_template('wallet-page.html', **getResp({
+        #'title': 'Wallet',
+        #'walletIcon': 'wallet',
+        #'proxyParent': start.rewardAddress,
+        # 'vaultIsSetup': start.vault is not None,
+        # 'unlocked': True,
+        # 'walletlockEnabled': False,
+        # 'network': network,
+        # 'image': getQRCode(start.wallet.address),
+        # 'wallet': start.wallet,
+        # 'exampleAlias': getRandomName(),
+        # 'alias': alias,
+        # 'sendSatoriTransaction': presentSendSatoriTransactionform(request.form)}))
 
 
 def getQRCode(value: str) -> str:
@@ -1665,7 +1707,14 @@ def decryptVault():
 @userInteracted
 @authRequired
 def vaultMainTest(network: str = 'main'):
-    return vault()
+    return theVault()
+
+
+@app.route('/vault', methods=['GET', 'POST'])
+@userInteracted
+@authRequired
+def vault():
+    return theVault()
 
 
 def presentVaultPasswordForm():
@@ -1678,10 +1727,7 @@ def presentVaultPasswordForm():
     return passwordForm
 
 
-@app.route('/vault', methods=['GET', 'POST'])
-@userInteracted
-@authRequired
-def vault():
+def theVault():
 
     def acceptSubmittion(passwordForm):
         # start.workingUpdates.put('decrypting...')
@@ -1700,23 +1746,14 @@ def vault():
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
     if start.vault is not None and not start.vault.isEncrypted:
-        global firstRun
-        theFirstRun = firstRun
-        firstRun = False
-        if theFirstRun:
-            return redirect('/dashboard')
         # start.workingUpdates.put('downloading balance...')
-        from satorilib.wallet.ethereum.wallet import EthereumWallet
-        account = EthereumWallet.generateAccount(start.vault._entropy)
-        # if start.server.betaStatus()[1].get('value') == 1:
-        #    claimResult = start.server.betaClaim(account.address)[1]
-        #    logging.info(
-        #        'beta NFT not yet claimed. Claiming Beta NFT:',
-        #        claimResult.get('description'))
-        myWallet = start.getWallet()
+        account = start.vault.account
+        #claimResult = start.server.setEthAddress(account.address)
+        start.refreshBalance(forWallet=False, threaded=False)
+        start.refreshUnspents(forWallet=False, threaded=True)
         try:
-            alias = myWallet.alias or start.server.getWalletAlias()
-        except Exception as e:
+            alias = start.wallet.alias or start.server.getWalletAlias()
+        except Exception as _:
             alias = None
         return render_template('vault.html', **getResp({
             'title': 'Vault',
@@ -1729,7 +1766,9 @@ def vault():
             'vaultOpened': True,
             'stakeRequired': constants.stakeRequired,
             'wallet': start.vault,
+            'walletBalance': start.wallet.balance.amount,
             'offer': start.details.wallet.get('offer', 0),
+            'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
             'poolOpen': start.poolIsAccepting,
             'ethAddress': account.address,
             'ethPrivateKey': account.key.to_0x_hex(),
@@ -1749,6 +1788,7 @@ def vault():
         'stakeRequired': constants.stakeRequired,
         'wallet': start.vault,
         'offer': start.details.wallet.get('offer', 0),
+        'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
         'poolOpen': start.poolIsAccepting,
         'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
         'bridgeSatoriTransaction': presentBridgeSatoriTransactionform(request.form)}))
@@ -1831,14 +1871,13 @@ def stakeForAddress(address: str):
 def lendToAddress(address: str):
     if start.vault is None:
         return '', 200
-    # the network portion should be whatever network I'm on.
-    network = 'main'
     vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
     success, result = start.server.lendToAddress(
         vaultSignature=vault.sign(address),
         vaultPubkey=vault.publicKey,
+        vaultAddress=vault.address,
         address=address)
     if success:
         return 'OK', 200
@@ -1910,6 +1949,14 @@ def proxyParentStatus():
         return result, 200
     return f'Failed stakeProxyChildren: {result}', 400
 
+@app.route('/pool/size/set/<amount>', methods=['GET'])
+@authRequired
+def setPoolSize(amount: float):
+    success, result = start.server.setPoolSize(amount)
+    if success:
+        start.details.wallet['pool_stake_limit'] = amount
+        return result, 200
+    return f'Failed setPoolSize: {result}', 400
 
 @app.route('/pool/worker/reward/set/<percent>', methods=['GET'])
 @authRequired
@@ -1948,6 +1995,15 @@ def removeProxyChild(address: str, id: int):
         return result, 200
     return f'Failed stakeProxyRemove: {result}', 400
 
+@app.route('/invited/by/<address>', methods=['GET'])
+@userInteracted
+@authRequired
+def invitedBy(address: str):
+    success, result = start.server.invitedBy(address)
+    if success:
+        start.setInvitedBy(address)
+        return result, 200
+    return f'Failed invitedBy: {result}', 400
 
 @app.route('/vote', methods=['GET', 'POST'])
 @userInteracted
@@ -2019,23 +2075,30 @@ def vote():
         # }]
 
     def acceptSubmittion(passwordForm):
-        _vault = start.openVault(password=passwordForm.password.data)
-        # if rvn is None and not rvn.isEncrypted:
-        #    flash('unable to open vault')
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
 
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
 
-    myWallet = start.getWallet()
-    return render_template('vote.html', **getResp({
-        'title': 'Vote',
-        'network': start.network,
-        'vaultPasswordForm': presentVaultPasswordForm(),
-        'vaultOpened': False,
-        'wallet': myWallet,
-        'vault': start.vault,
-        'streams': getStreams(myWallet),
-        **getVotes(myWallet)}))
+    if start.vault is not None and not start.vault.isEncrypted:
+        myWallet = start.getWallet()
+        return render_template('vote.html', **getResp({
+            'title': 'Vote',
+            'network': start.network,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'vaultOpened': True,
+            'wallet': myWallet,
+            'vault': start.vault,
+            'streams': getStreams(myWallet),
+            **getVotes(myWallet)}))
+    else:
+        return render_template('vote.html', **getResp({
+            'title': 'Vote',
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
 
 @app.route('/pool/participants', methods=['GET', 'POST'])
 @userInteracted
@@ -2058,15 +2121,33 @@ def streams():
     # if searchText is not None:
     #     streamsData = getStreams(searchText)
     #     return jsonify({'streams': streamsData})
-    oracleStreams = start.getAllOracleStreams(fetch=True)
-    return render_template('streams.html', **getResp({
-        'title': 'Streams',
-        'network': start.network,
-        'vault': start.vault,
-        'darkmode': darkmode,
-        'streams': oracleStreams[0:100],
-        'totalStreams': len(oracleStreams),
-        'allStreams': oracleStreams}))
+
+    def acceptSubmittion(passwordForm):
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+
+    if start.vault is not None and not start.vault.isEncrypted:
+        oracleStreams = start.getAllOracleStreams(fetch=True)
+        return render_template('streams.html', **getResp({
+            'title': 'Streams',
+            'network': start.network,
+            'vault': start.vault,
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'darkmode': darkmode,
+            'streams': oracleStreams[0:100],
+            'totalStreams': len(oracleStreams),
+            'allStreams': oracleStreams}))
+    else:
+        return render_template('streams.html', **getResp({
+            'title': 'Streams',
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+        }))
 
 
 @app.route('/vote_on/sanction/incremental', methods=['POST'])
@@ -2096,12 +2177,31 @@ def getObservations():
     return jsonify({'observations': observations}), 200
 
 
-@app.route('/proposals', methods=['GET'])
+@app.route('/proposals', methods=['GET','POST'])
 @userInteracted
 @vaultRequired
 @authRequired
 def proposals():
-    return render_template('proposals.html', **getResp({'title': 'Proposals'}))
+    def acceptSubmittion(passwordForm):
+        _vault = start.openVault(
+            password=passwordForm.password.data,
+            create=True)
+
+    if request.method == 'POST':
+        acceptSubmittion(forms.VaultPassword(formdata=request.form))
+
+    if start.vault is not None and not start.vault.isEncrypted:
+        return render_template('proposals.html', **getResp({
+            'title': 'Proposals',
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            }))
+    else:
+        return render_template('proposals.html', **getResp({
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm(),
+            'title': 'Proposals'
+        }))
 
 
 @app.route('/proposal/votes/get/<int:id>', methods=['GET'])
@@ -2572,7 +2672,7 @@ def relayCsv():
             **{'stream': stream.streamId.stream},
             **{'target': stream.streamId.target},
             **stream.asMap(noneToBlank=True),
-            **{'latest': start.relay.latest.get(stream.streamId.topic(), '')},
+            **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
             **{'cadenceStr': deduceCadenceString(stream.cadence)},
             **{'offsetStr': deduceOffsetString(stream.offset)}}
             for stream in start.relay.streams]
@@ -2664,8 +2764,22 @@ def triggerRelay(topic: str = None):
 
 if __name__ == '__main__':
     app.run(
-        host='0.0.0.0',
+        #host='0.0.0.0',
+        host='::', #ipv6
         port=config.flaskPort(),
         threaded=True,
         debug=debug,
         use_reloader=False)
+
+## possible - dual stack solution
+#import socket
+#from werkzeug.serving import run_simple
+#
+#def get_dual_stack_socket():
+#    sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+#    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+#    sock.bind(('::', config.flaskPort()))
+#    sock.listen(1)
+#    return sock
+#
+#run_simple('::', config.flaskPort(), app, threaded=True, request_handler=None, passthrough_errors=True, use_reloader=False)

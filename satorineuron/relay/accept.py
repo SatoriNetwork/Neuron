@@ -68,7 +68,7 @@ def acceptRelaySubmission(start: 'StartupDag', data: dict):
             source=data.get('source', 'satori'),
             author=start.wallet.publicKey,
             stream=data.get('name'),
-            target=data.get('target')).topic(),
+            target=data.get('target')).jsonId,
         data=data.get('data'),
         toCentral=False)
     # todo: why not to central?

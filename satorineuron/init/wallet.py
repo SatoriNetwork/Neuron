@@ -2,14 +2,16 @@ from typing import Union
 import os
 import time
 import shutil
+import threading
 from queue import Queue
 from satorilib.electrumx import Electrumx
 from satorilib.wallet import EvrmoreWallet
+from satorilib.wallet.concepts.balance import Balance
 from satorilib.wallet.evrmore.identity import EvrmoreIdentity
 from satorineuron import logging
 from satorineuron import config
 from satorineuron.common.structs import ConnectionTo
-
+# from satorilib.wallet.evrmore.identity import EvrmoreIdentity
 
 class WalletVaultManager():
     ''' Wallets Manager '''
@@ -28,15 +30,18 @@ class WalletVaultManager():
     def __init__(
         self,
         updateConnectionStatus: callable,
-        persistent: bool = False
+        persistent: bool = False,
+        useElectrumx:bool = True,
     ):
         self.persistent = persistent
         self.updateConnectionStatus = updateConnectionStatus
+        self.useElectrumx = useElectrumx
         self.electrumx: Electrumx = None
         self._wallet: Union[EvrmoreWallet, None] = None
         self._vault: Union[EvrmoreWallet, None] = None
         self.connectionsStatusQueue: Queue = Queue()
         self.userInteraction = time.time()
+        self.reconnecting = None
 
     @property
     def vault(self) -> EvrmoreWallet:
@@ -49,7 +54,7 @@ class WalletVaultManager():
     def setup(self):
         WalletVaultManager.performMigrationBackup("wallet")
         WalletVaultManager.performMigrationBackup("vault")
-        self.createElectrumxConnection()
+        #self.createElectrumxConnection()
 
     def disconnect(self):
         if isinstance(self.electrumx, Electrumx):
@@ -57,16 +62,31 @@ class WalletVaultManager():
             self.electrumx = None
 
     def reconnect(self):
-        self.setupWalletAndVault(force=True)
+        # TODO: improve reconnection process
+        ##self.setupWalletAndVault(force=True)
+        if isinstance(self.electrumx, Electrumx):
+            self.electrumx.ensureConnected()
+        else:
+            #import traceback
+            #traceback.print_stack()
+            #self.createElectrumxConnection()
+            self._wallet.electrumx = self.electrumx
+            if self._vault is not None:
+                self._vault.electrumx = self.electrumx
 
     def userInteracted(self):
         self.userInteraction = time.time()
         # thread so we don't make the user wait for the reconnect
-        #threading.Thread(target=self.reconnectIfInactive).start()
-        self.reconnectIfInactive()
+        #if (
+        #    self.reconnecting is None or (
+        #        isinstance(self.reconnecting, threading.Thread) and
+        #        not self.reconnecting.is_alive())
+        #):
+        #    self.reconnecting = threading.Thread(target=self.reconnectIfInactive)
+        #    self.reconnecting.start()
 
     def reconnectIfInactive(self):
-        if not self.electrumxCheck():
+        if not self.electrumxCheck() and self.useElectrumx:
             logging.info('wallet waking up, reconnecting...', color='yellow')
             return self.reconnect()
 
@@ -84,6 +104,8 @@ class WalletVaultManager():
         return False
 
     def createElectrumxConnection(self):
+        if not self.useElectrumx:
+            return
         try:
             self.electrumx = EvrmoreWallet.createElectrumxConnection(
                 hostPorts=config.get().get('electrumx servers'),
@@ -96,7 +118,7 @@ class WalletVaultManager():
                 e)
 
     def setupSubscriptions(self):
-        if self.electrumxCheck():
+        if self.electrumxCheck() and self.useElectrumx:
             # self.electrumx.api.subscribeToHeaders() # for testing
             if isinstance(self._wallet, EvrmoreWallet):
                 self._wallet.subscribeToScripthashActivity()
@@ -107,15 +129,24 @@ class WalletVaultManager():
                 #self._vault.subscribe()
                 #self._vault.callTransactionHistory()
 
+    def balanceUpdatedCallback(self, evr: Balance, satori: Balance, kind: str):
+        ''' tell the UI '''
+        print(kind, 'evr balance', evr.amount)
+        print(kind, 'satori balance', satori.amount)
+        #import traceback
+        #traceback.print_stack()
+
     def _initializeWallet(self, force: bool = False) -> EvrmoreWallet:
         if not force and self._wallet is not None:
             return self._wallet
         self._wallet = EvrmoreWallet(
             walletPath=config.walletPath('wallet.yaml'),
+            kind='wallet',
             reserve=0.25,
             isTestnet=False,
             electrumx=self.electrumx,
-            type='wallet')
+            useElectrumx=self.useElectrumx,
+            balanceUpdatedCallback=self.balanceUpdatedCallback)
         self._wallet()
         logging.info('initialized wallet', color='green')
         return self._wallet
@@ -142,11 +173,13 @@ class WalletVaultManager():
                     return self._vault
             self._vault = EvrmoreWallet(
                 walletPath=vaultPath,
+                kind='vault',
                 reserve=0.25,
                 isTestnet=False,
                 password=password,
                 electrumx=self.electrumx,
-                type='vault')
+                useElectrumx=self.useElectrumx,
+                balanceUpdatedCallback=self.balanceUpdatedCallback)
             self._vault()
             logging.info('initialized vault', color='green')
             return self._vault
@@ -191,14 +224,21 @@ class WalletVaultManager():
             raise e
 
     def setupWalletAndVault(self, force: bool = False):
-        if not self.electrumxCheck():
-            self.createElectrumxConnection()
+        #if not self.electrumxCheck() and self.useElectrumx:
+        #    self.createElectrumxConnection()
         self._initializeWallet(force=force)
         self._initializeVault(
-            password=None,
-            create=False,
+            password=str(config.get().get('vault password')),
+            create=config.get().get('vault password') is not None,
             force=force)
-        return self.setupSubscriptions()
+        #return self.setupSubscriptions()
+
+    #def setupWalletAndVaultIdentities(self, force: bool = False):
+    #    self._initializeWalletIdentity(force=force)
+    #    self._initializeVaultIdentity(
+    #        password=None,
+    #        create=False,
+    #        force=force)
 
     def setupWalletAndVaultIdentities(self, force: bool = False):
         self._initializeWalletIdentity(force=force)

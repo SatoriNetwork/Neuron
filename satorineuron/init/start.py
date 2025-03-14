@@ -5,6 +5,7 @@ import json
 import random
 import threading
 from queue import Queue
+from eth_account import Account
 import asyncio
 import pandas as pd
 from satorilib.concepts.structs import (
@@ -51,6 +52,9 @@ class SingletonMeta(type):
 
 class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     """a DAG of startup tasks."""
+
+    _holdingBalanceBase_cache = None
+    _holdingBalanceBase_timestamp = 0
 
     @classmethod
     async def create(
@@ -112,7 +116,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.urlSynergy: str = urlSynergy
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
-        self.details: CheckinDetails = None
+        self.details: CheckinDetails = CheckinDetails(raw={})
         self.key: str
         self.oracleKey: str
         self.idKey: str
@@ -143,6 +147,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBlockTime = time.time()
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
+        self.invitedBy: str = None
+        self.setInvitedBy()
         self.setEngineVersion()
         self.setupWalletManager()
         self.restartQueue: Queue = Queue()
@@ -223,10 +229,136 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             8)
         return self._holdingBalance
 
+    def refreshBalance(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        print('refreshing balance')
+        if forWallet and isinstance(self.wallet, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.wallet.get).start()
+            else:
+                self.wallet.get()
+        if forVault and isinstance(self.vault, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.vault.get).start()
+            else:
+                self.vault.get()
+        return self.holdingBalance
+
+    def refreshUnspents(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        if forWallet and isinstance(self.wallet, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.wallet.getReadyToSend).start()
+            else:
+                self.wallet.getReadyToSend()
+        if forVault and isinstance(self.vault, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.vault.getReadyToSend).start()
+            else:
+                self.vault.getReadyToSend()
+        return self._holdingBalance
+
+ #  api basescan version
+ #  @property
+ #   def holdingBalanceBase(self) -> float:
+ #       """
+ #       Get Satori from Base 5 min interval
+ #       """
+ #       import requests
+ #       current_time = time.time()
+ #       cache_timeout = 60 * 5
+ #       if self._holdingBalanceBase_cache is not None and (current_time - self._holdingBalanceBase_timestamp) < cache_timeout:
+ #           return self._holdingBalanceBase_cache
+ #       eth_address = self.vault.ethAddress
+ #       #base_api_url = "https://api.basescan.org/api"
+ #       params = {
+ #           "module": "account",
+ #           "action": "tokenbalance",
+ #           "contractaddress": "0xc1c37473079884CbFCf4905a97de361FEd414B2B",
+ #           "address": eth_address,
+ #           "tag": "latest",
+ #           "apikey": "xxx"
+ #       }
+ #       try:
+ #           response = requests.get(base_api_url, params=params)
+ #           response.raise_for_status()
+ #           data = response.json()
+ #           if data.get("status") == "1":
+ #               token_balance = int(data.get("result", 0)) / (10 ** 18)
+ #               self._holdingBalanceBase_cache = token_balance
+ #               self._holdingBalanceBase_timestamp = current_time
+ #               print(f"Connecting to Base node OK")
+ #               return token_balance
+ #           else:
+ #               print(f"Error API: {data.get('message', 'Unknown Error')}")
+ #               return 0
+ #       except requests.RequestException as e:
+ #           print(f"Error connecting to API: {e}")
+ #           return 0
+
+    @property
+    def holdingBalanceBase(self) -> float:
+        """
+        Get Satori from Base with 5-minute interval cache
+        """
+        import requests
+        import time
+
+        current_time = time.time()
+        cache_timeout = 60 * 5
+        if self._holdingBalanceBase_cache is not None and (current_time - self._holdingBalanceBase_timestamp) < cache_timeout:
+            return self._holdingBalanceBase_cache
+        eth_address = self.vault.ethAddress
+        base_api_url = "https://base-mainnet.g.alchemy.com/v2/wdwSzh0cONBj81_XmHWvODOBq-wuQiAi"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": "alchemy_getTokenBalances",
+            "params": [
+                eth_address,
+                ["0xc1c37473079884CbFCf4905a97de361FEd414B2B"]
+            ],
+            "id": 1
+        }
+        headers = {"Content-Type": "application/json"}
+        try:
+            response = requests.post(base_api_url, json=payload, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            if "result" in data and "tokenBalances" in data["result"]:
+                balance_hex = data["result"]["tokenBalances"][0]["tokenBalance"]
+                token_balance = int(balance_hex, 16) / (10 ** 18)
+                self._holdingBalanceBase_cache = token_balance
+                self._holdingBalanceBase_timestamp = current_time
+                print(f"Connecting to Base node OK")
+                return token_balance
+            else:
+                print(f"API Error: Unexpected response format")
+                return 0
+        except requests.RequestException as e:
+            print(f"Error connecting to API: {e}")
+            return 0
+
+    @property
+    def ethaddressforward(self) -> str:
+        eth_address = self.vault.ethAddress
+        if eth_address:
+            return eth_address
+        else:
+        #    print("Ethereum address not found")
+            return ""
+    @property
+    def evrvaultaddressforward(self) -> str:
+        evrvaultaddress = self.details.wallet.get('vaultaddress', '')
+        if evrvaultaddress:
+            return evrvaultaddress
+        else:
+        #    print("EVR Vault address not found")
+            return ""
+
+
     def setupWalletManager(self):
         self.walletVaultManager = WalletVaultManager(
             updateConnectionStatus=self.updateConnectionStatus,
-            persistent=self.runMode == RunMode.wallet)
+            persistent=self.runMode == RunMode.wallet,
+            useElectrumx=self.runMode != RunMode.worker)
         self.walletVaultManager.setup()
 
     def shutdownWallets(self):
@@ -308,7 +440,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             #        self.cacheOf(stream.streamId).getLatestObservationTime()
             #    )
             #    if ts > 0 and ts + 60*60*24 < time.time():
-            #        self.server.removeStream(stream.streamId.topic())
+            #        self.server.removeStream(stream.streamId.jsonId)
             #        self.triggerRestart()
             if self.server.checkinCheck():
                 self.triggerRestart()  # should just be start()
@@ -384,6 +516,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         await self.connectToDataServer()
         asyncio.create_task(self.stayConnectedForever())
         self.walletVaultManager.setupWalletAndVault()
+        #self.walletVaultManager.setupWalletAndVaultIdentities()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
@@ -429,6 +562,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             try:
                 self.details = CheckinDetails(
                     self.server.checkin(referrer=referrer))
+                if self.details.get('sponsor') is not None:
+                    self.setInvitedBy(self.details.get('sponsor'))
+                elif self.invitedBy is not None:
+                    self.server.invitedBy(self.invitedBy)
+                #logging.debug(self.details, color='teal')
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
@@ -614,6 +752,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             )
             self.aiengine.predictionProduced.subscribe(
                 lambda x: handleNewPrediction(x) if x is not None else None)
+
+    def addToEngine(self, stream: Stream, publication: Stream):
+        if self.aiengine is not None:
+            self.aiengine.addStream(stream, publication)
 
     def subConnect(self):
         """establish a random pubsub connection used only for subscribing"""
@@ -856,7 +998,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             relays = satorineuron.config.get("relay")
             rawStreams = []
             for x in streams:
-                topic = x.streamId.topic(asJson=True)
+                topic = x.streamId.jsonId
                 if topic in relays.keys():
                     x.uri = relays.get(topic).get("uri")
                     x.headers = relays.get(topic).get("headers")
@@ -1077,6 +1219,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engineVersion = version if version in ['v1', 'v2'] else default
         config.add(data={'engine version': self.engineVersion})
         return self.engineVersion
+
+    def setInvitedBy(self, address: Union[str, None] = None) -> str:
+        address = (address or config.get().get('invited by:', address))
+        if address:
+            self.invitedBy = address
+            config.add(data={'invited by': self.invitedBy})
+        return self.invitedBy
 
     def poolAccepting(self, status: bool):
         success, result = self.server.poolAccepting(status)

@@ -1,5 +1,9 @@
 {% extends "basic.html" %}
 {% block content %}
-{% include 'streams-search.html' %}
-{% include 'footer-on-front.html' %}
+{% if vaultOpened %}
+    {% include 'streams-search.html' %}
+    {% include 'footer-on-front.html' %}
+{% else %}
+    {% include 'streams-lock.html' %}
+{% endif %}
 {% endblock %}

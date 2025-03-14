@@ -153,7 +153,7 @@ class RawStreamRelayEngine(Cached):
             logging.error('Unable to set data: ', e)
         # if our ports are closed we also sent to ones
         start.publish(
-            topic=stream.streamId.topic(),
+            topic=stream.streamId.jsonId,
             data=data,
             observationTime=timestamp,
             observationHash=observationHash,
@@ -161,7 +161,7 @@ class RawStreamRelayEngine(Cached):
             isPrediction=False)
 
     def save(self, stream: Stream, data: str = None) -> CachedResult:
-        self.latest[stream.streamId.topic()] = data
+        self.latest[stream.streamId.jsonId] = data
         self.streamId = stream.streamId  # required by Cache
         return self.disk.appendByAttributes(value=data, hashThis=True)
     

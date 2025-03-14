@@ -1,3 +1,22 @@
+to reclaim space
+kill all docker containers
+remove containers and images you don't need
+
+```
+docker stop <container>
+docker rm <container>
+docker rmi
+docker buildx prune --all
+docker builder prune --all
+docker image prune -f
+docker system prune -f
+docker volume prune -f
+docker volume ls
+docker volume rm <name>
+docker system df
+
+```
+
 sometimes windows docker system will boat and take up more memory over time. Here's how you can reclaim that memory:
 
 Run these commands in an administrator powershell

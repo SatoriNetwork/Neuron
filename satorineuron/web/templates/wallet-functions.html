@@ -27,7 +27,7 @@
       </a>
       <center>
         <br/>
-        <div id='walletAddress'>{{ wallet.address }}</div>
+        <div id='walletAddress' class="padding-left-right-5">{{ wallet.address }}</div>
         <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">wallet address</p>
       </center>
       <hr class="dark horizontal my-3">
@@ -114,8 +114,12 @@
       </div>
       <hr class="dark horizontal my-0">
       <div class="card-footer p-1">
-        <center><p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
-          Transaction fees will be added during the send process. If {% if network=='main' %}Evrmore{% else %}Ravencoin{% endif %} is available the transaction fee will be no more than the required reserves of 0.25 {% if network=='main' %}EVR{% else %}RVN{% endif %}, often much less. If there is not more than .25 EVR in the wallet the transaction fee will be {{ ('%.8f' | format(wallet.mundoFee)).rstrip('0').rstrip('.') }} SATORI. For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://play.google.com/store/apps/details?id=com.magic.mobile'>Magic</a> or <a href='https://github.com/EvrmoreOrg/electrum-evrmore/releases'>the Electrum-Evrmore wallet</a>.</p></center>
+        <center>
+          <p class="text-sm mb-1 {% if darkmode %}dark-colors{% endif %}" style="margin-left:2rem; margin-right:2rem;"><span class="text-success text-sm font-weight-bolder"></span>
+          Transaction fees will be paid during the send process. They typically amount to no more than 0.25 {% if network=='main' %}EVR{% else %}RVN{% endif %}. If there isn't enough EVR available the transaction fee will be {{ ('%.8f' | format(wallet.mundoFee)).rstrip('0').rstrip('.') }} SATORI.<br><br>
+          For more details and control download then import your private key or seedwords into a fully featured wallet such as <a href='https://play.google.com/store/apps/details?id=com.magic.mobile'>Magic</a> or <a href='https://github.com/EvrmoreOrg/electrum-evrmore/releases'>the Electrum-Evrmore wallet</a>.
+          </p>
+        </center>
       </div>
     </div>
   </div>

@@ -72,14 +72,12 @@
   document.addEventListener('DOMContentLoaded', (event) => {
     getPoolAddresses();
     enableDisablePool();
-    // openClose pool display
-    setPoolToggle();
   });
 
   function getPoolAddresses() {
-    fetch('/pool/addresses', { 
-      method: 'GET', 
-      headers: { 'Content-Type': 'application/json' } 
+    fetch('/pool/addresses', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
     })
     .then(async response => {
       if (response.ok) {
@@ -260,9 +258,9 @@
 
   function getCsv(){
     if (!poolTableData) {
-      fetch('/pool/addresses', { 
-        method: 'GET', 
-        headers: { 'Content-Type': 'application/json' } 
+      fetch('/pool/addresses', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
       })
       .then(async response => {
         if (response.ok) {

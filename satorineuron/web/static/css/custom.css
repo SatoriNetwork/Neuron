@@ -3,6 +3,96 @@ PLACE HERE YOUR OWN CSS CODES AND IF NEEDED, OVERRIDE THE STYLES FROM THE OTHER 
 WE WILL RELEASE FUTURE UPDATES SO IN ORDER TO NOT OVERWRITE YOUR STYLES IT'S BETTER LIKE THIS.  */
 
 @font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: normal;
+  src: url(https://fonts.gstatic.com/s/roboto/v47/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWuaabVmUiA8.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: normal;
+  src: url(https://fonts.gstatic.com/s/roboto/v47/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWub2bVmUiA8.ttf) format('truetype');
+}
+.form-popup-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+}
+.form-popup-bg {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(94, 110, 141, 0.9);
+  opacity: 0;
+  visibility: hidden;
+  -webkit-transition: opacity 0.3s 0s, visibility 0s 0.3s;
+  -moz-transition: opacity 0.3s 0s, visibility 0s 0.3s;
+  transition: opacity 0.3s 0s, visibility 0s 0.3s;
+  overflow-y: auto;
+  z-index: 10000;
+}
+.form-popup-bg.is-visible {
+  opacity: 1;
+  visibility: visible;
+  -webkit-transition: opacity 0.3s 0s, visibility 0s 0s;
+  -moz-transition: opacity 0.3s 0s, visibility 0s 0s;
+  transition: opacity 0.3s 0s, visibility 0s 0s;
+}
+.form-container {
+  background-color: #2d3638;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  display: none; /*changed*/
+  flex-direction: column;
+  width: 100%;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  padding: 40px;
+  color: #fff;
+}
+.form-container.active {
+  display: flex; /*changed*/
+}
+.close-button {
+  background: none;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: solid 1px #fff;
+}
+.form-popup-bg:before {
+  content: "";
+  background-color: #fff;
+  opacity: 0.25;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.form_hint {
+  text-align: center;
+}
+
+
+@font-face {
   font-family: "Zen Maru Gothic";
   src: local(ZenMaruGothic Thin),
   url("../fonts/Zen_Maru_Gothic/ZenMaruGothic-Light.tff") format("tff"),
@@ -415,7 +505,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
   padding: 20px;
   text-align: center;
   height: 100%;
-  z-index: 10000;
+  z-index: 100000;
 }
 
 
@@ -430,7 +520,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 	padding: 20px;
 	text-align: center;
 	height: 100%;
-	z-index: 10000;
+	z-index: 100000;
   }
 
 .overlayForLoading {
@@ -441,15 +531,15 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 	pointer-events: none;
 }
 .loadingThingy {
-    z-index: 101;
+  z-index: 101;
     /*position: relative;
     background: url(../img/loading_icon.gif);
     display: none;
     margin: auto;*/
-	margin: auto;
-    height: 160px;
-    width: 160px;
-    position: absolute;
+	margin-left: auto;
+  height: 160px;
+  width: 160px;
+  position: relative;
 }
 
 .yellow-hover:hover {
@@ -971,4 +1061,94 @@ input:checked + .slider:before {
 
 .no-scroll {
   overflow: hidden;
+}
+
+/* Login Button class */
+.login-btn {
+  text-align: center;
+}
+.login-btn:hover {
+  background-color: grey;
+}
+.login-btn:active {
+  background-color: #10051D;
+  color: whitesmoke;
+}
+
+.form-popup-bg {
+  position:absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+}
+.form-popup-bg {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(94, 110, 141, 0.9);
+  opacity: 0;
+  visibility: hidden;
+  -webkit-transition: opacity 0.3s 0s, visibility 0s 0.3s;
+  -moz-transition: opacity 0.3s 0s, visibility 0s 0.3s;
+  transition: opacity 0.3s 0s, visibility 0s 0.3s;
+  overflow-y: auto;
+  z-index: 10000;
+}
+.form-popup-bg.is-visible {
+  opacity: 1;
+  visibility: visible;
+  -webkit-transition: opacity 0.3s 0s, visibility 0s 0s;
+  -moz-transition: opacity 0.3s 0s, visibility 0s 0s;
+  transition: opacity 0.3s 0s, visibility 0s 0s;
+}
+.form-container {
+    background-color: #2d3638;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+    display: none; /*changed*/
+    flex-direction: column;
+    width: 100%;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    position:relative;
+  padding: 40px;
+  color: #fff;
+}
+.close-button {
+  background:none;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: solid 1px #fff;
+}
+
+.form-popup-bg:before{
+    content:'';
+    background-color: #fff;
+  opacity: .25;
+  position:absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+.padding-left-right-5 {
+  padding-left: 5px;
+  padding-right: 5px;
 }
