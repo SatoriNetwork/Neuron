@@ -117,6 +117,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.poolIsAccepting: bool = False
         self.invitedBy: str = None
         self.setInvitedBy()
+        self.rewardAddress: str = None
+        self.setRewardAddress()
         self.setEngineVersion()
         self.setupWalletManager()
         if not config.get().get("disable restart", False):
@@ -430,7 +432,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()
@@ -492,7 +493,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()
@@ -540,6 +540,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 elif self.invitedBy is not None:
                     self.server.invitedBy(self.invitedBy)
                 #logging.debug(self.details, color='teal')
+                if (
+                    self.details.get('rewardaddress') != self.rewardAddress and
+                    self.rewardAddress is not None
+                ):
+                    self.setRewardAddress(globally=True)
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
@@ -611,18 +616,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             logging.warning(f"trying again in {x}")
             time.sleep(x)
 
-    def setRewardAddress(self) -> bool:
-        configRewardAddress: str = str(config.get().get("reward address", ""))
+    def setRewardAddress(self, globally: bool = False) -> bool:
+        self.rewardAddress: str = str(config.get().get("reward address", ""))
         if (
+            globally and
             self.env in ['prod', 'local'] and
-            len(configRewardAddress) == 34 and
-            configRewardAddress.startswith('E') and
-            self.rewardAddress != configRewardAddress
+            len(self.rewardAddress) == 34 and
+            self.rewardAddress.startswith('E')
         ):
             self.server.setRewardAddress(
-                signature=self.wallet.sign(configRewardAddress),
+                signature=self.wallet.sign(self.rewardAddress),
                 pubkey=self.wallet.publicKey,
-                address=configRewardAddress)
+                address=self.rewardAddress)
             return True
         return False
 
