@@ -540,11 +540,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 elif self.invitedBy is not None:
                     self.server.invitedBy(self.invitedBy)
                 #logging.debug(self.details, color='teal')
-                if (
-                    self.details.get('rewardaddress') != self.rewardAddress and
-                    self.rewardAddress is not None
-                ):
-                    self.setRewardAddress(globally=True)
+                if self.details.get('rewardaddress') != self.rewardAddress:
+                    if self.rewardAddress is not None:
+                        self.setRewardAddress(globally=True)
+                    else
+                        self.setRewardAddress(address=self.details.get('rewardaddress'))
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
@@ -616,8 +616,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             logging.warning(f"trying again in {x}")
             time.sleep(x)
 
-    def setRewardAddress(self, globally: bool = False) -> bool:
-        self.rewardAddress: str = str(config.get().get("reward address", ""))
+    def setRewardAddress(
+        self,
+        address: Union[str, None] = None,
+        globally: bool = False
+    ) -> bool:
+        if (
+            address and
+            len(address) == 34 and
+            address.startswith('E')
+        ):
+            self.rewardAddress = address
+            config.add(data={'reward address': address})
+        else:
+            self.rewardAddress: str = str(config.get().get('reward address', ''))
         if (
             globally and
             self.env in ['prod', 'local'] and
