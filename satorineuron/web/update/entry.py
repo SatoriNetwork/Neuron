@@ -1,3 +1,4 @@
+import requests
 from . import config
 from . import pull
 from . import hashes
@@ -5,7 +6,6 @@ from . import hashes
 def update():
 
     def shouldPullFromGithub() -> bool:
-        import requests
         r = requests.get('https://stage.satorinet.io/api/v1/update/github/required')
         if r.status_code == 200:
             if r.text.lower() == 'true':
@@ -13,7 +13,6 @@ def update():
         return False
 
     def shouldPullFromServer() -> bool:
-        import requests
         r = requests.get('https://stage.satorinet.io/api/v1/update/code/required')
         if r.status_code == 200:
             if r.text.lower() == 'true':
