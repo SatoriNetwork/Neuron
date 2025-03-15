@@ -538,10 +538,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             try:
                 self.details = CheckinDetails(
                     self.server.checkin(referrer=referrer))
-                if self.details.get('sponsor') is not None:
-                    self.setInvitedBy(self.details.get('sponsor'))
-                elif self.invitedBy is not None:
-                    self.server.invitedBy(self.invitedBy)
+                if self.details.get('sponsor') != self.invitedBy:
+                    if self.invitedBy is None:
+                        self.setInvitedBy(self.details.get('sponsor'))
+                    if isinstance(self.invitedBy, str) and len(self.invitedBy) == 34 and self.invitedBy.startswith('E'):
+                        self.server.invitedBy(self.invitedBy)
                 #logging.debug(self.details, color='teal')
                 if self.details.get('rewardaddress') != self.configRewardAddress:
                     if self.configRewardAddress is None:
@@ -981,7 +982,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.engineVersion
 
     def setInvitedBy(self, address: Union[str, None] = None) -> str:
-        address = (address or config.get().get('invited by:', address))
+        address = address or config.get().get('invited by', address)
         if address:
             self.invitedBy = address
             config.add(data={'invited by': self.invitedBy})
