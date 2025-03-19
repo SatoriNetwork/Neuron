@@ -572,8 +572,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     if isinstance(self.invitedBy, str) and len(self.invitedBy) == 34 and self.invitedBy.startswith('E'):
                         self.server.invitedBy(self.invitedBy)
                 if (
-                    self.details.get('data_manager_port') in (None, 24600)
-                    and  self.publicDataManagerPort not in (None, 24600)
+                    self.details.get('data_manager_port') in (None, 24600, '24600')
+                    and  self.publicDataManagerPort not in (None, 24600, '24600')
                 ):
                     self.server.setDataManagerPort(self.publicDataManagerPort)
                 #logging.debug(self.details, color='teal')
