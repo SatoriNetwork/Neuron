@@ -1511,8 +1511,11 @@
     return (
       document.getElementById("name").value != "" &&
       document.getElementById("cadence").value >= 60*10 &&
-      document.getElementById("url").value.startsWith("http") &&
-      (document.getElementById("offset").value == '' || document.getElementById("offset").value < 86400)
+      (document.getElementById("url").value == '' ||
+      document.getElementById("url").value.startsWith("http") ||
+      document.getElementById("url").value.startsWith("ipfs") ) &&
+      (document.getElementById("offset").value == '' ||
+      document.getElementById("offset").value < 86400)
 
       // don't require uri, if blank it'll automatically populate from url
       //  && document.getElementById("uri").value.startsWith("http")
