@@ -14,6 +14,7 @@ from satorilib.concepts.structs import (
     StreamPairs,
     StreamOverview)
 from satorilib import disk
+from satorilib.concepts import constants
 from satorilib.wallet import EvrmoreWallet
 from satorilib.wallet.evrmore.identity import EvrmoreIdentity
 from satorilib.server import SatoriServerClient
@@ -1289,3 +1290,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.lastBridgeTime < time.time() + 60*60*1:
             return True, ''
         return False, 'Please wait at least an hour before Bridging Satori'
+
+    @property
+    def stakeRequired(self) -> float:
+        return self.details.stakeRequired or constants.stakeRequired

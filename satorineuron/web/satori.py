@@ -25,7 +25,6 @@ from flask import session, request, render_template
 from flask import Response, render_template_string
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
-from satorilib.concepts import constants
 from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
 from satorilib.utils import getRandomName, getRandomQuote
 from satorilib.utils.time import timeToSeconds
@@ -1323,7 +1322,7 @@ def dashboard():
         streamOverviews = [stream for stream in start.streamDisplay]
         holdingBalance = start.refreshBalance()
         holdingBalanceBase = start.holdingBalanceBase
-        stakeStatus = holdingBalance + holdingBalanceBase  >= constants.stakeRequired or (
+        stakeStatus = holdingBalance + holdingBalanceBase  >= start.stakeRequired or (
             start.details.wallet.get('rewardaddress', None) not in [
                 None,
                 start.details.wallet.get('address'),
@@ -1344,7 +1343,7 @@ def dashboard():
             'miningDisplay': 'none',
             'proxyDisplay': 'none',
             'invitedBy': start.invitedBy,
-            'stakeRequired': constants.stakeRequired,
+            'stakeRequired': start.stakeRequired,
             'streamOverviews': streamOverviews,
             'engineVersion': start.engineVersion,
             'configOverrides': config.get(),
@@ -1764,7 +1763,7 @@ def theVault():
             'network': start.network,
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
-            'stakeRequired': constants.stakeRequired,
+            'stakeRequired': start.stakeRequired,
             'wallet': start.vault,
             'walletBalance': start.wallet.balance.amount,
             'offer': start.details.wallet.get('offer', 0),
@@ -1785,7 +1784,7 @@ def theVault():
         'network': start.network,
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
-        'stakeRequired': constants.stakeRequired,
+        'stakeRequired': start.stakeRequired,
         'wallet': start.vault,
         'offer': start.details.wallet.get('offer', 0),
         'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
