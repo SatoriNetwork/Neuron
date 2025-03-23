@@ -166,6 +166,21 @@
       {% endif %}
 -->
 
+      {% if admin %}
+        <li class="nav-item">
+          <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Admin' else '' }}" href="{{ url_for('admin') }}" onclick="showWorking();">
+            <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="material-icons opacity-10">verified_user</i>
+            </div>
+            <span class="nav-link-text ms-1">Admin</span>
+          </a>
+        </li>
+
+        {% if title=='Admin' %}
+        <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('admininviterlistbr');">Inviter Approval</a></li>
+        {% endif %}
+      {% endif %}
+
       <li class="nav-item">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Proposals' else '' }}" href="{{ url_for('proposals') }}" onclick="showWorking();">
           <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
