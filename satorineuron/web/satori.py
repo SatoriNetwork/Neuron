@@ -2100,6 +2100,24 @@ def vote():
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
 
+
+@app.route('/admin', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def admin():
+    if start.vault is not None and not start.vault.isEncrypted:
+        return render_template('admin.html', **getResp({
+            'title': 'Admin',
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm()}))
+    else:
+        return render_template('admin.html', **getResp({
+            'title': 'Admin',
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm()}))
+
+
 @app.route('/pool/participants', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
@@ -2108,6 +2126,7 @@ def poolParticipants():
     print("vault", start.vault.address)
     participants = start.server.poolParticipants(start.vault.address)
     return jsonify({'data': participants}), 200
+
 
 @app.route('/streams', methods=['GET', 'POST'])
 @userInteracted
