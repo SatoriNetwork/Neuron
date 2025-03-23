@@ -218,6 +218,7 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'lockable': isActuallyLockable(),
         'motto': MOTTO,
         'env': ENV,
+        'admin': start.admin,
         'paused': start.paused,
         'darkmode': darkmode,
         'title': 'Satori',
@@ -2040,6 +2041,7 @@ def vote():
             return 0
         else:
             return data
+
     def getVotes(wallet):
         # def valuesAsNumbers(map: dict):
         #    return {k: int(v) for k, v in map.items()}
@@ -2113,6 +2115,23 @@ def vote():
             'vaultOpened': False,
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
+
+@app.route('/admin', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def admin():
+    if start.vault is not None and not start.vault.isEncrypted:
+        return render_template('admin.html', **getResp({
+            'title': 'Admin',
+            'vaultOpened': True,
+            'vaultPasswordForm': presentVaultPasswordForm()}))
+    else:
+        return render_template('admin.html', **getResp({
+            'title': 'Admin',
+            'vaultOpened': False,
+            'vaultPasswordForm': presentVaultPasswordForm()}))
+
 
 @app.route('/pool/participants', methods=['GET', 'POST'])
 @userInteracted
@@ -2593,6 +2612,26 @@ def voteSubmitManifestWallet():
                 'managers': request.json.get('walletManagers', 0)})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
+
+#@app.route('/api/admin/inviters/<int:proposal_id>', methods=['POST'])
+#@userInteracted
+#@authRequired
+#def approve_proposal(proposal_id: int):
+#    try:
+#        wallet_address = start.wallet.address if start.wallet else None
+#        if not wallet_address:
+#            return jsonify({'status': 'error', 'message': 'No wallet address available'}), 401
+#        success, result = start.server.approveProposal(
+#            wallet_address, proposal_id)
+#        if not success and 'Unauthorized' in result.get('error', ''):
+#            return jsonify({'status': 'error', 'message': result['error']}), 403
+#        return jsonify(
+#            {'status': 'success', 'message': 'Proposal approved successfully'} if success
+#            else {'status': 'error', 'message': result.get('error')}
+#        ), 200 if success else 400
+#    except Exception as e:
+#        return jsonify({'status': 'error', 'message': str(e)}), 500
+#
 
 @app.route('/system_metrics', methods=['GET'])
 def systemMetrics():

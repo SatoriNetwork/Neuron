@@ -1009,3 +1009,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     @property
     def stakeRequired(self) -> float:
         return self.details.stakeRequired or constants.stakeRequired
+
+    @property
+    def admin(self) -> float:
+        ''' check if the wallet is an admin, shows admin abilities '''
+        if self.wallet is None:
+            return False
+        return self.wallet.address in ['admin addresses']
