@@ -12,10 +12,10 @@ import time
 import json
 import requests
 from functools import partial
+from satorilib import logging
 from satorilib.concepts.structs import Stream, StreamId
 from satorilib.disk import Cached
 from satorilib.disk.cache import CachedResult
-from satorilib import logging
 from satorilib.datamanager import DataServerApi
 import asyncio
 import pandas as pd
@@ -139,15 +139,15 @@ class RawStreamRelayEngine(Cached):
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
             data, timestamp, print=True)
         start = getStart()
-        dataForServer = pd.Dataframe({'value': [data]
-                                      },index=[timestamp])
+        dataForServer = pd.DataFrame(
+            {'value': [data]},
+            index=[timestamp])
         try:
             response = await start.dataClient.insertStreamData(
                 uuid=stream.streamId.uuid,
                 data=dataForServer,
-                isSub=True 
-            )
-            if response.status != DataServerApi.statusSuccess:
+                isSub=True)
+            if response.status != DataServerApi.statusSuccess.value:
                 raise Exception(response.senderMsg)
         except Exception as e:
             logging.error('Unable to set data: ', e)
@@ -164,7 +164,7 @@ class RawStreamRelayEngine(Cached):
         self.latest[stream.streamId.jsonId] = data
         self.streamId = stream.streamId  # required by Cache
         return self.disk.appendByAttributes(value=data, hashThis=True)
-    
+
     def run_async_in_thread(self, coroutine):
         """Helper function to run an async function in a thread"""
         loop = asyncio.new_event_loop()
@@ -182,10 +182,12 @@ class RawStreamRelayEngine(Cached):
         the details of each stream.
         '''
         result = RawStreamRelayEngine.call(streams[0])
+        logging.debug('STREAM', streams[0])
         successes = []
         if result is not None:
             for stream in streams:
                 hookResult = RawStreamRelayEngine.callHook(stream, result)
+                logging.debug('hookResult', hookResult)
                 if hookResult is not None:
                     cachedResult = self.save(stream, data=hookResult) # TODO : dataserver should handle this
                     if cachedResult.success:

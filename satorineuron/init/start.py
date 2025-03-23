@@ -236,7 +236,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self._holdingBalance
 
     def refreshBalance(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
-        print('refreshing balance')
         if forWallet and isinstance(self.wallet, EvrmoreWallet):
             if threaded:
                 threading.Thread(target=self.wallet.get).start()
@@ -906,9 +905,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             streamPairs = StreamPairs(
                 self.subscriptions,
                 StartupDag.predictionStreams(self.publications))
-            self.subscriptions, self.publications = streamPairs.get_matched_pairs()
-            subList = [sub.streamId.uuid for sub in self.subscriptions]
-            pubList = [pub.streamId.uuid for pub in self.publications]
+            subscriptions, publications = streamPairs.get_matched_pairs()
+            subList = [sub.streamId.uuid for sub in subscriptions]
+            pubList = [pub.streamId.uuid for pub in publications]
             _, fellowSubscribers = self.server.getStreamsSubscribers(subList)
             success, mySubscribers = self.server.getStreamsSubscribers(pubList)
             _, remotePublishers = self.server.getStreamsPublishers(subList)

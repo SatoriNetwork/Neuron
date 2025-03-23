@@ -165,6 +165,7 @@ predictions/
 
 config/ipfs
 config/relay.yaml
+config/*bk.yaml
 config/config.yaml
 config/manifest.yaml
 
