@@ -323,6 +323,7 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'lockable': isActuallyLockable(),
         'motto': MOTTO,
         'env': ENV,
+        'admin': start.admin,
         'paused': start.paused,
         'darkmode': darkmode,
         'title': 'Satori',
