@@ -908,8 +908,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             subscriptions, publications = streamPairs.get_matched_pairs()
             subList = [sub.streamId.uuid for sub in subscriptions]
             pubList = [pub.streamId.uuid for pub in publications]
+            pubListAll = [pub.streamId.uuid for pub in self.publications]
             _, fellowSubscribers = self.server.getStreamsSubscribers(subList)
-            success, mySubscribers = self.server.getStreamsSubscribers(pubList)
+            success, mySubscribers = self.server.getStreamsSubscribers(pubListAll)
             _, remotePublishers = self.server.getStreamsPublishers(subList)
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
 
