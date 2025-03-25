@@ -96,8 +96,8 @@ while True:
                 'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://stage.satorinet.io'}[ENV],
-                #'prod': 'http://137.184.38.160'}[ENV],  # n
+                #'prod': 'https://stage.satorinet.io'}[ENV],
+                'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
                 'local': 'https://mundo.satorinet.io',
@@ -2116,21 +2116,47 @@ def vote():
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
 
+
 @app.route('/admin', methods=['GET'])
 @userInteracted
 @vaultRequired
 @authRequired
 def admin():
     if start.vault is not None and not start.vault.isEncrypted:
+        success, content = start.server.getContentCreated()
         return render_template('admin.html', **getResp({
             'title': 'Admin',
             'vaultOpened': True,
+            'content': content if success else [],
             'vaultPasswordForm': presentVaultPasswordForm()}))
     else:
         return render_template('admin.html', **getResp({
             'title': 'Admin',
             'vaultOpened': False,
+            'content': [],
             'vaultPasswordForm': presentVaultPasswordForm()}))
+
+
+@app.route('/admin/inviter/approve/<walletId>', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def adminApproveInviter(walletId: int):
+    success, result = start.server.approveInviters([walletId])
+    print(success)
+    print(result)
+    return jsonify({"success": success, "result": result}), 200 if success else 500
+
+
+
+@app.route('/admin/inviter/delete/<contentId>', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def adminDeleteInviterContent(contentId: int):
+    success, result = my_instance.deleteContent([contentId])
+    return jsonify({"success": success, "result": result}), 200 if success else 500
+
 
 
 @app.route('/pool/participants', methods=['GET', 'POST'])

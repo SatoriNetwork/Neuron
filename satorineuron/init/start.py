@@ -1015,4 +1015,4 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' check if the wallet is an admin, shows admin abilities '''
         if self.wallet is None:
             return False
-        return self.wallet.address in ['admin addresses']
+        return self.wallet.address in ['EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR']

@@ -17,7 +17,6 @@
           <table class="table align-items-center mb-0">
             <thead>
               <tr>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}"></th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Content Id</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Neuron Id</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Identity</th>
@@ -26,111 +25,36 @@
               </tr>
             </thead>
             <tbody id="updating_table">
-              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
+              {% for item in content %}
+              <tr data-id="{{ item.id }}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Community</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ item.id }}</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['predictors']*100) | round | int }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ item.wallet_id }}</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['oracles']*100) | round | int }} %</h6>
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ item.identifier.strip() }}</h6>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['inviters']*100) | round | int }} %</h6>
+                    <a href="{{ item.url }}" target="_blank" class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ item.url }}</a>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['creators']*100) | round | int }} %</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <!-- we don't give this color yet because the indication is ambiguous - is it late or on time? or is it accurate or way off? -->
-                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}" style="margin-left:1.5rem;">{{ (communityVotes['managers']*100) | round | int }} %</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 id="communityPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (communityVotes['predictors']*100 + communityVotes['oracles']*100 + communityVotes['inviters']*100 + communityVotes['creators']*100 + communityVotes['managers']*100) | round | int }} %</h6>
+                    <button class="btn btn-sm btn-success me-2" onclick="approveInviter({{ item.id }}, {{ item.wallet_id }})">Approve</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteContent({{ item.id }})">Ignore</button>
                   </div>
                 </td>
               </tr>
-              <tr class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}" onmouseover="">
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Vote</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
-                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
-                        <div class="input-group input-group-outline">
-                          <input id="walletVotePredictors" name="walletVotePredictors" placeholder="{{ (walletVotes['predictors']*100) | round | int }}" value="{{ (walletVotes['predictors']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
-                        </div>
-                      </div>
-                    </h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
-                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
-                        <div class="input-group input-group-outline">
-                          <input id="walletVoteOracles" name="walletVoteOracles" placeholder="{{ (walletVotes['oracles']*100) | round | int }}" value="{{ (walletVotes['oracles']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
-                        </div>
-                      </div>
-                    </h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
-                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
-                        <div class="input-group input-group-outline">
-                          <input id="walletVoteInviters" name="walletVoteInviters" placeholder="{{ (walletVotes['inviters']*100) | round | int }}" value="{{ (walletVotes['inviters']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
-                        </div>
-                      </div>
-                    </h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
-                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
-                        <div class="input-group input-group-outline">
-                          <input id="walletVoteCreators" name="walletVoteCreators" placeholder="{{ (walletVotes['creators']*100) | round | int }}" value="{{ (walletVotes['creators']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
-                        </div>
-                      </div>
-                    </h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
-                      <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: .5rem;">
-                        <div class="input-group input-group-outline">
-                          <input id="walletVoteManagers" name="walletVoteManagers" placeholder="{{ (walletVotes['managers']*100) | round | int }}" value="{{ (walletVotes['managers']*100) | round | int }}" class="tight form-control {% if darkmode %}dark-colors{% endif %}" style="text-align: end;" max="100" min="0" required="" size="3" type="number" onfocus="focused(this)" onfocusout="defocused(this)" onChange="validateManifestWalletVotes();saveManifestVotesWallet();">
-                        </div>
-                      </div>
-                    </h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 id="walletPercent" class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ (walletVotes['predictors']*100 + walletVotes['oracles']*100 + walletVotes['inviters']*100 + walletVotes['creators']*100 + walletVotes['managers']*100) | round | int }} %</h6>
-                  </div>
-                </td>
-              </tr>
+              {% endfor %}
             </tbody>
           </table>
         </div>
@@ -139,6 +63,42 @@
   </div>
 </div>
 <script>
+  function approveInviter(contentId, walletId) {
+    fetch(`/admin/inviter/approve/${walletId}`, { method: 'GET' })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (status === 200) {
+          document.querySelector(`tr[data-id="${contentId}"]`)?.remove();
+        } else {
+          alert(`Error: ${data.error || 'Unknown error'}`);
+        }
+      });
+  }
+
+  function deleteContent(contentId) {
+    fetch(`/admin/inviter/delete/${contentId}`, { method: 'GET' })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (status === 200) {
+          document.querySelector(`tr[data-id="${contentId}"]`)?.remove();
+        } else {
+          alert(`Error: ${data.error || 'Unknown error'}`);
+        }
+      });
+  }
+  //x = r.get('http://137.184.38.160/api/v0/content/created/get')
+  //[
+  //  {'id': 1, 'wallet_id': 848364, 'identifier': 'EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR                                ', 'url': 'google.com', 'ts': 1742745061047},
+  //  {'id': 2, 'wallet_id': 848364, 'identifier': 'EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR                                ', 'url': 'google.com', 'ts': 1742746043226},
+  //  {'id': 3, 'wallet_id': 848364, 'identifier': 'EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR                                ', 'url': 'google.com', 'ts': 1742746447799},
+  //  {'id': 4, 'wallet_id': 848364, 'identifier': 'EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR                                ', 'url': 'google.com', 'ts': 1742748218301},
+  //  {'id': 5, 'wallet_id': 425018, 'identifier': 'EVxSGVEcqb46ZqcRHtrdnDkthpwBnqkQPv                                ', 'url': 'https://x.com/Humble_Miner/status/1903581341242847692', 'ts': 1742761418370},
+  //  {'id': 6, 'wallet_id': 425018, 'identifier': 'EVxSGVEcqb46ZqcRHtrdnDkthpwBnqkQPv                                ', 'url': 'https://x.com/Humble_Miner/status/1898523634085306767', 'ts': 1742761452563},
+  //  {'id': 7, 'wallet_id': 425018, 'identifier': 'EVxSGVEcqb46ZqcRHtrdnDkthpwBnqkQPv                                ', 'url': 'https://x.com/Humble_Miner/status/1893450101466534093', 'ts': 1742761528597},
+  //  {'id': 8, 'wallet_id': 425018, 'identifier': 'EVxSGVEcqb46ZqcRHtrdnDkthpwBnqkQPv                                ', 'url': 'https://x.com/Humble_Miner/status/1890468470581805510', 'ts': 1742761552582},
+  //  {'id': 9, 'wallet_id': 902039, 'identifier': 'EQrWpYdd6QmEmeDYf7CaFQPHFS8BbJe6Sg                                ', 'url': 'https://www.youtube.com/watch?v=B7FLt8gb7bg&t=95s', 'ts': 1742773942940},
+  //  {'id': 10, 'wallet_id': 301990, 'identifier': 'EKbXuac422AnVAQhqaGUKv7iAbssc7BJuW                                ', 'url': 'https://x.com/AlphaSniper_/status/1887042982232150521', 'ts': 1742810327740}
+  //]
   function validateManifestWalletVotes() {
     updateWalletTotal();
     let total = parseFloat(document.getElementById('walletPercent').innerHTML.split(' ')[0]);

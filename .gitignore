@@ -167,5 +167,6 @@ config/ipfs
 config/relay.yaml
 config/config.yaml
 config/manifest.yaml
+config/*bk.yaml
 
 !.devcontainer.json
