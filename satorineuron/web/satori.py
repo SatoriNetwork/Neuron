@@ -96,8 +96,8 @@ while True:
                 'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                #'prod': 'https://stage.satorinet.io'}[ENV],
-                'prod': 'http://137.184.38.160'}[ENV],  # n
+                'prod': 'https://stage.satorinet.io'}[ENV],
+                #'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
                 'local': 'https://mundo.satorinet.io',
