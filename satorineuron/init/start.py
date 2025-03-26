@@ -683,7 +683,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def populateData(self):
         """ save real and prediction data in neuron """
         for k in self.pubSubMapping.keys():
-            if k != 'transferProtocol' and k != 'transferProtocolPayload':
+            if k != 'transferProtocol' and k != 'transferProtocolPayload' and k != 'transferProtocolKey':
                 realDataDf = None
                 predictionDataDf = None
                 try:
@@ -913,14 +913,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             success, mySubscribers = self.server.getStreamsSubscribers(pubListAll)
             _, remotePublishers = self.server.getStreamsPublishers(subList)
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
-
+            print(mySubscribers)
+            mySubscribers = {'883f30d2-854c-5dcf-aa0f-1a0e9ad21df7': ['23.160.72.62:24611']}
             subInfo = {
                 uuid: {
                     'subscribers': fellowSubscribers.get(uuid, []),
                     'publishers': remotePublishers.get(uuid, [])}
                 for uuid in subList
             }
-            pubInfo = {
+            pubInfo = { 
                 uuid: {
                     'subscribers': mySubscribers.get(uuid, []),
                     'publishers': meAsPublisher.get(uuid, [])}
@@ -951,9 +952,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 else:
                     transferProtocol = self.determineTransferProtocol(
                         first_publisher_value[0].split(':')[0], self.dataServerPort)
+            transferProtocol = 'pubsub-support' # for Testing purposes
             self.pubSubMapping['transferProtocol'] = transferProtocol
-            if transferProtocol == 'pubsub':
-                self.pubSubMapping['transferProtocolPayload'] = self.key
+            # if transferProtocol == 'pubsub':
+            #     self.pubSubMapping['transferProtocolPayload'] = self.key
+            if transferProtocol == 'pubsub-support':
+                self.pubSubMapping['transferProtocolPayload'] = mySubscribers if success else {}
+                self.pubSubMapping['transferProtocolKey'] = self.key
             elif transferProtocol == 'p2p-proactive':
                 self.pubSubMapping['transferProtocolPayload'] = mySubscribers if success else {}
             else:
@@ -977,7 +982,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' local neuron client subscribes to engine predication data '''
 
         for k in self.pubSubMapping.keys():
-            if k!= 'transferProtocol' and k!= 'transferProtocolPayload':
+            if k!= 'transferProtocol' and k!= 'transferProtocolPayload' and k != 'transferProtocolKey':
                 response = await self.dataClient.subscribe(
                     peerHost=self.dataServerIp,
                     uuid=k,
@@ -993,7 +998,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' local neuron client subscribes to engine predication data '''
 
         for k, v in self.pubSubMapping.items():
-            if k!= 'transferProtocol' and k!= 'transferProtocolPayload':
+            if k!= 'transferProtocol' and k!= 'transferProtocolPayload' and k != 'transferProtocolKey':
                 response = await self.dataClient.subscribe(
                     peerHost=self.dataServerIp,
                     uuid=v['publicationUuid'],
@@ -1007,15 +1012,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     async def handleRawData(self, subscription: Subscription, message: Message):
 
-        def findMatchingStreamUuid(subUuid) -> str:
-            for key in self.pubSubMapping.keys():
-                if subUuid == self.pubSubMapping.get(key):
-                    return key
-
         logging.info('Raw Data Subscribtion Message',message.to_dict(True), color='green')
-        matchedStreamUuid = findMatchingStreamUuid(message.uuid)
-        self.data[matchedStreamUuid]['realData'] = pd.concat([
-            self.data[matchedStreamUuid]['realData'],
+        self.data[message.uuid]['realData'] = pd.concat([
+            self.data[message.uuid]['realData'],
             message.data
         ])
 
