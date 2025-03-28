@@ -571,11 +571,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         self.setInvitedBy(self.details.get('sponsor'))
                     if isinstance(self.invitedBy, str) and len(self.invitedBy) == 34 and self.invitedBy.startswith('E'):
                         self.server.invitedBy(self.invitedBy)
+                print("self.details.get('data_manager_port')")
+                print(self.details.get('data_manager_port'))
+                print("self.publicDataManagerPort")
+                print(self.publicDataManagerPort)
                 if (
                     self.details.get('data_manager_port') in (None, 24600, '24600')
-                    and  self.publicDataManagerPort not in (None, 24600, '24600')
+                    and self.publicDataManagerPort not in (None, 24600, '24600')
                 ):
                     self.server.setDataManagerPort(self.publicDataManagerPort)
+                    print("self.publicDataManagerPort")
+                    print(self.publicDataManagerPort)
                 #logging.debug(self.details, color='teal')
                 if self.details.get('rewardaddress') != self.configRewardAddress:
                     if self.configRewardAddress is not None:
@@ -1268,7 +1274,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.invitedBy
 
     def setPublicDataManagerPort(self, port: Union[int, None] = None) -> int:
-        port = (port or config.get().get('public data manager port:', port))
+        port = (port or config.get().get('public data manager port', port))
         if port:
             self.publicDataManagerPort = port
             config.add(data={'public data manager port': self.publicDataManagerPort})
