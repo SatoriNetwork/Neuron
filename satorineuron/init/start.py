@@ -35,6 +35,7 @@ from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, UiEndpoint, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
 from satorilib.datamanager import DataClient, DataServerApi, Message, Subscription
+from satorilib.utils.ip import getPublicIpv4UsingCurl
 from io import StringIO
 
 def getStart():
@@ -157,6 +158,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.setRewardAddress()
         self.setEngineVersion()
         self.setupWalletManager()
+        self.ip = getPublicIpv4UsingCurl()
         self.restartQueue: Queue = Queue()
         self.restartQueueThread = threading.Thread(
             target=self.restartWithQueue,
@@ -927,7 +929,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     'publishers': remotePublishers.get(uuid, [])}
                 for uuid in subList
             }
-            pubInfo = { 
+            pubInfo = {
                 uuid: {
                     'subscribers': mySubscribers.get(uuid, []),
                     'publishers': meAsPublisher.get(uuid, [])}
