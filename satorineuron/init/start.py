@@ -477,7 +477,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        self.subConnect()
+        #self.subConnect()
         self.pubsConnect()
         await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
         if self.isDebug:
@@ -500,7 +500,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.checkin()
         # self.populateData()
         # self.startSynergyEngine()
-        self.subConnect()
+        #self.subConnect()
         # self.pubsConnect()
         if self.isDebug:
             return
@@ -526,7 +526,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        self.subConnect()
+        #self.subConnect()
         self.pubsConnect()
         await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
         if self.isDebug:
@@ -895,7 +895,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         '''
         return config.get().get(
             'transfer protocol',
-            'p2p' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive')
+            #'p2p' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive')
+            'p2p-pubsub' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive-pubsub')
 
 
     async def sharePubSubInfo(self):
@@ -914,7 +915,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             _, remotePublishers = self.server.getStreamsPublishers(subList)
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
             print(mySubscribers)
-            mySubscribers = {'883f30d2-854c-5dcf-aa0f-1a0e9ad21df7': ['23.160.72.62:24611']}
             subInfo = {
                 uuid: {
                     'subscribers': fellowSubscribers.get(uuid, []),
@@ -943,24 +943,21 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             # Handle empty `meAsPublisher` case
             if not meAsPublisher:
                 logging.error("meAsPublisher is empty. Using default transfer protocol.")
-                transferProtocol = 'p2p-proactive' # a good usecase for 'pubsub'?
+                transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
             else:
                 first_publisher_value = next(iter(meAsPublisher.values()), [])
                 if not first_publisher_value:
                     logging.error("First publisher value is empty. Using default transfer protocol.")
-                    transferProtocol = 'p2p-proactive' # a good usecase for 'pubsub'?
+                    transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
                 else:
                     transferProtocol = self.determineTransferProtocol(
                         first_publisher_value[0].split(':')[0], self.dataServerPort)
-            transferProtocol = 'pubsub-support' # for Testing purposes
             self.pubSubMapping['transferProtocol'] = transferProtocol
-            # if transferProtocol == 'pubsub':
-            #     self.pubSubMapping['transferProtocolPayload'] = self.key
-            if transferProtocol == 'pubsub-support':
+            if transferProtocol == 'p2p-proactive-pubsub': # p2p-proactive-pubsub
                 self.pubSubMapping['transferProtocolPayload'] = mySubscribers if success else {}
                 self.pubSubMapping['transferProtocolKey'] = self.key
-            elif transferProtocol == 'p2p-proactive':
-                self.pubSubMapping['transferProtocolPayload'] = mySubscribers if success else {}
+            elif transferProtocol == 'p2p-pubsub':
+                self.pubSubMapping['transferProtocolKey'] = self.key
             else:
                 self.pubSubMapping['transferProtocolPayload'] = None
 
