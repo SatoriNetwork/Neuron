@@ -35,6 +35,10 @@ vault.yaml
 wallet.zip
 wallet*.yaml
 wallet*.zip
+vault.zip
+vault*.yaml
+vault*.zip
+wallet-wallets/*
 satorineuron/web/static/download
 wheels/
 pip-wheel-metadata/
