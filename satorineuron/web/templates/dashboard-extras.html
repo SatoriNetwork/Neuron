@@ -12,7 +12,7 @@
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Wallet</h4>
         </div>
         <div class="text-center pt-1">
-          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.balanceAmount }}</h4>
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ wallet.balance.amount }}</h4>
           <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATS</p>
         </div>
       </div>
@@ -35,8 +35,8 @@
       </div>
     </div>
   </div>
-  <!-- we are commenting these out because we're just going to have two stats to start with, we'll add more as we learn to care about them 
-  
+  <!-- we are commenting these out because we're just going to have two stats to start with, we'll add more as we learn to care about them
+
   <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
     <div class="card">
       <div class="card-header p-3 pt-2">
@@ -129,7 +129,7 @@
       </div>
     </div>
   </div>
-  
+
 </div>
 -->
 <div class="row mb-4">
@@ -140,7 +140,7 @@
           <div class="col-lg-6 col-7">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">Predictions</h6>
             <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
-              Prediction data streams published by this Satori Neuron 
+              Prediction data streams published by this Satori Neuron
             </p>
           </div>
         </div>
@@ -184,7 +184,7 @@
                   <div class="d-flex px-3 py-1">
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview['prediction'] }}</h6>
                   </div>
-                </td>                                                                
+                </td>
                 <!-- example
                 <td>{{ streamOverview['accuracy'] }}</td>
               <tr>
@@ -268,7 +268,7 @@
                   </div>
                 </td>
                 -->
-              </tr> 
+              </tr>
               {% endfor %}
             </tbody>
           </table>
@@ -285,7 +285,7 @@
       <div class="col-lg-6 col-7">
         <h6 class="{% if darkmode %}dark-colors{% endif %}">Data Streams</h6>
         <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
-        Primary data streams published by this Satori Neuron 
+        Primary data streams published by this Satori Neuron
         </p>
       </div>
       </div>
@@ -293,7 +293,7 @@
     <div class="card-body px-0 pb-2">
       <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
       <table class="table align-items-center mb-0" style="min-width: 1200px;">
-        
+
         <thead>
         <tr>
           <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Name</th>
@@ -390,7 +390,7 @@
 			        </h6>
             </div>
           </td>
-        </tr> 
+        </tr>
         {% endfor %}
         <div class="text-center pt-1">
 		  <form action="/register_stream" method="post">
@@ -517,11 +517,11 @@
 		console.log('DELETE');
 		console.log(name);
 		console.log(target);
-	}	
+	}
 </script>
 <script>
   function defaultMessage() {
-    document.getElementById("helpArea").innerHTML = ""; 
+    document.getElementById("helpArea").innerHTML = "";
   }
   defaultMessage();
   function nameDescription() {
@@ -544,22 +544,22 @@
   }
   function tagsDescription() {
     document.getElementById("helpArea").innerHTML = "Tag: (optional) List of tags, separated by commas, that describe the data stream.";
-  }  
+  }
   function urlDescription() {
     document.getElementById("helpArea").innerHTML = "Url: The base URL of the data stream. For example https://finance.yahoo.com/bitcoin";
-  }  
+  }
   function uriDescription() {
     document.getElementById("helpArea").innerHTML = "Uri: The full URI of the data stream. For example https://finance.yahoo.com/bitcoin?key=supersecretkey. The information input into this field is not saved to the server.";
-  }  
+  }
   function headersDescription() {
     document.getElementById("helpArea").innerHTML = "Headers: (optional) The headers of the request. The information input into this field is not saved to the server.";
   }
   function payloadDescription() {
     document.getElementById("helpArea").innerHTML = "Payload: (optional) The payload of the request. The information input into this field is not saved to the server.";
-  }  
+  }
   function hookDescription() {
     document.getElementById("helpArea").innerHTML = "Hook: (optional) A python function that intercepts the response before broadcasting. This can be used to filter the data down to a specific key known as the target. The information input into this field never leaves this device. <br />WARNING: Since this code is executed by the interpreter without any security measures, you should know exactly the code does before you submit this form.";
-  }  
+  }
 </script>
 
 
@@ -630,7 +630,7 @@
     console.log(prediction)
     addDataChartThree('next', null, prediction);
   }
-  
+
   var ctx = document.getElementById("chart-bars").getContext("2d");
   var chartOne = new Chart(ctx, {
     type: "bar",
@@ -912,7 +912,7 @@
             <div class="d-flex px-3 py-1">
               <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview[i]["prediction"] + `</h6>
             </div>
-          </td>                                                                
+          </td>
         </tr>`);
       }
       table_output.innerHTML = rows.join("");
@@ -921,7 +921,3 @@
 </script>
 
 {% endblock %}
-
-
-
-

@@ -24,6 +24,7 @@ config/autosecure.yaml
 config/manifest.yaml
 config/relay.yaml
 config/config.yaml
+config/.env
 #git rm --cached config/config.yaml
 !data/.gitkeep
 models/*
@@ -31,6 +32,7 @@ models/.gitkeep
 wallet/*
 !wallet/.gitkeep
 wallet.yaml
+vault*.yaml
 vault.yaml
 wallet.zip
 wallet*.yaml
@@ -131,6 +133,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# keys
+*.pem
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -166,5 +171,6 @@ config/ipfs
 config/relay.yaml
 config/config.yaml
 config/manifest.yaml
+config/*bk.yaml
 
 !.devcontainer.json

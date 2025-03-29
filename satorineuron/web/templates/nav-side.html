@@ -1,9 +1,9 @@
-<aside class="{% if darkmode %}dark-version{% else %}{% endif %} sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 bg-gradient-dark{% if darkmode %}-reverse{% endif %}" id="sidenav-main">
+<aside class="{% if darkmode %}dark-version{% else %}{% endif %} sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 bg-gradient-dark{% if darkmode %}-reverse{% endif %}" style="z-index: unset;" id="sidenav-main">
   <div class="sidenav-header">
     <i class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
     <a class="navbar-brand m-0" href="{{ url_for('dashboard') }}" target="_blank">
       <span class="text-white" title="{{v}}">
-        Sat<img src="{{ url_for('static', filename='img/ensodarkclear.png') }}" width="30" style='margin-right: 0.2rem;'>ri
+        <img src="{{ url_for('static', filename='img/satori-dark-inline.png') }}" style='margin-right: 0.2rem;width: 80%; max-width: 15.625rem;'>
       </span>
     </a>
   </div>
@@ -19,20 +19,13 @@
         </a>
       </li>
       {% if title=='Dashboard' or title=='Satori' %}
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('top-navbar-title');">Balance</a>
-      </li>
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('predictionsbr');">Prediction</a>
-      </li>
+      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('top-navbar-title');">Balance</a></li>
+      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('predictionsbr');">Prediction</a></li>
         {% if relayStreams|length > 0 %}
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('oraclesbr');">Oracle</a>
-      </li>
+      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('oraclesbr');">Oracle</a></li>
         {% endif %}
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('createbr');">Create</a>
-      </li>
+      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('createbr');">Create</a></li>
+      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('invitebr');">Invite</a></li>
       {% endif %}
 
 	    <!--heading not necessary
@@ -94,25 +87,13 @@
               <span class="nav-link-text">Wallet</span>
             </a>
           </li>
-          <li class='sub-nav-item'>
-            <a href='#' onclick="scrollOrJumpTo('vaultwarningbr');">Warning</a>
-          </li>
-          <li class='sub-nav-item'>
-            <a href='#' onclick="scrollOrJumpTo('rewardbr');">Reward Address</a>
-          </li>
-          <li class='sub-nav-item'>
-            <a href='#' onclick="scrollOrJumpTo('balancebr');">Balance</a>
-          </li>
-          <li class='sub-nav-item'>
-            <a href='#' onclick="scrollOrJumpTo('historybr');">Transaction History</a>
-          </li>
-          <li class='sub-nav-item'>
-            <a href='#' onclick="scrollOrJumpTo('metadatabr');">Metadata</a>
-          </li>
-          <li class='sub-nav-item'>
-            <a href='#' onclick="scrollOrJumpTo('ethvaultbr');">Ethereum Address</a>
-          </li>
-        {% else %}
+          <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('rewardbr');">Reward Address</a></li>
+          <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('balancebr');">Balance</a></li>
+          <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('ethvaultbr');">Base Address</a></li>
+          <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('ethbridgebr');">Bridge</a></li>
+          <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('historybr');">Transaction History</a></li>
+          <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('metadatabr');">Metadata</a></li>
+          {% else %}
           <li class="sub-nav-item" >
             <a href="{{ url_for('wallet', network='main') }}" onclick="showWorking();" class="{{ 'active bg-gradient-primary-reverse' if title=='Wallet' else '' }}">
               <i class="material-icons opacity-10" style="padding-right: 8px;">wallet</i>
@@ -121,6 +102,7 @@
           </li>
         {% endif %}
       {% endif %}
+
       <li class="nav-item">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Vote' else '' }}" href="{{ url_for('vote') }}" onclick="showWorking();">
           <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
@@ -129,13 +111,10 @@
           <span class="nav-link-text ms-1">Vote</span>
         </a>
       </li>
+
       {% if title=='Vote' %}
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('manifestbr');">Minting Manifest</a>
-      </li>
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('streamsbr');">Stream Approval</a>
-      </li>
+      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('manifestbr');">Minting Manifest</a></li>
+      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('streamslinkbr');">Stream Approval</a></li>
       {% endif %}
       <script>
         //document.getElementById('gotoWalletMain').addEventListener(
@@ -164,6 +143,14 @@
         //  }
         //}
       </script>
+      <li class="nav-item">
+        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Streams' else '' }}" href="{{ url_for('streams') }}" onclick="showWorking();">
+          <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+            <i class="material-icons opacity-10">public</i>
+          </div>
+          <span class="nav-link-text ms-1">Streams</span>
+        </a>
+      </li>
 
 <!--
       <li class="nav-item">
@@ -175,11 +162,27 @@
         </a>
       </li>
       {% if title=='Proposals' %}
-      <li class='sub-nav-item'>
-        <a href='#' onclick="scrollOrJumpTo('proposalsbr');">All Proposals</a>
-      </li>
+      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('proposalsbr');">All Proposals</a></li>
       {% endif %}
 -->
+
+
+      {% if admin %}
+        <li class="nav-item">
+          <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Admin' else '' }}" href="{{ url_for('admin') }}" onclick="showWorking();">
+            <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="material-icons opacity-10">verified_user</i>
+            </div>
+            <span class="nav-link-text ms-1">Admin</span>
+          </a>
+        </li>
+
+        {% if title=='Admin' %}
+        <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('admininviterlistbr');">Inviter Approval</a></li>
+        {% endif %}
+      {% endif %}
+
+
 
       <li class="nav-item">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Proposals' else '' }}" href="{{ url_for('proposals') }}" onclick="showWorking();">

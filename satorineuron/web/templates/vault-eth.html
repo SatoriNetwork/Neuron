@@ -4,18 +4,25 @@
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %} text-center">
         <p class="mb-3 {% if darkmode %}dark-colors{% endif %}">
-          This address has been automatically generated as part of your vault for future smart contract support utilizing Ethereum or Polygon.
+          This address has been automatically generated as part of your vault for future smart contract support utilizing Ethereum.
+        </p>
+        <p class="mb-3 {% if darkmode %}dark-colors{% endif %}">
+          To see your balance import your private key into a wallet like Metamask.
         </p>
         <br/>
-        <div id='ethAddress'>{{ ethAddress }}</div>
+        <a href="https://basescan.org/address/{{ ethAddress }}#tokentxns", target='_blank'>
+          <div id='ethAddress' onclick='document.getElementById("bridge-for-testing").style.display = "block";'>{{ ethAddress }}</div>
+        </a>
         <p class="text-sm mb-3 {% if darkmode %}dark-colors{% endif %}">
-          your ethereum/polygon address
+          your address on Base
         </p>
-      
+      </div>
+      <div style="padding: 1.25rem;margin-left: auto;margin-right: auto;">
+        <button id="addTokenButton" class="d-flex flex-row gap-2 btn btn-outline-dark {% if darkmode %}dark-colors{% endif %}" style="min-width: fit-content;align-items:center;justify-content:center" >Add SATORI to MetaMask</button>
       </div>
       <hr class="dark horizontal my-3">
       <center>
-        <p id="showKeyEth" class="cursor-pointer danger text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('sensitiveKeyEth').style.display='block';document.getElementById('showKeyEth').style.display='none';">
+        <p id="showKeyEth" class="cursor-pointer danger text-sm mb-2 {% if darkmode %}dark-colors{% endif %}" onclick="document.getElementById('sensitiveKeyEth').style.display='block';document.getElementById('showKeyEth').style.display='none';setEthAddress();">
           Show private key
         </p>
         <div id="sensitiveKeyEth" style="display: none; margin-left:2rem; margin-right:2rem;">
@@ -28,8 +35,108 @@
     </div>
   </div>
 </div>
+<script>
+  function setEthAddress() {
+    fetch('/set/eth/address', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        return response.text().then(errorMessage => {
+          throw new Error(errorMessage || 'Network response was not ok.');
+        });
+      }
+    }).then(text => {
+      console.log(text);
+    }).catch(error => {
+      console.error('Error:', error)
+    });
+  }
+
+// Chain ID for Base
+const baseChainId = "0x2105"; // Correct Chain ID for Base Mainnet
+const baseNetworkParams = {
+    chainId: baseChainId,
+    chainName: "Base Mainnet",
+    nativeCurrency: {
+        name: "Base",
+        symbol: "ETH",
+        decimals: 18,
+    },
+    rpcUrls: ["https://mainnet.base.org"], // Default RPC endpoint
+    blockExplorerUrls: ["https://basescan.org"], // Correct block explorer for Base
+};
+
+
+async function switchToBaseNetwork() {
+    try {
+        const currentChainId = await window.ethereum.request({ method: "eth_chainId" });
+        if (currentChainId !== baseChainId) {
+            await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [baseNetworkParams],
+            });
+        }
+    } catch (error) {
+        console.error("Error switching to Base network:", error);
+        alert("Failed to switch to the Base network. Please check your MetaMask settings.");
+    }
+}
+
+
+  // Add SATORI token to metamask
+  document.getElementById("addTokenButton").addEventListener("click", async function () {
+    const tokenAddress = "0xc1c37473079884CbFCf4905a97de361FEd414B2B";
+    const tokenSymbol = "SATORI";
+    const tokenDecimals = 18;
+    const tokenImage = "https://raw.githubusercontent.com/SatoriNetwork/Neuron/refs/heads/main/satorineuron/web/static/img/Satori.png";
+
+    try {
+        // Ensure MetaMask is installed
+        if (!window.ethereum) {
+            alert("MetaMask is not installed. Please install it to use this feature.");
+            return;
+        }
+
+        // Switch to Base network
+        await switchToBaseNetwork();
+
+        // Connect MetaMask to the site
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        if (accounts.length === 0) {
+            alert("MetaMask connection failed. Please try connecting manually.");
+            return;
+        }
+        console.log("Connected to MetaMask with account:", accounts[0]);
+
+        // Add the token to MetaMask
+        const wasAdded = await window.ethereum.request({
+            method: "wallet_watchAsset",
+            params: {
+                type: "ERC20",
+                options: {
+                    address: tokenAddress,
+                    symbol: tokenSymbol,
+                    decimals: tokenDecimals,
+                    image: tokenImage,
+                },
+            },
+        });
+
+        if (wasAdded) {
+            console.log("Token added successfully!");
+            alert("Token added to MetaMask successfully!");
+        } else {
+            console.log("User declined to add the token.");
+            alert("User declined to add the token.");
+        }
+    } catch (error) {
+        console.error("Error adding token:", error);
+        alert("An error occurred while trying to add the token. Check the console for details.");
+    }
+});
+
+
+
+</script>
 {% endblock %}
-
-
-
-

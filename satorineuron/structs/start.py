@@ -1,13 +1,43 @@
+from enum import Enum
 from typing import Union
 import threading
 from queue import Queue
 from reactivex.subject import BehaviorSubject
 from satorilib.concepts.structs import StreamId, Stream
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
-# from satorilib.api.ipfs import Ipfs
+from satorilib.wallet import RavencoinWallet, EvrmoreWallet
+# from satorilib.ipfs import Ipfs
 from satorilib.server import SatoriServerClient
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
+
+
+class RunMode(Enum):
+    normal = 1
+    worker = 2
+    wallet = 3
+
+    @classmethod
+    def choose(cls, runMode):
+        # Convert runMode to lowercase if it's a string
+        if isinstance(runMode, str):
+            runMode = runMode.lower()
+        # Define a mapping of possible inputs to Enum values
+        mapping = {
+            1: cls.normal,
+            '1': cls.normal,
+            '': cls.normal,
+            None: cls.normal,
+            'none': cls.normal,
+            'normal': cls.normal,
+            2: cls.worker,
+            '2': cls.worker,
+            'worker': cls.worker,
+            3: cls.wallet,
+            '3': cls.wallet,
+            'wallet': cls.wallet,
+        }
+        # Return the corresponding Enum value
+        return mapping.get(runMode, cls.normal)
 
 
 class StartupDagStruct(object):
@@ -16,7 +46,7 @@ class StartupDagStruct(object):
     def __init__(
         self,
         env: str = None,
-        walletOnlyMode: bool = False,
+        runMode: RunMode = False,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
@@ -24,7 +54,7 @@ class StartupDagStruct(object):
         *args
     ):
         self.env = env
-        self.walletOnlyMode = walletOnlyMode
+        self.runMode = None
         self.workingUpdates: Queue = None
         self.chatUpdates: Queue = None
         self.connectionsStatusQueue: Queue = None
@@ -50,6 +80,7 @@ class StartupDagStruct(object):
         self.signedStreamIds: list['SignedStreamId'] = None
         self.relayValidation: 'ValidateRelayStream' = None
         self.server: SatoriServerClient = None
+        self.electrumx: Electrumx = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
         self.relay: 'RawStreamRelayEngine' = None
@@ -57,11 +88,15 @@ class StartupDagStruct(object):
         self.publications: list[Stream] = None
         self.subscriptions: list[Stream] = None
         self.asyncThread: AsyncThread = None
-        self.udpQueue: Queue
+        self.udpQueue: Queue  # TODO: remove
         self.stakeStatus: bool = False
 
     def cacheOf(self, streamId: StreamId):
         ''' returns the reference to the cache of a stream '''
+
+    @property
+    def walletMode(self) -> bool:
+        ''' get wallet '''
 
     @property
     def network(self) -> str:
@@ -111,17 +146,10 @@ class StartupDagStruct(object):
 
     def getVault(
         self,
-        network: str = None,
         password: Union[str, None] = None,
         create: bool = False,
     ) -> Union[EvrmoreWallet, RavencoinWallet]:
         ''' get the ravencoin vault '''
-
-    def openWallet(self, network: Union[str, None] = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        ''' get the ravencoin vault '''
-
-    def openWallet(self, network: str = None):
-        ''' opens the local wallet. '''
 
     def checkin(self):
         ''' checks in with the Satori Server '''

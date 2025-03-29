@@ -13,8 +13,8 @@ import json
 import requests
 from functools import partial
 from satorilib.concepts.structs import Stream, StreamId
-from satorilib.api.disk import Cached
-from satorilib.api.disk.cache import CachedResult
+from satorilib.disk import Cached
+from satorilib.disk.cache import CachedResult
 from satorilib import logging
 
 
@@ -137,7 +137,7 @@ class RawStreamRelayEngine(Cached):
             data, timestamp, print=True)
         start = getStart()
         start.publish(
-            topic=stream.streamId.topic(),
+            topic=stream.streamId.jsonId,
             data=data,
             observationTime=timestamp,
             observationHash=observationHash,
@@ -145,7 +145,7 @@ class RawStreamRelayEngine(Cached):
             isPrediction=False)
 
     def save(self, stream: Stream, data: str = None) -> CachedResult:
-        self.latest[stream.streamId.topic()] = data
+        self.latest[stream.streamId.jsonId] = data
         self.streamId = stream.streamId  # required by Cache
         return self.disk.appendByAttributes(value=data, hashThis=True)
 

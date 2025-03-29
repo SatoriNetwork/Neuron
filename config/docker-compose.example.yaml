@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  satorineuron01:
+    image: satorinet/satorineuron:latest
+    container_name: satorineuron01
+    #restart: always
+    ports:
+      - "127.0.0.1:24601:24601"
+      - "24611:24611"
+    volumes:
+      - ~/.satori01/run:/Satori/Neuron/run
+      - ~/.satori01/data:/Satori/Neuron/data
+      - ~/.satori01/models:/Satori/Neuron/models
+      - ~/.satori01/config:/Satori/Neuron/config
+      - ~/.satori01/wallet:/Satori/Neuron/wallet
+    environment:
+      - ENV=prod
+    deploy:
+      resources:
+        limits:
+          cpus: "1.3"
+          memory: "3.5g"
+    stdin_open: true
+    tty: true
+    #entrypoint: ["python3", "/Satori/Neuron/satorineuron/web/app.py"]
+    entrypoint: ["bash", "/Satori/Neuron/satorineuron/web/start.sh"]
+
+### be sure to match the port in the config file:
+# data manager port: 24611
+
+### run
+# docker-compose -f config/docker-compose.yml up -d
+
+### stop
+# docker-compose -f config/docker-compose.yml down
+
+### check logs
+# docker-compose -f config/docker-compose.yml logs -f
+
+### debug
+# docker-compose -f config/docker-compose.yml exec satorineuron01 bash

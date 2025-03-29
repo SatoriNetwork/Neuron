@@ -1,0 +1,161 @@
+{% block content %}
+<div class="row mb-4">
+  <div class="col-lg-12 col-md-12 mb-md-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+        <div class="row">
+          <div class="col-lg-12 col-12">
+            <h6 class="{% if darkmode %}dark-colors{% endif %}">Inviters</h6>
+            <p id='mintingManifestDescription' class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+              Please Approve or Disapprove inviters by content.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body px-0 pb-2">
+        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
+          <table class="table align-items-center mb-0">
+            <thead>
+              <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Content Id</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Neuron Id</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Identity</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Content URL</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="updating_table">
+              {% for item in content %}
+              <tr data-id="{{ item.id }}" class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}">
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ item.id }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ item.wallet_id }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <h6 class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ item.identifier.strip() }}</h6>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <a href="{{ item.url }}" target="_blank" class="mb-0 text-sm {% if darkmode %}dark-text{% endif %}">{{ item.url }}</a>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex px-3 py-1">
+                    <button class="btn btn-sm btn-success me-2" onclick="approveInviter({{ item.id }}, {{ item.wallet_id }})">Approve</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteContent({{ item.id }})">Ignore</button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function approveInviter(contentId, walletId) {
+    fetch(`/admin/inviter/approve/${walletId}`, { method: 'GET' })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (status === 200) {
+          document.querySelector(`tr[data-id="${contentId}"]`)?.remove();
+        } else {
+          alert(`Error: ${data.error || 'Unknown error'}`);
+        }
+      });
+  }
+
+  function deleteContent(contentId) {
+    fetch(`/admin/inviter/delete/${contentId}`, { method: 'GET' })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (status === 200) {
+          document.querySelector(`tr[data-id="${contentId}"]`)?.remove();
+        } else {
+          alert(`Error: ${data.error || 'Unknown error'}`);
+        }
+      });
+  }
+  //x = r.get('http://137.184.38.160/api/v0/content/created/get')
+  //[
+  //  {'id': 1, 'wallet_id': 848364, 'identifier': 'EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR                                ', 'url': 'google.com', 'ts': 1742745061047},
+  //  {'id': 2, 'wallet_id': 848364, 'identifier': 'EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR                                ', 'url': 'google.com', 'ts': 1742746043226},
+  //  {'id': 3, 'wallet_id': 848364, 'identifier': 'EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR                                ', 'url': 'google.com', 'ts': 1742746447799},
+  //  {'id': 4, 'wallet_id': 848364, 'identifier': 'EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR                                ', 'url': 'google.com', 'ts': 1742748218301},
+  //  {'id': 5, 'wallet_id': 425018, 'identifier': 'EVxSGVEcqb46ZqcRHtrdnDkthpwBnqkQPv                                ', 'url': 'https://x.com/Humble_Miner/status/1903581341242847692', 'ts': 1742761418370},
+  //  {'id': 6, 'wallet_id': 425018, 'identifier': 'EVxSGVEcqb46ZqcRHtrdnDkthpwBnqkQPv                                ', 'url': 'https://x.com/Humble_Miner/status/1898523634085306767', 'ts': 1742761452563},
+  //  {'id': 7, 'wallet_id': 425018, 'identifier': 'EVxSGVEcqb46ZqcRHtrdnDkthpwBnqkQPv                                ', 'url': 'https://x.com/Humble_Miner/status/1893450101466534093', 'ts': 1742761528597},
+  //  {'id': 8, 'wallet_id': 425018, 'identifier': 'EVxSGVEcqb46ZqcRHtrdnDkthpwBnqkQPv                                ', 'url': 'https://x.com/Humble_Miner/status/1890468470581805510', 'ts': 1742761552582},
+  //  {'id': 9, 'wallet_id': 902039, 'identifier': 'EQrWpYdd6QmEmeDYf7CaFQPHFS8BbJe6Sg                                ', 'url': 'https://www.youtube.com/watch?v=B7FLt8gb7bg&t=95s', 'ts': 1742773942940},
+  //  {'id': 10, 'wallet_id': 301990, 'identifier': 'EKbXuac422AnVAQhqaGUKv7iAbssc7BJuW                                ', 'url': 'https://x.com/AlphaSniper_/status/1887042982232150521', 'ts': 1742810327740}
+  //]
+  function validateManifestWalletVotes() {
+    updateWalletTotal();
+    let total = parseFloat(document.getElementById('walletPercent').innerHTML.split(' ')[0]);
+    if (total > 100.0) {
+      document.getElementById('walletPercent').innerHTML = '100 %';
+      document.getElementById('walletVotePredictors').value = parseInt(parseInt(document.getElementById('walletVotePredictors').value) / total * 100);
+      document.getElementById('walletVoteOracles').value = parseInt(parseInt(document.getElementById('walletVoteOracles').value) / total * 100);
+      document.getElementById('walletVoteInviters').value = parseInt(parseInt(document.getElementById('walletVoteInviters').value) / total * 100);
+      document.getElementById('walletVoteCreators').value = parseInt(parseInt(document.getElementById('walletVoteCreators').value) / total * 100);
+      document.getElementById('walletVoteManagers').value = parseInt(parseInt(document.getElementById('walletVoteManagers').value) / total * 100);
+      updateWalletTotal();
+    }
+    return true;
+  }
+  function updateMintingManifestDescription(activity) {
+    if (activity == 'predictors') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Predictors are Satori Neurons that predict raw datastreams and publish those predictions for free.';
+    } else if (activity == 'oracles') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Oracles are Satori Neurons that publish raw data streams desribing or tracking some aspect of the real world.';
+    } else if (activity == 'inviters') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Inviters are those that have onboarded Predictors and Oracles.';
+    } else if (activity == 'creators') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Creators are developers that earn bounties from the Development Fund.';
+    } else if (activity == 'managers') {
+      document.getElementById('mintingManifestDescription').innerHTML = 'Managers (effectively The Satori Association) maintain the infrastructure that supports the Satori Network and ecosystem.';
+    } else {
+      document.getElementById('mintingManifestDescription').innerHTML = 'The Minting Manifest determines which mining activity deserves what percentage of the newly minted coins. Please vote on the relative worth of each mining activity.';
+    }
+  }
+  function updateWalletTotal() {
+    document.getElementById('walletPercent').innerHTML = (
+      parseInt(document.getElementById('walletVotePredictors').value) +
+      parseInt(document.getElementById('walletVoteOracles').value) +
+      parseInt(document.getElementById('walletVoteInviters').value) +
+      parseInt(document.getElementById('walletVoteCreators').value) +
+      parseInt(document.getElementById('walletVoteManagers').value)) + ' %';
+  }
+
+  function saveManifestVotesWallet() {
+    console.log('saving manifest votes');
+    fetch(
+      '/vote/submit/manifest/wallet', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          walletPredictors: parseInt(document.getElementById('walletVotePredictors').value),
+          walletOracles: parseInt(document.getElementById('walletVoteOracles').value),
+          walletInviters: parseInt(document.getElementById('walletVoteInviters').value),
+          walletCreators: parseInt(document.getElementById('walletVoteCreators').value),
+          walletManagers: parseInt(document.getElementById('walletVoteManagers').value)})})
+    .then(response => {
+        if (response.ok) {
+            console.log("manifest submitted");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+</script>
+{% endblock %}

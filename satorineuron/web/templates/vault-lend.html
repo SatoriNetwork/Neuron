@@ -15,7 +15,7 @@
         </div>
       </div>
       <div id="lendingCardContent" class="collapse show">
-        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %} padding-left-right-5">
           To participate in a pool add the pool address here.
           <br><br>
         </p>
@@ -74,14 +74,17 @@
       });
   }
   function checkEnterForLendingAddress(event){
-    if (event.key === "Enter" || event.keyCode === 13) {
-      console.log('enter detected');
-      if (document.getElementById("addLendingAddress").value.length == 0) {
-        removeLending();
-      } else if (document.getElementById("addLendingAddress").value.length == 34) {
-        setLendingAddress();
-      } else {
-        document.getElementById("addLendingAddressConfirmation").innerHTML = 'Invalid address.';
+    if (isFocused(document.querySelector('#addLendingAddress'))) {
+      document.getElementById("addStakingAddressConfirmation").innerHTML = '';
+      if (event.key === "Enter" || event.keyCode === 13) {
+        console.log('enter detected');
+        if (document.getElementById("addLendingAddress").value.length == 0) {
+          removeLending();
+        } else if (document.getElementById("addLendingAddress").value.length == 34) {
+          setLendingAddress();
+        } else {
+          document.getElementById("addLendingAddressConfirmation").innerHTML = 'Invalid address.';
+        }
       }
     }
   }

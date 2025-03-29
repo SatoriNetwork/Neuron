@@ -22,22 +22,17 @@
         </div>
       </div>
       <div id="delegateCardContent" class="collapse show">
-        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}" style="margin-left:1rem;margin-right:1rem;">
           A Satori Neuron Delegate is a Neuron that receives the rewards of, and holds the staking requirement for, one or more remote Neurons.
           <br><br>
-          This Neuron acts as a delegate to the following remote Satori Neurons:
-          <br><br>
         </p>
-        <div class="row mb-4"  style='padding-left:2rem;padding-right:2rem;'>
-          <p id='delegateStakeTable' class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}"></p>
-        </div>
         <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem;'>
           <div class="col-xl-3 col-sm-3 mb-xl-0">
             <center>
               <p id="addStakingAddressLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;" onClick="toggleRewardAddresses();">
                 Stake for Address:
               </p>
-            <center>
+            </center>
           </div>
           <div class="col-xl-6 col-sm-6 mb-xl-0">
             <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
@@ -59,6 +54,92 @@
           <div class="col-xl-3 col-sm-3 mb-xl-0">
             <p id='addStakingAddressConfirmation'></p>
           </div>
+        </div>
+        <!-- though this solution is more dynamic it still suffers from the same problem that closing the pool suffers from:
+         namely, people already in the pool can increase their staking power to go over the limit... not sure we should release this feature.
+         it seems the better thing to do is just an eventual rewrite when we move this functionality to our chain...
+         the checking functionality in /stake/lend/to/address id disabled, everything else is live...
+         nor was this functionality added to the automatic assignment of workers, though that one is naturally already limited anyway.
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}" style="margin-left:1rem;margin-right:1rem;display: block;">
+          Pool Size
+          <br>
+          You may limit the amount of stake able to join the pool.
+          <br><br>
+        </p>
+        <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem; display: flex;'>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <center>
+              <p id="poolSizeLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;">
+                Pool Size:
+              </p>
+            </center>
+          </div>
+          <div class="col-xl-6 col-sm-6 mb-xl-0">
+            <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+              <div class="d-flex px-3 py-1" style="padding-right: 1rem; margin-left:auto; margin-right: auto;">
+                <div class="input-group input-group-outline">
+                  <input
+                    id="poolSize"
+                    name="poolSize"
+                    class="tight form-control {% if darkmode %}dark-colors{% endif %}"
+                    style="text-align: center;"
+                    maxLength="7"
+                    required=""
+                    placeholder="{{ pool_stake_limit }}"
+                    value="{{ pool_stake_limit }}"
+                    type="number"
+                    onKeyPress="checkEnterForPoolSize(event)">
+                </div>
+              </div>
+            </h6>
+          </div>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <p id='poolSizeConfirmation'></p>
+          </div>
+        </div>-->
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}" style="margin-left:1rem;margin-right:1rem;display: block;">
+          To automatically pull workers from the network, make an offer to reward them below.
+          <br>
+          You are responsible for rewarding them, see the daily predictors report which tallies each worker's effort.
+          <br><br>
+        </p>
+        <div class="row"  style='padding-left:2rem;padding-right:2rem; padding-top: .1rem; padding-bottom: 2rem; display: flex;'>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <center>
+              <p id="addStakingOfferLabel" class="mb-1 {% if darkmode %}dark-colors{% endif %}" style="padding-top: .25rem;">
+                Miner Reward %:
+              </p>
+            </center>
+          </div>
+          <div class="col-xl-6 col-sm-6 mb-xl-0">
+            <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">
+              <div class="d-flex px-3 py-1" style="padding-right: 1rem; margin-left:auto; margin-right: auto;">
+                <div class="input-group input-group-outline">
+                  <input
+                    id="addStakingOffer"
+                    name="addStakingOffer"
+                    class="tight form-control {% if darkmode %}dark-colors{% endif %}"
+                    style="text-align: center;"
+                    maxLength="3"
+                    required=""
+                    placeholder="{{ offer }}"
+                    type="number"
+                    onKeyPress="checkEnterForStakingOffer(event)">
+                </div>
+              </div>
+            </h6>
+          </div>
+          <div class="col-xl-3 col-sm-3 mb-xl-0">
+            <p id='addStakingOfferConfirmation'></p>
+          </div>
+        </div>
+        <p class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}">
+          <br><br>
+          This Neuron acts as a delegate to the following remote Satori Neurons:
+          <br><br>
+        </p>
+        <div class="row mb-4"  style='padding-left:2rem;padding-right:2rem;'>
+          <p id='delegateStakeTable' class="text-sm mb-0 text-center {% if darkmode %}dark-colors{% endif %}"></p>
         </div>
       </div>
     </div>
@@ -104,11 +185,35 @@
   }
 
   function checkEnterForStakingAddress(event){
-    if (event.key === "Enter" || event.keyCode === 13) {
-      console.log('enter detected');
-      setStakingAddress();
+    if (isFocused(document.querySelector('#addStakingAddress'))) {
+      document.getElementById("addStakingAddressConfirmation").innerHTML = '';
+      if (event.key === "Enter" || event.keyCode === 13) {
+        console.log('enter detected');
+        setStakingAddress();
+      }
     }
   }
+
+  function checkEnterForPoolSize(event){
+    if (isFocused(document.querySelector('#poolSize'))) {
+      document.getElementById("poolSizeConfirmation").innerHTML = '';
+      if (event.key === "Enter" || event.keyCode === 13) {
+        console.log('enter detected');
+        setPoolSize();
+      }
+    }
+  }
+
+  function checkEnterForStakingOffer(event){
+    if (isFocused(document.querySelector('#addStakingOffer'))) {
+      document.getElementById("addStakingOfferConfirmation").innerHTML = '';
+      if (event.key === "Enter" || event.keyCode === 13) {
+        console.log('enter detected');
+        setStakingOffer();
+      }
+    }
+  }
+
 
   function setStakingAddress() {
     address = document.getElementById("addStakingAddress").value;
@@ -134,6 +239,86 @@
     });
   }
 
+  function setPoolSize() {
+    function validatePoolSize(offer) {
+      const value = parseFloat(offer);
+      // Allow empty input
+      if (isNaN(value)) {
+          return true;
+      }
+      // Allow 0 or values 10 and above
+      if (value >= 0 && value < 5000000) {
+          document.getElementById("poolSize").value = ''; // Clear invalid input
+          return false;
+      }
+      return true;
+    }
+    offer = document.getElementById("poolSize").value;
+    if (!validatePoolSize(offer)){
+      return;
+    }
+    fetch('/pool/size/set/' + offer, { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+    })
+    .then(text => {
+      if (text == 'OK') {
+        document.getElementById("poolSizeConfirmation").innerHTML = 'Saved!';
+        getProxyParentStatus();
+      } else {
+        console.log(text);
+        document.getElementById("poolSizeConfirmation").innerHTML = 'Unable to save.';
+      }
+    }).catch(error => {
+      document.getElementById("poolSizeConfirmation").innerHTML = 'Unable to save.';
+      console.error('Error:', error);
+    });
+  }
+
+  function setStakingOffer() {
+    function validateStakingOffer(offer) {
+      const value = parseFloat(offer);
+      // Allow empty input
+      if (isNaN(value)) {
+          return true;
+      }
+      // Allow 0 or values 10 and above
+      if (value !== 0 && value < 1) {
+          document.getElementById("addStakingOffer").value = ''; // Clear invalid input
+          return false;
+      }
+      return true;
+    }
+    offer = document.getElementById("addStakingOffer").value;
+    if (!validateStakingOffer(offer)){
+      return;
+    }
+    fetch('/pool/worker/reward/set/' + offer, { method: 'GET' })
+    .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+    })
+    .then(text => {
+      if (text == 'OK') {
+        document.getElementById("addStakingOfferConfirmation").innerHTML = 'Saved!';
+        getProxyParentStatus();
+      } else {
+        console.log(text);
+        document.getElementById("addStakingOfferConfirmation").innerHTML = 'Unable to save.';
+      }
+    }).catch(error => {
+      document.getElementById("addStakingOfferConfirmation").innerHTML = 'Unable to save.';
+      console.error('Error:', error);
+    });
+  }
+
   function createTable(text) {
     // example text '[{
     //   "parent": 1234,
@@ -154,6 +339,7 @@
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the rewards most recently earned by the remote Neuron">Reward</th>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the amount of stake this delegate Neuron is providing the remote Neuron. Can take up to 24 day to update.">Stake</th>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="the remote Neuron is or is not pointing its reward to this Neuron">Pointed</th>
+              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="this worker was automatically assigned from the public workers">Public</th>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="stake the remote Neuron regardless of their chosen reward address">Charity</th>
               <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" title="remove staking for the remote Neuron">Remove</th>
             </tr>
@@ -165,13 +351,15 @@
     let totalStake = 0;
     // Iterate over each item in the JSON array
     data.forEach(item => {
+      console.log(item);
         // Determine the alias (use empty string if not provided)
         let alias = item.name ? item.name : item.address;
         let aliasLabel = item.name ? `wallet address: ${item.address}` : `wallet`;
         let pointed = item.pointed == 1 ? 'Yes' : 'No';
+        let public = item.automatic == 1 ? 'Yes' : 'No';
         let satori = item.child_satori ? parseFloat(item.child_satori) : 0;
         console.log(item.child_proxy);
-        let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= 6 ? 0: 6); // Convert proxy to float
+        let proxy = item.child_proxy ? parseFloat(item.child_proxy) : (satori >= {{ stakeRequired }} ? 0: {{ stakeRequired }}); // Convert proxy to float
         let reward = parseFloat(item.reward); // Convert reward to float
         totalCount += 1;
         totalReward += isNaN(reward) ? 0 : reward; // Add reward, ensure NaN doesn't get added
@@ -187,25 +375,32 @@
             </td>
         `;
         tableHTML += `
-            <td>
-              <div class="py-1" style="display: inline-flex;">
-                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${item.reward}</h6>
-              </div>
-            </td>
+          <td>
+            <div class="py-1" style="display: inline-flex;">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${item.reward}</h6>
+            </div>
+          </td>
         `;
         tableHTML += `
-            <td>
-              <div class="py-1" style="display: inline-flex;">
-                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${proxy}</h6>
-              </div>
-            </td>
+          <td>
+            <div class="py-1" style="display: inline-flex;">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="most recent">${proxy}</h6>
+            </div>
+          </td>
         `;
         tableHTML += `
-            <td>
-              <div class="py-1" style="display: inline-flex;">
-                <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="pointing rewards to delegate?">${pointed}</h6>
-              </div>
-            </td>
+          <td>
+            <div class="py-1" style="display: inline-flex;">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="pointing rewards to delegate?">${pointed}</h6>
+            </div>
+          </td>
+        `;
+        tableHTML += `
+          <td>
+            <div class="py-1" style="display: inline-flex;">
+              <h6 class="mb-0 text-sm {% if darkmode %}dark-colors{% endif %}" title="automatically assigned from public workers">${public}</h6>
+            </div>
+          </td>
         `;
         tableHTML += `
             <td>
@@ -423,13 +618,10 @@
     if (!jsonArray || jsonArray.length === 0) {
         return '';
     }
-
     let headers = Object.keys(jsonArray[0]);
     headers = headers.filter(header => !columnsToExclude.includes(header));
-
     const csvRows = [];
     csvRows.push(headers.join(','));
-
     jsonArray.forEach(obj => {
         const values = headers.map(header => {
             const escaped = ('' + obj[header]).replace(/"/g, '""');
@@ -437,17 +629,14 @@
         });
         csvRows.push(values.join(','));
     });
-
     return csvRows.join('\n');
   }
 
   function downloadCsv(csvContent, filename) {
       const blob = new Blob([csvContent], { type: 'text/csv' });
-
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = filename;
-
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

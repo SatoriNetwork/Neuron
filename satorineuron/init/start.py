@@ -4,34 +4,39 @@ import time
 import json
 import random
 import threading
-from reactivex.subject import BehaviorSubject
 from queue import Queue
-import satorineuron
-import satoriengine
-from satorilib.concepts.structs import StreamId, Stream
+from eth_account import Account
+from satorilib.concepts.structs import (
+    StreamId,
+    Stream,
+    StreamPairs,
+    StreamOverview)
+from satorilib import disk
 from satorilib.concepts import constants
-from satorilib.api import disk
-from satorilib.api.wallet import RavencoinWallet, EvrmoreWallet
-# from satorilib.api.ipfs import Ipfs
+from satorilib.wallet import EvrmoreWallet
 from satorilib.server import SatoriServerClient
 from satorilib.server.api import CheckinDetails
 from satorilib.pubsub import SatoriPubSubConn
 from satorilib.asynchronous import AsyncThread
+import satoriengine
+from satoriengine.veda.data.structs import StreamForecast
+import satorineuron
 from satorineuron import VERSION
 from satorineuron import logging
 from satorineuron import config
-from satorineuron.init.restart import restartLocalSatori
-from satorineuron.init.tag import LatestTag
+from satorineuron.init import engine
+from satorineuron.init.tag import LatestTag, Version
+from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
-from satorineuron.structs.start import StartupDagStruct
-from satorineuron.structs.pubsub import SignedStreamId
+from satorineuron.structs.start import RunMode, StartupDagStruct
 from satorineuron.synergy.engine import SynergyManager
 
-
 def getStart():
-    ''' returns StartupDag singleton '''
+    """returns StartupDag singleton"""
     return StartupDag()
+
+
 # engine_start = StartupDag()
 
 
@@ -40,32 +45,36 @@ class SingletonMeta(type):
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(
-                SingletonMeta, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
 class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
-    ''' a DAG of startup tasks. '''
+    """a DAG of startup tasks."""
+
+    _holdingBalanceBase_cache = None
+    _holdingBalanceBase_timestamp = 0
 
     def __init__(
         self,
         *args,
-        env: str = 'dev',
-        walletOnlyMode: bool = False,
+        env: str = "dev",
+        runMode: str = None,
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
         urlSynergy: str = None,
-        isDebug: bool = False
+        isDebug: bool = False,
     ):
         super(StartupDag, self).__init__(*args)
-        self.version = [int(x) for x in VERSION.split('.')]
+        self.version = Version(VERSION)
+        # TODO: test and turn on with new installer
+        # self.watchForVersionUpdates()
         self.env = env
-        self.walletOnlyMode = walletOnlyMode
-        self.lastWalletCall = 0
-        self.lastVaultCall = 0
-        self.electrumCooldown = 10
+        self.runMode = RunMode.choose(runMode)
+        logging.info(f'mode: {self.runMode.name}', print=True)
+        self.userInteraction = time.time()
+        self.walletVaultManager: WalletVaultManager
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
         # self.workingUpdates: BehaviorSubject = BehaviorSubject(None)
@@ -81,11 +90,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.urlSynergy: str = urlSynergy
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
-        self._ravencoinWallet: RavencoinWallet
-        self._evrmoreWallet: EvrmoreWallet
-        self._ravencoinVault: Union[RavencoinWallet, None] = None
-        self._evrmoreVault: Union[EvrmoreWallet, None] = None
-        self.details: CheckinDetails = None
+        self.details: CheckinDetails = CheckinDetails(raw={})
         self.key: str
         self.oracleKey: str
         self.idKey: str
@@ -95,6 +100,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.server: SatoriServerClient
+        self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
         self.synergy: Union[SynergyManager, None] = None
@@ -102,236 +108,334 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
         self.subscriptions: list[Stream] = []
-        self.udpQueue: Queue = Queue()
+        self.streamDisplay: list = []
+        self.udpQueue: Queue = Queue()  # TODO: remove
         self.stakeStatus: bool = False
         self.miningMode: bool = False
-        self.mineToVault: bool = False
-        if not config.get().get('disable_restart', False):
+        self.stopAllSubscriptions = threading.Event()
+        self.lastBlockTime = time.time()
+        self.lastBridgeTime = 0
+        self.poolIsAccepting: bool = False
+        self.invitedBy: str = None
+        self.latestObservationTime: float = 0
+        self.setInvitedBy()
+        self.configRewardAddress: str = None
+        self.setRewardAddress()
+        self.setEngineVersion()
+        self.setupWalletManager()
+        if not config.get().get("disable restart", False):
             self.restartThread = threading.Thread(
-                target=self.restartEverythingPeriodic, daemon=True)
+                target=self.restartEverythingPeriodic,
+                daemon=True)
             self.restartThread.start()
+        self.restartQueue: Queue = Queue()
+        self.restartQueueThread = threading.Thread(
+            target=self.restartWithQueue,
+            args=(self.restartQueue,),
+            daemon=True)
+        self.restartQueueThread.start()
         self.checkinCheckThread = threading.Thread(
-            target=self.checkinCheck, daemon=True)
+            target=self.checkinCheck,
+            daemon=True)
         self.checkinCheckThread.start()
         # self.delayedStart()
-        alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
+        alreadySetup: bool = os.path.exists(config.walletPath("wallet.yaml"))
         if not alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
         self.ranOnce = False
+        if self.runMode == RunMode.normal:
+            startFunction = self.start
+        elif self.runMode == RunMode.worker:
+            startFunction = self.startWorker
+        elif self.runMode == RunMode.wallet:
+            startFunction = self.startWalletOnly
         while True:
             if self.asyncThread.loop is not None:
                 self.checkinThread = self.asyncThread.repeatRun(
-                    task=self.start,
-                    interval=60*60*24 if alreadySetup else 60*60*12)
+                    task=startFunction,
+                    interval=60 * 60 * 24 if alreadySetup else 60 * 60 * 12,
+                )
                 break
-            time.sleep(60*15)
+            time.sleep(60 * 15)
 
-    def delayedEngine(self):
-        time.sleep(60*60*6)
-        self.buildEngine()
-
-    def checkinCheck(self):
-        while True:
-            time.sleep(60*60*6)
-            if self.server.checkinCheck():
-                self.triggerRestart()  # should just be start()
-
-    def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
-        ''' returns the reference to the cache of a stream '''
-        return self.caches.get(streamId)
+    @property
+    def walletOnlyMode(self) -> bool:
+        return self.runMode == RunMode.wallet
 
     @property
     def rewardAddress(self) -> str:
         if isinstance(self.details, CheckinDetails):
-            reward = self.details.wallet.get('rewardaddress', '')
-            if reward not in [
-                    self.details.wallet.get('address', ''),
-                    self.details.wallet.get('vaultaddress', '')]:
-                return reward or ''
-        return ''
+            reward = self.details.wallet.get("rewardaddress", "")
+            if (
+                reward not in [
+                    self.details.wallet.get("address", ""),
+                    self.details.wallet.get("vaultaddress", "")]
+            ):
+                return reward or ""
+        return ""
 
     @property
     def network(self) -> str:
-        return 'main' if self.env == 'prod' else 'test'
+        return 'main' if self.env in ['prod', 'local'] else 'test'
 
     @property
-    def vault(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        return self._evrmoreVault if self.env == 'prod' else self._ravencoinVault
+    def vault(self) -> EvrmoreWallet:
+        return self.walletVaultManager.vault
 
     @property
-    def wallet(self) -> Union[EvrmoreWallet, RavencoinWallet]:
-        return self._evrmoreWallet if self.env == 'prod' else self._ravencoinWallet
+    def wallet(self) -> EvrmoreWallet:
+        return self.walletVaultManager.wallet
 
     @property
     def holdingBalance(self) -> float:
         self._holdingBalance = round(
-            self.wallet.balanceAmount + (
-                self.vault.balanceAmount if self.vault is not None else 0), 8)
+            self.wallet.balance.amount
+            + (self.vault.balance.amount if self.vault is not None else 0),
+            8)
         return self._holdingBalance
 
-    @property
-    def ravencoinWallet(self) -> RavencoinWallet:
-        if self._ravencoinWallet is None:
-            self._ravencoinWallet = RavencoinWallet(
-                config.walletPath('wallet.yaml'),
-                reserve=0.25,
-                isTestnet=self.networkIsTest('ravencoin'))
-        return self._ravencoinWallet
-
-    @property
-    def evrmoreWallet(self) -> EvrmoreWallet:
-        if self._evrmoreWallet is None:
-            self._evrmoreWallet = EvrmoreWallet(
-                config.walletPath('wallet.yaml'),
-                reserve=0.25,
-                isTestnet=self.networkIsTest('evrmore'))
-        return self._evrmoreWallet
-
-    def ravencoinVault(
-        self,
-        password: Union[str, None] = None,
-        create: bool = False,
-    ) -> Union[RavencoinWallet, None]:
-        if self._ravencoinVault is None or (self._ravencoinVault.password is None and password is not None):
-            try:
-                vaultPath = config.walletPath('vault.yaml')
-                if os.path.exists(vaultPath) or create:
-                    self._ravencoinVault = RavencoinWallet(
-                        vaultPath,
-                        reserve=0.25,
-                        isTestnet=self.networkIsTest('ravencoin'),
-                        password=password)
-            except Exception as e:
-                logging.error('failed to open vault', color='red')
-                raise e
-            if password is None:
-                logging.info('loaded raw vault', color='green')
+    def refreshBalance(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        print('refreshing balance')
+        if forWallet and isinstance(self.wallet, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.wallet.get).start()
             else:
-                logging.info('accessed vault', color='green')
-            return self._ravencoinVault
-        return self._ravencoinVault
-
-    def evrmoreVault(
-        self,
-        password: Union[str, None] = None,
-        create: bool = False,
-    ) -> Union[RavencoinWallet, None]:
-        if self._evrmoreVault is None:
-            try:
-                vaultPath = config.walletPath('vault.yaml')
-                if os.path.exists(vaultPath) or create:
-                    self._evrmoreVault = EvrmoreWallet(
-                        vaultPath,
-                        reserve=0.25,
-                        isTestnet=self.networkIsTest('evrmore'),
-                        password=password)
-            except Exception as e:
-                logging.error('failed to open vault', color='red')
-                raise e
-            if password is None:
-                logging.info('loaded vault', color='green')
+                self.wallet.get()
+        if forVault and isinstance(self.vault, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.vault.get).start()
             else:
-                logging.info('accessed vault', color='green')
-            return self._evrmoreVault
-        elif self._evrmoreVault.password is None and password is not None:
-            self._evrmoreVault.open(password)
-        return self._evrmoreVault
+                self.vault.get()
+        return self.holdingBalance
+
+    def refreshUnspents(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        if forWallet and isinstance(self.wallet, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.wallet.getReadyToSend).start()
+            else:
+                self.wallet.getReadyToSend()
+        if forVault and isinstance(self.vault, EvrmoreWallet):
+            if threaded:
+                threading.Thread(target=self.vault.getReadyToSend).start()
+            else:
+                self.vault.getReadyToSend()
+        return self._holdingBalance
+
+ #  api basescan version
+ #  @property
+ #   def holdingBalanceBase(self) -> float:
+ #       """
+ #       Get Satori from Base 5 min interval
+ #       """
+ #       import requests
+ #       current_time = time.time()
+ #       cache_timeout = 60 * 5
+ #       if self._holdingBalanceBase_cache is not None and (current_time - self._holdingBalanceBase_timestamp) < cache_timeout:
+ #           return self._holdingBalanceBase_cache
+ #       eth_address = self.vault.ethAddress
+ #       #base_api_url = "https://api.basescan.org/api"
+ #       params = {
+ #           "module": "account",
+ #           "action": "tokenbalance",
+ #           "contractaddress": "0xc1c37473079884CbFCf4905a97de361FEd414B2B",
+ #           "address": eth_address,
+ #           "tag": "latest",
+ #           "apikey": "xxx"
+ #       }
+ #       try:
+ #           response = requests.get(base_api_url, params=params)
+ #           response.raise_for_status()
+ #           data = response.json()
+ #           if data.get("status") == "1":
+ #               token_balance = int(data.get("result", 0)) / (10 ** 18)
+ #               self._holdingBalanceBase_cache = token_balance
+ #               self._holdingBalanceBase_timestamp = current_time
+ #               print(f"Connecting to Base node OK")
+ #               return token_balance
+ #           else:
+ #               print(f"Error API: {data.get('message', 'Unknown Error')}")
+ #               return 0
+ #       except requests.RequestException as e:
+ #           print(f"Error connecting to API: {e}")
+ #           return 0
+
+    @property
+    def holdingBalanceBase(self) -> float:
+        """
+        Get Satori from Base with 5-minute interval cache
+        """
+        import requests
+        import time
+
+        current_time = time.time()
+        cache_timeout = 60 * 5
+        if self._holdingBalanceBase_cache is not None and (current_time - self._holdingBalanceBase_timestamp) < cache_timeout:
+            return self._holdingBalanceBase_cache
+        eth_address = self.vault.ethAddress
+        base_api_url = "https://base-mainnet.g.alchemy.com/v2/wdwSzh0cONBj81_XmHWvODOBq-wuQiAi"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": "alchemy_getTokenBalances",
+            "params": [
+                eth_address,
+                ["0xc1c37473079884CbFCf4905a97de361FEd414B2B"]
+            ],
+            "id": 1
+        }
+        headers = {"Content-Type": "application/json"}
+        try:
+            response = requests.post(base_api_url, json=payload, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            if "result" in data and "tokenBalances" in data["result"]:
+                balance_hex = data["result"]["tokenBalances"][0]["tokenBalance"]
+                token_balance = int(balance_hex, 16) / (10 ** 18)
+                self._holdingBalanceBase_cache = token_balance
+                self._holdingBalanceBase_timestamp = current_time
+                print(f"Connecting to Base node OK")
+                return token_balance
+            else:
+                print(f"API Error: Unexpected response format")
+                return 0
+        except requests.RequestException as e:
+            print(f"Error connecting to API: {e}")
+            return 0
+
+    @property
+    def ethaddressforward(self) -> str:
+        eth_address = self.vault.ethAddress
+        if eth_address:
+            return eth_address
+        else:
+        #    print("Ethereum address not found")
+            return ""
+    @property
+    def evrvaultaddressforward(self) -> str:
+        evrvaultaddress = self.details.wallet.get('vaultaddress', '')
+        if evrvaultaddress:
+            return evrvaultaddress
+        else:
+        #    print("EVR Vault address not found")
+            return ""
+
+
+    def setupWalletManager(self):
+        self.walletVaultManager = WalletVaultManager(
+            updateConnectionStatus=self.updateConnectionStatus,
+            persistent=self.runMode == RunMode.wallet,
+            useElectrumx=self.runMode != RunMode.worker)
+        self.walletVaultManager.setup()
+
+    def shutdownWallets(self):
+        self.walletVaultManager.disconnect()
+        self.walletVaultManager.electrumx = None
+        self.walletVaultManager._wallet = None
+        self.walletVaultManager._vault = None
+
+    def closeVault(self):
+        self.walletVaultManager.closeVault()
+
+    def openVault(self, password: Union[str, None] = None, create: bool = False):
+        return self.walletVaultManager.openVault(password=password, create=create)
+
+    def getWallet(self, **kwargs):
+        return self.walletVaultManager.getWallet()
+
+    def getVault(self, password: Union[str, None] = None, create: bool = False):
+        return self.walletVaultManager.getVault(password=password, create=create)
+
+    def electrumxCheck(self):
+        self.walletVaultManager.electrumxCheck()
+
+    def watchForVersionUpdates(self):
+        """
+        if we notice the code version has updated, download code restart
+        in order to restart we have to kill the main thread manually.
+        """
+
+        def getPidByName(name: str) -> Union[int, None]:
+            """
+            Returns the PID of a process given a name or partial command name match.
+            If multiple matches are found, returns the first match.
+            Returns None if no process is found with the given name.
+            """
+            import psutil
+
+            for proc in psutil.process_iter(["pid", "cmdline"]):
+                try:
+                    # Check if the process command line matches the target name
+                    if name in " ".join(proc.info["cmdline"]):
+                        return proc.info["pid"]
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue  # Process terminated or access denied, skip
+            return None  # No process found with the given name
+
+        def terminatePid(pid: int):
+            import signal
+            os.kill(pid, signal.SIGTERM)  # Send SIGTERM to the process
+
+        def watchForever():
+            latestTag = LatestTag(self.version, serverURL=self.urlServer)
+            while True:
+                time.sleep(60 * 60 * 6)
+                if latestTag.mustUpdate():
+                    terminatePid(getPidByName("satori.py"))
+
+        self.watchVersionThread = threading.Thread(
+            target=watchForever,
+            daemon=True)
+        self.watchVersionThread.start()
+
+    def userInteracted(self):
+        self.userInteraction = time.time()
+        # tell engines or managers the user interacted, incase they care:
+        self.walletVaultManager.userInteracted()
+
+    def delayedEngine(self):
+        time.sleep(60 * 60 * 6)
+        self.buildEngine()
+
+    def checkinCheck(self):
+        while True:
+            time.sleep(60 * 60 * 6)
+            # loop through streams, if I haven't had an observation on a stream
+            # in more than 24 hours, delete it. and restart
+            # for stream in self.subscriptions:
+            #    ts = timestampToSeconds(
+            #        self.cacheOf(stream.streamId).getLatestObservationTime()
+            #    )
+            #    if ts > 0 and ts + 60*60*24 < time.time():
+            #        self.server.removeStream(stream.streamId.jsonId)
+            #        self.triggerRestart()
+            if self.latestObservationTime + 60*60*6 < time.time():
+                self.triggerRestart()
+            if self.server.checkinCheck():
+                self.triggerRestart()
+
+    def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
+        """returns the reference to the cache of a stream"""
+        return self.caches.get(streamId)
 
     def networkIsTest(self, network: str = None) -> bool:
-        return network.lower().strip() in ('testnet', 'test', 'ravencoin', 'rvn')
-
-    def getWallet(self, network: str = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        network = network or self.network
-        if self.networkIsTest(network):
-            return self.ravencoinWallet
-        return self.evrmoreWallet
-
-    def getVault(
-        self,
-        network: str = None,
-        password: Union[str, None] = None,
-        create: bool = False,
-    ) -> Union[EvrmoreWallet, RavencoinWallet]:
-        network = network or self.network
-        if self.networkIsTest(network):
-            return self.ravencoinVault(password=password, create=create)
-        return self.evrmoreVault(password=password, create=create)
-
-    def openWallet(self, network: Union[str, None] = None) -> Union[EvrmoreWallet, RavencoinWallet]:
-        wallet = self.getWallet(network)
-        if self.lastWalletCall + self.electrumCooldown < time.time():
-            self.lastWalletCall = time.time()
-            wallet = wallet()
-            if wallet.electrumx.conn is not None:
-                self.updateConnectionStatus(
-                    connTo=ConnectionTo.electrumx,
-                    status=True)
-            else:
-                self.updateConnectionStatus(
-                    connTo=ConnectionTo.electrumx,
-                    status=False)
-            logging.info('opened wallet', color='green')
-        else:
-            logging.info('respecting wallet cooldown', color='green')
-        return wallet
-
-    def closeVault(self) -> Union[RavencoinWallet, EvrmoreWallet, None]:
-        ''' close the vault, reopen it without decrypting it. '''
-        try:
-            self._ravencoinVault.close()
-        except Exception as _:
-            pass
-        try:
-            self._evrmoreVault.close()
-        except Exception as _:
-            pass
-
-    def openVault(
-        self,
-        network: Union[str, None] = None,
-        password: Union[str, None] = None,
-        create: bool = False,
-    ) -> Union[RavencoinWallet, EvrmoreWallet, None]:
-        '''
-        without a password it will open the vault (if it exists) but not decrypt
-        it. this allows us to get it's balance, but not spend from it.
-        '''
-        self.closeVault()
-        vault = self.getVault(network, password, create)
-        if vault is not None and self.lastVaultCall + self.electrumCooldown < time.time():
-            self.lastVaultCall = time.time()
-            vault = vault()
-            if vault.electrumx.conn is not None:
-                self.updateConnectionStatus(
-                    connTo=ConnectionTo.electrumx,
-                    status=True)
-            else:
-                self.updateConnectionStatus(
-                    connTo=ConnectionTo.electrumx,
-                    status=False)
-            logging.info('opened vault', color='green')
-        else:
-            logging.info('respecting vault cooldown', color='green')
-        return vault
+        return network.lower().strip() in ("testnet", "test", "ravencoin", "rvn")
 
     def start(self):
-        ''' start the satori engine. '''
+        """start the satori engine."""
         # while True:
         if self.ranOnce:
-            time.sleep(60*60)
+            time.sleep(60 * 60)
         self.ranOnce = True
         if self.walletOnlyMode:
-            self.getWallet()
-            self.getVault()
+            self.walletVaultManager.setupWalletAndVault()
             self.createServerConn()
+            self.checkin()
+            logging.info("in WALLETONLYMODE")
             return
+        self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
-        self.getWallet()
-        self.getVault()
         self.createServerConn()
         self.checkin()
-        self.setRewardAddress()
         self.verifyCaches()
         # self.startSynergyEngine()
         self.subConnect()
@@ -340,7 +444,68 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             return
         self.startRelay()
         self.buildEngine()
-        time.sleep(60*60*24)
+        time.sleep(60 * 60 * 24)
+
+    def engine_necessary(self):
+        """Below are what is necessary for the Engine to start building"""
+        if self.ranOnce:
+            time.sleep(60 * 60)
+        self.ranOnce = True
+        if self.walletOnlyMode:
+            self.walletVaultManager.setupWalletAndVault()
+            self.createServerConn()
+            return
+        # self.setMiningMode()
+        # self.setEngineVersion()
+        # self.createRelayValidation()
+        self.walletVaultManager.setupWalletAndVault()
+        # self.getVault()
+        self.createServerConn()
+        self.checkin()
+        # self.setRewardAddress()
+        # self.verifyCaches()
+        # self.startSynergyEngine()
+        self.subConnect()
+        # self.pubsConnect()
+        if self.isDebug:
+            return
+        # self.startRelay()
+        self.buildEngine()
+        time.sleep(60 * 60 * 24)
+
+    def startWalletOnly(self):
+        """start the satori engine."""
+        logging.info("running in walletOnly mode", color="blue")
+        # while True:
+        if self.ranOnce:
+            time.sleep(60 * 60)
+        self.ranOnce = True
+        self.walletVaultManager.setupWalletAndVault()
+        self.createServerConn()
+
+    def startWorker(self):
+        """start the satori engine."""
+        logging.info("running in worker mode", color="blue")
+        # while True:
+        if self.ranOnce:
+            time.sleep(60 * 60)
+        self.ranOnce = True
+        self.walletVaultManager.setupWalletAndVault()
+        #self.walletVaultManager.setupWalletAndVaultIdentities()
+        self.setMiningMode()
+        self.setEngineVersion()
+        self.createRelayValidation()
+        self.createServerConn()
+        self.checkin()
+        self.verifyCaches()
+        # self.startSynergyEngine()
+        self.subConnect()
+        self.pubsConnect()
+        if self.isDebug:
+            return
+        self.startRelay()
+        self.buildEngine()
+        time.sleep(60 * 60 * 24)
 
     def updateConnectionStatus(self, connTo: ConnectionTo, status: bool):
         # logging.info('connTo:', connTo, status, color='yellow')
@@ -351,18 +516,20 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
-        logging.info('started relay validation engine', color='green')
+        logging.info("started relay validation engine", color="green")
 
     def createServerConn(self):
-        logging.debug(self.urlServer, color='teal')
+        logging.debug(self.urlServer, color="teal")
         self.server = SatoriServerClient(
-            self.wallet, url=self.urlServer, sendingUrl=self.urlMundo)
+            self.wallet, url=self.urlServer, sendingUrl=self.urlMundo
+        )
 
     def checkin(self):
         try:
-            referrer = open(
-                config.root('config', 'referral.txt'),
-                mode='r').read().strip()
+            referrer = (
+                open(config.root("config", "referral.txt"), mode="r")
+                .read()
+                .strip())
         except Exception as _:
             referrer = None
         x = 30
@@ -372,11 +539,23 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             try:
                 self.details = CheckinDetails(
                     self.server.checkin(referrer=referrer))
+                if self.details.get('sponsor') != self.invitedBy:
+                    if self.invitedBy is None:
+                        self.setInvitedBy(self.details.get('sponsor'))
+                    if isinstance(self.invitedBy, str) and len(self.invitedBy) == 34 and self.invitedBy.startswith('E'):
+                        self.server.invitedBy(self.invitedBy)
+                #logging.debug(self.details, color='teal')
+                if self.details.get('rewardaddress') != self.configRewardAddress:
+                    if self.configRewardAddress is None:
+                        self.setRewardAddress(address=self.details.get('rewardaddress'))
+                    else:
+                        self.setRewardAddress(globally=True)
                 self.updateConnectionStatus(
-                    connTo=ConnectionTo.central,
-                    status=True)
+                    connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
+                self.poolIsAccepting = bool(
+                    self.details.wallet.get("accepting", False))
                 self.oracleKey = self.details.oracleKey
                 self.idKey = self.details.idKey
                 self.subscriptionKeys = self.details.subscriptionKeys
@@ -384,17 +563,22 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.subscriptions = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.subscriptions)]
-                if attempt < 5 and (self.details is None or len(self.subscriptions) == 0):
+                if (
+                    attempt < 5 and (
+                        self.details is None or len(self.subscriptions) == 0)
+                ):
                     time.sleep(30)
                     continue
-                logging.info('subscriptions:', len(
+                logging.info("subscriptions:", len(
                     self.subscriptions), print=True)
                 # logging.info('subscriptions:', self.subscriptions, print=True)
                 self.publications = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.publications)]
-                logging.info('publications:', len(
-                    self.publications), print=True)
+                logging.info(
+                    "publications:",
+                    len(self.publications),
+                    print=True)
                 # logging.info('publications:', self.publications, print=True)
                 self.caches = {
                     x.streamId: disk.Cache(id=x.streamId)
@@ -427,34 +611,45 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 #        signed=self.wallet.sign(sig)) for p, sig in zip(
                 #            self.publications,
                 #            self.publicationKeys)]
-                logging.info('checked in with Satori', color='green')
+                logging.info("checked in with Satori", color="green")
                 break
             except Exception as e:
                 self.updateConnectionStatus(
-                    connTo=ConnectionTo.central,
-                    status=False)
-                logging.warning(f'connecting to central err: {e}')
-            x = x * 1.5 if x < 60*60*6 else 60*60*6
-            logging.warning(f'trying again in {x}')
+                    connTo=ConnectionTo.central, status=False)
+                logging.warning(f"connecting to central err: {e}")
+            x = x * 1.5 if x < 60 * 60 * 6 else 60 * 60 * 6
+            logging.warning(f"trying again in {x}")
             time.sleep(x)
 
-    def setRewardAddress(self) -> bool:
-        configRewardAddress: str = str(config.get().get('reward address', ''))
+    def setRewardAddress(
+        self,
+        address: Union[str, None] = None,
+        globally: bool = False
+    ) -> bool:
         if (
-            self.env == 'prod' and
-            len(configRewardAddress) == 34 and
-            configRewardAddress.startswith('E') and
-            self.rewardAddress != configRewardAddress
+            address and
+            len(address) == 34 and
+            address.startswith('E')
+        ):
+            self.configRewardAddress = address
+            config.add(data={'reward address': address})
+        else:
+            self.configRewardAddress: str = str(config.get().get('reward address', ''))
+        if (
+            globally and
+            self.env in ['prod', 'local'] and
+            len(self.configRewardAddress) == 34 and
+            self.configRewardAddress.startswith('E')
         ):
             self.server.setRewardAddress(
-                signature=self.wallet.sign(configRewardAddress),
+                signature=self.wallet.sign(self.configRewardAddress),
                 pubkey=self.wallet.publicKey,
-                address=configRewardAddress)
+                address=self.configRewardAddress)
             return True
         return False
 
     def verifyCaches(self) -> bool:
-        ''' rehashes my published hashes '''
+        """rehashes my published hashes"""
 
         def validateCache(cache: disk.Cache):
             success, _ = cache.validateAllHashes()
@@ -468,41 +663,94 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @staticmethod
     def predictionStreams(streams: list[Stream]):
-        ''' filter down to prediciton publications '''
+        """filter down to prediciton publications"""
         # todo: doesn't work
         return [s for s in streams if s.predicting is not None]
 
     @staticmethod
     def oracleStreams(streams: list[Stream]):
-        ''' filter down to prediciton publications '''
+        """filter down to prediciton publications"""
         return [s for s in streams if s.predicting is None]
 
     def buildEngine(self):
-        ''' start the engine, it will run w/ what it has til ipfs is synced '''
-        # if self.miningMode:
-        # logging.warning('Running in Minng Mode.', color='green')
-        self.engine: satoriengine.Engine = satorineuron.engine.getEngine(
+        """start the engine, it will run w/ what it has til ipfs is synced"""
+
+        def streamDisplayer(subsription: Stream):
+            return StreamOverview(
+                streamId=subsription.streamId,
+                value="",
+                prediction="",
+                values=[],
+                predictions=[])
+
+        def handleNewPrediction(streamForecast: StreamForecast):
+            for stream_display in self.streamDisplay:
+                if stream_display.streamId == streamForecast.streamId:
+                    stream_display.value = streamForecast.currentValue["value"].iloc[-1]
+                    stream_display.prediction = streamForecast.forecast["pred"].iloc[0]
+                    stream_display.values = [
+                        value
+                        for value in streamForecast.currentValue.value]
+                    stream_display.predictions = [
+                        value
+                        for value in streamForecast.predictionHistory.value]
+            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId.strId}', color='blue')
+            self.server.publish(
+                topic=streamForecast.predictionStreamId.jsonId,
+                data=streamForecast.forecast["pred"].iloc[0],
+                observationTime=streamForecast.observationTime,
+                observationHash=streamForecast.observationHash,
+                isPrediction=True,
+                useAuthorizedCall=self.version >= Version("0.2.6"))
+
+        # TODO: we will have to change this some day to a mapping between the
+        #       publication (key) and all the supporting subscriptions (value)
+        #       because we will have a target feature stream and feature streams
+        #       {publication: [primarySubscription1, subscription2, ...]}
+        streamPairs = StreamPairs(
+            self.subscriptions,
+            StartupDag.predictionStreams(self.publications))
+        self.subscriptions, self.publications = streamPairs.get_matched_pairs()
+        # print([sub.streamId for sub in self.subscriptions])
+
+        self.streamDisplay = [
+            streamDisplayer(subscription)
+            for subscription in self.subscriptions]
+
+        self.engine: satoriengine.Engine = engine.getEngine(
+            run=self.engineVersion == 'v1',
             subscriptions=self.subscriptions,
-            publications=StartupDag.predictionStreams(self.publications))
+            publications=self.publications)
         self.engine.run()
         # else:
         #    logging.warning('Running in Local Mode.', color='green')
+        if self.engineVersion == 'v2':
+            self.aiengine: satoriengine.veda.engine.Engine = (
+                satoriengine.veda.engine.Engine(
+                    streams=self.subscriptions,
+                    pubstreams=self.publications)
+            )
+            self.aiengine.predictionProduced.subscribe(
+                lambda x: handleNewPrediction(x) if x is not None else None)
+
+    def addToEngine(self, stream: Stream, publication: Stream):
+        if self.aiengine is not None:
+            self.aiengine.addStream(stream, publication)
 
     def subConnect(self):
-        ''' establish a random pubsub connection used only for subscribing '''
+        """establish a random pubsub connection used only for subscribing"""
         if self.sub is not None:
             self.sub.disconnect()
             self.updateConnectionStatus(
-                connTo=ConnectionTo.pubsub,
-                status=False)
+                connTo=ConnectionTo.pubsub, status=False)
             self.sub = None
         if self.key:
             signature = self.wallet.sign(self.key)
-            self.sub = satorineuron.engine.establishConnection(
+            self.sub = engine.establishConnection(
                 url=random.choice(self.urlPubsubs),
                 # url='ws://pubsub3.satorinet.io:24603',
                 pubkey=self.wallet.publicKey,
-                key=signature.decode() + '|' + self.key,
+                key=signature.decode() + "|" + self.key,
                 emergencyRestart=self.emergencyRestart,
                 onConnect=lambda: self.updateConnectionStatus(
                     connTo=ConnectionTo.pubsub,
@@ -512,13 +760,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     status=False))
         else:
             time.sleep(30)
-            raise Exception('no key provided by satori server')
+            raise Exception("no key provided by satori server")
 
     def pubsConnect(self):
-        '''
+        """
         oracle nodes publish to every pubsub machine. therefore, they have
         an additional set of connections that they mush push to.
-        '''
+        """
         self.pubs = []
         # oracles = oracleStreams(self.publications)
         if not self.oracleKey:
@@ -526,25 +774,25 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         for pubsubMachine in self.urlPubsubs:
             signature = self.wallet.sign(self.oracleKey)
             self.pubs.append(
-                satorineuron.engine.establishConnection(
+                engine.establishConnection(
                     subscription=False,
                     url=pubsubMachine,
-                    pubkey=self.wallet.publicKey + ':publishing',
+                    pubkey=self.wallet.publicKey + ":publishing",
                     emergencyRestart=self.emergencyRestart,
-                    key=signature.decode() + '|' + self.oracleKey))
+                    key=signature.decode() + "|" + self.oracleKey))
 
     def startRelay(self):
         def append(streams: list[Stream]):
-            relays = satorineuron.config.get('relay')
+            relays = satorineuron.config.get("relay")
             rawStreams = []
             for x in streams:
-                topic = x.streamId.topic(asJson=True)
+                topic = x.streamId.jsonId
                 if topic in relays.keys():
-                    x.uri = relays.get(topic).get('uri')
-                    x.headers = relays.get(topic).get('headers')
-                    x.payload = relays.get(topic).get('payload')
-                    x.hook = relays.get(topic).get('hook')
-                    x.history = relays.get(topic).get('history')
+                    x.uri = relays.get(topic).get("uri")
+                    x.headers = relays.get(topic).get("headers")
+                    x.payload = relays.get(topic).get("payload")
+                    x.hook = relays.get(topic).get("hook")
+                    x.history = relays.get(topic).get("history")
                     rawStreams.append(x)
             return rawStreams
 
@@ -552,11 +800,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.relay.kill()
         self.relay = RawStreamRelayEngine(streams=append(self.publications))
         self.relay.run()
-        logging.info('started relay engine', color='green')
+        logging.info("started relay engine", color="green")
 
     def startSynergyEngine(self):
-        '''establish a synergy connection'''
-        '''DISABLED FOR NOW:
+        """establish a synergy connection"""
+        """DISABLED FOR NOW:
         Snippet of a tcpdump
         23:11:41.073074 IP lpcpu04.58111 > dns.google.domain: 2468+ A? synergy.satorinet.io. (38)
         23:11:41.073191 IP lpcpu04.42736 > dns.google.domain: 10665+ A? synergy.satorinet.io. (38)
@@ -571,59 +819,55 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         23:11:41.075438 IP lpcpu04.49361 > dns.google.domain: 19875+ A? synergy.satorinet.io. (38)
         23:11:41.075581 IP lpcpu04.57224 > dns.google.domain: 47540+ A? synergy.satorinet.io. (38)
         same second, hundred of querys
-        '''
+        """
         if self.wallet:
             self.synergy = SynergyManager(
                 url=self.urlSynergy,
                 wallet=self.wallet,
                 onConnect=self.syncDatasets)
-            logging.info(
-                'connected to Satori p2p network', color='green')
+            logging.info("connected to Satori p2p network", color="green")
         else:
-            raise Exception('wallet not open yet.')
+            raise Exception("wallet not open yet.")
 
     def syncDataset(self, streamId: StreamId):
-        ''' establish a synergy connection '''
+        """establish a synergy connection"""
         if self.synergy and self.synergy.isConnected:
             for stream in self.subscriptions:
                 if streamId == stream.streamId:
-                    logging.info('resyncing stream:', stream, print=True)
+                    logging.info("resyncing stream:", stream, print=True)
                     self.synergy.connectToPeer(stream.streamId)
         # else:
         #    raise Exception('synergy not created or not connected.')
 
     def syncDatasets(self):
-        ''' establish a synergy connection '''
+        """establish a synergy connection"""
         if self.synergy and self.synergy.isConnected:
             self.updateConnectionStatus(
-                connTo=ConnectionTo.synergy,
-                status=True)
+                connTo=ConnectionTo.synergy, status=True)
             for stream in self.subscriptions:
                 self.synergy.connectToPeer(stream.streamId)
         else:
             self.updateConnectionStatus(
-                connTo=ConnectionTo.synergy,
-                status=False)
+                connTo=ConnectionTo.synergy, status=False)
         # else:
         #    raise Exception('synergy not created or not connected.')
 
     def pause(self, timeout: int = 60):
-        ''' pause the engine. '''
+        """pause the engine."""
         self.paused = True
         # self.engine.pause()
         self.pauseThread = self.asyncThread.delayedRun(
-            task=self.unpause,
-            delay=timeout)
-        logging.info('AI engine paused', color='green')
+            task=self.unpause, delay=timeout)
+        logging.info("AI engine paused", color="green")
 
     def unpause(self):
-        ''' pause the engine. '''
+        """pause the engine."""
         # self.engine.unpause()
         self.paused = False
         if self.pauseThread is not None:
             self.asyncThread.cancelTask(self.pauseThread)
         self.pauseThread = None
-        logging.info('AI engine unpaused', color='green')
+        logging.info("AI engine unpaused", color="green")
 
     def repullFor(self, streamId: StreamId):
         if self.engine is not None:
@@ -636,7 +880,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                             model.inputsUpdated.on_next(True)
 
     def delayedStart(self):
-        alreadySetup: bool = os.path.exists(config.walletPath('wallet.yaml'))
+        alreadySetup: bool = os.path.exists(config.walletPath("wallet.yaml"))
         if alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
         # while True:
@@ -647,26 +891,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #        break
         #    time.sleep(1)
 
-    def triggerRestart(self):
+    def triggerRestart(self, return_code=1):
         from satorisynapse import Envelope, Signal
-        self.udpQueue.put(Envelope(ip='', vesicle=Signal(restart=True)))
+        self.udpQueue.put(
+            Envelope(ip="", vesicle=Signal(restart=True)))  # TODO: remove
         import time
         time.sleep(5)
-        os._exit(0)
-        # import requests
-        # requests.get('http://127.0.0.1:24601/restart')
+        # 0 = shutdown, 1 = restart container, 2 = restart app
+        os._exit(return_code)
 
     def emergencyRestart(self):
         import time
-        logging.warning('restarting in 10 minutes', print=True)
-        time.sleep(60*10)
+        logging.warning("restarting in 10 minutes", print=True)
+        time.sleep(60 * 10)
         self.triggerRestart()
 
     def restartEverythingPeriodic(self):
         import random
         restartTime = time.time() + config.get().get(
-            'restartTime',
-            random.randint(60*60*21, 60*60*24))
+            "restartTime", random.randint(60 * 60 * 21, 60 * 60 * 24)
+        )
         # # removing tag check because I think github might block vps or
         # # something when multiple neurons are hitting it at once. very
         # # strange, but it was unreachable for someone and would just hang.
@@ -674,11 +918,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         while True:
             if time.time() > restartTime:
                 self.triggerRestart()
-            time.sleep(random.randint(60*60, 60*60*4))
+            time.sleep(random.randint(60 * 60, 60 * 60 * 4))
             # time.sleep(random.randint(10, 20))
             # latestTag.get()
             # if latestTag.isNew:
             #    self.triggerRestart()
+
+    def restartWithQueue(self, queue):
+        return_code = int(queue.get())  # Wait for signal
+        self.triggerRestart(return_code)
 
     def publish(
         self,
@@ -689,9 +937,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         toCentral: bool = True,
         isPrediction: bool = False,
     ) -> True:
-        ''' publishes to all the pubsub servers '''
-        if self.holdingBalance < constants.stakeRequired:
-            return False
+        """publishes to all the pubsub servers"""
+        # does this take proxy into account? I don't think so.
+        # if self.holdingBalance < constants.stakeRequired:
+        #    return False
         if not isPrediction:
             for pub in self.pubs:
                 pub.publish(
@@ -706,42 +955,64 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 observationTime=observationTime,
                 observationHash=observationHash,
                 isPrediction=isPrediction,
-                useAuthorizedCall=self.version[1] >= 2 and self.version[2] >= 6)
+                useAuthorizedCall=self.version >= Version("0.2.6"))
 
     def performStakeCheck(self):
         self.stakeStatus = self.server.stakeCheck()
         return self.stakeStatus
 
     def setMiningMode(self, miningMode: Union[bool, None] = None):
-        miningMode = miningMode if isinstance(
-            miningMode, bool) else config.get().get('mining mode', True)
+        miningMode = (
+            miningMode
+            if isinstance(miningMode, bool)
+            else config.get().get('mining mode', True))
         self.miningMode = miningMode
         config.add(data={'mining mode': self.miningMode})
+        if hasattr(self, 'server') and self.server is not None:
+            self.server.setMiningMode(miningMode)
         return self.miningMode
 
-    def enableMineToVault(self, network: str = 'main'):
-        vault = self.getVault(network=network)
-        mineToAddress = vault.address
-        success, result = self.server.enableMineToVault(
-            walletSignature=self.getWallet(
-                network=network).sign(mineToAddress),
-            vaultSignature=vault.sign(mineToAddress),
-            vaultPubkey=vault.publicKey,
-            address=mineToAddress)
+    def setEngineVersion(self, version: Union[str, None] = None) -> str:
+        default = 'v2'
+        version = (
+            version
+            if version in ['v1', 'v2']
+            else config.get().get('engine version', default))
+        self.engineVersion = version if version in ['v1', 'v2'] else default
+        config.add(data={'engine version': self.engineVersion})
+        return self.engineVersion
+
+    def setInvitedBy(self, address: Union[str, None] = None) -> str:
+        address = address or config.get().get('invited by', address)
+        if address:
+            self.invitedBy = address
+            config.add(data={'invited by': self.invitedBy})
+        return self.invitedBy
+
+    def poolAccepting(self, status: bool):
+        success, result = self.server.poolAccepting(status)
         if success:
-            self.mineToVault = True
+            self.poolIsAccepting = status
         return success, result
 
-    def disableMineToVault(self, network: str = 'main'):
-        vault = self.getVault(network=network)
-        wallet = self.getWallet(network=network)
-        # logging.debug('wallet:', wallet, color="magenta")
-        mineToAddress = wallet.address
-        success, result = self.server.disableMineToVault(
-            walletSignature=wallet.sign(mineToAddress),
-            vaultSignature=vault.sign(mineToAddress),
-            vaultPubkey=vault.publicKey,
-            address=mineToAddress)
-        if success:
-            self.mineToVault = False
-        return success, result
+    def getAllOracleStreams(self, searchText: Union[str, None] = None, fetch: bool = False):
+        if fetch or self.allOracleStreams is None:
+            self.allOracleStreams = self.server.getSearchStreams(
+                searchText=searchText)
+        return self.allOracleStreams
+
+    def ableToBridge(self):
+        if self.lastBridgeTime < time.time() + 60*60*1:
+            return True, ''
+        return False, 'Please wait at least an hour before Bridging Satori'
+
+    @property
+    def stakeRequired(self) -> float:
+        return self.details.stakeRequired or constants.stakeRequired
+
+    @property
+    def admin(self) -> float:
+        ''' check if the wallet is an admin, shows admin abilities '''
+        if self.wallet is None:
+            return False
+        return self.wallet.address in ['EUqgzX7rpCBkR5x7kzzmVFJEAQrjqPeUeR']

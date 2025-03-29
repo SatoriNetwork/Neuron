@@ -2,12 +2,11 @@ import re
 import requests
 import json
 import pandas as pd
-import datetime as dt
 from functools import partial
 from satorilib.concepts.structs import Observation, StreamId
-from satorilib.api import hash
-from satorilib.api.disk import Cached
-from satorilib.api.time import nowStr
+from satorilib.disk import Cached
+from satorilib.utils import hash
+from satorilib.utils.time import nowStr
 from satorineuron import config
 from satorineuron import logging
 from satorineuron.relay.history import GetHistory
@@ -67,7 +66,7 @@ class ValidateRelayStream(object):
         if streamId in self.claimed:
             return True
         # this potentially avoid a redundant call to the server after satori restart...
-        # if streamId.topic(asJson=True) in config.get('relay').keys():
+        # if streamId.jsonId in config.get('relay').keys():
         #    # heuristic, there's a possibility, if something went wrong,
         #    # that the stream is saved locally but not registered on server...
         #    return True
@@ -130,7 +129,7 @@ class ValidateRelayStream(object):
             'relay',
             data={
                 **config.get('relay'),
-                **{streamId.topic(asJson=True): {
+                **{streamId.jsonId: {
                     'uri': data.get('uri'),
                     'headers': data.get('headers'),
                     'payload': data.get('payload'),
@@ -342,7 +341,7 @@ class RelayStreamHistorySaver(Cached):
         ''' save this observation to the right parquet file on disk '''
         self.streamId = self.id  # required by Cache
         self.disk.append(Observation.parse({
-            'topic': self.id.topic(),
+            'topic': self.id.jsonId,
             'data': value
         }).df.copy(), hashThis=True)
 
@@ -362,7 +361,7 @@ class RelayStreamHistorySaver(Cached):
         # peer = getStart().ipfs.address()
         # payload = {
         #    'author': {'pubkey': getStart().wallet.publicKey},
-        #    'stream': self.id.topic(asJson=False, authorAsPubkey=True),
+        #    'stream': self.id.mapId,
         #    'ipfs': pinAddress,
         #    'disk': system.directorySize(path),
         #    **({'peer': peer} if peer is not None else {}),

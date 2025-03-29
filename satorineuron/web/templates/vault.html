@@ -21,12 +21,12 @@
     <!-- put voting template here -->
     <br id="aliasbr">
     {% include 'wallet-alias.html' %}
+    <br id="ethvaultbr">
+    {% include 'vault-eth.html' %}
     <br id="historybr">
     {% include 'wallet-history.html' %}
     <br id="metadatabr">
     {% include 'wallet-meta.html' %}
-    <br id="ethvaultbr">
-    {% include 'vault-eth.html' %}
     {% include 'footer-on-front.html' %}
   {% else %}
     {% include 'vault-lock.html' %}

@@ -1,6 +1,28 @@
 {% block content %}
+  <style>
+    .hidden-balance {
+      opacity: 0;
+      transition: opacity 0.1s ease-in-out;
+    }
+
+    .show-balance {
+      opacity: 1 !important;
+    }
+    #balancesDetails {
+      height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    }
+
+    #balancesDetails.show {
+      height: auto;
+      opacity: 1;
+    }
+  </style>
+
   <div class="col-xl-3 col-lg-3 col-sm-12 mb-xl-0 mb-4">
-    <div class="card  {% if darkmode %}dark-colors{% endif %}" style="height: 200px;">
+    <div id="BalanceCard" class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
         <div class="icon icon-lg icon-shape {% if darkmode %}bg-gradient-lightpurple-drastic{%else%}bg-gradient-lightpurple-drastic shadow-dark{% endif %} text-center border-radius-xl mt-n4 position-absolute" style="width:84px !important;">
           <i class="material-icons opacity-10">wallet<i class="material-icons opacity-10">lock</i></i>
@@ -8,13 +30,59 @@
         <div class="text-end pt-1" style="display:block;">
           <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">Holdings</h4>
         </div>
-        <div class="text-center pt-1" style="padding-top:3rem !important;">
-          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">{{ holdingBalance }}</h4>
-          <p class="text-sm mb-0 text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
+        <button id="balanceButton" class="btn btn-link w-100 text-center {% if darkmode %}dark-colors{% endif %}"
+                style="padding-top:1.5rem; margin-bottom:.0rem; text-transform: none; font-size: 1.2rem; cursor: pointer; border: none; background: none;"
+                type="button"
+                data-toggle="collapse"
+                data-target="#balancesDetails"
+                aria-expanded="false"
+                aria-controls="balancesDetails">
+          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">
+            {{ "%.3f"|format(((holdingBalance | default(0)) + (holdingBalanceBase | default(0))) | round(3)) }}
+          </h4>
+          <p class="text-sm text-capitalize {% if darkmode %}dark-colors{% endif %}">SATORI</p>
+        </button>
+        <div id="balancesDetails" class="collapse hide">
+          <div id="balances" class="text-center mt-2 d-flex" style="justify-content: space-evenly; transition: opacity 0.1s ease-in-out;">
+            <a href="https://evr.cryptoscope.io/address/?address={{evrvaultaddressforward}}" target='_blank'>
+              <p class="text-xs {% if darkmode %}dark-colors{% endif %}" style="font-weight: 400 !important;margin-bottom:.5rem;line-height: .5rem;">
+                {{ "%.3f"|format(holdingBalance | default(0) | round(3)) }}
+              </p>
+              <p class="text-xs {% if darkmode %}dark-colors{% endif %}" style="font-weight: 300 !important;">
+                on Evrmore
+              </p>
+            </a>
+            <a href="https://basescan.org/address/{{ethaddressforward}}#tokentxns" target='_blank'>
+              <p class="text-xs {% if darkmode %}dark-colors{% endif %}" style="font-weight: 400 !important;margin-bottom:.5rem;line-height: .5rem;">
+                {{ "%.3f"|format(holdingBalanceBase | default(0) | round(3)) }}
+              </p>
+              <p class="text-xs {% if darkmode %}dark-colors{% endif %}" style="font-weight: 300 !important;">
+                on Base
+              </p>
+            </a>
+          </div>
         </div>
       </div>
-      <div class="card-footer p-1">
-      </div>
+      <div class="card-footer p-1"></div>
     </div>
   </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const balanceButton = document.getElementById("BalanceCard");
+      const balancesDetails = document.getElementById("balancesDetails");
+
+      balanceButton.addEventListener("mouseover", function () {
+        if (!balancesDetails.classList.contains("show")) {
+          balancesDetails.classList.add("show");
+        }
+        balancesDetails.style.height = balancesDetails.scrollHeight + "px"; // Expand smoothly
+        balancesDetails.style.opacity = "1";
+      });
+
+      balanceButton.addEventListener("mouseout", function () {
+        balancesDetails.style.height = "0px"; // Collapse smoothly
+        balancesDetails.style.opacity = "0";
+      });
+    });
+  </script>
 {% endblock %}
