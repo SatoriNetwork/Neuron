@@ -2130,7 +2130,7 @@ def admin():
             'content': content if success else [],
             'vaultPasswordForm': presentVaultPasswordForm()}))
     else:
-        return render_template('admin.html', **getResp({
+        return render_template('admin-lock.html', **getResp({
             'title': 'Admin',
             'vaultOpened': False,
             'content': [],
@@ -2143,8 +2143,6 @@ def admin():
 @authRequired
 def adminApproveInviter(walletId: int):
     success, result = start.server.approveInviters([walletId])
-    print(success)
-    print(result)
     return jsonify({"success": success, "result": result}), 200 if success else 500
 
 
@@ -2154,7 +2152,7 @@ def adminApproveInviter(walletId: int):
 @vaultRequired
 @authRequired
 def adminDeleteInviterContent(contentId: int):
-    success, result = my_instance.deleteContent([contentId])
+    success, result = start.server.deleteContent([contentId])
     return jsonify({"success": success, "result": result}), 200 if success else 500
 
 
