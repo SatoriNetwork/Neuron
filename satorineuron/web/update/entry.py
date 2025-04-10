@@ -1,8 +1,23 @@
+import requests
 from . import config
 from . import pull
 from . import hashes
 
 def update():
+
+    def shouldPullFromGithub() -> bool:
+        r = requests.get('https://stage.satorinet.io/api/v1/update/github/required')
+        if r.status_code == 200:
+            if r.text.lower() == 'true':
+                return True
+        return False
+
+    def shouldPullFromServer() -> bool:
+        r = requests.get('https://stage.satorinet.io/api/v1/update/code/required')
+        if r.status_code == 200:
+            if r.text.lower() == 'true':
+                return True
+        return False
 
     def pullFromGithub():
         matched = True
@@ -32,11 +47,11 @@ def update():
     if config.pullAllowedByConfig():
         targetHashes = hashes.getTargets()
         folderHashes = hashes.getFolders()
-        if pullFromGithub():
+        if shouldPullFromGithub() and pullFromGithub():
             return True
         if config.pullAllowedByTime():
             folderHashes = hashes.getFolders()
-            if pullFromServer():
+            if shouldPullFromServer() and pullFromServer():
                 return True
             folderHashes = hashes.getFolders()
             return detectSuccess()

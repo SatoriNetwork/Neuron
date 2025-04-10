@@ -445,8 +445,7 @@
           <div class="row">
             <div class="col-xl-12 col-sm-12">
               <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 75px;">
-                <button class="flex-row btn btn-outline-dark" style="width: 100%" id="btnOpenForm" onclick="openForm()"> Create Oracle
-                  Datastream
+                <button class="flex-row btn btn-outline-dark" style="width: 100%" id="btnOpenForm" onclick="openForm()"> Create Oracle Datastream
                   <!--{% if darkmode %}{{ newRelayStream.submit(size=32, class_="tight form-control dark-colors"  ) }}
                     {% else %}{{ newRelayStream.submit(size=32, class_="tight form-control") }}
                     {% endif %}-->
@@ -1506,8 +1505,11 @@
     return (
       document.getElementById("name").value != "" &&
       document.getElementById("cadence").value >= 60*10 &&
-      document.getElementById("url").value.startsWith("http") &&
-      (document.getElementById("offset").value == '' || document.getElementById("offset").value < 86400)
+      (document.getElementById("url").value == '' ||
+      document.getElementById("url").value.startsWith("http") ||
+      document.getElementById("url").value.startsWith("ipfs") ) &&
+      (document.getElementById("offset").value == '' ||
+      document.getElementById("offset").value < 86400)
       // don't require uri, if blank it'll automatically populate from url
       //  && document.getElementById("uri").value.startsWith("http")
     );

@@ -27,7 +27,6 @@ from flask import Flask, url_for, redirect, jsonify, flash, send_from_directory
 from flask import session, request, render_template
 from flask import Response, stream_with_context, render_template_string
 from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
-from satorilib.concepts import constants
 from satorilib.wallet.wallet import TransactionFailure
 from satorilib.utils.time import timeToSeconds, nowStr
 from satorilib.wallet import RavencoinWallet, EvrmoreWallet
@@ -104,7 +103,7 @@ while True:
                 'local': 'https://mundo.satorinet.io',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://mundo.satorinet.io'}[ENV],
+                'prod': 'https://mundo.satorinet.io:24607'}[ENV],
             # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
                 # 'local': ['ws://192.168.0.10:24603'],
@@ -219,6 +218,7 @@ def getResp(resp: Union[dict, None] = None) -> dict:
         'lockable': isActuallyLockable(),
         'motto': MOTTO,
         'env': ENV,
+        'admin': start.admin,
         'paused': start.paused,
         'darkmode': darkmode,
         'title': 'Satori',
@@ -1222,7 +1222,7 @@ def dashboard():
         streamOverviews = [stream for stream in start.streamDisplay]
         holdingBalance = start.refreshBalance()
         holdingBalanceBase = start.holdingBalanceBase
-        stakeStatus = holdingBalance + holdingBalanceBase  >= constants.stakeRequired or (
+        stakeStatus = holdingBalance + holdingBalanceBase  >= start.stakeRequired or (
             start.details.wallet.get('rewardaddress', None) not in [
                 None,
                 start.details.wallet.get('address'),
@@ -1243,7 +1243,7 @@ def dashboard():
             'miningDisplay': 'none',
             'proxyDisplay': 'none',
             'invitedBy': start.invitedBy,
-            'stakeRequired': constants.stakeRequired,
+            'stakeRequired': start.stakeRequired,
             'streamOverviews': streamOverviews,
             'engineVersion': start.engineVersion,
             'configOverrides': config.get(),
@@ -1595,8 +1595,8 @@ def wallet(network: str = 'main'):
         alias = start.wallet.alias or start.server.getWalletAlias()
     except Exception as e:
         alias = None
-    start.refreshBalance(forVault=False)
-    start.refreshUnspents(forVault=False)
+    start.refreshBalance(forVault=False, threaded=False)
+    start.refreshUnspents(forVault=False, threaded=True)
     #if config.get().get('wallet lock'):
     if request.method == 'POST':
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
@@ -1764,8 +1764,8 @@ def theVault():
         # start.workingUpdates.put('downloading balance...')
         account = start.vault.account
         #claimResult = start.server.setEthAddress(account.address)
-        start.refreshBalance()
-        start.refreshUnspents(forWallet=False)
+        start.refreshBalance(forWallet=False, threaded=False)
+        start.refreshUnspents(forWallet=False, threaded=True)
         try:
             alias = start.wallet.alias or start.server.getWalletAlias()
         except Exception as _:
@@ -1779,7 +1779,7 @@ def theVault():
             'network': start.network,
             'vaultPasswordForm': presentVaultPasswordForm(),
             'vaultOpened': True,
-            'stakeRequired': constants.stakeRequired,
+            'stakeRequired': start.stakeRequired,
             'wallet': start.vault,
             'walletBalance': start.wallet.balance.amount,
             'offer': start.details.wallet.get('offer', 0),
@@ -1800,7 +1800,7 @@ def theVault():
         'network': start.network,
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
-        'stakeRequired': constants.stakeRequired,
+        'stakeRequired': start.stakeRequired,
         'wallet': start.vault,
         'offer': start.details.wallet.get('offer', 0),
         'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
@@ -2041,6 +2041,7 @@ def vote():
             return 0
         else:
             return data
+
     def getVotes(wallet):
         # def valuesAsNumbers(map: dict):
         #    return {k: int(v) for k, v in map.items()}
@@ -2114,6 +2115,47 @@ def vote():
             'vaultOpened': False,
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
+
+
+@app.route('/admin', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def admin():
+    if start.vault is not None and not start.vault.isEncrypted:
+        success, content = start.server.getContentCreated()
+        return render_template('admin.html', **getResp({
+            'title': 'Admin',
+            'vaultOpened': True,
+            'content': content if success else [],
+            'vaultPasswordForm': presentVaultPasswordForm()}))
+    else:
+        return render_template('admin-lock.html', **getResp({
+            'title': 'Admin',
+            'vaultOpened': False,
+            'content': [],
+            'vaultPasswordForm': presentVaultPasswordForm()}))
+
+
+@app.route('/admin/inviter/approve/<walletId>', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def adminApproveInviter(walletId: int):
+    success, result = start.server.approveInviters([walletId])
+    return jsonify({"success": success, "result": result}), 200 if success else 500
+
+
+
+@app.route('/admin/inviter/delete/<contentId>', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def adminDeleteInviterContent(contentId: int):
+    success, result = start.server.deleteContent([contentId])
+    return jsonify({"success": success, "result": result}), 200 if success else 500
+
+
 
 @app.route('/pool/participants', methods=['GET', 'POST'])
 @userInteracted
@@ -2594,6 +2636,26 @@ def voteSubmitManifestWallet():
                 'managers': request.json.get('walletManagers', 0)})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
+
+#@app.route('/api/admin/inviters/<int:proposal_id>', methods=['POST'])
+#@userInteracted
+#@authRequired
+#def approve_proposal(proposal_id: int):
+#    try:
+#        wallet_address = start.wallet.address if start.wallet else None
+#        if not wallet_address:
+#            return jsonify({'status': 'error', 'message': 'No wallet address available'}), 401
+#        success, result = start.server.approveProposal(
+#            wallet_address, proposal_id)
+#        if not success and 'Unauthorized' in result.get('error', ''):
+#            return jsonify({'status': 'error', 'message': result['error']}), 403
+#        return jsonify(
+#            {'status': 'success', 'message': 'Proposal approved successfully'} if success
+#            else {'status': 'error', 'message': result.get('error')}
+#        ), 200 if success else 400
+#    except Exception as e:
+#        return jsonify({'status': 'error', 'message': str(e)}), 500
+#
 
 @app.route('/system_metrics', methods=['GET'])
 def systemMetrics():

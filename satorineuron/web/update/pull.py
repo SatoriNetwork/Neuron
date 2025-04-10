@@ -92,9 +92,16 @@ def fromServer(repo: str) -> bool:
     return False
 
 
-def fromGithub(repo:str) -> tuple[bytes, bytes, int]:
+def fromGithub(repo:str, branch: str = 'main') -> tuple[bytes, bytes, int]:
+    # commands = [f'cd /Satori/{repo.title()}/', 'git pull'],
+    commands = [
+        f'cd /Satori/{repo.title()}',
+        'git fetch --all',
+        f'git reset --hard origin/{branch}',
+        'git pull --force'
+    ]
     process = subprocess.Popen(
-        ['/bin/bash', '-c', f'cd /Satori/{repo.title()}/ && git pull'],
+        ['/bin/bash', '-c', ' && '.join(commands)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     #process.wait()

@@ -37,6 +37,10 @@ vault.yaml
 wallet.zip
 wallet*.yaml
 wallet*.zip
+vault.zip
+vault*.yaml
+vault*.zip
+wallet-wallets/*
 satorineuron/web/static/download
 wheels/
 pip-wheel-metadata/
@@ -167,5 +171,6 @@ config/ipfs
 config/relay.yaml
 config/config.yaml
 config/manifest.yaml
+config/*bk.yaml
 
 !.devcontainer.json
