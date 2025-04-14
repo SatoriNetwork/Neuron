@@ -106,7 +106,7 @@ class WalletVaultManager():
         if not self.useElectrumx:
             return
         try:
-            self.electrumx = EvrmoreWallet.createElectrumxConnection(
+            self.electrumx = Electrumx.createElectrumxConnection(
                 hostPorts=config.get().get('electrumx servers'),
                 persistent=self.persistent)
             logging.info('initialized electrumx', color='green')
