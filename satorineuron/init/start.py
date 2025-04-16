@@ -567,7 +567,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             attempt += 1
             try:
                 self.details = CheckinDetails(
-                    self.server.checkin(referrer=referrer))
+                    self.server.checkin(referrer=referrer, ip=ip))
                 if self.details.get('sponsor') != self.invitedBy:
                     if self.invitedBy is None:
                         self.setInvitedBy(self.details.get('sponsor'))
