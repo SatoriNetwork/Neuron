@@ -1272,7 +1272,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.invitedBy
 
     def setPublicDataManagerPort(self, port: Union[int, None] = None) -> int:
-        port = (port or config.get().get('public data manager port', port))
+        port = (port or config.get().get('server port', port))
         if port:
             self.publicDataManagerPort = port
             config.add(data={'public data manager port': self.publicDataManagerPort})
