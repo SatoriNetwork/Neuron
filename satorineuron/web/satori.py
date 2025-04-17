@@ -2225,6 +2225,14 @@ def removeVote():
     return jsonify({'message': message}), 200
 
 
+@app.route('/balance/power/get', methods=['GET'])
+@userInteracted
+@authRequired
+def getPowerBalance():
+    balance = start.server.getPowerBalance()
+    return balance, 200
+
+
 @app.route('/get_observations', methods=['POST'])
 @userInteracted
 @authRequired

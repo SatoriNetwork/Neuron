@@ -1,0 +1,77 @@
+{% block content %}
+<div class="row" style='padding-bottom:2rem;'>
+  <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4">
+    <div class="card {% if darkmode %}dark-colors{% endif %}">
+      <div class="row" style='padding-left:2rem;padding-right:2rem;'>
+        <div class="col-xl-12 col-sm-12 mb-xl-0">
+          <button
+          class="btn btn-link w-100 text-left {% if darkmode %}dark-colors{% endif %}"
+          style="padding-top:1.5rem; text-transform: none;"
+          type="button"
+          data-toggle="collapse"
+          data-target="#getBalanceCardContent"
+          aria-expanded="false"
+          aria-controls="getBalanceCardContent"
+          onclick="getPowerBalance()">
+            <h4 class="{% if darkmode %}dark-colors{% endif %}">Neuron Power Balances</h4>
+          </button>
+        </div>
+      </div>
+      <div id="getBalanceCardContent" class="collapse hide">
+        <div class="row text-center" style='padding-left:2rem;padding-right:2rem;padding-bottom:2rem;'>
+          <div class="col-md-2">
+            <div id="label-1">Held Satori</div>
+            <div id="satori-power-value-1">0.0</div>
+          </div>
+          <div class="col-md-2">
+            <div id="label-3">Liquid Stake Received</div>
+            <div id="satori-power-value-2">0.0</div>
+          </div>
+          <div class="col-md-2">
+            <div id="label-5">Solid Stake Received</div>
+            <div id="satori-power-value-3">0.0</div>
+          </div>
+          <div class="col-md-2">
+            <div id="label-2">Liquid Stake Provided</div>
+            <div id="satori-power-value-4">0.0</div>
+          </div>
+          <div class="col-md-2">
+            <div id="label-4">Solid Stake Provided</div>
+            <div id="satori-power-value-5">0.0</div>
+          </div>
+          <div class="col-md-2">
+            <div id="label-6">Remaining Staking Power</div>
+            <div id="satori-power-value-6">0.0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  function getPowerBalance() {
+    fetch('/balance/power/get', { method: 'GET' })
+    .then(response => {
+      if (response.ok) {
+        return response.json(); // Assuming JSON response
+      } else {
+        return response.text().then(errorMessage => {
+          throw new Error(errorMessage || 'Network response was not ok.');
+        });
+      }
+    }).then(data => {
+      // Dynamically update values
+      document.getElementById('satori-power-value-1').innerText = data['held satori'] || '0.0';
+      document.getElementById('satori-power-value-2').innerText = data['liquid stake provided'] || '0.0';
+      document.getElementById('satori-power-value-3').innerText = data['liquid stake received'] || '0.0';
+      document.getElementById('satori-power-value-4').innerText = data['solid stake provided'] || '0.0';
+      document.getElementById('satori-power-value-5').innerText = data['solid stake received'] || '0.0';
+      document.getElementById('satori-power-value-6').innerText = data['staking power'] || '0.0';
+    }).catch(error => {
+      console.error('Error:', error);
+    });
+  }
+</script>
+{% endblock %}
