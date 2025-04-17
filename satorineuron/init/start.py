@@ -575,14 +575,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         self.server.invitedBy(self.invitedBy)
                 print("self.details.get('data_manager_port')")
                 print(self.details.get('data_manager_port'))
-                print("self.publicDataManagerPort")
+                print("self.publicDataManagerPort - first ")
                 print(self.publicDataManagerPort)
                 if (
                     self.details.get('data_manager_port') in (None, 24600, '24600')
                     and self.publicDataManagerPort not in (None, 24600, '24600')
                 ):
                     self.server.setDataManagerPort(self.publicDataManagerPort)
-                    print("self.publicDataManagerPort")
+                    print("self.publicDataManagerPort - second")
                     print(self.publicDataManagerPort)
                 #logging.debug(self.details, color='teal')
                 if self.details.get('rewardaddress') != self.configRewardAddress:
