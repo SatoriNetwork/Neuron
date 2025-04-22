@@ -922,7 +922,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             success, mySubscribers = self.server.getStreamsSubscribers(pubListAll)
             _, remotePublishers = self.server.getStreamsPublishers(subList)
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
-            print(mySubscribers)
+            
+            for data in [fellowSubscribers, mySubscribers, remotePublishers, meAsPublisher]:
+            # removing duplicates ( same ip and port )
+                for key in data:
+                    seen = set()
+                    data[key] = [x for x in data[key] if not (x in seen or seen.add(x))]
+            print("My Subscribers", mySubscribers)
+            print("MeAsPublisher", meAsPublisher)
             subInfo = {
                 uuid: {
                     'subscribers': fellowSubscribers.get(uuid, []),
@@ -954,12 +961,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
             else:
                 first_publisher_value = next(iter(meAsPublisher.values()), [])
+                print('first_publisher_value', first_publisher_value)
                 if not first_publisher_value:
                     logging.error("First publisher value is empty. Using default transfer protocol.")
                     transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
                 else:
+                    print('entered checking the loopback')
                     transferProtocol = self.determineTransferProtocol(
                         first_publisher_value[0].split(':')[0], self.dataServerPort)
+                    print('transferProtocol', transferProtocol)
             self.pubSubMapping['transferProtocol'] = transferProtocol
             if transferProtocol == 'p2p-proactive-pubsub': # p2p-proactive-pubsub
                 self.pubSubMapping['transferProtocolPayload'] = mySubscribers if success else {}
