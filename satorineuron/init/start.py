@@ -577,6 +577,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 print(self.details.get('data_manager_port'))
                 print("self.publicDataManagerPort - first ")
                 print(self.publicDataManagerPort)
+                if config.get().get('prediction stream', 'notExisting') == 'notExisting':
+                    config.add(data={'prediction stream': None})
                 # if (
                 #     self.details.get('data_manager_port') in (None, 24600, '24600')
                 #     and self.publicDataManagerPort not in (None, 24600, '24600')
@@ -916,8 +918,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.subscriptions,
                 StartupDag.predictionStreams(self.publications))
             subscriptions, publications = streamPairs.get_matched_pairs()
-            subList = [sub.streamId.uuid for sub in subscriptions]
-            pubList = [pub.streamId.uuid for pub in publications]
+            predictionStreamsToPredict = config.get().get('prediction stream', None)
+            if predictionStreamsToPredict is not None:
+                streamsLen = int(predictionStreamsToPredict)
+                logging.info(f"Length of Streams reduced from {len(subscriptions)} to {streamsLen}")
+            else:
+                streamsLen = len(subscriptions)
+            subList = [sub.streamId.uuid for sub in subscriptions[:streamsLen]]
+            pubList = [pub.streamId.uuid for pub in publications[:streamsLen]]
             pubListAll = [pub.streamId.uuid for pub in self.publications]
             _, fellowSubscribers = self.server.getStreamsSubscribers(subList)
             success, mySubscribers = self.server.getStreamsSubscribers(pubListAll)
