@@ -939,6 +939,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     data[key] = [x for x in data[key] if not (x in seen or seen.add(x))]
             print("My Subscribers", mySubscribers)
             print("MeAsPublisher", meAsPublisher)
+            print("remotePublishers", remotePublishers)
             subInfo = {
                 uuid: {
                     'subscribers': fellowSubscribers.get(uuid, []),
