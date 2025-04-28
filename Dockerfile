@@ -27,12 +27,15 @@ RUN apt-get update && \
     #chmod -R 777 /Satori/Engine && \
     #chmod -R 777 /Satori/Neuron && \
 ## File system setup
+ARG GITHUB_USERNAME
+ARG GITHUB_TOKEN
 ARG BRANCH_FLAG=main
 RUN mkdir /Satori && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Synapse.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Wallet.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Engine.git && \
+    cd /Satori && git clone -b ${BRANCH_FLAG} https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/SatoriNetwork/Engine.git && \
     cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Neuron.git && \
     cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
     cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
@@ -130,26 +133,14 @@ CMD ["bash", "./start_from_image.sh"]
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:previous
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:0.3.9
 ## fast
-# docker buildx build --no-cache -f Dockerfile --platform linux/amd64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
+# export $(grep -v '^#' .env | xargs) && docker buildx build --no-cache -f Dockerfile --platform linux/amd64 --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:test         --push .
 # docker pull satorinet/satorineuron:test
 # docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # docker push satorinet/satorineuron:latest
 ## slow
-# docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:test         --push .
+# export $(grep -v '^#' .env | xargs) && docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:test         --push .
 # docker pull satorinet/satorineuron:test
 # docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # docker push satorinet/satorineuron:latest
-# docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=main -t satorinet/satorineuron:rpi_satori   --push .
+# export $(grep -v '^#' .env | xargs) && docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:rpi_satori   --push .
 # echo "Done!"
-
-# Kolten
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Neumont\Enterprise\Satori\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
-
-# John
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Satori\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
-
-# Mizuki
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\DevNeuron\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
-
-# Scott
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\GitHub\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
