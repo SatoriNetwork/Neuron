@@ -264,6 +264,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """
         Get Satori from Base with 5-minute interval cache
         """
+        # TEMPORARY DISABLE
+        return 0
+        
         import requests
         import time
 
