@@ -4,26 +4,25 @@
 
 # python:slim will eventually fail, if we need to revert try this:
 # FROM python:slim3.12.0b1-slim
-FROM python:3.10-slim AS builder
+FROM python:3.10-slim AS gitclone
 
 ## System dependencies
 RUN apt-get update && \
-    apt-get install -y build-essential && \
-    apt-get install -y wget && \
-    apt-get install -y curl && \
-    apt-get install -y git && \
-    apt-get install -y vim && \
-    apt-get install -y cmake && \
-    apt-get install -y dos2unix && \
-    apt-get install -y libleveldb-dev && \
+    apt-get install -y \
+        build-essential \
+        wget \
+        curl \
+        git \
+        vim \
+        cmake \
+        dos2unix \
+        libleveldb-dev && \
     apt-get clean
     # TODO: need zip? I think it was just used for IPFS install
     #apt-get install -y zip
 
 # TODO: test 777 permissions
-    #chmod -R 777 /Satori/Synapse && \
     #chmod -R 777 /Satori/Lib && \
-    #chmod -R 777 /Satori/Wallet && \
     #chmod -R 777 /Satori/Engine && \
     #chmod -R 777 /Satori/Neuron && \
 ## File system setup
@@ -31,21 +30,22 @@ ARG GITHUB_USERNAME
 ARG GITHUB_TOKEN
 ARG BRANCH_FLAG=main
 RUN mkdir /Satori && \
-    cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Synapse.git && \
-    cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
-    cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Wallet.git && \
-    cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Engine.git && \
-    cd /Satori && git clone -b ${BRANCH_FLAG} https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/SatoriNetwork/Engine.git && \
-    cd /Satori && git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Neuron.git && \
-    cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \
-    cd /Satori && git clone https://github.com/ibm-granite/granite-tsfm.git && \
-    mkdir /Satori/Neuron/models && \
-    mkdir /Satori/Neuron/models/huggingface && \
+    cd /Satori && \
+    git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
+    git clone -b ${BRANCH_FLAG} https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/SatoriNetwork/Engine.git && \
+    git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Neuron.git && \
+    rm -rf /root/.gitconfig /root/.ssh /root/.netrc && \
+    mkdir -p /Satori/Neuron/models/huggingface && \
     chmod +x /Satori/Neuron/satorineuron/web/start.sh && \
     chmod +x /Satori/Neuron/satorineuron/web/start_from_image.sh && \
     dos2unix /Satori/Neuron/satorineuron/web/start.sh && \
     dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
     # NOTE: dos2unix line is used to convert line endings from Windows to Unix format
+
+# Stage 2: Final image
+FROM python:3.10-slim AS builder
+
+COPY --from=gitclone /Satori /Satori
 
 ## Install everything
 ENV HF_HOME=/Satori/Neuron/models/huggingface
@@ -53,7 +53,23 @@ ARG GPU_FLAG=off
 ENV GPU_FLAG=${GPU_FLAG}
 # for torch: cpu cu118 cu121 cu124 --index-url https://download.pytorch.org/whl/cpu
 ENV PIP_DEFAULT_TIMEOUT=100
-RUN pip install --upgrade pip && \
+
+RUN apt-get update && \
+    apt-get install -y \
+        build-essential \
+        wget \
+        curl \
+        git \
+        vim \
+        cmake \
+        dos2unix \
+        libleveldb-dev && \
+    apt-get clean
+
+RUN cd /Satori && \
+    git clone https://github.com/amazon-science/chronos-forecasting.git && \
+    git clone https://github.com/ibm-granite/granite-tsfm.git && \
+    pip install --upgrade pip && \
     if [ "${GPU_FLAG}" = "on" ]; then \
     pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
     else \
@@ -63,8 +79,6 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir /Satori/granite-tsfm && \
     pip install --no-cache-dir /Satori/chronos-forecasting
 
-#RUN cd /Satori/Wallet && pip install --no-cache-dir -r requirements.txt && python setup.py develop
-RUN cd /Satori/Synapse && pip install --no-cache-dir -r requirements.txt && python setup.py develop
 RUN cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop
 RUN cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop
 RUN cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
@@ -133,14 +147,18 @@ CMD ["bash", "./start_from_image.sh"]
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:previous
 # docker tag satorinet/satorineuron:latest satorinet/satorineuron:0.3.9
 ## fast
-# export $(grep -v '^#' .env | xargs) && docker buildx build --no-cache -f Dockerfile --platform linux/amd64 --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:test         --push .
+# export $(grep -v '^#' .env | xargs)
+# docker buildx build --no-cache -f Dockerfile --platform linux/amd64 --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:test         --push . 
 # docker pull satorinet/satorineuron:test
 # docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # docker push satorinet/satorineuron:latest
+# unset GITHUB_USERNAME GITHUB_TOKEN
 ## slow
-# export $(grep -v '^#' .env | xargs) && docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:test         --push .
+# export $(grep -v '^#' .env | xargs)
+# docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:test         --push .
 # docker pull satorinet/satorineuron:test
 # docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # docker push satorinet/satorineuron:latest
-# export $(grep -v '^#' .env | xargs) && docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:rpi_satori   --push .
+# docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:rpi_satori   --push .
+# unset GITHUB_USERNAME GITHUB_TOKEN
 # echo "Done!"
