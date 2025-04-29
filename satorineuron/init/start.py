@@ -30,7 +30,6 @@ from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, StartupDagStruct
-from satorineuron.synergy.engine import SynergyManager
 
 def getStart():
     """returns StartupDag singleton"""
@@ -63,7 +62,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
-        urlSynergy: str = None,
         isDebug: bool = False,
     ):
         super(StartupDag, self).__init__(*args)
@@ -87,7 +85,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.urlServer: str = urlServer
         self.urlMundo: str = urlMundo
         self.urlPubsubs: list[str] = urlPubsubs
-        self.urlSynergy: str = urlSynergy
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
         self.details: CheckinDetails = CheckinDetails(raw={})
@@ -103,7 +100,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
-        self.synergy: Union[SynergyManager, None] = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
@@ -805,56 +801,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relay.run()
         logging.info("started relay engine", color="green")
 
-    def startSynergyEngine(self):
-        """establish a synergy connection"""
-        """DISABLED FOR NOW:
-        Snippet of a tcpdump
-        23:11:41.073074 IP lpcpu04.58111 > dns.google.domain: 2468+ A? synergy.satorinet.io. (38)
-        23:11:41.073191 IP lpcpu04.42736 > dns.google.domain: 10665+ A? synergy.satorinet.io. (38)
-        23:11:41.073796 IP lpcpu04.10088 > dns.google.domain: 42995+ A? synergy.satorinet.io. (38)
-        23:11:41.073819 IP lpcpu04.42121 > dns.google.domain: 31559+ A? synergy.satorinet.io. (38)
-        23:11:41.073991 IP lpcpu04.44500 > dns.google.domain: 33234+ A? synergy.satorinet.io. (38)
-        23:11:41.074484 IP lpcpu04.40834 > dns.google.domain: 29728+ A? synergy.satorinet.io. (38)
-        23:11:41.074561 IP lpcpu04.62919 > dns.google.domain: 40503+ A? synergy.satorinet.io. (38)
-        23:11:41.074685 IP lpcpu04.38206 > dns.google.domain: 20506+ A? synergy.satorinet.io. (38)
-        23:11:41.075028 IP lpcpu04.58587 > dns.google.domain: 34024+ A? synergy.satorinet.io. (38)
-        23:11:41.075408 IP lpcpu04.45231 > dns.google.domain: 13854+ A? synergy.satorinet.io. (38)
-        23:11:41.075438 IP lpcpu04.49361 > dns.google.domain: 19875+ A? synergy.satorinet.io. (38)
-        23:11:41.075581 IP lpcpu04.57224 > dns.google.domain: 47540+ A? synergy.satorinet.io. (38)
-        same second, hundred of querys
-        """
-        if self.wallet:
-            self.synergy = SynergyManager(
-                url=self.urlSynergy,
-                wallet=self.wallet,
-                onConnect=self.syncDatasets)
-            logging.info("connected to Satori p2p network", color="green")
-        else:
-            raise Exception("wallet not open yet.")
-
-    def syncDataset(self, streamId: StreamId):
-        """establish a synergy connection"""
-        if self.synergy and self.synergy.isConnected:
-            for stream in self.subscriptions:
-                if streamId == stream.streamId:
-                    logging.info("resyncing stream:", stream, print=True)
-                    self.synergy.connectToPeer(stream.streamId)
-        # else:
-        #    raise Exception('synergy not created or not connected.')
-
-    def syncDatasets(self):
-        """establish a synergy connection"""
-        if self.synergy and self.synergy.isConnected:
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.synergy, status=True)
-            for stream in self.subscriptions:
-                self.synergy.connectToPeer(stream.streamId)
-        else:
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.synergy, status=False)
-        # else:
-        #    raise Exception('synergy not created or not connected.')
-
     def pause(self, timeout: int = 60):
         """pause the engine."""
         self.paused = True
@@ -895,11 +841,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #    time.sleep(1)
 
     def triggerRestart(self, return_code=1):
-        from satorisynapse import Envelope, Signal
-        self.udpQueue.put(
-            Envelope(ip="", vesicle=Signal(restart=True)))  # TODO: remove
-        import time
-        time.sleep(5)
         # 0 = shutdown, 1 = restart container, 2 = restart app
         os._exit(return_code)
 

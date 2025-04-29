@@ -31,7 +31,6 @@ from satorilib.wallet.wallet import TransactionFailure
 from satorilib.utils.time import timeToSeconds, nowStr
 from satorilib.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
-from satorisynapse import Envelope, Signal
 from satorineuron import VERSION, MOTTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
@@ -112,12 +111,6 @@ while True:
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
             # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
-            urlSynergy={
-                # 'local': 'https://192.168.0.10:24602',
-                'local': 'https://synergy.satorinet.io:24602',
-                'dev': 'https://localhost:24602',
-                'test': 'https://test.satorinet.io:24602',
-                'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
 
         # start.buildEngine()
@@ -565,9 +558,6 @@ def refresh():
 @userInteracted
 @authRequired
 def restart():
-    start.udpQueue.put(
-        Envelope(ip='', vesicle=Signal(restart=True)))  # TODO: remove
-    start.restartQueue.put(1)
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -593,9 +583,6 @@ def restart():
 @userInteracted
 @authRequired
 def shutdown():
-    start.udpQueue.put(
-        Envelope(ip='', vesicle=Signal(shutdown=True)))  # TODO: remove
-    start.restartQueue.put(0)
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -2911,57 +2898,6 @@ def publsih():
 def publsihMeta():
     ''' to streamr - publish to a stream '''
     return render_template('unknown.html', **getResp())
-
-###############################################################################
-## UDP communication ##########################################################
-###############################################################################
-
-
-@app.route('/synapse/ping', methods=['GET'])
-def synapsePing():
-    ''' tells p2p script we're up and running '''
-    # if start.wallet is None:
-    #    return 'fail', 400
-    # if start.synergy is not None:
-    #    return 'ready', 200
-    # return 'ok', 200
-    # if start.synergy is None:
-    #    return 'fail', 201
-    return 'ready', 200
-
-
-@app.route('/synapse/ports', methods=['GET'])
-def synapsePorts():
-    ''' receives data from udp relay '''
-    return str(start.peer.gatherChannels())
-
-
-@app.route('/synapse/stream')  # TODO: remove
-def synapseStream():
-    ''' here we listen for messages from the synergy engine '''
-
-    def event_stream():
-        while True:
-            message = start.udpQueue.get()  # TODO: remove
-            if isinstance(message, Envelope):
-                yield 'data:' + message.toJson + '\n\n'
-
-    return Response(
-        stream_with_context(event_stream()),
-        content_type='text/event-stream')
-
-
-@app.route('/synapse/message', methods=['POST'])
-def synapseMessage():
-    ''' receives data from udp relay '''
-    data = request.data
-    remoteIp = request.headers.get('remoteIp')
-    # remotePort = int(request.headers.get('remotePort')) #not needed at this time
-    # localPort = int(request.headers.get('localPort'))
-    if any(v is None for v in [remoteIp, data]):
-        return 'fail', 400
-    start.synergy.passMessage(remoteIp, message=data)
-    return 'ok', 200
 
 
 ###############################################################################

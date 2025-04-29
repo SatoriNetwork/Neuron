@@ -14,16 +14,9 @@ FROM satorinet/satorineuron:latest
 # FROM satorinet/satorineuron:base
 
 #RUN cd / && rm -rf /Satori && mkdir /Satori && mkdir /Satori/Synapse && mkdir /Satori/Lib && mkdir /Satori/Wallet && mkdir /Satori/Engine && mkdir /Satori/Neuron && mkdir /Satori/Neuron/data && mkdir /Satori/Neuron/uploaded && mkdir /Satori/Neuron/models && mkdir /Satori/Neuron/predictions && mkdir /Satori/Neuron/wallet
-COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
-COPY Synapse/setup.py /Satori/Synapse/setup.py
-COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
 COPY Lib/satorilib /Satori/Lib/satorilib
 COPY Lib/setup.py /Satori/Lib/setup.py
 COPY Lib/requirements.txt /Satori/Lib/requirements.txt
-COPY Wallet/satoriwallet /Satori/Wallet/satoriwallet
-COPY Wallet/reqs /Satori/Wallet/reqs
-COPY Wallet/setup.py /Satori/Wallet/setup.py
-COPY Wallet/requirements.txt /Satori/Wallet/requirements.txt
 COPY Engine/satoriengine /Satori/Engine/satoriengine
 COPY Engine/setup.py /Satori/Engine/setup.py
 COPY Engine/requirements.txt /Satori/Engine/requirements.txt
@@ -62,7 +55,6 @@ CMD ["bash", "./start_from_image.sh"]
 # description: Miner environment and software for the Satori Network
 
 # RUN OPTIONS
-# python -m satorisynapse.run async
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env ENV=prod satorinet/satorineuron:latest ./start.sh
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine --env ENV=prod satorinet/satorineuron:latest bash
 # docker run --rm -it --name satorineuron -p 24601:24601 -v c:\repos\Satori\Neuron:/Satori/Neuron -v c:\repos\Satori\Synapse:/Satori/Synapse -v c:\repos\Satori\Lib:/Satori/Lib -v c:\repos\Satori\Wallet:/Satori/Wallet -v c:\repos\Satori\Engine:/Satori/Engine satorinet/satorineuron:latest bash
