@@ -106,7 +106,6 @@
       document.getElementById('walletPercent').innerHTML = '100 %';
       document.getElementById('walletVotePredictors').value = parseInt(parseInt(document.getElementById('walletVotePredictors').value) / total * 100);
       document.getElementById('walletVoteOracles').value = parseInt(parseInt(document.getElementById('walletVoteOracles').value) / total * 100);
-      document.getElementById('walletVoteInviters').value = parseInt(parseInt(document.getElementById('walletVoteInviters').value) / total * 100);
       document.getElementById('walletVoteCreators').value = parseInt(parseInt(document.getElementById('walletVoteCreators').value) / total * 100);
       document.getElementById('walletVoteManagers').value = parseInt(parseInt(document.getElementById('walletVoteManagers').value) / total * 100);
       updateWalletTotal();
@@ -118,8 +117,6 @@
       document.getElementById('mintingManifestDescription').innerHTML = 'Predictors are Satori Neurons that predict raw datastreams and publish those predictions for free.';
     } else if (activity == 'oracles') {
       document.getElementById('mintingManifestDescription').innerHTML = 'Oracles are Satori Neurons that publish raw data streams desribing or tracking some aspect of the real world.';
-    } else if (activity == 'inviters') {
-      document.getElementById('mintingManifestDescription').innerHTML = 'Inviters are those that have onboarded Predictors and Oracles.';
     } else if (activity == 'creators') {
       document.getElementById('mintingManifestDescription').innerHTML = 'Creators are developers that earn bounties from the Development Fund.';
     } else if (activity == 'managers') {
@@ -132,7 +129,6 @@
     document.getElementById('walletPercent').innerHTML = (
       parseInt(document.getElementById('walletVotePredictors').value) +
       parseInt(document.getElementById('walletVoteOracles').value) +
-      parseInt(document.getElementById('walletVoteInviters').value) +
       parseInt(document.getElementById('walletVoteCreators').value) +
       parseInt(document.getElementById('walletVoteManagers').value)) + ' %';
   }
@@ -146,7 +142,6 @@
         body: JSON.stringify({
           walletPredictors: parseInt(document.getElementById('walletVotePredictors').value),
           walletOracles: parseInt(document.getElementById('walletVoteOracles').value),
-          walletInviters: parseInt(document.getElementById('walletVoteInviters').value),
           walletCreators: parseInt(document.getElementById('walletVoteCreators').value),
           walletManagers: parseInt(document.getElementById('walletVoteManagers').value)})})
     .then(response => {

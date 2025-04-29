@@ -2039,7 +2039,6 @@ def vote():
                            if start.vault is not None and start.vault.isDecrypted else {
                 'predictors': 0,
                 'oracles': 0,
-                'inviters': 0,
                 'creators': 0,
                 'managers': 0})}
         return x
@@ -2617,7 +2616,6 @@ def voteSubmitManifestWallet():
     if (
         request.json.get('walletPredictors') > 0 or
         request.json.get('walletOracles') > 0 or
-        request.json.get('walletInviters') > 0 or
         request.json.get('walletCreators') > 0 or
         request.json.get('walletManagers') > 0
     ):
@@ -2626,31 +2624,10 @@ def voteSubmitManifestWallet():
             votes={
                 'predictors': request.json.get('walletPredictors', 0),
                 'oracles': request.json.get('walletOracles', 0),
-                'inviters': request.json.get('walletInviters', 0),
                 'creators': request.json.get('walletCreators', 0),
                 'managers': request.json.get('walletManagers', 0)})
     return jsonify({'message': 'Manifest votes received successfully'}), 200
 
-
-#@app.route('/api/admin/inviters/<int:proposal_id>', methods=['POST'])
-#@userInteracted
-#@authRequired
-#def approve_proposal(proposal_id: int):
-#    try:
-#        wallet_address = start.wallet.address if start.wallet else None
-#        if not wallet_address:
-#            return jsonify({'status': 'error', 'message': 'No wallet address available'}), 401
-#        success, result = start.server.approveProposal(
-#            wallet_address, proposal_id)
-#        if not success and 'Unauthorized' in result.get('error', ''):
-#            return jsonify({'status': 'error', 'message': result['error']}), 403
-#        return jsonify(
-#            {'status': 'success', 'message': 'Proposal approved successfully'} if success
-#            else {'status': 'error', 'message': result.get('error')}
-#        ), 200 if success else 400
-#    except Exception as e:
-#        return jsonify({'status': 'error', 'message': str(e)}), 500
-#
 
 @app.route('/system_metrics', methods=['GET'])
 def systemMetrics():
