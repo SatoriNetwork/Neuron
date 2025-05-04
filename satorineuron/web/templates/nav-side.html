@@ -25,7 +25,6 @@
       <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('oraclesbr');">Oracle</a></li>
         {% endif %}
       <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('createbr');">Create</a></li>
-      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('invitebr');">Invite</a></li>
       {% endif %}
 
 	    <!--heading not necessary
@@ -103,19 +102,6 @@
         {% endif %}
       {% endif %}
 
-      <li class="nav-item">
-        <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Vote' else '' }}" href="{{ url_for('vote') }}" onclick="showWorking();">
-          <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-            <i class="material-icons opacity-10">thumb_up</i>
-          </div>
-          <span class="nav-link-text ms-1">Vote</span>
-        </a>
-      </li>
-
-      {% if title=='Vote' %}
-      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('manifestbr');">Minting Manifest</a></li>
-      <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('streamslinkbr');">Stream Approval</a></li>
-      {% endif %}
       <script>
         //document.getElementById('gotoWalletMain').addEventListener(
         //  'click',

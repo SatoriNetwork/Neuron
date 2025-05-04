@@ -32,7 +32,7 @@ ARG BRANCH_FLAG=main
 RUN mkdir /Satori && \
     cd /Satori && \
     git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Lib.git && \
-    git clone -b ${BRANCH_FLAG} https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/SatoriNetwork/Engine.git && \
+    git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Engine.git && \
     git clone -b ${BRANCH_FLAG} https://github.com/SatoriNetwork/Neuron.git && \
     rm -rf /root/.gitconfig /root/.ssh /root/.netrc && \
     mkdir -p /Satori/Neuron/models/huggingface && \
@@ -41,6 +41,7 @@ RUN mkdir /Satori && \
     dos2unix /Satori/Neuron/satorineuron/web/start.sh && \
     dos2unix /Satori/Neuron/satorineuron/web/start_from_image.sh
     # NOTE: dos2unix line is used to convert line endings from Windows to Unix format
+    # for private repos: git clone -b ${BRANCH_FLAG} https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/SatoriNetwork/Engine.git && \
 
 # Stage 2: Final image
 FROM python:3.10-slim AS builder

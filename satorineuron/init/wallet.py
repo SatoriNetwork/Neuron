@@ -130,8 +130,8 @@ class WalletVaultManager():
 
     def balanceUpdatedCallback(self, evr: Balance, satori: Balance, kind: str):
         ''' tell the UI '''
-        print(kind, 'evr balance', evr.amount)
-        print(kind, 'satori balance', satori.amount)
+        logging.debug(kind, 'evr balance', evr.amount)
+        logging.debug(kind, 'satori balance', satori.amount)
         #import traceback
         #traceback.print_stack()
 
