@@ -10,5 +10,5 @@ logging.setup(level={
     'critical': logging.CRITICAL,
 }[config.get().get('logging level', 'info').lower()])
 
-VERSION = '0.3.19'
+VERSION = '0.3.20'
 MOTTO = 'Let your workings remain a mystery, just show people the results.'
