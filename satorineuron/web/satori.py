@@ -987,6 +987,8 @@ def registerStream():
         # randomize the offset in order to lessen spiking issues
         data['cadence'] = data.get('cadence', Stream.minimumCadence)
         data['offset'] = data.get('offset', random.uniform(0, data['cadence']))
+        if data['offset'] == 0:
+            data['offset'] = random.uniform(0, data['cadence'])
         if data.get('hook') in ['', None, {}]:
             hook, status = generateHookFromTarget(data.get('target', ''))
             if status == 200:
@@ -2148,7 +2150,6 @@ def adminDeleteInviterContent(contentId: int):
 @vaultRequired
 @authRequired
 def poolParticipants():
-    print("vault", start.vault.address)
     participants = start.server.poolParticipants(start.vault.address)
     return jsonify({'data': participants}), 200
 

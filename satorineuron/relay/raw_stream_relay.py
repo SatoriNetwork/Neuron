@@ -10,6 +10,7 @@ from typing import Union
 import threading
 import time
 import json
+import random
 import requests
 from functools import partial
 from satorilib.concepts.structs import Stream, StreamId
@@ -213,7 +214,7 @@ class RawStreamRelayEngine(Cached):
 
     def _offset(self, stream: Stream) -> int:
         ''' returns cadence in seconds, engine does not allow < 60 '''
-        return int(stream.offset or 0)
+        return int(stream.offset or random.uniform(0, self._cadence(stream)))
 
     def runForever(self, active: int):
         # though I would like to use the asyncThread for this, as it would be

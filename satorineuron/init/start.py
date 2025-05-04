@@ -191,7 +191,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self._holdingBalance
 
     def refreshBalance(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
-        print('refreshing balance')
         if forWallet and isinstance(self.wallet, EvrmoreWallet):
             if threaded:
                 threading.Thread(target=self.wallet.get).start()
