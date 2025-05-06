@@ -248,7 +248,7 @@ class WalletVaultManager():
         self,
         password: Union[str, None] = None,
         create: bool = False,
-    ) -> EvrmoreWallet:
+    ) -> Union[EvrmoreWallet, None]:
         if isinstance(self._vault, EvrmoreWallet):
             return self._vault
         return self._initializeVault(password=password, create=create)
@@ -257,7 +257,7 @@ class WalletVaultManager():
         self,
         password: Union[str, None] = None,
         create: bool = False,
-    ) -> EvrmoreWallet:
+    ) -> Union[EvrmoreWallet, None]:
         if isinstance(self._vault, EvrmoreWallet):
             if self._vault.isDecrypted:
                 return self._vault
