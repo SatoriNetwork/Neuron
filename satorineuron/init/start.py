@@ -540,17 +540,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                             'vaultaddress': vault.address, 
                             'vaultpubkey': vault.publicKey,
                         } if isinstance(vault, EvrmoreWallet) else None))
-                #if self.details.get('msg') == 'welcome':
-                #    vault = self.getVault()
-                #    if not vault.isEncrypted:
-                #        vaultAddress = vault.address
-                #        success, result = self.server.registerVault(
-                #            walletSignature=self.getWallet().sign(vaultAddress),
-                #            vaultSignature=vault.sign(vaultAddress),
-                #            vaultPubkey=vault.publicKey,
-                #            address=vaultAddress)
-                #        if success:
-                #            logging.info('registered vault')
                 if self.details.get('sponsor') != self.invitedBy:
                     if self.invitedBy is None:
                         self.setInvitedBy(self.details.get('sponsor'))
