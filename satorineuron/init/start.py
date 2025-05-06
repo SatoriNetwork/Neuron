@@ -908,6 +908,71 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             'transfer protocol',
             #'p2p' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive')
             'p2p-pubsub' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive-pubsub')
+    
+    def determineInternalNatIp(self) -> str:
+        """Determine the internal NAT IP address using multiple methods."""
+        
+        import socket
+        import subprocess
+        import re
+        import ipaddress
+
+        # Method 1: Using socket
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            if ipaddress.ip_address(ip).is_private:
+                return ip
+        except Exception as e:
+            logging.debug(f"Socket method failed: {e}")
+        
+        # Method 2: Parse output of ip address command
+        try:
+            result = subprocess.run(["ip", "addr", "show"], capture_output=True, text=True)
+            output = result.stdout
+            interfaces = {}
+            current_iface = None
+            
+            for line in output.splitlines():
+                iface_match = re.match(r'^\d+:\s+(\w+):', line)
+                if iface_match:
+                    current_iface = iface_match.group(1)
+                    if current_iface == 'lo' or current_iface.startswith(('docker', 'br-', 'veth')):
+                        current_iface = None
+                elif current_iface and 'inet ' in line:
+                    ip_match = re.search(r'inet\s+(\d+\.\d+\.\d+\.\d+)', line)
+                    if ip_match:
+                        ip = ip_match.group(1)
+                        if not ip.startswith('127.') and ipaddress.ip_address(ip).is_private:
+                            interfaces[current_iface] = ip
+            
+            # First try specific interface prefixes
+            priority_prefixes = ['eth', 'ens', 'eno', 'enp', 'wlan']
+            for prefix in priority_prefixes:
+                for iface, ip in interfaces.items():
+                    if iface.startswith(prefix):
+                        return ip
+            
+            # Then try any available private IP
+            if interfaces:
+                return next(iter(interfaces.values()))
+                    
+        except Exception as e:
+            logging.error(f"IP command method failed: {e}")
+        
+        # Method 3: Fallback to hostname command
+        try:
+            result = subprocess.run(["hostname", "-I"], capture_output=True, text=True)
+            ips = result.stdout.strip().split()
+            for ip in ips:
+                if ipaddress.ip_address(ip).is_private:
+                    return ip
+        except Exception as e:
+            logging.error(f"Hostname method failed: {e}")
+        
+        return "0.0.0.0"
 
 
     async def sharePubSubInfo(self):
@@ -937,6 +1002,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 for key in data:
                     seen = set()
                     data[key] = [x for x in data[key] if not (x in seen or seen.add(x))]
+            # print("Fellow Subscribers", fellowSubscribers)
             print("My Subscribers", mySubscribers)
             print("MeAsPublisher", meAsPublisher)
             print("remotePublishers", remotePublishers)
@@ -965,20 +1031,37 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
 
+            # Appending the internal NAT ip if remotePublisher has same ip as of the host
+            hostIpAndPort = next(iter(meAsPublisher.values()), [])
+            print('Host Ip And Port', hostIpAndPort)
+            hostIp = hostIpAndPort[0].split(':')[0]
+            for k, v in remotePublishers.items():
+                publisherIp = v[0].split(':')[0]
+                if publisherIp == hostIp:
+                    logging.info("Matched Ip Found for Remote Publisher")
+                    uuidOfMatchedIp = k
+                    portOfMatchedIp = v[0].split(':')[1]
+                    internalNatIp = self.determineInternalNatIp()
+                    publisherToBeAppended = internalNatIp + ':' + portOfMatchedIp
+                    for k, v in fellowSubscribers.items():
+                        if k == uuidOfMatchedIp:
+                            print("Appended Ip with Port:", publisherToBeAppended)
+                            v.append(publisherToBeAppended)
+
+            print("Fellow Subscribers", fellowSubscribers)
+
             # Handle empty `meAsPublisher` case
             if not meAsPublisher:
                 logging.error("meAsPublisher is empty. Using default transfer protocol.")
                 transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
             else:
-                first_publisher_value = next(iter(meAsPublisher.values()), [])
-                print('first_publisher_value', first_publisher_value)
-                if not first_publisher_value:
+                if not hostIpAndPort:
                     logging.error("First publisher value is empty. Using default transfer protocol.")
                     transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
                 else:
                     print('entered checking the loopback')
                     transferProtocol = self.determineTransferProtocol(
-                        first_publisher_value[0].split(':')[0], self.dataServerPort)
+                        hostIp, self.dataServerPort)
                     print('transferProtocol', transferProtocol)
             self.pubSubMapping['transferProtocol'] = transferProtocol
             if transferProtocol == 'p2p-proactive-pubsub': # p2p-proactive-pubsub
