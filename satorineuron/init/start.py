@@ -1032,7 +1032,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             }
 
             # Appending the internal NAT ip if remotePublisher has same ip as of the host
-            hostIpAndPort = next(iter(meAsPublisher.values()), [])
+            hostIpAndPort = next((value for value in meAsPublisher.values() if value), [])
             print('Host Ip And Port', hostIpAndPort)
             hostIp = hostIpAndPort[0].split(':')[0]
             for k, v in remotePublishers.items():
