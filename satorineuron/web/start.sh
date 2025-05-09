@@ -9,10 +9,10 @@ if [ "$HEADLESS" = "True" ]; then
     python headless.py
 else
     # Start required background processes
-    nohup python /Satori/Neuron/satorineuron/web/data.py > data.log 2>&1 &
+    nohup python app.py > app.log 2>&1 &
+    nohup python data.py > data.log 2>&1 &
     nohup python /Satori/Engine/satoriengine/veda/enginerun.py > enginerun.log 2>&1 &
     # Run main application in background
-    nohup python app.py > app.log 2>&1 &
 
     # Keep container alive with infinite loop
     echo "Main processes started, keeping container alive..."
@@ -23,9 +23,9 @@ else
             nohup python app.py > app.log 2>&1 &
         fi
 
-        if ! pgrep -f "python /Satori/Neuron/satorineuron/web/data.py" > /dev/null; then
+        if ! pgrep -f "python data.py" > /dev/null; then
             echo "data.py process died, restarting..."
-            nohup python /Satori/Neuron/satorineuron/web/data.py > data.log 2>&1 &
+            nohup python data.py > data.log 2>&1 &
         fi
 
         if ! pgrep -f "python /Satori/Engine/satoriengine/veda/enginerun.py" > /dev/null; then
