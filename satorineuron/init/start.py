@@ -1031,38 +1031,38 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
             }
 
-            # Appending the internal NAT ip if remotePublisher has same ip as of the host
-            hostIpAndPort = next((value for value in meAsPublisher.values() if value), [])
-            print('Host Ip And Port', hostIpAndPort)
-            hostIp = hostIpAndPort[0].split(':')[0]
-            for k, v in remotePublishers.items():
-                publisherIp = v[0].split(':')[0]
-                if publisherIp == hostIp:
-                    logging.info("Matched Ip Found for Remote Publisher")
-                    uuidOfMatchedIp = k
-                    portOfMatchedIp = v[0].split(':')[1]
-                    internalNatIp = self.determineInternalNatIp()
-                    publisherToBeAppended = internalNatIp + ':' + portOfMatchedIp
-                    for k, v in fellowSubscribers.items():
-                        if k == uuidOfMatchedIp:
-                            print("Appended Ip with Port:", publisherToBeAppended)
-                            v.append(publisherToBeAppended)
 
-            print("Fellow Subscribers", fellowSubscribers)
 
             # Handle empty `meAsPublisher` case
             if not meAsPublisher:
-                logging.error("meAsPublisher is empty. Using default transfer protocol.")
+                logging.warning("meAsPublisher is empty. Using default transfer protocol.")
                 transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
             else:
                 if not hostIpAndPort:
-                    logging.error("First publisher value is empty. Using default transfer protocol.")
+                    logging.warning("First publisher value is empty. Using default transfer protocol.")
                     transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
                 else:
+                    # Appending the internal NAT ip if remotePublisher has same ip as of the host
+                    hostIpAndPort = next((value for value in meAsPublisher.values() if value), [])
+                    print('Host Ip And Port', hostIpAndPort)
+                    hostIp = hostIpAndPort[0].split(':')[0]
+                    for k, v in remotePublishers.items():
+                        publisherIp = v[0].split(':')[0]
+                        if publisherIp == hostIp:
+                            logging.info("Matched Ip Found for Remote Publisher")
+                            uuidOfMatchedIp = k
+                            portOfMatchedIp = v[0].split(':')[1]
+                            internalNatIp = self.determineInternalNatIp()
+                            publisherToBeAppended = internalNatIp + ':' + portOfMatchedIp
+                            for k, v in fellowSubscribers.items():
+                                if k == uuidOfMatchedIp:
+                                    print("Appended Ip with Port:", publisherToBeAppended)
+                                    v.append(publisherToBeAppended)
                     print('entered checking the loopback')
                     transferProtocol = self.determineTransferProtocol(
                         hostIp, self.dataServerPort)
                     print('transferProtocol', transferProtocol)
+                    
             self.pubSubMapping['transferProtocol'] = transferProtocol
             if transferProtocol == 'p2p-proactive-pubsub': # p2p-proactive-pubsub
                 self.pubSubMapping['transferProtocolPayload'] = mySubscribers if success else {}
