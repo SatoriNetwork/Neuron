@@ -1770,6 +1770,7 @@ def theVault():
             'vaultOpened': True,
             'stakeRequired': start.stakeRequired,
             'wallet': start.vault,
+            'rewardAddress': start.rewardAddress,
             'walletBalance': start.wallet.balance.amount,
             'offer': start.details.wallet.get('offer', 0),
             'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
@@ -1790,6 +1791,7 @@ def theVault():
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'stakeRequired': start.stakeRequired,
+        'rewardAddress': start.rewardAddress,
         'wallet': start.vault,
         'offer': start.details.wallet.get('offer', 0),
         'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
@@ -1833,9 +1835,10 @@ def mineToAddressStatus():
 def mineToAddress(address: str):
     if start.vault is None:
         return '', 200
-    # the network portion should be whatever network I'm on.
-    network = 'main'
-    start.details.wallet['rewardaddress'] = address if address != 'null' else None
+    print(address, EvrmoreWallet.addressIsValid(address))
+    success = start.setRewardAddress(address, globally=False)
+    if not success:
+        return f'Failed to set reward address: invalid address', 200
     vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
@@ -1844,7 +1847,6 @@ def mineToAddress(address: str):
         signature=vault.sign(address),
         pubkey=vault.publicKey,
         address=address)
-    print(success, result)
     if success:
         return 'OK', 200
     return f'Failed to set reward address: {result}', 400

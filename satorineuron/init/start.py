@@ -161,14 +161,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     @property
     def rewardAddress(self) -> str:
         if isinstance(self.details, CheckinDetails):
-            reward = self.details.wallet.get("rewardaddress", "")
-            if (
-                reward not in [
-                    self.details.wallet.get("address", ""),
-                    self.details.wallet.get("vaultaddress", "")]
-            ):
-                return reward or ""
-        return ""
+            return self.details.get('rewardaddress')
+        return self.configRewardAddress
+        #if isinstance(self.details, CheckinDetails):
+        #    return self.details.rewardAddress
+        #return self.configRewardAddress
 
     @property
     def network(self) -> str:
@@ -627,20 +624,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         address: Union[str, None] = None,
         globally: bool = False
     ) -> bool:
-        if (
-            address and
-            len(address) == 34 and
-            address.startswith('E')
-        ):
+        if EvrmoreWallet.addressIsValid(address):
             self.configRewardAddress = address
             config.add(data={'reward address': address})
+            if isinstance(self.details, CheckinDetails):
+                self.details.setRewardAddress(address)
+            if not globally:
+                return True
         else:
             self.configRewardAddress: str = str(config.get().get('reward address', ''))
         if (
             globally and
             self.env in ['prod', 'local'] and
-            len(self.configRewardAddress) == 34 and
-            self.configRewardAddress.startswith('E')
+            EvrmoreWallet.addressIsValid(self.configRewardAddress)
         ):
             self.server.setRewardAddress(
                 signature=self.wallet.sign(self.configRewardAddress),
