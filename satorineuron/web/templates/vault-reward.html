@@ -65,7 +65,7 @@
     focus(thing);
     console.log(thing.value);
     if (thing.value == '') {
-      thing.value = '{{ wallet.address }}';
+      thing.value = thing.placeholder;
     }
   }
   function checkEnterForRewardAddress(event){
