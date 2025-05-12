@@ -996,6 +996,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             success, mySubscribers = self.server.getStreamsSubscribers(pubListAll)
             _, remotePublishers = self.server.getStreamsPublishers(subList)
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
+            _, hostInfo = self.server.getStreamsPublishers(pubListAll)
 
             for data in [fellowSubscribers, mySubscribers, remotePublishers, meAsPublisher]:
             # removing duplicates ( same ip and port )
@@ -1004,7 +1005,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     data[key] = [x for x in data[key] if not (x in seen or seen.add(x))]
             # print("Fellow Subscribers", fellowSubscribers)
             print("My Subscribers", mySubscribers)
-            print("MeAsPublisher", meAsPublisher)
+            print("hostInfo", hostInfo)
             print("remotePublishers", remotePublishers)
             subInfo = {
                 uuid: {
@@ -1032,11 +1033,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             }
 
 
-            hostIpAndPort = next((value for value in meAsPublisher.values() if value), [])
+            hostIpAndPort = next((value for value in hostInfo.values() if value), [])
 
-            # Handle empty `meAsPublisher` or hostIpAndPort is not known case
-            if not meAsPublisher or not hostIpAndPort:
-                logging.warning("meAsPublisher is empty. Using default transfer protocol.")
+            # Handle empty `hostInfo` or hostIpAndPort is not known case
+            if not hostInfo or not hostIpAndPort:
+                logging.warning("hostInfo is empty. Using default transfer protocol.")
                 transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
             else:
                 print('Host Ip And Port', hostIpAndPort)
