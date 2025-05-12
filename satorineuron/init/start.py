@@ -150,6 +150,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
         self.publicDataManagerPort = 24600
+        self.transferProtocol: Union[str, None] = None
         self.setPublicDataManagerPort()
         self.invitedBy: str = None
         self.setInvitedBy()
@@ -998,12 +999,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             _, meAsPublisher = self.server.getStreamsPublishers(pubList)
             _, hostInfo = self.server.getStreamsPublishers(pubListAll)
 
-            for data in [fellowSubscribers, mySubscribers, remotePublishers, meAsPublisher]:
             # removing duplicates ( same ip and port )
+            for data in [fellowSubscribers, mySubscribers, remotePublishers, meAsPublisher]:
                 for key in data:
                     seen = set()
                     data[key] = [x for x in data[key] if not (x in seen or seen.add(x))]
-            # print("Fellow Subscribers", fellowSubscribers)
+
             print("My Subscribers", mySubscribers)
             print("hostInfo", hostInfo)
             print("remotePublishers", remotePublishers)
@@ -1037,8 +1038,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
             # Handle empty `hostInfo` or hostIpAndPort is not known case
             if not hostInfo or not hostIpAndPort:
-                logging.warning("hostInfo is empty. Using default transfer protocol.")
-                transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
+                logging.warning("Host Info is empty. Using default Pro-active protocol.")
+                self.transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
             else:
                 print('Host Ip And Port', hostIpAndPort)
                 hostIp = hostIpAndPort[0].split(':')[0]
@@ -1055,16 +1056,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                             if k == uuidOfMatchedIp:
                                 print("Appended Ip with Port:", publisherToBeAppended)
                                 v.append(publisherToBeAppended)
-                print('entered checking the loopback')
-                transferProtocol = self.determineTransferProtocol(
+                self.transferProtocol = self.determineTransferProtocol(
                     hostIp, self.dataServerPort)
-                print('transferProtocol', transferProtocol)
+                print('transferProtocol', self.transferProtocol)
                     
-            self.pubSubMapping['transferProtocol'] = transferProtocol
-            if transferProtocol == 'p2p-proactive-pubsub': # p2p-proactive-pubsub
+            self.pubSubMapping['transferProtocol'] = self.transferProtocol
+            if self.transferProtocol == 'p2p-proactive-pubsub': # p2p-proactive-pubsub
                 self.pubSubMapping['transferProtocolPayload'] = mySubscribers if success else {}
                 self.pubSubMapping['transferProtocolKey'] = self.key
-            elif transferProtocol == 'p2p-pubsub':
+            elif self.transferProtocol == 'p2p-pubsub':
                 self.pubSubMapping['transferProtocolKey'] = self.key
             else:
                 self.pubSubMapping['transferProtocolPayload'] = None

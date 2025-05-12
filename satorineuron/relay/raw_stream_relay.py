@@ -144,15 +144,19 @@ class RawStreamRelayEngine(Cached):
             {'value': [data]},
             index=[timestamp])
         try:
-            response = await start.dataClient.insertStreamData(
-                uuid=stream.streamId.uuid,
-                data=dataForServer,
-                isSub=True)
-            if response.status != DataServerApi.statusSuccess.value:
-                raise Exception(response.senderMsg)
+            if start.transferProtocol == 'p2p-proactive-pubsub':
+                await start.dataClient.insertStreamData(
+                    uuid=stream.streamId.uuid,
+                    data=dataForServer,
+                    isSub=True,
+                    sendOnly=True)
+            else:
+                await start.dataClient.insertStreamData(
+                    uuid=stream.streamId.uuid,
+                    data=dataForServer,
+                    isSub=True)
         except Exception as e:
             logging.error('Unable to set data: ', e)
-        # if our ports are closed we also sent to ones
         start.publish(
             topic=stream.streamId.jsonId,
             data=data,
