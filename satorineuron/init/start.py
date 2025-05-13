@@ -1008,31 +1008,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             print("My Subscribers", mySubscribers)
             print("hostInfo", hostInfo)
             print("remotePublishers", remotePublishers)
-            subInfo = {
-                uuid: {
-                    'subscribers': fellowSubscribers.get(uuid, []),
-                    'publishers': remotePublishers.get(uuid, [])}
-                for uuid in subList
-            }
-            pubInfo = {
-                uuid: {
-                    'subscribers': mySubscribers.get(uuid, []),
-                    'publishers': meAsPublisher.get(uuid, [])}
-                for uuid in pubList
-            }
-
-            self.pubSubMapping = {
-                sub_uuid: {
-                    'publicationUuid': pub_uuid,
-                    'supportiveUuid': [],
-                    'dataStreamSubscribers': subInfo[sub_uuid]['subscribers'],
-                    'dataStreamPublishers': subInfo[sub_uuid]['publishers'],
-                    'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'],
-                    'predictiveStreamPublishers': pubInfo[pub_uuid]['publishers']
-                }
-                for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
-            }
-
 
             hostIpAndPort = next((value for value in hostInfo.values() if value), [])
 
@@ -1060,7 +1035,32 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     hostIp, self.dataServerPort)
                 print('transferProtocol', self.transferProtocol)
                     
+            subInfo = {
+                uuid: {
+                    'subscribers': fellowSubscribers.get(uuid, []),
+                    'publishers': remotePublishers.get(uuid, [])}
+                for uuid in subList
+            }
+            pubInfo = {
+                uuid: {
+                    'subscribers': mySubscribers.get(uuid, []),
+                    'publishers': meAsPublisher.get(uuid, [])}
+                for uuid in pubList
+            }
+
+            self.pubSubMapping = {
+                sub_uuid: {
+                    'publicationUuid': pub_uuid,
+                    'supportiveUuid': [],
+                    'dataStreamSubscribers': subInfo[sub_uuid]['subscribers'],
+                    'dataStreamPublishers': subInfo[sub_uuid]['publishers'],
+                    'predictiveStreamSubscribers': pubInfo[pub_uuid]['subscribers'],
+                    'predictiveStreamPublishers': pubInfo[pub_uuid]['publishers']
+                }
+                for sub_uuid, pub_uuid in zip(subInfo.keys(), pubInfo.keys())
+            }
             self.pubSubMapping['transferProtocol'] = self.transferProtocol
+
             if self.transferProtocol == 'p2p-proactive-pubsub': # p2p-proactive-pubsub
                 self.pubSubMapping['transferProtocolPayload'] = mySubscribers if success else {}
                 self.pubSubMapping['transferProtocolKey'] = self.key
@@ -1089,15 +1089,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         for k in self.pubSubMapping.keys():
             if k!= 'transferProtocol' and k!= 'transferProtocolPayload' and k != 'transferProtocolKey':
                 response = await self.dataClient.subscribe(
-                    peerHost=self.dataServerIp,
                     uuid=k,
                     callback=self.handleRawData)
                 if response.status == DataServerApi.statusSuccess.value:
-                    logging.debug('Subscribed to Raw Data', response.senderMsg, color='green')
+                    logging.debug('Subscribed to Raw Data', response.senderMsg)
                 else:
                     logging.warning('Failed to Subscribe: ', response.senderMsg )
-                    # await asyncio.sleep(10)
-                    # await self.subscribeToRawData()
 
     async def subscribeToEngineUpdates(self):
         ''' local neuron client subscribes to engine predication data '''
@@ -1105,15 +1102,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         for k, v in self.pubSubMapping.items():
             if k!= 'transferProtocol' and k!= 'transferProtocolPayload' and k != 'transferProtocolKey':
                 response = await self.dataClient.subscribe(
-                    peerHost=self.dataServerIp,
                     uuid=v['publicationUuid'],
                     callback=self.handlePredictionData)
                 if response.status == DataServerApi.statusSuccess.value:
-                    logging.debug('Subscribed to Prediction Data', response.senderMsg, color='green')
+                    logging.debug('Subscribed to Prediction Data', response.senderMsg)
                 else:
                     logging.warning('Failed to Subscribe: ', response.senderMsg )
-                    # await asyncio.sleep(10)
-                    # await self.subscribeToEngineUpdates()
 
     async def handleRawData(self, subscription: Subscription, message: Message):
 
