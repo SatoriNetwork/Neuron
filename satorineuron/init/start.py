@@ -701,7 +701,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 try:
                     realData = await self.dataClient.getLocalStreamData(k)
                     if realData.status == DataServerApi.statusSuccess.value and isinstance(realData.data, pd.DataFrame):
-                        realDataDf = realData.data
+                        realDataDf = realData.data.tail(50)
                     else:
                         raise Exception(realData.senderMsg)
                 except Exception as e:
@@ -710,7 +710,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 try:
                     predictionData = await self.dataClient.getLocalStreamData(self.pubSubMapping[k]['publicationUuid'])
                     if predictionData.status == DataServerApi.statusSuccess.value and isinstance(predictionData.data, pd.DataFrame):
-                        predictionDataDf = predictionData.data
+                        predictionDataDf = predictionData.data.tail(50)
                     else:
                         raise Exception(predictionData.senderMsg)
                 except Exception as e:
@@ -1112,10 +1112,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     async def handleRawData(self, subscription: Subscription, message: Message):
 
         logging.info('Raw Data Subscribtion Message',message.to_dict(True), color='green')
-        self.data[message.uuid]['realData'] = pd.concat([
+        updated_data  = pd.concat([
             self.data[message.uuid]['realData'],
             message.data
         ])
+        self.data[message.uuid]['realData'] = updated_data.tail(50)
 
     async def handlePredictionData(self, subscription: Subscription, message: Message):
 
@@ -1126,10 +1127,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
         logging.info('Prediction Data Subscribtion Message',message.to_dict(True), color='green')
         matchedStreamUuid = findMatchingStreamUuid(message.uuid)
-        self.data[matchedStreamUuid]['predictionData'] = pd.concat([
+        updated_data  = pd.concat([
             self.data[matchedStreamUuid]['predictionData'],
             message.data
         ])
+        self.data[matchedStreamUuid]['predictionData'] = updated_data.tail(50)
 
     def startRelay(self):
         def append(streams: list[Stream]):
