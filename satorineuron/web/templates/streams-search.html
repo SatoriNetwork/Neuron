@@ -71,6 +71,11 @@
                         <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                       </div>
                     {% endif %}
+                    {% if hasRoom %}
+                      <div id="stream_predict_{{stream['stream_id']}}" onclick="predictStream({{ stream['stream_id'] }}, event);">
+                        <i class="material-icons opacity-10" title="Predict Stream">trending_up</i>
+                      </div>
+                    {% endif %}
                     <div id="observations">
                       <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }}, stream['stream']);">stacked_line_chart</i>
                     </div>
@@ -167,6 +172,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.2.0/chartjs-plugin-zoom.min.js"></script>
 <script type="text/javascript">
   const darkmode = {{ 'true' if darkmode else 'false' }};
+  const hasRoom = {{ 'true' if hasRoom else 'false' }};
   let storedStreams = {{ allStreams|tojson }};
   let filteredStreams = storedStreams;
   let displayStreams = storedStreams.slice(0, 100);
@@ -222,7 +228,7 @@
     // Hide the notification after 2 seconds
     setTimeout(() => {
       notification.style.display = 'none';
-    }, 1000*2);
+    }, 1000*5);
   }
 
   // Increment Vote
@@ -458,6 +464,9 @@
       const voteActionHtml = `
         <td>
           <div class="d-flex gap-2">
+            <div id="observations">
+              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}' );">stacked_line_chart</i>
+            </div>
             ${stream.vote === 0 ?
                 `<div id="stream_increment_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
                     <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
@@ -466,9 +475,12 @@
                     <i class="material-icons opacity-10" title="Approved">thumb_up</i>
                 </div>`
             }
-            <div id="observations">
-              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}' );">stacked_line_chart</i>
-            </div>
+            ${hasRoom ? 
+                `<div id="stream_predict_${stream.stream_id}" onclick="predictStream(${stream.stream_id}, event);">
+                    <i class="material-icons opacity-10" title="Predict Stream">trending_up</i>
+                </div>` : 
+                ''
+            }
           </div>
         </td>
         `;
@@ -883,5 +895,25 @@
       modal.style.display = 'none';
     }
   };
+
+  function predictStream(streamId, event) {
+    event.stopPropagation();
+    fetch(
+      '/predict/stream', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({streamId: streamId})})
+    .then(async (response) => {
+        if (response.ok) {
+            const responseData = await response.json();
+            console.log("responseData", responseData.message);
+            showNotification("Please Restart your Neuron for changes to take effect");
+        }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Something went wrong!", true);
+    });
+  }
 </script>
 {% endblock %}

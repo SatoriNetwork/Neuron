@@ -1124,6 +1124,45 @@ def removeStreamByPost():
     removeRelayStream = json.loads(request.get_json())
     return acceptSubmittion(removeRelayStream)
 
+# oracle endpoints          ^
+# prediction endpioints     v
+
+@app.route('/remove/stream', methods=['POST'])
+@userInteracted
+@authRequired
+def removePredictionStream():
+    # Get the subscription stream details from the request payload
+    payload = request.get_json()
+    if not payload or not all(k in payload for k in ['source', 'author', 'stream', 'target']):
+        return 'Invalid payload', 400
+
+    # Find the corresponding prediction stream in start.publications
+    subStreamId = StreamId(
+        source=payload['source'],
+        author=payload['author'],
+        stream=payload['stream'],
+        target=payload['target']
+    )
+    pubStreamId =  start.getMatchingStream(subStreamId)
+    # Find the prediction stream that corresponds to this subscription
+    if not pubStreamId:
+        return 'Prediction stream not found', 404
+
+    # Call server.removeStream with the prediction stream details
+    r = start.server.removeStream(payload=json.dumps({
+        'source': pubStreamId.source,
+        #'pubkey': start.wallet.publicKey, #ignored by server
+        'stream': pubStreamId.stream,
+        'target': pubStreamId.target
+    }))
+
+    if r:
+        # Remove the stream from our local state
+        start.removePair(pubStreamId, subStreamId)
+        return 'success', 200
+    else:
+        return 'Failed to remove stream', 500
+
 
 ###############################################################################
 ## Routes - dashboard #########################################################
@@ -1835,7 +1874,6 @@ def mineToAddressStatus():
 def mineToAddress(address: str):
     if start.vault is None:
         return '', 200
-    print(address, EvrmoreWallet.addressIsValid(address))
     success = start.setRewardAddress(address, globally=False)
     if not success:
         return f'Failed to set reward address: invalid address', 200
@@ -2184,6 +2222,7 @@ def streams():
             'vault': start.vault,
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
+            'hasRoom': len(start.subscriptions) < 10, # TODO: fix for multivariate situation
             'darkmode': darkmode,
             'streams': oracleStreams[0:100],
             'totalStreams': len(oracleStreams),
@@ -2204,6 +2243,31 @@ def incrementalVote():
     message = start.server.incrementVote(streamId=streamId)
     return jsonify({'message': message}), 200
 
+
+@app.route('/predict/stream', methods=['POST'])
+@userInteracted
+@authRequired
+def predictStream():
+    try:
+        # Get streamId from request payload
+        data = request.get_json()
+        streamId = request.json.get('streamId', "")
+        if not data or 'streamId' not in data:
+            return jsonify({'error': 'Missing streamId in request'}), 400
+
+        streamId = data['streamId']
+        
+        # Call server to start predicting the stream
+        result = start.server.predictStream(streamId)
+        
+        if result:
+            return jsonify({'message': 'Started predicting stream'}), 200
+        else:
+            return jsonify({'error': 'Failed to start predicting stream'}), 500
+            
+    except Exception as e:
+        logging.error(f"Error predicting stream: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/clear_vote_on/sanction/incremental', methods=['POST'])
 @userInteracted

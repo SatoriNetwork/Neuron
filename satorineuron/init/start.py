@@ -708,6 +708,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.subscriptions,
             StartupDag.predictionStreams(self.publications))
         self.subscriptions, self.publications = streamPairs.get_matched_pairs()
+        print('SUBSCRIPTIONS', self.subscriptions)
+        print('PUBLICATIONS', self.publications)
+
         # print([sub.streamId for sub in self.subscriptions])
 
         self.streamDisplay = [
@@ -729,6 +732,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             )
             self.aiengine.predictionProduced.subscribe(
                 lambda x: handleNewPrediction(x) if x is not None else None)
+
+    def getMatchingStream(self, streamId: StreamId) -> Union[StreamId, None]:
+        for stream in self.publications:
+            if stream.streamId == streamId:
+                return stream.predicting  # predicting is already a StreamId
+            if stream.predicting == streamId:  # comparing StreamId objects directly
+                return stream.streamId
+        return None
+    
+    def removePair(self, pub: StreamId, sub: StreamId):
+        self.publications = [p for p in self.publications if p.streamId != pub]
+        self.subscriptions = [s for s in self.subscriptions if s.streamId != sub]
 
     def addToEngine(self, stream: Stream, publication: Stream):
         if self.aiengine is not None:

@@ -45,6 +45,7 @@
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Target</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Latest</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Prediction</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}">Actions</th>
               </tr>
             </thead>
             <tbody id="updating_table">
@@ -97,89 +98,16 @@
                     <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">{{ streamOverview.prediction }}</h6>
                   </div>
                 </td>
-                <!-- example
-                <td>{{ streamOverview.accuracy }}</td>
-              <tr>
-                <td>
+                <td id="td-{{streamOverview.hashed}}-actions">
                   <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">Streamr</h6>
+                    <button 
+                    class="btn btn-link text-dark p-0 fixed-plugin-close-button" 
+                    style="margin-bottom: 0 !important;"
+                    onclick="event.stopPropagation(); removeStream('{{streamOverview.source}}', '{{streamOverview.author}}', '{{streamOverview.stream}}', '{{streamOverview.target}}', '{{streamOverview.hashed}}');">
+                      <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">remove_circle_outline</i>
+                    </button>
                   </div>
                 </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">Gold-4hr</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">Close</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">2196</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">2192</h6>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">Satori</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">BTC-10min-pred</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">High</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">36912</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">47681</h6>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">Streamr</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">Montana-Weather-Daily</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">Average Temperature</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">68</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm">71</h6>
-                  </div>
-                </td>
-                -->
               </tr>
               {% endfor %}
             </tbody>
@@ -309,162 +237,6 @@
     }
   }
 
-  //var ctx = document.getElementById("chart-bars").getContext("2d");
-  //var chartOne = new Chart(ctx, {
-  //  type: "bar",
-  //  data: {
-  //    labels: ["", "", "", "", "", "", "Today"],
-  //    datasets: [{
-  //      label: "",
-  //      tension: 0.4,
-  //      borderWidth: 0,
-  //      borderRadius: 4,
-  //      borderSkipped: false,
-  //      backgroundColor: lineColor,//"rgba(60, 60, 60, .8)",
-  //      data: [50, 20, 10, 22, 50, 10, 40],
-  //      maxBarThickness: 4
-  //    }, ],
-  //  },
-  //  options: {
-  //    responsive: true,
-  //    maintainAspectRatio: false,
-  //    plugins: {
-  //      legend: {
-  //        display: false,
-  //      }
-  //    },
-  //    interaction: {
-  //      intersect: false,
-  //      mode: 'index',
-  //    },
-  //    scales: {
-  //      y: {
-  //        grid: {
-  //          drawBorder: false,
-  //          display: true,
-  //          drawOnChartArea: true,
-  //          drawTicks: false,
-  //          borderDash: [1, 0],
-  //          color: 'rgba(180, 180, 180, .2)'
-  //        },
-  //        ticks: {
-  //          suggestedMin: 0,
-  //          suggestedMax: 500,
-  //          beginAtZero: true,
-  //          padding: 10,
-  //          font: {
-  //            size: 14,
-  //            weight: 300,
-  //            style: 'normal',
-  //            lineHeight: 2
-  //          },
-  //          color: "#98999a"
-  //        },
-  //      },
-  //      x: {
-  //        grid: {
-  //          drawBorder: false,
-  //          display: true,
-  //          drawOnChartArea: true,
-  //          drawTicks: false,
-  //          borderDash: [5, 5],
-  //          color: 'rgba(45, 45, 45, .0)'
-  //        },
-  //        ticks: {
-  //          display: true,
-  //          color: '#98999a',
-  //          padding: 10,
-  //          font: {
-  //            size: 14,
-  //            weight: 300,
-  //            style: 'normal',
-  //            lineHeight: 2
-  //          },
-  //        }
-  //      },
-  //    },
-  //  },
-  //});
-  //
-  //
-  //var ctx2 = document.getElementById("chart-line").getContext("2d");
-  //
-  //var chartTwo = new Chart(ctx2, {
-  //  type: "line",
-  //  data: {
-  //    labels: ["", "", "", "", "", "", "", "", "Now"],
-  //    datasets: [{
-  //      label: "error rate",
-  //      tension: .2,
-  //      borderWidth: 0,
-  //      pointRadius: 0,
-  //      pointBackgroundColor: "rgba(60, 60, 60, .8)",
-  //      pointBorderColor: "transparent",
-  //      borderColor: lineColor,
-  //      borderWidth: 3,
-  //      backgroundColor: "transparent",
-  //      fill: true,
-  //      data: [500, 400, 300, 320, 420, 350, 270, 230, 220],
-  //    }],
-  //  },
-  //  options: {
-  //    responsive: true,
-  //    maintainAspectRatio: false,
-  //    plugins: {
-  //      legend: {
-  //        display: false,
-  //      }
-  //    },
-  //    interaction: {
-  //      intersect: false,
-  //      mode: 'index',
-  //    },
-  //    scales: {
-  //      y: {
-  //        grid: {
-  //          drawBorder: false,
-  //          display: true,
-  //          drawOnChartArea: true,
-  //          drawTicks: false,
-  //          borderDash: [1, 0],
-  //          color: 'rgba(180, 180, 180, .2)'
-  //        },
-  //        ticks: {
-  //          display: true,
-  //          color: '#98999a',
-  //          padding: 10,
-  //          font: {
-  //            size: 14,
-  //            weight: 300,
-  //            style: 'normal',
-  //            lineHeight: 2
-  //          },
-  //        }
-  //      },
-  //      x: {
-  //        grid: {
-  //          drawBorder: false,
-  //          display: false,
-  //          drawOnChartArea: false,
-  //          drawTicks: false,
-  //          borderDash: [5, 5]
-  //        },
-  //        ticks: {
-  //          display: true,
-  //          color: '#98999a',
-  //          padding: 10,
-  //          font: {
-  //            size: 14,
-  //            weight: 300,
-  //            style: 'normal',
-  //            lineHeight: 2
-  //          },
-  //        }
-  //      },
-  //    },
-  //  },
-  //});
-
   var ctx3 = document.getElementById("chart-line-tasks").getContext("2d");
 
   var chartThree = new Chart(ctx3, {
@@ -576,9 +348,7 @@
     function viewOnClick(streamOverview) {
       return function () {
         scrollOrJumpTo('predictionsbr');
-        //setData(chartOne, streamOverview.predictions);
         setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
-        //setData(chartTwo, streamOverview.errs);
       }
     }
     if (e.data == "close") {
@@ -592,72 +362,24 @@
       console.log(streamOverview.predictions);
       console.log(streamOverview.prediction);
       // find the table row for this stream and update it
-      //let tdIcon = document.getElementById("td-" + streamOverview.hashed + "-icon");
-      //let tdSource = document.getElementById("td-" + streamOverview.hashed + "-source");
       let tdStream = document.getElementById("td-" + streamOverview.hashed + "-stream");
       let tdTarget = document.getElementById("td-" + streamOverview.hashed + "-target");
       let tdValue = document.getElementById("td-" + streamOverview.hashed + "-value");
       let tdPrediction = document.getElementById("td-" + streamOverview.hashed + "-prediction");
-      //tdIcon.onclick = viewOnClick(streamOverview);
-      //tdSource.onclick = viewOnClick(streamOverview);
+      let tdActions = document.getElementById("td-" + streamOverview.hashed + "-actions");
       tdStream.onclick = viewOnClick(streamOverview);
       tdTarget.onclick = viewOnClick(streamOverview);
       tdValue.onclick = viewOnClick(streamOverview);
       tdPrediction.onclick = viewOnClick(streamOverview);
-      //tdIcon.innerHTML = `<div class="d-flex px-3 py-1">
-      //  <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream('` + streamOverview.source + `', '` + streamOverview.author + `', '` + streamOverview.stream + `', '` + streamOverview.target + `', '` + streamOverview.hashed + `');">
-      //    <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
-      //      <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
-      //    </button>
-      //  </h6>
-      //</div>`
-      //tdSource.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.source + `</h6></div>`
       tdStream.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.stream + `</h6></div>`
       tdTarget.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.target + `</h6></div>`
       tdValue.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.value + `</h6></div>`
       tdPrediction.innerHTML = `<div class="d-flex px-3 py-1"><h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview.prediction) + `</h6></div>`
-      //let myRow = document.getElementById("tr-" + streamOverview.hashed);
-      //myRow.onclick = function() {
-      //  scrollOrJumpTo('predictionsbr');
-      //  setData(chartOne, streamOverview.predictions);
-      //  setData(chartTwo, streamOverview.errs);
-      //  setDataChartThree(streamOverview.values, streamOverview.prediction, streamOverview.predictions);
-      //};
-      //myRow.innerHTML = `
-      //    <td class="td-`+streamOverview.hashed+`">
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" title="continue to predict this stream even if it becomes unapproved for reward?" onclick="pinDepinStream(` + streamOverview.source + `, ` + streamOverview.author + `, ` + streamOverview.stream + `, ` + streamOverview.target + `, ` + streamOverview.hashed+`);">
-      //          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
-      //            <i id="pinDepinIconFor`+streamOverview.hashed+`" class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;margin-right:24px;`+ (streamOverview.pinned ? `color: black;` :  `color: grey;`) + `">` + (streamOverview.pinned ? `check` : `check_box_outline_blank`) + `</i>
-      //          </button>
-      //        </h6>
-      //      </div>
-      //    </td>
-      //    <td class="td-`+streamOverview.hashed+`">
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.source + `</h6>
-      //      </div>
-      //    </td>
-      //    <td>
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.stream + `</h6>
-      //      </div>
-      //    </td>
-      //    <td>
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.target + `</h6>
-      //      </div>
-      //    </td>
-      //    <td>
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + streamOverview.value + `</h6>
-      //      </div>
-      //    </td>
-      //    <td>
-      //      <div class="d-flex px-3 py-1">
-      //        <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}">` + predictionOrEmptyString(streamOverview.prediction) + `</h6>
-      //      </div>
-      //    </td>`;
+      tdActions.innerHTML = `<div class="d-flex px-3 py-1">
+        <button class="btn btn-link text-danger p-0" onclick="event.stopPropagation(); removeStream('` + streamOverview.source + `', '` + streamOverview.author + `', '` + streamOverview.stream + `', '` + streamOverview.target + `', '` + streamOverview.hashed + `');">
+          <i class="material-icons" style="font-size: 24px;">delete</i>
+        </button>
+      </div>`
     }
   };
   function predictionOrEmptyString(p) {
@@ -669,5 +391,35 @@
     }
     return p;
     }
+  function removeStream(source, author, stream, target, hash) {
+    if (!confirm('Are you sure you want to remove this stream? This action cannot be undone.')) {
+      return;
+    }
+    fetch('/remove/stream', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        source: source,
+        author: author,
+        stream: stream,
+        target: target
+      })
+    })
+    .then(response => {
+      if (response.ok) {
+        // Remove the row from the table
+        const row = document.getElementById('tr-' + hash);
+        if (row) {
+          row.remove();
+        }
+      } else {
+        alert('Failed to remove stream. Please try again.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while removing the stream. Please try again.');
+    });
+  }
 </script>
 {% endblock %}
