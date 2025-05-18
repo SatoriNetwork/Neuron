@@ -1,6 +1,7 @@
 import os
 from functools import partial
 from .config import root, read, write, get, put, env, var, add
+from satorineuron import config
 
 
 # root = partial(root, os.path.abspath(__file__)) # no, put configs outside lib:
@@ -51,7 +52,8 @@ def modify(data: dict):
 
 
 def flaskPort():
-    return get().get(verbose('flaskPort'), '24601')
+    # return get().get(verbose('flaskPort'), '24601')
+    return str(config.get().get('ui port', 24601))
 
 
 def nodejsPort():

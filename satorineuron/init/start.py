@@ -83,6 +83,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             urlSynergy=urlSynergy,
             isDebug=isDebug)
         await startupDag.startFunction()
+        return startupDag
 
     def __init__(
         self,
@@ -486,7 +487,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.isDebug:
             return
         self.startRelay()
-        await asyncio.Event().wait() # probably place this at the end of satori.py?
+        # await asyncio.Event().wait() # probably place this at the end of satori.py?
 
     async def engine_necessary(self):
         """Below are what is necessary for the Engine to start building"""

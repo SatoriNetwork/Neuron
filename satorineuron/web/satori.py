@@ -100,10 +100,13 @@ def sendToUI(
 ## Startup ####################################################################
 ###############################################################################
 
-while True:
-    try:
-        # Run the async creation directly in the main thread
-        start = asyncio.run(StartupDag.create(
+def run_async_startup():
+    import threading
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    # Start the async processes in the background
+    startup_task = loop.create_task(StartupDag.create(
             env=ENV,
             runMode=config.get().get('run mode', os.environ.get('RUNMODE')),
             sendToUI=sendToUI,
@@ -138,24 +141,22 @@ while True:
                 'test': 'https://test.satorinet.io:24602',
                 'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False))
+    
+    # Keep the loop running in a separate thread
+    def run_event_loop():
+        loop.run_forever()
+    
+    threading.Thread(target=run_event_loop, daemon=True).start()
+    
+    # Wait for startup to complete (optional)
+    while not startup_task.done():
+        time.sleep(0.1)
+        
+    # Return the result but let the event loop keep running
+    return startup_task.result()
 
-        # start.buildEngine()
-        # threading.Thread(target=start.start, daemon=True).start()
-        logging.info(f'environment: {ENV}', print=True)
-        logging.info('Satori Neuron is starting...', color='green')
-        break
-    except ConnectionError as e:
-        # try again...
-        traceback.print_exc()
-        logging.error(f'ConnectionError in app startup: {e}', color='red')
-        time.sleep(30)
-    # except RemoteDisconnected as e:
-    except Exception as e:
-        # try again...
-        traceback.print_exc()
-        logging.error(f'Exception in app startup: {e}', color='red')
-        time.sleep(30)
-
+# Get the startup result
+start = run_async_startup()
 
 ###############################################################################
 ## Socket Endpoints ###########################################################
