@@ -33,7 +33,6 @@ from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, UiEndpoint, StartupDagStruct
-from satorineuron.synergy.engine import SynergyManager
 from satorilib.datamanager import DataClient, DataServerApi, Message, Subscription
 from satorilib.utils.ip import getPublicIpv4UsingCurl
 from io import StringIO
@@ -68,7 +67,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
-        urlSynergy: str = None,
         isDebug: bool = False,
     ) -> 'StartupDag':
         '''Factory method to create and initialize StartupDag asynchronously'''
@@ -80,7 +78,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             urlServer=urlServer,
             urlMundo=urlMundo,
             urlPubsubs=urlPubsubs,
-            urlSynergy=urlSynergy,
             isDebug=isDebug)
         await startupDag.startFunction()
         return startupDag
