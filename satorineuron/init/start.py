@@ -757,7 +757,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         for value in streamForecast.predictionHistory.value]
                     self.addModelUpdate(stream_display)
             logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId}', color='blue')
-            # self.server.publish( # TODO : fix this for the new datamanager
+            # self.server.publish( 
             #     topic=streamForecast.predictionStreamId.topic(),
             #     data=streamForecast.forecast["pred"].iloc[0],
             #     observationTime=streamForecast.observationTime,
@@ -1126,12 +1126,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if pubUuid == self.pubSubMapping.get(key, {}).get('publicationUuid'):
                     return key
 
+        def findMatchingStream(uuid: str) -> Stream:
+            for pub in self.publications:
+                if pub.streamId.uuid == message.uuid:
+                    return pub
+
         logging.info('Prediction Data Subscribtion Message',message.to_dict(True), color='green')
         matchedStreamUuid = findMatchingStreamUuid(message.uuid)
         updated_data  = pd.concat([
             self.data[matchedStreamUuid]['predictionData'],
             message.data
         ])
+        matchedStream = findMatchingStream(message.uuid)
+        
+        self.server.publish(
+            topic=matchedStream.streamId.jsonId,
+            data=str(message.data['value'].iloc[0]),
+            observationTime=str(message.data.index[0]),
+            observationHash=str(message.data['hash'].iloc[0]),
+            isPrediction=True,
+            useAuthorizedCall=self.version >= Version("0.2.6"))
         self.data[matchedStreamUuid]['predictionData'] = updated_data.tail(50)
 
     def startRelay(self):
