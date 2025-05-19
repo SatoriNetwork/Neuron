@@ -107,7 +107,7 @@ class WalletVaultManager():
         if not self.useElectrumx:
             return
         try:
-            self.electrumx = EvrmoreWallet.createElectrumxConnection(
+            self.electrumx = Electrumx.create(
                 hostPorts=config.get().get('electrumx servers'),
                 persistent=self.persistent)
             logging.info('initialized electrumx', color='green')
@@ -131,8 +131,8 @@ class WalletVaultManager():
 
     def balanceUpdatedCallback(self, evr: Balance, satori: Balance, kind: str):
         ''' tell the UI '''
-        print(kind, 'evr balance', evr.amount)
-        print(kind, 'satori balance', satori.amount)
+        logging.debug(kind, 'evr balance', evr.amount)
+        logging.debug(kind, 'satori balance', satori.amount)
         #import traceback
         #traceback.print_stack()
 
@@ -233,12 +233,6 @@ class WalletVaultManager():
             force=force)
         #return self.setupSubscriptions()
 
-    #def setupWalletAndVaultIdentities(self, force: bool = False):
-    #    self._initializeWalletIdentity(force=force)
-    #    self._initializeVaultIdentity(
-    #        password=None,
-    #        create=False,
-    #        force=force)
 
     def setupWalletAndVaultIdentities(self, force: bool = False):
         self._initializeWalletIdentity(force=force)
@@ -257,7 +251,7 @@ class WalletVaultManager():
         self,
         password: Union[str, None] = None,
         create: bool = False,
-    ) -> EvrmoreWallet:
+    ) -> Union[EvrmoreWallet, None]:
         if isinstance(self._vault, EvrmoreWallet):
             return self._vault
         return self._initializeVault(password=password, create=create)
@@ -266,7 +260,7 @@ class WalletVaultManager():
         self,
         password: Union[str, None] = None,
         create: bool = False,
-    ) -> EvrmoreWallet:
+    ) -> Union[EvrmoreWallet, None]:
         if isinstance(self._vault, EvrmoreWallet):
             if self._vault.isDecrypted:
                 return self._vault

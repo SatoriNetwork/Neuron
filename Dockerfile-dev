@@ -85,9 +85,7 @@ EXPOSE 24601
 
 # todo: maybe just move all this to the code part.
 # RUN mkdir /Satori
-# RUN mkdir /Satori/Synapse
 # RUN mkdir /Satori/Lib
-# RUN mkdir /Satori/Wallet
 # RUN mkdir /Satori/Engine
 # RUN mkdir /Satori/Neuron
 # RUN mkdir /Satori/Neuron/data
@@ -96,16 +94,9 @@ EXPOSE 24601
 # RUN mkdir /Satori/Neuron/config
 # RUN mkdir /Satori/Neuron/uploaded
 # RUN mkdir /Satori/Neuron/predictions
-# COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
-# COPY Synapse/setup.py /Satori/Synapse/setup.py
-# COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
 # COPY Lib/satorilib /Satori/Lib/satorilib
 # COPY Lib/setup.py /Satori/Lib/setup.py
 # COPY Lib/requirements.txt /Satori/Lib/requirements.txt
-# COPY Wallet/satoriwallet /Satori/Wallet/satoriwallet
-# COPY Wallet/reqs /Satori/Wallet/reqs
-# COPY Wallet/setup.py /Satori/Wallet/setup.py
-# COPY Wallet/requirements.txt /Satori/Wallet/requirements.txt
 # COPY Engine/satoriengine /Satori/Engine/satoriengine
 # COPY Engine/setup.py /Satori/Engine/setup.py
 # COPY Engine/requirements.txt /Satori/Engine/requirements.txt
@@ -114,15 +105,11 @@ EXPOSE 24601
 # COPY Neuron/setup.py /Satori/Neuron/setup.py
 # COPY Neuron/requirements.txt /Satori/Neuron/requirements.txt
 
-# RUN chmod -R 777 /Satori/Synapse
 # RUN chmod -R 777 /Satori/Lib
-# RUN chmod -R 777 /Satori/Wallet
 # RUN chmod -R 777 /Satori/Engine
 # RUN chmod -R 777 /Satori/Neuron
 
-# RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git && \
-# cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git && \
-# cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git && \
+# RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git && \
 # cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git && \
 # # cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Neuron.git && \
 # cd /Satori && git clone https://github.com/amazon-science/chronos-forecasting.git && \

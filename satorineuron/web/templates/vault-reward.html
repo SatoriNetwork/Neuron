@@ -34,7 +34,7 @@
                   <input
                     id="minigReward"
                     name="minigReward"
-                    placeholder="{{ wallet.address }}"
+                    placeholder="{{ rewardAddress }}"
                     value="{{ proxyParent }}"
                     class="tight form-control {% if darkmode %}dark-colors{% endif %}"
                     style="text-align: center;"
@@ -65,16 +65,19 @@
     focus(thing);
     console.log(thing.value);
     if (thing.value == '') {
-      thing.value = '{{ wallet.address }}';
+      thing.value = thing.placeholder;
     }
   }
   function checkEnterForRewardAddress(event){
-    if (isFocused(document.querySelector('#minigReward'))) {
+    let element = document.getElementById('minigReward');
+    if (isFocused(element)) {
       document.getElementById("minigRewardConfirmation").innerHTML = '';
       if (event.key === "Enter" || event.keyCode === 13) {
         console.log('enter detected');
         setRewardAddress();
       }
+    } else if (isFocused(element) && element.value.length == 34) {
+      setRewardAddress();
     }
   }
   function reportVault() {
@@ -156,13 +159,13 @@
   }
   document.addEventListener('DOMContentLoaded', (event) => {
     reportVault();
-    getMineToAddressStatus().then(text => {
-      if (text == '') {
-        document.getElementById("minigReward").placeholder = '{{ wallet.address }}';
-        // don't auto-set the address becasue if they leave it blank they will be put in a pool
-        // setRewardAddress();
-      }
-    });
+    //getMineToAddressStatus().then(text => {
+    //  if (text == '') {
+    //    document.getElementById("minigReward").placeholder = '{{ wallet.address }}';
+    //    // don't auto-set the address becasue if they leave it blank they will be put in a pool
+    //    // setRewardAddress();
+    //  }
+    //});
     getMyDelegate();
 
   });

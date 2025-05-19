@@ -25,7 +25,6 @@ from satorilib.wallet.wallet import TransactionFailure
 from satorilib.utils.time import timeToSeconds
 from satorilib.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
-from satorisynapse import Envelope, Signal
 from satorineuron import VERSION, MOTTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream

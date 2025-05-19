@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Unlock Neuron</title>
+</head>
+<body>
+  <form method="POST" action="/unlock">
+    <label for="passphrase">Passphrase:</label>
+    <input type="password" id="passphrase" name="passphrase" required>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit">Unlock</button>
+  </form>
+</body>
+</html>

@@ -26,10 +26,10 @@ from flask import Response, render_template_string
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from satorilib.concepts.structs import Stream, StreamId, StreamOverviews
-from satorilib.utils import getRandomName, getRandomQuote
-from satorilib.utils.time import timeToSeconds
-from satorilib.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.wallet.wallet import TransactionFailure
+from satorilib.utils.time import timeToSeconds, nowStr
+from satorilib.wallet import RavencoinWallet, EvrmoreWallet
+from satorilib.utils import getRandomName, getRandomQuote
 from satorineuron import VERSION, MOTTO, config
 from satorineuron import logging
 from satorineuron.relay import acceptRelaySubmission, processRelayCsv, generateHookFromTarget, registerDataStream
@@ -125,7 +125,7 @@ def run_async_startup():
                 'local': 'https://mundo.satorinet.io',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://mundo.satorinet.io'}[ENV],
+                'prod': 'https://mundo.satorinet.io:24607'}[ENV],
             # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
                 # 'local': ['ws://192.168.0.10:24603'],
@@ -134,12 +134,6 @@ def run_async_startup():
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
             # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
-            urlSynergy={
-                # 'local': 'https://192.168.0.10:24602',
-                'local': 'https://synergy.satorinet.io:24602',
-                'dev': 'https://localhost:24602',
-                'test': 'https://test.satorinet.io:24602',
-                'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False))
     
     # Keep the loop running in a separate thread
@@ -429,7 +423,7 @@ def passphrase():
             timeout = min(timeout * 1.618, 60*5)
             return "Wrong passphrase, try again.\n\nIf you're unable to unlock your Neuron remove the setting in the config file."
     next_url = request.args.get('next')
-    return render_template_string(passphrase_html, next=next_url)
+    return render_template('unlock.html', next=next_url)
 
 
 @app.route('/lock/enable', methods=['GET', 'POST'])
@@ -671,7 +665,7 @@ def refresh():
 @userInteracted
 @authRequired
 def restart():
-    start.restartQueue.put(1)
+    start.restartQueue.put(1) # I think we should re-evaluate the restart process
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -1102,6 +1096,8 @@ def registerStream():
         # randomize the offset in order to lessen spiking issues
         data['cadence'] = data.get('cadence', Stream.minimumCadence)
         data['offset'] = data.get('offset', random.uniform(0, data['cadence']))
+        if data['offset'] == 0:
+            data['offset'] = random.uniform(0, data['cadence'])
         if data.get('hook') in ['', None, {}]:
             hook, status = generateHookFromTarget(data.get('target', ''))
             if status == 200:
@@ -1236,6 +1232,45 @@ def removeStreamByPost():
 
     removeRelayStream = json.loads(request.get_json())
     return acceptSubmittion(removeRelayStream)
+
+# oracle endpoints          ^
+# prediction endpioints     v
+
+@app.route('/remove/stream', methods=['POST'])
+@userInteracted
+@authRequired
+def removePredictionStream():
+    # Get the subscription stream details from the request payload
+    payload = request.get_json()
+    if not payload or not all(k in payload for k in ['source', 'author', 'stream', 'target']):
+        return 'Invalid payload', 400
+
+    # Find the corresponding prediction stream in start.publications
+    subStreamId = StreamId(
+        source=payload['source'],
+        author=payload['author'],
+        stream=payload['stream'],
+        target=payload['target']
+    )
+    pubStreamId =  start.getMatchingStream(subStreamId)
+    # Find the prediction stream that corresponds to this subscription
+    if not pubStreamId:
+        return 'Prediction stream not found', 404
+
+    # Call server.removeStream with the prediction stream details
+    r = start.server.removeStream(payload=json.dumps({
+        'source': pubStreamId.source,
+        #'pubkey': start.wallet.publicKey, #ignored by server
+        'stream': pubStreamId.stream,
+        'target': pubStreamId.target
+    }))
+
+    if r:
+        # Remove the stream from our local state
+        start.removePair(pubStreamId, subStreamId)
+        return 'success', 200
+    else:
+        return 'Failed to remove stream', 500
 
 
 ###############################################################################
@@ -1767,6 +1802,7 @@ def theVault():
             'vaultOpened': True,
             'stakeRequired': start.stakeRequired,
             'wallet': start.vault,
+            'rewardAddress': start.rewardAddress,
             'walletBalance': start.wallet.balance.amount,
             'offer': start.details.wallet.get('offer', 0),
             'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
@@ -1787,6 +1823,7 @@ def theVault():
         'vaultPasswordForm': presentVaultPasswordForm(),
         'vaultOpened': False,
         'stakeRequired': start.stakeRequired,
+        'rewardAddress': start.rewardAddress,
         'wallet': start.vault,
         'offer': start.details.wallet.get('offer', 0),
         'pool_stake_limit': start.details.wallet.get('pool_stake_limit', ''),
@@ -1830,9 +1867,9 @@ def mineToAddressStatus():
 def mineToAddress(address: str):
     if start.vault is None:
         return '', 200
-    # the network portion should be whatever network I'm on.
-    network = 'main'
-    start.details.wallet['rewardaddress'] = address if address != 'null' else None
+    success = start.setRewardAddress(address, globally=False)
+    if not success:
+        return f'Failed to set reward address: invalid address', 200
     vault = start.getVault()
     if vault.isEncrypted:
         return redirect('/vault')
@@ -1841,7 +1878,6 @@ def mineToAddress(address: str):
         signature=vault.sign(address),
         pubkey=vault.publicKey,
         address=address)
-    print(success, result)
     if success:
         return 'OK', 200
     return f'Failed to set reward address: {result}', 400
@@ -2027,6 +2063,7 @@ def vote():
             return 0
         else:
             return data
+
     def getVotes(wallet):
         # def valuesAsNumbers(map: dict):
         #    return {k: int(v) for k, v in map.items()}
@@ -2037,7 +2074,6 @@ def vote():
                            if start.vault is not None and start.vault.isDecrypted else {
                 'predictors': 0,
                 'oracles': 0,
-                'inviters': 0,
                 'creators': 0,
                 'managers': 0})}
         return x
@@ -2108,15 +2144,38 @@ def vote():
 @authRequired
 def admin():
     if start.vault is not None and not start.vault.isEncrypted:
+        success, content = start.server.getContentCreated()
         return render_template('admin.html', **getResp({
             'title': 'Admin',
             'vaultOpened': True,
+            'content': content if success else [],
             'vaultPasswordForm': presentVaultPasswordForm()}))
     else:
-        return render_template('admin.html', **getResp({
+        return render_template('admin-lock.html', **getResp({
             'title': 'Admin',
             'vaultOpened': False,
+            'content': [],
             'vaultPasswordForm': presentVaultPasswordForm()}))
+
+
+@app.route('/admin/inviter/approve/<walletId>', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def adminApproveInviter(walletId: int):
+    success, result = start.server.approveInviters([walletId])
+    return jsonify({"success": success, "result": result}), 200 if success else 500
+
+
+
+@app.route('/admin/inviter/delete/<contentId>', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def adminDeleteInviterContent(contentId: int):
+    success, result = start.server.deleteContent([contentId])
+    return jsonify({"success": success, "result": result}), 200 if success else 500
+
 
 
 @app.route('/pool/participants', methods=['GET', 'POST'])
@@ -2124,7 +2183,6 @@ def admin():
 @vaultRequired
 @authRequired
 def poolParticipants():
-    print("vault", start.vault.address)
     participants = start.server.poolParticipants(start.vault.address)
     return jsonify({'data': participants}), 200
 
@@ -2158,6 +2216,7 @@ def streams():
             'vault': start.vault,
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
+            'hasRoom': len(start.subscriptions) < 10, # TODO: fix for multivariate situation
             'darkmode': darkmode,
             'streams': oracleStreams[0:100],
             'totalStreams': len(oracleStreams),
@@ -2179,6 +2238,31 @@ def incrementalVote():
     return jsonify({'message': message}), 200
 
 
+@app.route('/predict/stream', methods=['POST'])
+@userInteracted
+@authRequired
+def predictStream():
+    try:
+        # Get streamId from request payload
+        data = request.get_json()
+        streamId = request.json.get('streamId', "")
+        if not data or 'streamId' not in data:
+            return jsonify({'error': 'Missing streamId in request'}), 400
+
+        streamId = data['streamId']
+        
+        # Call server to start predicting the stream
+        result = start.server.predictStream(streamId)
+        
+        if result:
+            return jsonify({'message': 'Started predicting stream'}), 200
+        else:
+            return jsonify({'error': 'Failed to start predicting stream'}), 500
+            
+    except Exception as e:
+        logging.error(f"Error predicting stream: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/clear_vote_on/sanction/incremental', methods=['POST'])
 @userInteracted
 @authRequired
@@ -2186,6 +2270,14 @@ def removeVote():
     streamId = request.json.get('streamId', "")
     message = start.server.removeVote(streamId=streamId)
     return jsonify({'message': message}), 200
+
+
+@app.route('/balance/power/get', methods=['GET'])
+@userInteracted
+@authRequired
+def getPowerBalance():
+    balance = start.server.getPowerBalance()
+    return balance, 200
 
 
 @app.route('/get_observations', methods=['POST'])
@@ -2585,7 +2677,6 @@ def voteSubmitManifestWallet():
     if (
         request.json.get('walletPredictors') > 0 or
         request.json.get('walletOracles') > 0 or
-        request.json.get('walletInviters') > 0 or
         request.json.get('walletCreators') > 0 or
         request.json.get('walletManagers') > 0
     ):
@@ -2594,7 +2685,6 @@ def voteSubmitManifestWallet():
             votes={
                 'predictors': request.json.get('walletPredictors', 0),
                 'oracles': request.json.get('walletOracles', 0),
-                'inviters': request.json.get('walletInviters', 0),
                 'creators': request.json.get('walletCreators', 0),
                 'managers': request.json.get('walletManagers', 0)})
     return jsonify({'message': 'Manifest votes received successfully'}), 200

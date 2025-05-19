@@ -1,9 +1,9 @@
 {% extends "basic.html" %}
 {% block content %}
-{% if 1==1 %}
+{% if vaultOpened %}
     {% include 'admin-description.html' %}
-    <!--br id="admininviterslinkbr">
-    { include 'admin-inviters.html' }-->
+    <br id="admininviterslinkbr">
+    {% include 'admin-inviters.html' %}
     {% include 'footer-on-front.html' %}
 {% else %}
     {% include 'admin-lock.html' %}

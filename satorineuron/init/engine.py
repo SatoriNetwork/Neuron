@@ -1,6 +1,6 @@
 import json
-import copy
 import time
+import copy
 from satorilib import logging
 from satorilib.utils import memory
 from satorilib.concepts import Observation, Stream

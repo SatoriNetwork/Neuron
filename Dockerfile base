@@ -49,9 +49,7 @@ RUN apt-get update && \
 
 # todo: maybe just move all this to the code part.
 
-#RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Synapse.git
 #RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Lib.git
-#RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Wallet.git
 #RUN cd /Satori && git clone -b dev https://github.com/SatoriNetwork/Engine.git
 
 # ADVANCED ENGINE STUFF
@@ -61,16 +59,9 @@ RUN apt-get update && \
 # RUN pip install --no-cache-dir /Satori/granite-tsfm
 # RUN pip install --no-cache-dir /Satori/chronos-forecasting
 
-# COPY Synapse/satorisynapse /Satori/Synapse/satorisynapse
-# COPY Synapse/setup.py /Satori/Synapse/setup.py
-# COPY Synapse/requirements.txt /Satori/Synapse/requirements.txt
 # COPY Lib/satorilib /Satori/Lib/satorilib
 # COPY Lib/setup.py /Satori/Lib/setup.py
 # COPY Lib/requirements.txt /Satori/Lib/requirements.txt
-# COPY Wallet/satoriwallet /Satori/Wallet/satoriwallet
-# COPY Wallet/reqs /Satori/Wallet/reqs
-# COPY Wallet/setup.py /Satori/Wallet/setup.py
-# COPY Wallet/requirements.txt /Satori/Wallet/requirements.txt
 # COPY Engine/satoriengine /Satori/Engine/satoriengine
 # COPY Engine/setup.py /Satori/Engine/setup.py
 # COPY Engine/requirements.txt /Satori/Engine/requirements.txt

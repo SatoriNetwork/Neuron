@@ -94,7 +94,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
-        urlSynergy: str = None,
         isDebug: bool = False,
     ):
         super(StartupDag, self).__init__(*args)
@@ -116,7 +115,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.urlServer: str = urlServer
         self.urlMundo: str = urlMundo
         self.urlPubsubs: list[str] = urlPubsubs
-        self.urlSynergy: str = urlSynergy
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
         self.details: CheckinDetails = CheckinDetails(raw={})
@@ -134,7 +132,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.allOracleStreams = None
         self.sub: SatoriPubSubConn = None
         self.pubs: list[SatoriPubSubConn] = []
-        self.synergy: Union[SynergyManager, None] = None
         self.relay: RawStreamRelayEngine = None
         self.engine: satoriengine.Engine
         self.publications: list[Stream] = []
@@ -210,14 +207,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     @property
     def rewardAddress(self) -> str:
         if isinstance(self.details, CheckinDetails):
-            reward = self.details.wallet.get("rewardaddress", "")
-            if (
-                reward not in [
-                    self.details.wallet.get("address", ""),
-                    self.details.wallet.get("vaultaddress", "")]
-            ):
-                return reward or ""
-        return ""
+            return self.details.get('rewardaddress')
+        return self.configRewardAddress
+        #if isinstance(self.details, CheckinDetails):
+        #    return self.details.rewardAddress
+        #return self.configRewardAddress
 
     @property
     def network(self) -> str:
@@ -308,6 +302,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """
         Get Satori from Base with 5-minute interval cache
         """
+        # TEMPORARY DISABLE
+        return 0
+        
         import requests
         import time
 
@@ -385,7 +382,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def getWallet(self, **kwargs):
         return self.walletVaultManager.getWallet()
 
-    def getVault(self, password: Union[str, None] = None, create: bool = False):
+    def getVault(self, password: Union[str, None] = None, create: bool = False) -> Union[EvrmoreWallet, None]:
         return self.walletVaultManager.getVault(password=password, create=create)
 
     def electrumxCheck(self):
@@ -454,7 +451,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             if self.latestObservationTime + 60*60*6 < time.time():
                 self.triggerRestart()
             if self.server.checkinCheck():
-                self.triggerRestart()  # should just be start()
+                self.triggerRestart()
 
     def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
         """returns the reference to the cache of a stream"""
@@ -568,8 +565,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         while True:
             attempt += 1
             try:
+                vault = self.getVault()
                 self.details = CheckinDetails(
-                    self.server.checkin(referrer=referrer, ip=self.ip))
+                    self.server.checkin(
+                        referrer=referrer,
+                        ip=self.ip,
+                        vaultInfo={
+                            'vaultaddress': vault.address, 
+                            'vaultpubkey': vault.publicKey,
+                        } if isinstance(vault, EvrmoreWallet) else None))
                 if self.details.get('sponsor') != self.invitedBy:
                     if self.invitedBy is None:
                         self.setInvitedBy(self.details.get('sponsor'))
@@ -591,10 +595,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.server.setDataManagerPort(self.publicDataManagerPort)
                 #logging.debug(self.details, color='teal')
                 if self.details.get('rewardaddress') != self.configRewardAddress:
-                    if self.configRewardAddress is not None:
-                        self.setRewardAddress(globally=True)
-                    else:
+                    if self.configRewardAddress is None:
                         self.setRewardAddress(address=self.details.get('rewardaddress'))
+                    else:
+                        self.setRewardAddress(globally=True)
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
@@ -671,20 +675,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         address: Union[str, None] = None,
         globally: bool = False
     ) -> bool:
-        if (
-            address and
-            len(address) == 34 and
-            address.startswith('E')
-        ):
+        if EvrmoreWallet.addressIsValid(address):
             self.configRewardAddress = address
             config.add(data={'reward address': address})
+            if isinstance(self.details, CheckinDetails):
+                self.details.setRewardAddress(address)
+            if not globally:
+                return True
         else:
             self.configRewardAddress: str = str(config.get().get('reward address', ''))
         if (
             globally and
             self.env in ['prod', 'local'] and
-            len(self.configRewardAddress) == 34 and
-            self.configRewardAddress.startswith('E')
+            EvrmoreWallet.addressIsValid(self.configRewardAddress)
         ):
             self.server.setRewardAddress(
                 signature=self.wallet.sign(self.configRewardAddress),
@@ -773,6 +776,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.subscriptions,
             StartupDag.predictionStreams(self.publications))
         self.subscriptions, self.publications = streamPairs.get_matched_pairs()
+        print('SUBSCRIPTIONS', self.subscriptions)
+        print('PUBLICATIONS', self.publications)
+
         # print([sub.streamId for sub in self.subscriptions])
 
         self.streamDisplay = [
@@ -792,6 +798,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             )
             self.aiengine.predictionProduced.subscribe(
                 lambda x: handleNewPrediction(x) if x is not None else None)
+
+    def getMatchingStream(self, streamId: StreamId) -> Union[StreamId, None]:
+        for stream in self.publications:
+            if stream.streamId == streamId:
+                return stream.predicting  # predicting is already a StreamId
+            if stream.predicting == streamId:  # comparing StreamId objects directly
+                return stream.streamId
+        return None
+    
+    def removePair(self, pub: StreamId, sub: StreamId):
+        self.publications = [p for p in self.publications if p.streamId != pub]
+        self.subscriptions = [s for s in self.subscriptions if s.streamId != sub]
 
     def addToEngine(self, stream: Stream, publication: Stream):
         if self.aiengine is not None:
@@ -1285,11 +1303,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #    time.sleep(1)
 
     def triggerRestart(self, return_code=1):
-        from satorisynapse import Envelope, Signal
-        self.udpQueue.put(
-            Envelope(ip="", vesicle=Signal(restart=True)))  # TODO: remove
-        import time
-        time.sleep(5)
         # 0 = shutdown, 1 = restart container, 2 = restart app
         os._exit(return_code)
 
@@ -1376,7 +1389,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.engineVersion
 
     def setInvitedBy(self, address: Union[str, None] = None) -> str:
-        address = (address or config.get().get('invited by', address))
+        address = address or config.get().get('invited by', address)
         if address:
             self.invitedBy = address
             config.add(data={'invited by': self.invitedBy})
@@ -1415,4 +1428,4 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ''' check if the wallet is an admin, shows admin abilities '''
         if self.wallet is None:
             return False
-        return self.wallet.address in ['admin addresses']
+        return self.wallet.address in ['EKHXCC6vGU3VfrGsRFnfBGLkvm6EENsXaB']

@@ -26,7 +26,6 @@ from satorilib.wallet.wallet import TransactionFailure
 from satorilib.utils.time import timeToSeconds
 from satorilib.wallet import RavencoinWallet, EvrmoreWallet
 from satorilib.utils import getRandomName, getRandomQuote
-from satorisynapse import Envelope, Signal
 from satorineuron import VERSION, MOTTO
 from satorineuron import VERSION, config
 from satorineuron import logging
@@ -76,17 +75,12 @@ while True:
                 'local': 'https://mundo.satorinet.io',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
-                'prod': 'https://mundo.satorinet.io'}[ENV],
+                'prod': 'https://mundo.satorinet.io:24607'}[ENV],
             urlPubsubs={
                 'local': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
-            urlSynergy={
-                'local': 'https://synergy.satorinet.io:24602',
-                'dev': 'https://localhost:24602',
-                'test': 'https://test.satorinet.io:24602',
-                'prod': 'https://synergy.satorinet.io:24602'}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
         # threading.Thread(target=start.start, daemon=True).start()
         logging.info(f'environment: {ENV}', print=True)

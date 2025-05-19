@@ -19,15 +19,10 @@ start = StartupDag(
         'local': 'http://192.168.0.10:5002',
         'dev': 'http://localhost:5002',
         'test': 'https://test.satorinet.io',
-        'prod': 'https://mundo.satorinet.io'}[ENV],
+        'prod': 'https://mundo.satorinet.io:24607'}[ENV],
     urlPubsubs={
         'local': ['ws://192.168.0.10:24603'],
         'dev': ['ws://localhost:24603'],
         'test': ['ws://test.satorinet.io:24603'],
         'prod': ['ws://pubsub1.satorinet.io:24603']}[ENV],
-    urlSynergy={
-        'local': 'https://192.168.0.10:24602',
-        'dev': 'https://localhost:24602',
-        'test': 'https://test.satorinet.io:24602',
-        'prod': 'https://synergy.satorinet.io:24602'}[ENV],
     isDebug=sys.argv[1] if len(sys.argv) > 1 else False)

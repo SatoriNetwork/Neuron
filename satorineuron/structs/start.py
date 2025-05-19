@@ -68,7 +68,6 @@ class StartupDagStruct(object):
         urlServer: str = None,
         urlMundo: str = None,
         urlPubsubs: list[str] = None,
-        urlSynergy: str = None,
         *args
     ):
         self.env = env
@@ -79,8 +78,7 @@ class StartupDagStruct(object):
         self.env: str = None
         self.urlServer: str = None
         self.urlMundo: str = None
-        self.urlPubsubs: list[str] = None
-        self.urlSynergy: str = None
+        self.urlPubsubs: [str] = None
         self.paused: bool = None
         self.pauseThread: Union[threading.Thread, None] = None
         self._ravencoinWallet: RavencoinWallet = None
@@ -179,9 +177,6 @@ class StartupDagStruct(object):
 
     def pubsConnect(self):
         ''' establish a pubsub connection. '''
-
-    def startSynergyEngine(self):
-        ''' establish a synergy connection. '''
 
     def startRelay(self):
         ''' starts the relay engine '''
