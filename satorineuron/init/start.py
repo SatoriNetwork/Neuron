@@ -33,7 +33,7 @@ from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, UiEndpoint, StartupDagStruct
-from satorilib.datamanager import DataClient, DataServerApi, Message, Subscription
+from satorilib.datamanager import DataClient, DataServerApi, DataClientApi, Message, Subscription
 from satorilib.utils.ip import getPublicIpv4UsingCurl
 from io import StringIO
 
@@ -1127,12 +1127,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     async def handleRawData(self, subscription: Subscription, message: Message):
 
-        logging.info('Raw Data Subscribtion Message',message.to_dict(True), color='green')
-        updated_data  = pd.concat([
-            self.data[message.uuid]['realData'],
-            message.data
-        ])
-        self.data[message.uuid]['realData'] = updated_data.tail(50)
+        if message.status != DataClientApi.streamInactive.value:
+            logging.info('Raw Data Subscribtion Message',message.to_dict(True), color='green')
+            updated_data  = pd.concat([
+                self.data[message.uuid]['realData'],
+                message.data
+            ])
+            self.data[message.uuid]['realData'] = updated_data.tail(50)
+        else:
+            logging.warning('Raw Data Subscribtion Message',message.to_dict(True))
 
     async def handlePredictionData(self, subscription: Subscription, message: Message):
 
@@ -1146,22 +1149,25 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 if pub.streamId.uuid == message.uuid:
                     return pub
 
-        logging.info('Prediction Data Subscribtion Message',message.to_dict(True), color='green')
-        matchedStreamUuid = findMatchingStreamUuid(message.uuid)
-        updated_data  = pd.concat([
-            self.data[matchedStreamUuid]['predictionData'],
-            message.data
-        ])
-        matchedStream = findMatchingStream(message.uuid)
-        
-        self.server.publish(
-            topic=matchedStream.streamId.jsonId,
-            data=str(message.data['value'].iloc[0]),
-            observationTime=str(message.data.index[0]),
-            observationHash=str(message.data['hash'].iloc[0]),
-            isPrediction=True,
-            useAuthorizedCall=self.version >= Version("0.2.6"))
-        self.data[matchedStreamUuid]['predictionData'] = updated_data.tail(50)
+        if message.status != DataClientApi.streamInactive.value:
+            logging.info('Prediction Data Subscribtion Message',message.to_dict(True), color='green')
+            matchedStreamUuid = findMatchingStreamUuid(message.uuid)
+            updated_data  = pd.concat([
+                self.data[matchedStreamUuid]['predictionData'],
+                message.data
+            ])
+            matchedStream = findMatchingStream(message.uuid)
+            
+            self.server.publish(
+                topic=matchedStream.streamId.jsonId,
+                data=str(message.data['value'].iloc[0]),
+                observationTime=str(message.data.index[0]),
+                observationHash=str(message.data['hash'].iloc[0]),
+                isPrediction=True,
+                useAuthorizedCall=self.version >= Version("0.2.6"))
+            self.data[matchedStreamUuid]['predictionData'] = updated_data.tail(50)
+        else:
+            logging.warning('Prediction Data Subscribtion Message',message.to_dict(True))
 
     def startRelay(self):
         def append(streams: list[Stream]):
