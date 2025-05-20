@@ -907,7 +907,7 @@
         if (response.ok) {
             const responseData = await response.json();
             console.log("responseData", responseData.message);
-            showNotification("Please Restart your Neuron for changes to take effect");
+            showNotification("Stream added successfully. Please restart to see it on the dashboard.");
         }
     })
     .catch(error => {

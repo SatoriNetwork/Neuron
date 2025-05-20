@@ -185,6 +185,8 @@ def getFile(ext: str = '.csv') -> tuple[str, int, Union[None, 'FileStorage']]:
 
 
 def getResp(resp: Union[dict, None] = None) -> dict:
+    if start.needsRestart:
+        flash(start.needsRestart)
     try:
         holdingBalance = start.holdingBalance
     except Exception as e:
@@ -1159,6 +1161,7 @@ def removePredictionStream():
     if r:
         # Remove the stream from our local state
         start.removePair(pubStreamId, subStreamId)
+        start.needsRestart = 'Restart required for changes to take effect.'
         return 'success', 200
     else:
         return 'Failed to remove stream', 500
@@ -2261,6 +2264,7 @@ def predictStream():
         result = start.server.predictStream(streamId)
         
         if result:
+            start.needsRestart = 'Restart required for changes to take effect'
             return jsonify({'message': 'Started predicting stream'}), 200
         else:
             return jsonify({'error': 'Failed to start predicting stream'}), 500

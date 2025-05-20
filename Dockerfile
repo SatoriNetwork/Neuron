@@ -72,17 +72,19 @@ RUN cd /Satori && \
     git clone https://github.com/ibm-granite/granite-tsfm.git && \
     pip install --upgrade pip && \
     if [ "${GPU_FLAG}" = "on" ]; then \
-    pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
+        pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
+        pip install triton nvidia-pyindex nvidia-cublas-cu12; \
     else \
-    pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu; \
+        pip install --no-cache-dir torch==2.3.1 --index-url https://download.pytorch.org/whl/cpu; \
     fi && \
     pip install --no-cache-dir transformers==4.44.2 && \
     pip install --no-cache-dir /Satori/granite-tsfm && \
     pip install --no-cache-dir /Satori/chronos-forecasting
 
-RUN cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop
-RUN cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop
-RUN cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+    RUN cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+    cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+    cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+    rm -rf /root/.cache /root/.local
 
 ## no need for ollama at this time.
 #RUN apt-get install -y curl
