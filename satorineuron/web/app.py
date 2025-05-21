@@ -44,7 +44,7 @@ def monitorAndRestartSatori():
                 return_code = process.poll()
                 if return_code is not None:
                     print(f'Satori exited with code {return_code}.')
-                    if return_code == 2:  # just restart satori app
+                    if return_code == 3:  # just restart satori app
                         break
                     return return_code  # 0 shutdown, 1 restart container, err
             except KeyboardInterrupt:

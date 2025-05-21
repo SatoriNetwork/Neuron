@@ -721,6 +721,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     'realData': realDataDf if realDataDf is not None else pd.DataFrame([]),
                     'predictionData': predictionDataDf if predictionDataDf is not None else pd.DataFrame([])
                 }
+                for stream_display in self.streamDisplay:
+                    if stream_display.streamId == self.findMatchingPubSubStream(k).streamId:
+                        if not self.data[k]['realData'].empty and not self.data[k]['predictionData'].empty:
+                            stream_display.value = self.data[k]["realData"]['value'].iloc[-1]
+                            stream_display.prediction = self.data[k]["predictionData"]['value'].iloc[-1]
+                            stream_display.values = [
+                                value
+                                for value in self.data[k]["realData"]['value']]
+                            stream_display.predictions = [
+                                value
+                                for value in self.data[k]["predictionData"]['value']]
+                            self.addModelUpdate(stream_display)
 
     @staticmethod
     def predictionStreams(streams: list[Stream]):
@@ -733,68 +745,69 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """filter down to prediciton publications"""
         return [s for s in streams if s.predicting is None]
 
-    async def buildEngine(self):
-        """start the engine, it will run w/ what it has til ipfs is synced"""
+    def streamDisplayer(self, subsription: Stream):
+        return StreamOverview(
+            streamId=subsription.streamId,
+            value="",
+            prediction="",
+            values=[],
+            predictions=[])
+    
 
-        def streamDisplayer(subsription: Stream):
-            return StreamOverview(
-                streamId=subsription.streamId,
-                value="",
-                prediction="",
-                values=[],
-                predictions=[])
 
-        def handleNewPrediction(streamForecast: StreamForecast):
-            for stream_display in self.streamDisplay:
-                if stream_display.streamId == streamForecast.streamId:
-                    stream_display.value = streamForecast.currentValue["value"].iloc[-1]
-                    stream_display.prediction = streamForecast.forecast["pred"].iloc[0]
-                    stream_display.values = [
-                        value
-                        for value in streamForecast.currentValue.value]
-                    stream_display.predictions = [
-                        value
-                        for value in streamForecast.predictionHistory.value]
-                    self.addModelUpdate(stream_display)
-            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId}', color='blue')
-            # self.server.publish( 
-            #     topic=streamForecast.predictionStreamId.topic(),
-            #     data=streamForecast.forecast["pred"].iloc[0],
-            #     observationTime=streamForecast.observationTime,
-            #     observationHash=streamForecast.observationHash,
-            #     isPrediction=True,
-            #     useAuthorizedCall=self.version >= Version("0.2.6"))
 
-        # TODO: we will have to change this some day to a mapping between the
-        #       publication (key) and all the supporting subscriptions (value)
-        #       because we will have a target feature stream and feature streams
-        #       {publication: [primarySubscription1, subscription2, ...]}
-        streamPairs = StreamPairs(
-            self.subscriptions,
-            StartupDag.predictionStreams(self.publications))
-        self.subscriptions, self.publications = streamPairs.get_matched_pairs()
-        print('SUBSCRIPTIONS', self.subscriptions)
-        print('PUBLICATIONS', self.publications)
+    # async def buildEngine(self):
+    #     """start the engine, it will run w/ what it has til ipfs is synced"""
 
-        # print([sub.streamId for sub in self.subscriptions])
 
-        self.streamDisplay = [
-            streamDisplayer(subscription)
-            for subscription in self.subscriptions]
+    #     def handleNewPrediction(streamForecast: StreamForecast):
+    #         for stream_display in self.streamDisplay:
+    #             if stream_display.streamId == streamForecast.streamId:
+    #                 stream_display.value = streamForecast.currentValue["value"].iloc[-1]
+    #                 stream_display.prediction = streamForecast.forecast["pred"].iloc[0]
+    #                 stream_display.values = [
+    #                     value
+    #                     for value in streamForecast.currentValue.value]
+    #                 stream_display.predictions = [
+    #                     value
+    #                     for value in streamForecast.predictionHistory.value]
+    #                 self.addModelUpdate(stream_display)
+    #         logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId}', color='blue')
+    #         # self.server.publish( 
+    #         #     topic=streamForecast.predictionStreamId.topic(),
+    #         #     data=streamForecast.forecast["pred"].iloc[0],
+    #         #     observationTime=streamForecast.observationTime,
+    #         #     observationHash=streamForecast.observationHash,
+    #         #     isPrediction=True,
+    #         #     useAuthorizedCall=self.version >= Version("0.2.6"))
 
-        self.engine: satoriengine.Engine = engine.getEngine(
-            run=self.engineVersion == 'v1',
-            subscriptions=self.subscriptions,
-            publications=self.publications)
-        self.engine.run()
-        # else:
-        #    logging.warning('Running in Local Mode.', color='green')
-        if self.engineVersion == 'v2':
-            self.aiengine: satoriengine.veda.engine.Engine = (
-                await satoriengine.veda.engine.Engine.create()
-            )
-            self.aiengine.predictionProduced.subscribe(
-                lambda x: handleNewPrediction(x) if x is not None else None)
+    #     # TODO: we will have to change this some day to a mapping between the
+    #     #       publication (key) and all the supporting subscriptions (value)
+    #     #       because we will have a target feature stream and feature streams
+    #     #       {publication: [primarySubscription1, subscription2, ...]}
+    #     streamPairs = StreamPairs(
+    #         self.subscriptions,
+    #         StartupDag.predictionStreams(self.publications))
+    #     self.subscriptions, self.publications = streamPairs.get_matched_pairs()
+    #     print('SUBSCRIPTIONS', self.subscriptions)
+    #     print('PUBLICATIONS', self.publications)
+
+    #     # print([sub.streamId for sub in self.subscriptions])
+
+
+    #     self.engine: satoriengine.Engine = engine.getEngine(
+    #         run=self.engineVersion == 'v1',
+    #         subscriptions=self.subscriptions,
+    #         publications=self.publications)
+    #     self.engine.run()
+    #     # else:
+    #     #    logging.warning('Running in Local Mode.', color='green')
+    #     if self.engineVersion == 'v2':
+    #         self.aiengine: satoriengine.veda.engine.Engine = (
+    #             await satoriengine.veda.engine.Engine.create()
+    #         )
+    #         self.aiengine.predictionProduced.subscribe(
+    #             lambda x: handleNewPrediction(x) if x is not None else None)
 
     def getMatchingStream(self, streamId: StreamId) -> Union[StreamId, None]:
         for stream in self.publications:
@@ -999,6 +1012,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             streamPairs = StreamPairs(
                 self.subscriptions,
                 StartupDag.predictionStreams(self.publications))
+            self.streamDisplay = [
+                self.streamDisplayer(subscription)
+                for subscription in self.subscriptions]
             subscriptions, publications = streamPairs.get_matched_pairs()
             predictionStreamsToPredict = config.get().get('prediction stream', None)
             if predictionStreamsToPredict is not None:
@@ -1139,33 +1155,42 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     async def handlePredictionData(self, subscription: Subscription, message: Message):
 
-        def findMatchingStreamUuid(pubUuid) -> str:
+        def findMatchingSubUuid(pubUuid) -> str:
             for key in self.pubSubMapping.keys():
                 if pubUuid == self.pubSubMapping.get(key, {}).get('publicationUuid'):
                     return key
 
-        def findMatchingStream(uuid: str) -> Stream:
-            for pub in self.publications:
-                if pub.streamId.uuid == message.uuid:
-                    return pub
-
         if message.status != DataClientApi.streamInactive.value:
             logging.info('Prediction Data Subscribtion Message',message.to_dict(True), color='green')
-            matchedStreamUuid = findMatchingStreamUuid(message.uuid)
+            matchedSubUuid = findMatchingSubUuid(message.uuid)
             updated_data  = pd.concat([
-                self.data[matchedStreamUuid]['predictionData'],
+                self.data[matchedSubUuid]['predictionData'],
                 message.data
             ])
-            matchedStream = findMatchingStream(message.uuid)
+
+            matchedPubStream = self.findMatchingPubSubStream(message.uuid, False)
+            matchedSubStream = self.findMatchingPubSubStream(matchedSubUuid)
             
             self.server.publish(
-                topic=matchedStream.streamId.jsonId,
+                topic=matchedPubStream.streamId.jsonId,
                 data=str(message.data['value'].iloc[0]),
                 observationTime=str(message.data.index[0]),
                 observationHash=str(message.data['hash'].iloc[0]),
                 isPrediction=True,
                 useAuthorizedCall=self.version >= Version("0.2.6"))
-            self.data[matchedStreamUuid]['predictionData'] = updated_data.tail(50)
+            self.data[matchedSubUuid]['predictionData'] = updated_data.tail(50)
+
+            for stream_display in self.streamDisplay:
+                if stream_display.streamId == matchedSubStream.streamId:
+                    stream_display.value = self.data[matchedSubUuid]["realData"]['value'].iloc[-1]
+                    stream_display.prediction = str(message.data['value'].iloc[0])
+                    stream_display.values = [
+                        value
+                        for value in self.data[matchedSubUuid]["realData"]['value']]
+                    stream_display.predictions = [
+                        value
+                        for value in self.data[matchedSubUuid]["predictionData"]['value']]
+                    self.addModelUpdate(stream_display)
         else:
             logging.warning('Prediction Data Subscribtion Message',message.to_dict(True))
 
@@ -1189,6 +1214,17 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relay = RawStreamRelayEngine(streams=append(self.publications))
         self.relay.run()
         logging.info("started relay engine", color="green")
+
+    def findMatchingPubSubStream(self, uuid: str, sub: bool = True) -> Stream:
+            if sub:
+                for sub in self.subscriptions:
+                    if sub.streamId.uuid == uuid:
+                        return sub
+            else:
+                for pub in self.publications:
+                    if pub.streamId.uuid == uuid:
+                        return pub
+
 
     def addWorkingUpdate(self, data: str):
         ''' tell ui we are working on something '''
