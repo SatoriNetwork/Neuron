@@ -709,8 +709,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.subscriptions,
             StartupDag.predictionStreams(self.publications))
         self.subscriptions, self.publications = streamPairs.get_matched_pairs()
-        print('SUBSCRIPTIONS', self.subscriptions)
-        print('PUBLICATIONS', self.publications)
 
         # print([sub.streamId for sub in self.subscriptions])
 

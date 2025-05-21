@@ -2273,6 +2273,32 @@ def predictStream():
         logging.error(f"Error predicting stream: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/flag/stream', methods=['POST'])
+@userInteracted
+@authRequired
+def flagStream():
+    try:
+        # Get streamId from request payload
+        data = request.get_json()
+        streamId = request.json.get('streamId', "")
+        if not data or 'streamId' not in data:
+            return jsonify({'error': 'Missing streamId in request'}), 400
+
+        streamId = data['streamId']
+        
+        # Call server to flag the stream
+        result = start.server.flagStream(streamId)
+        
+        if result:
+            start.needsRestart = 'Restart required for changes to take effect'
+            return jsonify({'message': 'Stream flagged for review'}), 200
+        else:
+            return jsonify({'error': 'Failed to flag stream'}), 500
+            
+    except Exception as e:
+        logging.error(f"Error flagging stream: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
 @app.route('/clear_vote_on/sanction/incremental', methods=['POST'])
 @userInteracted
 @authRequired
@@ -2986,3 +3012,5 @@ if __name__ == '__main__':
 #    return sock
 #
 #run_simple('::', config.flaskPort(), app, threaded=True, request_handler=None, passthrough_errors=True, use_reloader=False)
+
+
