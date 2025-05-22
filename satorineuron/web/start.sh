@@ -8,13 +8,59 @@ if [ "$HEADLESS" = "True" ]; then
     echo "Running in headless mode"
     python headless.py
 else
-    # Function to start all three processes
-    start_all_processes() {
-        echo "Starting all processes at $(date)..."
-        # Kill existing processes if running - the "|| true" prevents errors if process not found
+    # Function to handle different exit codes
+    handle_exit_code() {
+        local exit_code=$1
+        local timestamp=$(date)
+        
+        echo "Processing exit code $exit_code at $timestamp"
+        
+        case $exit_code in
+            0)
+                echo "Shutdown requested (exit code 0)"
+                # Create shutdown flag
+                touch /tmp/shutdown_requested
+                # Stop all processes gracefully
+                pkill -TERM -f "python app.py" || true
+                pkill -TERM -f "python data.py" || true
+                pkill -TERM -f "python /Satori/Engine/satoriengine/veda/engine.py" || true
+                
+                # Wait a bit for graceful shutdown
+                sleep 10
+                
+                # Exit the container as requested
+                exit 0
+                ;;
+            1)
+                echo "Container restart requested (exit code 1) - restarting all processes"
+                # Full restart as requested
+                sleep 5
+                restart_all_processes
+                ;;
+            3)
+                echo "Satori app restart (exit code 3) - this should be handled internally by Python"
+                # This is handled by your Python monitorAndRestartSatori loop
+                # No action needed from bash script
+                ;;
+            *)
+                echo "Unexpected exit code $exit_code - performing default restart"
+                sleep 15
+                restart_all_processes
+                ;;
+        esac
+    }
+    
+    # Function to restart all processes
+    restart_all_processes() {
+        echo "Restarting all processes at $(date)..."
+        
+        # Kill existing processes
         pkill -f "python app.py" || true
         pkill -f "python data.py" || true
-        pkill -f "python /Satori/Engine/satoriengine/veda/enginerun.py" || true
+        pkill -f "python /Satori/Engine/satoriengine/veda/engine.py" || true
+        
+        # Kill existing log monitors
+        pkill -f "tail -f app.log" || true
         
         # Give processes time to shut down
         sleep 5
@@ -22,9 +68,40 @@ else
         # Start all processes
         nohup python app.py > app.log 2>&1 &
         nohup python data.py > data.log 2>&1 &
-        nohup python /Satori/Engine/satoriengine/veda/enginerun.py > enginerun.log 2>&1 &
+        nohup python /Satori/Engine/satoriengine/veda/engine.py > engine.log 2>&1 &
         
         echo "All processes restarted at $(date)"
+        
+        # Restart log monitoring
+        start_log_monitoring
+    }
+    
+    start_log_monitoring() {
+        # Monitor app.log for exit codes
+        tail -f app.log | while read line; do
+            if [[ "$line" =~ Satori\ exited\ with\ code\ ([0-9]+)\. ]]; then
+                exit_code="${BASH_REMATCH[1]}"
+                echo "Exit code detected in app.log: $exit_code"
+                handle_exit_code "$exit_code"
+            fi
+        done &
+        
+        # You can also monitor other logs if needed
+        # tail -f data.log | while read line; do
+        #     # Handle data.py specific messages
+        # done &
+    }
+    
+    start_all_processes() {
+        echo "Starting all processes at $(date)..."
+
+        nohup python app.py > app.log 2>&1 &
+        nohup python data.py > data.log 2>&1 &
+        nohup python /Satori/Engine/satoriengine/veda/engine.py > engine.log 2>&1 &
+
+        echo "All processes started at $(date)"
+
+        start_log_monitoring
     }
     
     # Start processes for the first time
@@ -33,10 +110,15 @@ else
     # Keep container alive with infinite loop
     echo "Main processes started, keeping container alive at $(date)..."
     while true; do
+        # Check for shutdown flag first
+        if [ -f /tmp/shutdown_requested ]; then
+            echo "Shutdown flag detected, stopping monitoring loop"
+            exit 0
+        fi
         # Check if any of the three processes are not running
-        if ! pgrep -f "python app.py" > /dev/null || ! pgrep -f "python data.py" > /dev/null || ! pgrep -f "python /Satori/Engine/satoriengine/veda/enginerun.py" > /dev/null; then
+        if ! pgrep -f "python app.py" > /dev/null || ! pgrep -f "python data.py" > /dev/null || ! pgrep -f "python /Satori/Engine/satoriengine/veda/engine.py" > /dev/null; then
             echo "One of the main processes died at $(date), restarting all processes..."
-            start_all_processes
+            restart_all_processes
         fi
         
         # Sleep for 5 minutes before checking again
