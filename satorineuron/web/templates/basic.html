@@ -21,116 +21,22 @@
   </head>
   {% endblock %}
   <body class="g-sidenav-show {% if darkmode %}bg-gray-900{% else %}bg-gray-200{% endif %}">
-	  <div id="working" class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="display: none;">
-      <div class="container-for-center vertical-center" style="text-align: center; margin: auto; display: flex; justify-content: center;">
-		    {% if darkmode %}<img src="{{ url_for('static', filename='img/loading_dark.gif') }}" class="loadingThingy">{% else %}<img src="{{ url_for('static', filename='img/loading_light.gif') }}" class="loadingThingy">{% endif %}
-      </div>
+	<div id="working" class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="display: none;">
+    <div class="container-for-center vertical-center" style="text-align: center; margin: auto; display: flex; justify-content: center;">
+		  {% if darkmode %}<img src="{{ url_for('static', filename='img/loading_dark.gif') }}" class="loadingThingy">{% else %}<img src="{{ url_for('static', filename='img/loading_light.gif') }}" class="loadingThingy">{% endif %}
     </div>
-    <!--{ % include 'loader.html' %}-->
-    <!--{ % include 'header.html' % }-->
-    {% include 'nav-side.html' %}
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-      {% include 'header.html' %}
-      <div class="container-fluid py-4">
-        {% include 'flash.html' %}
-        {% block content %}
-        {% endblock %}
-        <!--{ % include 'footer.html' % }-->
-      </div>
-      {% include 'footer-nav.html' %}
-    </main>
-    <!--{ % include 'settings.html' % }-->
-    {% include 'scripts.html' %}
-	  <script>
-      function showWorking() {
-        document.getElementById("working").style.display = "block";
-        return true;
-      }
-      function hideWorking() {
-        document.getElementById("working").style.display = "none";
-        return true;
-      }
-      function isFocused(element) {
-        return document.activeElement === element;
-      }
-    </script>
-
-    <script>
-      function checkMainSize() {
-        let mainFrame = document.getElementsByClassName('main-content')[0];
-        if (mainFrame) {
-          let mainSize = mainFrame.clientWidth;
-          return mainSize;
-        } else {
-          return 0;
-        }
-      }
-    </script>
-
-    <script>
-      function loadingRightPadding() {
-        let mainWidth = checkMainSize();
-        let padding_width = (mainWidth - 200) / 2;
-        return padding_width;
-      }
-    </script>
-
-    <script>
-      const spinner_container = document.getElementById('working');
-      let spinnerCheckInterval;
-      let spinnerUpdateInterval;
-      function spaceLoadingImg() {
-        return "margin-right:" + loadingRightPadding() + "px;"; 
-      }
-      async function updateSpinner() {
-        const spinner = document.getElementsByClassName('loadingThingy')[0];
-        const popup = document.getElementById('create_ds_popup');
-        if (popup) {
-          if (popup.classList.contains('is-visible')){
-            const spinner = document.getElementsByClassName('loadingThingy')[0];
-            spinner.setAttribute("style", "margin: auto;");
-          } else {
-            spinner.setAttribute("style", spaceLoadingImg());  
-          }
-        } else {
-          spinner.setAttribute("style", spaceLoadingImg());  
-        }
-        console.log("updating style: spinner");
-      }
-      function checkSpinnerDisplaying() {
-        if(spinner_container.style.display == 'block') {
-          if (!spinnerUpdateInterval) {
-            spinnerUpdateInterval = setInterval(updateSpinner, 100);
-          }
-        } else {
-          if (spinnerUpdateInterval) {
-            clearInterval(spinnerUpdateInterval);
-            spinnerUpdateInterval = null;
-          }
-        }
-      }
-      spinnerCheckInterval = setInterval(checkSpinnerDisplaying, 100);
-
-      window.onload = function () {
-        updateSpinner();
-      }
-    </script>
-
-    <script>
-      /// Socket.IO connection ///
-      var socket = io();
-      socket.on('connect', function() {
-        console.log('Socket.IO connected!');
-      });
-      // Define your custom event listeners
-      socket.on('update_value', function(data) {
-        console.log('Socket.IO response!', data.value);
-        //document.getElementById("value").innerText = data.value;
-      });
-      socket.on('disconnect', function() {
-        console.log('Socket.IO disconnected. It will attempt to reconnect automatically.');
-      });
-    </script>
+    <div id="working_messages" class="container-for-center vertical-center" style="padding-left: 0px;position: relative;margin-left: 12%;margin-top: 20%;"><p id="working_message"></p></div>
+	</div>
+  <!--{ % include 'loader.html' %}-->
+  <!--{ % include 'header.html' % }-->
+  {% include 'nav-side.html' %}
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    {% include 'header.html' %}
+    <div class="container-fluid py-4">
+      {% include 'flash.html' %}
+      {% block content %}
+      {% endblock %}
+      <!--{ % include 'footer.html' % }-->
 
     </div>
     {% include 'footer-nav.html' %}

@@ -152,6 +152,7 @@
       {% endif %}
 -->
 
+
       {% if admin %}
         <li class="nav-item">
           <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Admin' else '' }}" href="{{ url_for('admin') }}" onclick="showWorking();">
@@ -166,6 +167,8 @@
         <li class='sub-nav-item'><a href='#' onclick="scrollOrJumpTo('admininviterlistbr');">Inviter Approval</a></li>
         {% endif %}
       {% endif %}
+
+
 
       <li class="nav-item">
         <a class="nav-link text-white {{ 'active bg-gradient-primary-reverse' if title=='Proposals' else '' }}" href="{{ url_for('proposals') }}" onclick="showWorking();">

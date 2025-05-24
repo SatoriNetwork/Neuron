@@ -6,8 +6,11 @@ import random
 import threading
 from queue import Queue
 from eth_account import Account
+<<<<<<< HEAD
 import asyncio
 import pandas as pd
+=======
+>>>>>>> main
 from satorilib.concepts.structs import (
     StreamId,
     Stream,
@@ -32,10 +35,14 @@ from satorineuron.init.tag import LatestTag, Version
 from satorineuron.init.wallet import WalletVaultManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
+<<<<<<< HEAD
 from satorineuron.structs.start import RunMode, UiEndpoint, StartupDagStruct
 from satorilib.datamanager import DataClient, DataServerApi, DataClientApi, Message, Subscription
 from satorilib.utils.ip import getPublicIpv4UsingCurl
 from io import StringIO
+=======
+from satorineuron.structs.start import RunMode, StartupDagStruct
+>>>>>>> main
 
 def getStart():
     """returns StartupDag singleton"""
@@ -57,9 +64,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     _holdingBalanceBase_cache = None
     _holdingBalanceBase_timestamp = 0
 
+<<<<<<< HEAD
     @classmethod
     async def create(
         cls,
+=======
+    def __init__(
+        self,
+>>>>>>> main
         *args,
         env: str = 'dev',
         runMode: str = None,
@@ -144,12 +156,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBlockTime = time.time()
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
+<<<<<<< HEAD
         self.publicDataManagerPort = 24600
         self.transferProtocol: Union[str, None] = None
         self.setPublicDataManagerPort()
         self.invitedBy: str = None
         self.setInvitedBy()
         self.latestObservationTime: str = 0
+=======
+        self.invitedBy: str = None
+        self.latestObservationTime: float = 0
+        self.setInvitedBy()
+>>>>>>> main
         self.configRewardAddress: str = None
         self.setRewardAddress()
         self.setEngineVersion()
@@ -468,14 +486,32 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     async def start(self):
         """start the satori engine."""
+<<<<<<< HEAD
         await self.connectToDataServer()
         asyncio.create_task(self.stayConnectedForever())
+=======
+        # while True:
+        if self.ranOnce:
+            time.sleep(60 * 60)
+        self.ranOnce = True
+        if self.walletOnlyMode:
+            self.walletVaultManager.setupWalletAndVault()
+            self.createServerConn()
+            self.checkin()
+            logging.info("in WALLETONLYMODE")
+            return
+>>>>>>> main
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
+<<<<<<< HEAD
         #self.subConnect()
+=======
+        self.verifyCaches()
+        self.subConnect()
+>>>>>>> main
         self.pubsConnect()
         await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
         if self.isDebug:
@@ -496,9 +532,15 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # self.getVault()
         self.createServerConn()
         self.checkin()
+<<<<<<< HEAD
         # self.populateData()
         # self.startSynergyEngine()
         #self.subConnect()
+=======
+        # self.setRewardAddress()
+        # self.verifyCaches()
+        self.subConnect()
+>>>>>>> main
         # self.pubsConnect()
         if self.isDebug:
             return
@@ -524,7 +566,12 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
+<<<<<<< HEAD
         #self.subConnect()
+=======
+        self.verifyCaches()
+        self.subConnect()
+>>>>>>> main
         self.pubsConnect()
         await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
         if self.isDebug:
@@ -566,7 +613,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.details = CheckinDetails(
                     self.server.checkin(
                         referrer=referrer,
-                        ip=self.ip,
                         vaultInfo={
                             'vaultaddress': vault.address, 
                             'vaultpubkey': vault.publicKey,
@@ -576,6 +622,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         self.setInvitedBy(self.details.get('sponsor'))
                     if isinstance(self.invitedBy, str) and len(self.invitedBy) == 34 and self.invitedBy.startswith('E'):
                         self.server.invitedBy(self.invitedBy)
+<<<<<<< HEAD
                 print("self.details.get('data_manager_port')")
                 print(self.details.get('data_manager_port'))
                 print("self.publicDataManagerPort - first ")
@@ -590,6 +637,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 #     print("self.publicDataManagerPort - second")
                 #     print(self.publicDataManagerPort)
                 self.server.setDataManagerPort(self.publicDataManagerPort)
+=======
+>>>>>>> main
                 #logging.debug(self.details, color='teal')
                 if self.details.get('rewardaddress') != self.configRewardAddress:
                     if self.configRewardAddress is None:
@@ -755,11 +804,47 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     
 
 
+<<<<<<< HEAD
 
     # async def buildEngine(self):
     #     """start the engine, it will run w/ what it has til ipfs is synced"""
+=======
+        def handleNewPrediction(streamForecast: StreamForecast):
+            for stream_display in self.streamDisplay:
+                if stream_display.streamId == streamForecast.streamId:
+                    stream_display.value = streamForecast.currentValue["value"].iloc[-1]
+                    stream_display.prediction = streamForecast.forecast["pred"].iloc[0]
+                    stream_display.values = [
+                        value
+                        for value in streamForecast.currentValue.value]
+                    stream_display.predictions = [
+                        value
+                        for value in streamForecast.predictionHistory.value]
+            logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId.strId}', color='blue')
+            self.server.publish(
+                topic=streamForecast.predictionStreamId.jsonId,
+                data=streamForecast.forecast["pred"].iloc[0],
+                observationTime=streamForecast.observationTime,
+                observationHash=streamForecast.observationHash,
+                isPrediction=True,
+                useAuthorizedCall=self.version >= Version("0.2.6"))
+
+        # TODO: we will have to change this some day to a mapping between the
+        #       publication (key) and all the supporting subscriptions (value)
+        #       because we will have a target feature stream and feature streams
+        #       {publication: [primarySubscription1, subscription2, ...]}
+        streamPairs = StreamPairs(
+            self.subscriptions,
+            StartupDag.predictionStreams(self.publications))
+        self.subscriptions, self.publications = streamPairs.get_matched_pairs()
+        print('SUBSCRIPTIONS', self.subscriptions)
+        print('PUBLICATIONS', self.publications)
+
+        # print([sub.streamId for sub in self.subscriptions])
+>>>>>>> main
 
 
+<<<<<<< HEAD
     #     def handleNewPrediction(streamForecast: StreamForecast):
     #         for stream_display in self.streamDisplay:
     #             if stream_display.streamId == streamForecast.streamId:
@@ -808,6 +893,39 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     #         )
     #         self.aiengine.predictionProduced.subscribe(
     #             lambda x: handleNewPrediction(x) if x is not None else None)
+
+    def getMatchingStream(self, streamId: StreamId) -> Union[StreamId, None]:
+        for stream in self.publications:
+            if stream.streamId == streamId:
+                return stream.predicting  # predicting is already a StreamId
+            if stream.predicting == streamId:  # comparing StreamId objects directly
+                return stream.streamId
+        return None
+    
+    def removePair(self, pub: StreamId, sub: StreamId):
+        self.publications = [p for p in self.publications if p.streamId != pub]
+        self.subscriptions = [s for s in self.subscriptions if s.streamId != sub]
+
+    def addToEngine(self, stream: Stream, publication: Stream):
+        if self.aiengine is not None:
+            self.aiengine.addStream(stream, publication)
+=======
+        self.engine: satoriengine.Engine = engine.getEngine(
+            run=self.engineVersion == 'v1',
+            subscriptions=self.subscriptions,
+            publications=self.publications)
+        self.engine.run()
+        # else:
+        #    logging.warning('Running in Local Mode.', color='green')
+        if self.engineVersion == 'v2':
+            self.aiengine: satoriengine.veda.engine.Engine = (
+                satoriengine.veda.engine.Engine(
+                    streams=self.subscriptions,
+                    pubstreams=self.publications)
+            )
+            self.aiengine.predictionProduced.subscribe(
+                lambda x: handleNewPrediction(x) if x is not None else None)
+>>>>>>> main
 
     def getMatchingStream(self, streamId: StreamId) -> Union[StreamId, None]:
         for stream in self.publications:
@@ -1215,6 +1333,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.relay.run()
         logging.info("started relay engine", color="green")
 
+<<<<<<< HEAD
     def findMatchingPubSubStream(self, uuid: str, sub: bool = True) -> Stream:
             if sub:
                 for sub in self.subscriptions:
@@ -1302,6 +1421,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         # else:
         #    raise Exception('synergy not created or not connected.')
 
+=======
+>>>>>>> main
     def pause(self, timeout: int = 60):
         """pause the engine."""
         self.paused = True
@@ -1434,6 +1555,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             config.add(data={'invited by': self.invitedBy})
         return self.invitedBy
 
+<<<<<<< HEAD
     def setPublicDataManagerPort(self, port: Union[int, None] = None) -> int:
         port = (port or config.get().get('server port', port))
         if port:
@@ -1441,6 +1563,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             config.add(data={'public data manager port': self.publicDataManagerPort})
         return self.publicDataManagerPort
 
+=======
+>>>>>>> main
     def poolAccepting(self, status: bool):
         success, result = self.server.poolAccepting(status)
         if success:
