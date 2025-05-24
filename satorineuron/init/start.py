@@ -156,11 +156,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.setupWalletManager()
         self.ip = getPublicIpv4UsingCurl()
         self.restartQueue: Queue = Queue()
-        self.restartQueueThread = threading.Thread(
-            target=self.restartWithQueue,
-            args=(self.restartQueue,),
-            daemon=True)
-        self.restartQueueThread.start()
+        # self.restartQueueThread = threading.Thread(
+        #     target=self.restartWithQueue,
+        #     args=(self.restartQueue,),
+        #     daemon=True)
+        # self.restartQueueThread.start()
         self.checkinCheckThread = threading.Thread(
             target=self.checkinCheck,
             daemon=True)

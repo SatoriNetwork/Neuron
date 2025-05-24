@@ -638,7 +638,8 @@ def import_wallet():
 @userInteracted
 @authRequired
 def refresh():
-    start.restartQueue.put(2)
+    print('Satori exited with code 2.')
+    logging.info("Refreshing Satori Neuron")
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -665,6 +666,8 @@ def refresh():
 @userInteracted
 @authRequired
 def restart():
+    print('Satori exited with code 1.')
+    logging.info("Restarting All.")
     html = (
         '<!DOCTYPE html>'
         '<html>'
@@ -690,6 +693,8 @@ def restart():
 @userInteracted
 @authRequired
 def shutdown():
+    print('Satori exited with code 0.')
+    logging.info("Shutting down Satori Neuron")
     html = (
         '<!DOCTYPE html>'
         '<html>'

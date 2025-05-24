@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  sat01:
+    image: satorinet/satorineuron:p2p
+    container_name: sat01
+    #restart: always
+    network_mode: "host"
+    volumes:
+      - c:\repos\Satori\Neuron:/Satori/Neuron
+      - c:\repos\Satori\Synapse:/Satori/Synapse
+      # - c:\repos\Satori\Wallet\sat01:/Satori/Wallet
+      - c:\repos\Satori\Lib:/Satori/Lib
+      - c:\repos\Satori\Engine:/Satori/Engine
+      # - ~/.satori0/Neuron/satorineuron:/Satori/Neuron/satorineuron
+    environment:
+      - ENV=prod
+    deploy:
+      resources:
+        limits:
+          cpus: "1.3"
+          memory: "3.5g"
+    stdin_open: true
+    tty: true
+    #entrypoint: ["bash", "/Satori/Neuron/satorineuron/web/start.sh"]
+    entrypoint: ["/bin/bash", "-c", "pip install python-evrmorelib -U && bash /Satori/Neuron/satorineuron/web/start.sh"]
