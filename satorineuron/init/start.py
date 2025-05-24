@@ -100,7 +100,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.env = env
         self.runMode = RunMode.choose(runMode or config.get().get('mode', None))
         self.sendToUI = sendToUI or (lambda x: None)
-        logging.info(f'mode: {self.runMode.name}', print=True)
+        logging.debug(f'mode: {self.runMode.name}', print=True)
         self.userInteraction = time.time()
         self.walletVaultManager: WalletVaultManager
         self.asyncThread: AsyncThread = AsyncThread()
@@ -144,9 +144,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.lastBlockTime = time.time()
         self.lastBridgeTime = 0
         self.poolIsAccepting: bool = False
-        self.publicDataManagerPort = 24600
         self.transferProtocol: Union[str, None] = None
-        self.setPublicDataManagerPort()
         self.invitedBy: str = None
         self.setInvitedBy()
         self.latestObservationTime: str = 0
@@ -570,31 +568,24 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                             'vaultaddress': vault.address, 
                             'vaultpubkey': vault.publicKey,
                         } if isinstance(vault, EvrmoreWallet) else None))
+                
                 if self.details.get('sponsor') != self.invitedBy:
                     if self.invitedBy is None:
                         self.setInvitedBy(self.details.get('sponsor'))
                     if isinstance(self.invitedBy, str) and len(self.invitedBy) == 34 and self.invitedBy.startswith('E'):
                         self.server.invitedBy(self.invitedBy)
-                print("self.details.get('data_manager_port')")
-                print(self.details.get('data_manager_port'))
-                print("self.publicDataManagerPort - first ")
-                print(self.publicDataManagerPort)
+
                 if config.get().get('prediction stream', 'notExisting') == 'notExisting':
                     config.add(data={'prediction stream': None})
-                # if (
-                #     self.details.get('data_manager_port') in (None, 24600, '24600')
-                #     and self.publicDataManagerPort not in (None, 24600, '24600')
-                # ):
-                #     self.server.setDataManagerPort(self.publicDataManagerPort)
-                #     print("self.publicDataManagerPort - second")
-                #     print(self.publicDataManagerPort)
-                self.server.setDataManagerPort(self.publicDataManagerPort)
-                #logging.debug(self.details, color='teal')
+
+                self.server.setDataManagerPort(self.dataServerPort)
+
                 if self.details.get('rewardaddress') != self.configRewardAddress:
                     if self.configRewardAddress is None:
                         self.setRewardAddress(address=self.details.get('rewardaddress'))
                     else:
                         self.setRewardAddress(globally=True)
+
                 self.updateConnectionStatus(
                     connTo=ConnectionTo.central, status=True)
                 # logging.debug(self.details, color='magenta')
@@ -614,48 +605,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 ):
                     time.sleep(30)
                     continue
-                logging.info("subscriptions:", len(
+                logging.debug("subscriptions:", len(
                     self.subscriptions), print=True)
-                # logging.info('subscriptions:', self.subscriptions, print=True)
                 self.publications = [
                     Stream.fromMap(x)
                     for x in json.loads(self.details.publications)]
-                logging.info(
+                logging.debug(
                     "publications:",
                     len(self.publications),
                     print=True)
-                # logging.info('publications:', self.publications, print=True)
                 self.caches = {
                     x.streamId: disk.Cache(id=x.streamId)
                     for x in set(self.subscriptions + self.publications)}
-                # for k, v in self.caches.items():
-                #    logging.debug(k, v, color='magenta')
-
-                # logging.debug(self.caches, color='yellow')
-                # self.signedStreamIds = [
-                #    SignedStreamId(
-                #        source=s.id.source,
-                #        author=s.id.author,
-                #        stream=s.id.stream,
-                #        target=s.id.target,
-                #        publish=False,
-                #        subscribe=True,
-                #        signature=sig,  # doesn't the server need my pubkey?
-                #        signed=self.wallet.sign(sig)) for s, sig in zip(
-                #            self.subscriptions,
-                #            self.subscriptionKeys)
-                # ] + [
-                #    SignedStreamId(
-                #        source=p.id.source,
-                #        author=p.id.author,
-                #        stream=p.id.stream,
-                #        target=p.id.target,
-                #        publish=True,
-                #        subscribe=True,
-                #        signature=sig,  # doesn't the server need my pubkey?
-                #        signed=self.wallet.sign(sig)) for p, sig in zip(
-                #            self.publications,
-                #            self.publicationKeys)]
                 logging.info("checked in with Satori", color="green")
                 break
             except Exception as e:
@@ -1052,9 +1013,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     seen = set()
                     data[key] = [x for x in data[key] if not (x in seen or seen.add(x))]
 
-            print("My Subscribers", mySubscribers)
-            print("hostInfo", hostInfo)
-            print("remotePublishers", remotePublishers)
+            logging.debug("My Subscribers", mySubscribers, print=True)
+            logging.debug("hostInfo", hostInfo, print=True)
+            logging.debug("remotePublishers", remotePublishers, print=True)
 
             hostIpAndPort = next((value for value in hostInfo.values() if value), [])
 
@@ -1063,12 +1024,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 logging.warning("Host Info is empty. Using default Pro-active protocol.")
                 self.transferProtocol = 'p2p-proactive-pubsub' # a good usecase for 'pubsub'?
             else:
-                print('Host Ip And Port', hostIpAndPort)
+                logging.debug('Host Ip And Port', hostIpAndPort, print=True)
                 hostIp = hostIpAndPort[0].split(':')[0]
                 for k, v in remotePublishers.items():
                     publisherIp = v[0].split(':')[0]
                     if publisherIp == hostIp:
-                        logging.info("Matched Ip Found for Remote Publisher")
                         uuidOfMatchedIp = k
                         portOfMatchedIp = v[0].split(':')[1]
                         internalNatIp = self.determineInternalNatIp()
@@ -1076,11 +1036,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         for k, v in fellowSubscribers.items():
                             # Appending the internal NAT ip if remotePublisher has same ip as of the host
                             if k == uuidOfMatchedIp:
-                                print("Appended Ip with Port:", publisherToBeAppended)
+                                logging.debug("Appended remotePublisher Ip with Port:", publisherToBeAppended, print=True)
                                 v.append(publisherToBeAppended)
                 self.transferProtocol = self.determineTransferProtocol(
                     hostIp, self.dataServerPort)
-                print('transferProtocol', self.transferProtocol)
+                logging.debug('transferProtocol', self.transferProtocol, print=True)
                     
             subInfo = {
                 uuid: {
@@ -1448,13 +1408,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.invitedBy = address
             config.add(data={'invited by': self.invitedBy})
         return self.invitedBy
-
-    def setPublicDataManagerPort(self, port: Union[int, None] = None) -> int:
-        port = (port or config.get().get('server port', port))
-        if port:
-            self.publicDataManagerPort = port
-            config.add(data={'public data manager port': self.publicDataManagerPort})
-        return self.publicDataManagerPort
 
     def poolAccepting(self, status: bool):
         success, result = self.server.poolAccepting(status)

@@ -135,7 +135,7 @@ class RawStreamRelayEngine(Cached):
     ):
         ''' relays data to pubsub '''
         from satorineuron.init.start import getStart
-        print("publishing Stream UUID", stream.streamId.uuid)
+        logging.debug("publishing Stream UUID", stream.streamId.uuid, print=True)
         logging.info(
             'outgoing message:',
             f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',

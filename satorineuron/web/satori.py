@@ -171,7 +171,7 @@ start = run_async_startup()
 
 @socketio.on('connect')
 def handle_connect():
-    print("Client connected")
+    logging.debug("Client connected", print=True)
     emit('update_value', {'value': 'Connected!'})
 
 # @app.route('/model-updates')

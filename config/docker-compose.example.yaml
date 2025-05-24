@@ -5,9 +5,7 @@ services:
     image: satorinet/satorineuron:latest
     container_name: satorineuron01
     #restart: always
-    ports:
-      - "127.0.0.1:24601:24601"
-      - "24611:24611"
+    network_mode: "host"
     volumes:
       - ~/.satori01/run:/Satori/Neuron/run
       - ~/.satori01/data:/Satori/Neuron/data

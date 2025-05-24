@@ -21,7 +21,7 @@ else
                 # Create shutdown flag
                 touch /tmp/shutdown_requested
                 # Stop all processes gracefully
-                pkill -TERM -f "python satori.py" || true
+                pkill -TERM -f "python app.py" || true
                 pkill -TERM -f "python data.py" || true
                 pkill -TERM -f "python /Satori/Engine/satoriengine/veda/engine.py" || true
                 
@@ -39,9 +39,9 @@ else
                 ;;
             2)
                 echo "Neuron Application restart requested (exit code 2)"
-                pkill -f "python satori.py" || true
+                pkill -f "python app.py" || true
                 sleep 5
-                nohup python satori.py > app.log 2>&1 &
+                nohup python app.py > app.log 2>&1 &
                 ;;
             3)
                 echo "Satori app restart (exit code 3) - this should be handled internally by Python"
@@ -61,7 +61,7 @@ else
         echo "Restarting all processes at $(date)..."
         
         # Kill existing processes
-        pkill -f "python satori.py" || true
+        pkill -f "python app.py" || true
         pkill -f "python data.py" || true
         pkill -f "python /Satori/Engine/satoriengine/veda/engine.py" || true
         
@@ -72,7 +72,7 @@ else
         sleep 5
         
         # Start all processes
-        nohup python satori.py > app.log 2>&1 &
+        nohup python app.py > app.log 2>&1 &
         nohup python data.py > data.log 2>&1 &
         nohup python /Satori/Engine/satoriengine/veda/engine.py > engine.log 2>&1 &
         
@@ -101,7 +101,7 @@ else
     start_all_processes() {
         echo "Starting all processes at $(date)..."
 
-        nohup python satori.py > app.log 2>&1 &
+        nohup python app.py > app.log 2>&1 &
         nohup python data.py > data.log 2>&1 &
         nohup python /Satori/Engine/satoriengine/veda/engine.py > engine.log 2>&1 &
         
@@ -120,7 +120,7 @@ else
             exit 0
         fi
         # Check if any of the three processes are not running
-        if ! pgrep -f "python satori.py" > /dev/null || ! pgrep -f "python data.py" > /dev/null || ! pgrep -f "python /Satori/Engine/satoriengine/veda/engine.py" > /dev/null; then
+        if ! pgrep -f "python app.py" > /dev/null || ! pgrep -f "python data.py" > /dev/null || ! pgrep -f "python /Satori/Engine/satoriengine/veda/engine.py" > /dev/null; then
             echo "One of the main processes died at $(date), restarting all processes..."
             restart_all_processes
         fi
