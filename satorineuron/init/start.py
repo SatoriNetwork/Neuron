@@ -564,6 +564,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.details = CheckinDetails(
                     self.server.checkin(
                         referrer=referrer,
+                        ip=self.ip,
                         vaultInfo={
                             'vaultaddress': vault.address, 
                             'vaultpubkey': vault.publicKey,
@@ -662,7 +663,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 try:
                     realData = await self.dataClient.getLocalStreamData(k)
                     if realData.status == DataServerApi.statusSuccess.value and isinstance(realData.data, pd.DataFrame):
-                        realDataDf = realData.data.tail(50)
+                        realDataDf = realData.data.tail(100)
                     else:
                         raise Exception(realData.senderMsg)
                 except Exception as e:
@@ -671,28 +672,27 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 try:
                     predictionData = await self.dataClient.getLocalStreamData(self.pubSubMapping[k]['publicationUuid'])
                     if predictionData.status == DataServerApi.statusSuccess.value and isinstance(predictionData.data, pd.DataFrame):
-                        predictionDataDf = predictionData.data.tail(50)
+                        predictionDataDf = predictionData.data.tail(100)
                     else:
                         raise Exception(predictionData.senderMsg)
                 except Exception as e:
                     # logging.error(e)
                     pass
-                self.data[k] = {
-                    'realData': realDataDf if realDataDf is not None else pd.DataFrame([]),
-                    'predictionData': predictionDataDf if predictionDataDf is not None else pd.DataFrame([])
-                }
-                for stream_display in self.streamDisplay:
-                    if stream_display.streamId == self.findMatchingPubSubStream(k).streamId:
-                        if not self.data[k]['realData'].empty and not self.data[k]['predictionData'].empty:
-                            stream_display.value = self.data[k]["realData"]['value'].iloc[-1]
-                            stream_display.prediction = self.data[k]["predictionData"]['value'].iloc[-1]
-                            stream_display.values = [
-                                value
-                                for value in self.data[k]["realData"]['value']]
-                            stream_display.predictions = [
-                                value
-                                for value in self.data[k]["predictionData"]['value']]
-                            self.addModelUpdate(stream_display)
+
+                if realDataDf is not None and predictionDataDf is not None and not realDataDf.empty and not predictionDataDf.empty:
+                    aligned_real, aligned_predictions = self.alignPredDataWithRealData(realDataDf, predictionDataDf)
+                    self.data[k] = {
+                        'realData': aligned_real.tail(100),  # Keep last 100 aligned points
+                        'predictionData': aligned_predictions.tail(100)
+                    }
+                else:
+                    # Fallback to original behavior if alignment fails
+                    self.data[k] = {
+                        'realData': realDataDf.tail(100) if realDataDf is not None else pd.DataFrame([]),
+                        'predictionData': predictionDataDf.tail(100) if predictionDataDf is not None else pd.DataFrame([])
+                    }
+
+                self.updateStreamDisplay(self.findMatchingPubSubStream(k).streamId)
 
     @staticmethod
     def predictionStreams(streams: list[Stream]):
@@ -1124,7 +1124,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 self.data[message.uuid]['realData'],
                 message.data
             ])
-            self.data[message.uuid]['realData'] = updated_data.tail(50)
+            self.data[message.uuid]['realData'] = updated_data.tail(100)
         else:
             logging.warning('Raw Data Subscribtion Message',message.to_dict(True))
 
@@ -1138,10 +1138,28 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if message.status != DataClientApi.streamInactive.value:
             logging.info('Prediction Data Subscribtion Message',message.to_dict(True), color='green')
             matchedSubUuid = findMatchingSubUuid(message.uuid)
-            updated_data  = pd.concat([
+            updatedPredictionData  = pd.concat([
                 self.data[matchedSubUuid]['predictionData'],
                 message.data
             ])
+            currentRealData = self.data[matchedSubUuid]['realData']
+
+            # if not currentRealData.empty and not updatedPredictionData.empty:
+            #     try:
+            #         aligned_real, aligned_predictions = self.alignPredDataWithRealData(
+            #             currentRealData, updatedPredictionData
+            #         )
+            #         self.data[matchedSubUuid] = {
+            #             'realData': aligned_real.tail(100),
+            #             'predictionData': aligned_predictions.tail(100)
+            #         }
+            #     except Exception as e:
+            #         logging.warning(f"Failed to align data for {matchedSubUuid}: {e}")
+            #         # Fallback to unaligned data
+            #         self.data[matchedSubUuid]['predictionData'] = updatedPredictionData.tail(100)
+            # else:
+            #     # If real data is empty or alignment not possible, just update prediction data
+            #     self.data[matchedSubUuid]['predictionData'] = updatedPredictionData.tail(100)
 
             matchedPubStream = self.findMatchingPubSubStream(message.uuid, False)
             matchedSubStream = self.findMatchingPubSubStream(matchedSubUuid)
@@ -1153,19 +1171,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 observationHash=str(message.data['hash'].iloc[0]),
                 isPrediction=True,
                 useAuthorizedCall=self.version >= Version("0.2.6"))
-            self.data[matchedSubUuid]['predictionData'] = updated_data.tail(50)
-
-            for stream_display in self.streamDisplay:
-                if stream_display.streamId == matchedSubStream.streamId:
-                    stream_display.value = self.data[matchedSubUuid]["realData"]['value'].iloc[-1]
-                    stream_display.prediction = str(message.data['value'].iloc[0])
-                    stream_display.values = [
-                        value
-                        for value in self.data[matchedSubUuid]["realData"]['value']]
-                    stream_display.predictions = [
-                        value
-                        for value in self.data[matchedSubUuid]["predictionData"]['value']]
-                    self.addModelUpdate(stream_display)
+            self.data[matchedSubUuid]['predictionData'] = updatedPredictionData.tail(100)
+            
+            self.updateStreamDisplay(matchedSubStream.streamId)
         else:
             logging.warning('Prediction Data Subscribtion Message',message.to_dict(True))
 
@@ -1200,6 +1208,27 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     if pub.streamId.uuid == uuid:
                         return pub
 
+    def updateStreamDisplay(self, streamId: StreamId):
+        """
+        Update stream display with new value and prediction 
+        """
+        for stream_display in self.streamDisplay:
+            if stream_display.streamId == streamId:
+                uuid = streamId.uuid
+                if uuid in self.data:
+                    realData = self.data[uuid]['realData']
+                    predData = self.data[uuid]['predictionData']
+                    
+                    if not realData.empty:
+                        stream_display.value = str(realData['value'].iloc[-1])
+                        stream_display.values = [str(val) for val in realData['value']]
+                    
+                    if not predData.empty:
+                        stream_display.prediction = str(predData['value'].iloc[-1])
+                        stream_display.predictions = [str(val) for val in predData['value']]
+
+                self.addModelUpdate(stream_display)
+                break
 
     def addWorkingUpdate(self, data: str):
         ''' tell ui we are working on something '''
@@ -1436,3 +1465,72 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.wallet is None:
             return False
         return self.wallet.address in ['EKHXCC6vGU3VfrGsRFnfBGLkvm6EENsXaB']
+    
+    def alignPredDataWithRealData(self, realDataDf, predictionDataDf):
+        """
+        For each real data point, find the LATEST prediction made AFTER that real data timestamp.
+        Automatically calculates cadence from real data.
+        
+        Args:
+            real_data_df: DataFrame with real observations
+            prediction_data_df: DataFrame with predictions
+        
+        Returns:
+            tuple: (aligned_real_data, aligned_prediction_data)
+        """
+        if realDataDf.empty or predictionDataDf.empty:
+            return realDataDf, predictionDataDf
+        
+        # Ensure datetime index and sort
+        realDataDf.index = pd.to_datetime(realDataDf.index)
+        predictionDataDf.index = pd.to_datetime(predictionDataDf.index)
+        realDataDf = realDataDf.sort_index()
+        predictionDataDf = predictionDataDf.sort_index()
+        
+        # Calculate cadence from real data (median time difference between consecutive points)
+        if len(realDataDf) < 2:
+            cadence_minutes = 10  # Default fallback
+        else:
+            time_diffs = realDataDf.index.to_series().diff().dropna()
+            cadence_seconds = time_diffs.median().total_seconds()
+            cadence_minutes = max(1, cadence_seconds / 60)  # At least 1 minute
+        
+        # Pre-filter prediction data to reduce search space
+        min_real_time = realDataDf.index.min()
+        max_real_time = realDataDf.index.max()
+        prediction_window = pd.Timedelta(minutes=cadence_minutes)
+        
+        # Only keep predictions that could potentially match
+        pred_mask = (predictionDataDf.index >= min_real_time) & \
+                    (predictionDataDf.index <= max_real_time + prediction_window)
+        filtered_predictions = predictionDataDf[pred_mask]
+        
+        if filtered_predictions.empty:
+            return pd.DataFrame(), pd.DataFrame()
+        
+        # Use searchsorted for efficient time-based matching
+        pred_timestamps = filtered_predictions.index
+        aligned_real = []
+        aligned_predictions = []
+        
+        for real_timestamp, real_row in realDataDf.iterrows():
+            window_start = real_timestamp + pd.Timedelta(seconds=1)
+            window_end = real_timestamp + prediction_window
+            
+            # Find prediction indices within window using binary search
+            start_idx = pred_timestamps.searchsorted(window_start, side='left')
+            end_idx = pred_timestamps.searchsorted(window_end, side='right')
+            
+            if start_idx < end_idx:
+                # Get the latest (rightmost) prediction in the window
+                latest_pred_idx = end_idx - 1
+                latest_prediction = filtered_predictions.iloc[latest_pred_idx]
+                aligned_real.append(real_row)
+                aligned_predictions.append(latest_prediction)
+        
+        # Convert to DataFrames with matching indices
+        if aligned_real:
+            return (pd.DataFrame(aligned_real).reset_index(drop=True),
+                    pd.DataFrame(aligned_predictions).reset_index(drop=True))
+        else:
+            return pd.DataFrame(), pd.DataFrame()
