@@ -683,7 +683,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     'realData': realDataDf.tail(100) if realDataDf is not None else pd.DataFrame([]),
                     'predictionData': predictionDataDf.tail(100) if predictionDataDf is not None else pd.DataFrame([])
                 }
-                if realDataDf is not None or predictionDataDf is not None or not realDataDf.empty or not predictionDataDf.empty:
+                if ((realDataDf is not None and not realDataDf.empty) or 
+                (predictionDataDf is not None and not predictionDataDf.empty)):
                     self.updateStreamDisplay(self.findMatchingPubSubStream(k).streamId)
 
     @staticmethod
