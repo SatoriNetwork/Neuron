@@ -67,22 +67,40 @@ RUN apt-get update && \
         libleveldb-dev && \
     apt-get clean
 
+# testing
+#pip uninstall granite-tsfm; rm -rf granite-tsfm; git clone -b v2.0.6 https://github.com/ibm-granite/granite-tsfm.git; pip install --no-cache-dir /Satori/granite-tsfm
+#pip uninstall granite-tsfm nvidia-cublas-cu12 nvidia-cuda-cupti-cu12 nvidia-cuda-nvrtc-cu12 nvidia-cuda-runtime-cu12 nvidia-cudnn-cu12 nvidia-cufft-cu12 nvidia-cufile-cu12 nvidia-curand-cu12 nvidia-cusolver-cu12 nvidia-cusparse-cu12 nvidia-cusparselt-cu12 nvidia-nccl-cu12 nvidia-nvjitlink-cu12 nvidia-nvtx-cu12
+# du -sh /usr/local/lib/python3.10/site-packages/* | sort -h
+# rm -rf /usr/local/lib/python3.10/site-packages/nvidia
+
 RUN cd /Satori && \
-    git clone https://github.com/amazon-science/chronos-forecasting.git && \
+    git clone -b v1.5.2 https://github.com/amazon-science/chronos-forecasting.git && \
     git clone https://github.com/ibm-granite/granite-tsfm.git && \
+    cd granite-tsfm && \
+    git checkout 43f2a35d76fe9a6c7fb5714b2cbff57eaa7c3980 && \
+    cd .. && \
     pip install --upgrade pip && \
     if [ "${GPU_FLAG}" = "on" ]; then \
-    pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
+        pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cu124; \
+        pip install triton nvidia-pyindex nvidia-cublas-cu12; \
     else \
-    pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu; \
-    fi && \
-    pip install --no-cache-dir transformers==4.44.2 && \
-    pip install --no-cache-dir /Satori/granite-tsfm && \
-    pip install --no-cache-dir /Satori/chronos-forecasting
+        pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu; \
+    fi
+RUN pip install --no-cache-dir transformers==4.51.3
+RUN pip install --no-cache-dir /Satori/granite-tsfm
+RUN pip install --no-cache-dir /Satori/chronos-forecasting
 
-RUN cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop
-RUN cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop
-RUN cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop
+# erase nvidia if GPU_FLAG is off
+#RUN if [ "${GPU_FLAG}" = "on" ]; then \
+#        echo "GPU_FLAG is on"; \
+#    else \
+#        rm -rf /usr/local/lib/python3.10/site-packages/nvidia; \ 
+#    fi
+
+RUN cd /Satori/Lib && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+    cd /Satori/Engine && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+    cd /Satori/Neuron && pip install --no-cache-dir -r requirements.txt && python setup.py develop && \
+    rm -rf /root/.cache /root/.local
 
 ## no need for ollama at this time.
 #RUN apt-get install -y curl

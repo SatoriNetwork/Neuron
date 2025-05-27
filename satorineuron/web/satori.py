@@ -292,6 +292,8 @@ def getFile(ext: str = '.csv') -> tuple[str, int, Union[None, 'FileStorage']]:
 
 
 def getResp(resp: Union[dict, None] = None) -> dict:
+    if start.needsRestart:
+        flash(start.needsRestart)
     try:
         holdingBalance = start.holdingBalance
     except Exception as e:
@@ -1271,6 +1273,7 @@ def removePredictionStream():
     if r:
         # Remove the stream from our local state
         start.removePair(pubStreamId, subStreamId)
+        start.needsRestart = 'Restart required for changes to take effect.'
         return 'success', 200
     else:
         return 'Failed to remove stream', 500
@@ -2258,6 +2261,7 @@ def predictStream():
         result = start.server.predictStream(streamId)
         
         if result:
+            start.needsRestart = 'Restart required for changes to take effect'
             return jsonify({'message': 'Started predicting stream'}), 200
         else:
             return jsonify({'error': 'Failed to start predicting stream'}), 500
@@ -2266,6 +2270,32 @@ def predictStream():
         logging.error(f"Error predicting stream: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/flag/stream', methods=['POST'])
+@userInteracted
+@authRequired
+def flagStream():
+    try:
+        # Get streamId from request payload
+        data = request.get_json()
+        streamId = request.json.get('streamId', "")
+        if not data or 'streamId' not in data:
+            return jsonify({'error': 'Missing streamId in request'}), 400
+
+        streamId = data['streamId']
+        
+        # Call server to flag the stream
+        result = start.server.flagStream(streamId)
+        
+        if result:
+            start.needsRestart = 'Restart required for changes to take effect'
+            return jsonify({'message': 'Stream flagged for review'}), 200
+        else:
+            return jsonify({'error': 'Failed to flag stream'}), 500
+            
+    except Exception as e:
+        logging.error(f"Error flagging stream: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
 @app.route('/clear_vote_on/sanction/incremental', methods=['POST'])
 @userInteracted
 @authRequired
@@ -2972,3 +3002,5 @@ if __name__ == '__main__':
 #    return sock
 #
 #run_simple('::', config.flaskPort(), app, threaded=True, request_handler=None, passthrough_errors=True, use_reloader=False)
+
+

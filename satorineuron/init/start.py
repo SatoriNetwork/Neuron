@@ -94,6 +94,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         isDebug: bool = False,
     ):
         super(StartupDag, self).__init__(*args)
+        self.needsRestart: Union[str, None] = None
         self.version = Version(VERSION)
         # TODO: test and turn on with new installer
         # self.watchForVersionUpdates()

@@ -62,6 +62,9 @@
                 </td>
                 <td>
                   <div class="d-flex gap-2">
+                    <div id="observations">
+                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }}, stream['stream']);">stacked_line_chart</i>
+                    </div>
                     {% if stream.vote == 0 %}
                       <div id="stream_increment_{{stream['stream_id']}}" onclick="incrementVote({{ stream['stream_id'] }}, event);">
                         <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
@@ -76,8 +79,8 @@
                         <i class="material-icons opacity-10" title="Predict Stream">trending_up</i>
                       </div>
                     {% endif %}
-                    <div id="observations">
-                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }}, stream['stream']);">stacked_line_chart</i>
+                    <div id="stream_flag_{{stream['stream_id']}}" onclick="flagStream({{ stream['stream_id'] }}, event);">
+                      <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Flag Stream">flag</i>
                     </div>
                   </div>
                 </td>
@@ -481,6 +484,9 @@
                 </div>` : 
                 ''
             }
+            <div id="stream_flag_${stream.stream_id}" onclick="flagStream(${stream.stream_id}, event);">
+              <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Flag Stream">flag</i>
+            </div>
           </div>
         </td>
         `;
@@ -907,12 +913,37 @@
         if (response.ok) {
             const responseData = await response.json();
             console.log("responseData", responseData.message);
-            showNotification("Please Restart your Neuron for changes to take effect");
+            showNotification("Stream added successfully. Please restart to see it on the dashboard.");
         }
     })
     .catch(error => {
       console.error('Error:', error);
       showNotification("Something went wrong!", true);
+    });
+  }
+  function flagStream(streamId, event) {
+    event.stopPropagation();
+    const voteActionElement = document.getElementById(`stream_flag_${streamId}`);
+    
+    fetch(
+      '/flag/stream', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({streamId: streamId})})
+    .then(async (response) => {
+        if (response.ok) {
+            const responseData = await response.json();
+            console.log("responseData", responseData.message);
+            voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Flagged Stream">flag</i>';
+            showNotification("Stream has been flagged for review.");
+        } else {
+            // Handle non-200 responses
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Failed to flag stream. Please try again.", true);
     });
   }
 </script>
