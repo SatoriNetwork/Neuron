@@ -1054,8 +1054,6 @@ def clearEditStream(topic=None):
     return 'ok', 200
 
 
-# @app.route('/remove_stream/<source>/<stream>/<target>/', methods=['GET'])
-# def removeStream(source=None, stream=None, target=None):
 @app.route('/remove_stream/<topic>', methods=['GET'])
 @userInteracted
 @authRequired
@@ -1068,9 +1066,17 @@ def removeStream(topic=None):
     return removeStreamLogic(removeRelayStream)
 
 
+@app.route('/restore_stream/<topic>', methods=['GET'])
+@userInteracted
+@authRequired
+def restoreStream(topic=None):
+    restoreRelayStream = StreamId.fromTopic(topic)
+    return restoreStreamLogic(restoreRelayStream)
+
+
 def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
     def acceptSubmittion(removeRelayStream: StreamId, doRedirect=True):
-        r = start.server.removeStream(payload=json.dumps({
+        r = start.server.removeOracleStream(payload=json.dumps({
             'source': removeRelayStream.source,
             # should match removeRelayStream.author
             'pubkey': start.wallet.publicKey,
@@ -1094,6 +1100,32 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
             return redirect('/dashboard')
 
     return acceptSubmittion(removeRelayStream, doRedirect)
+
+
+def restoreStreamLogic(restoreRelayStream: StreamId, doRedirect=True):
+    def acceptSubmittion(restoreRelayStream: StreamId, doRedirect=True):
+        r = start.server.restoreOracleStream(payload=json.dumps({
+            'source': restoreRelayStream.source,
+            'pubkey': start.wallet.publicKey,
+            'stream': restoreRelayStream.stream,
+            'target': restoreRelayStream.target,
+        }))
+        if (r.status_code == 200):
+            msg = 'Stream restored.'
+            try:
+                start.relayValidation.claimed.add(restoreRelayStream)
+            except Exception as e:
+                logging.error('restore stream logic err', e)
+            start.checkin()
+            start.pubsConnect()
+            start.startRelay()
+        else:
+            msg = 'Unable to restore stream.'
+        if doRedirect:
+            flash(msg)
+            return redirect('/dashboard')
+
+    return acceptSubmittion(restoreRelayStream, doRedirect)
 
 
 @app.route('/remove_stream_by_post', methods=['POST'])
