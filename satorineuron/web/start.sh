@@ -77,7 +77,7 @@ else
                 sleep 1
                 pkill -9 -f "python satori.py" || true
                 sleep 5
-                nohup python satori.py > app.log 2>&1 &
+                nohup python satori.py > neuron.log 2>&1 &
                 ;;
             3)
                 echo "Satori app restart (exit code 3) - this should be handled internally by Python"
@@ -110,14 +110,14 @@ else
         pkill -9 -f "python /Satori/Engine/satoriengine/veda/engine.py" || true
         
         # Kill existing log monitors
-        pkill -f "tail -f app.log" || true
+        pkill -f "tail -f neuron.log" || true
         
         # Give processes time to shut down
         sleep 10
         
         # Start all processes
         nohup python data.py > data.log 2>&1 &
-        nohup python satori.py > app.log 2>&1 &
+        nohup python satori.py > neuron.log 2>&1 &
         nohup python /Satori/Engine/satoriengine/veda/engine.py > engine.log 2>&1 &
         
         echo "All processes restarted at $(date)"
@@ -127,11 +127,11 @@ else
     }
     
     start_log_monitoring() {
-        # Monitor app.log for exit codes
-        tail -f app.log | while read line; do
+        # Monitor neuron.log for exit codes
+        tail -f neuron.log | while read line; do
             if [[ "$line" =~ Satori\ exited\ with\ code\ ([0-9]+)\. ]]; then
                 exit_code="${BASH_REMATCH[1]}"
-                echo "Exit code detected in app.log: $exit_code"
+                echo "Exit code detected in neuron.log: $exit_code"
                 handle_exit_code "$exit_code"
             fi
         done &
@@ -145,7 +145,7 @@ else
     start_all_processes() {
         echo "Starting all processes at $(date)..."
 
-        nohup python satori.py > app.log 2>&1 &
+        nohup python satori.py > neuron.log 2>&1 &
         nohup python data.py > data.log 2>&1 &
         nohup python /Satori/Engine/satoriengine/veda/engine.py > engine.log 2>&1 &
         
