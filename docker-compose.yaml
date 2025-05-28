@@ -9,7 +9,7 @@ services:
     volumes:
       - c:\repos\Satori\Neuron:/Satori/Neuron
       - c:\repos\Satori\Synapse:/Satori/Synapse
-      # - c:\repos\Satori\Wallet\sat01:/Satori/Wallet
+      - c:\repos\Satori\Wallet\sat01:/Satori/Wallet
       - c:\repos\Satori\Lib:/Satori/Lib
       - c:\repos\Satori\Engine:/Satori/Engine
       # - ~/.satori0/Neuron/satorineuron:/Satori/Neuron/satorineuron
@@ -22,5 +22,4 @@ services:
           memory: "3.5g"
     stdin_open: true
     tty: true
-    #entrypoint: ["bash", "/Satori/Neuron/satorineuron/web/start.sh"]
-    entrypoint: ["/bin/bash", "-c", "pip install python-evrmorelib -U && bash /Satori/Neuron/satorineuron/web/start.sh"]
+    entrypoint: ["bash", "/Satori/Neuron/satorineuron/web/start.sh"]
