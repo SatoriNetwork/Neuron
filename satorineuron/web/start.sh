@@ -13,8 +13,8 @@ else
         local timestamp=$(date)
         
         # Check each process individually
-        if ! pgrep -f "python app.py" > /dev/null; then
-            dead_processes+=("app.py")
+        if ! pgrep -f "python satori.py" > /dev/null; then
+            dead_processes+=("satori.py")
         fi
         
         if ! pgrep -f "python data.py" > /dev/null; then
@@ -51,9 +51,9 @@ else
                 sleep 1
                 pkill -9 -f "python data.py" || true
 
-                pkill -TERM -f "python app.py" || true
+                pkill -TERM -f "python satori.py" || true
                 sleep 1
-                pkill -9 -f "python app.py" || true
+                pkill -9 -f "python satori.py" || true
 
                 pkill -TERM -f "python /Satori/Engine/satoriengine/veda/engine.py" || true
                 sleep 1
@@ -73,11 +73,11 @@ else
                 ;;
             2)
                 echo "Neuron Application restart requested (exit code 2)"
-                pkill -f "python app.py" || true
+                pkill -f "python satori.py" || true
                 sleep 1
-                pkill -9 -f "python app.py" || true
+                pkill -9 -f "python satori.py" || true
                 sleep 5
-                nohup python app.py > app.log 2>&1 &
+                nohup python satori.py > app.log 2>&1 &
                 ;;
             3)
                 echo "Satori app restart (exit code 3) - this should be handled internally by Python"
@@ -97,9 +97,9 @@ else
         echo "Restarting all processes at $(date)..."
         
         # Kill existing processes
-        pkill -f "python app.py" || true
+        pkill -f "python satori.py" || true
         sleep 1
-        pkill -9 -f "python app.py" || true
+        pkill -9 -f "python satori.py" || true
 
         pkill -f "python data.py" || true
         sleep 1
@@ -117,7 +117,7 @@ else
         
         # Start all processes
         nohup python data.py > data.log 2>&1 &
-        nohup python app.py > app.log 2>&1 &
+        nohup python satori.py > app.log 2>&1 &
         nohup python /Satori/Engine/satoriengine/veda/engine.py > engine.log 2>&1 &
         
         echo "All processes restarted at $(date)"
@@ -145,7 +145,7 @@ else
     start_all_processes() {
         echo "Starting all processes at $(date)..."
 
-        nohup python app.py > app.log 2>&1 &
+        nohup python satori.py > app.log 2>&1 &
         nohup python data.py > data.log 2>&1 &
         nohup python /Satori/Engine/satoriengine/veda/engine.py > engine.log 2>&1 &
         
