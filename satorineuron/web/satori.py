@@ -1188,7 +1188,7 @@ def restoreStream(topic=None):
 
 def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
     def acceptSubmittion(removeRelayStream: StreamId, doRedirect=True):
-        r = start.server.removeOracleStream(payload=json.dumps({
+        r = start.server.removeStream(payload=json.dumps({
             'source': removeRelayStream.source,
             # should match removeRelayStream.author
             'pubkey': start.wallet.publicKey,
@@ -1216,7 +1216,7 @@ def removeStreamLogic(removeRelayStream: StreamId, doRedirect=True):
 
 def restoreStreamLogic(restoreRelayStream: StreamId, doRedirect=True):
     def acceptSubmittion(restoreRelayStream: StreamId, doRedirect=True):
-        r = start.server.restoreOracleStream(payload=json.dumps({
+        r = start.server.restoreStream(payload=json.dumps({
             'source': restoreRelayStream.source,
             'pubkey': start.wallet.publicKey,
             'stream': restoreRelayStream.stream,
@@ -1295,7 +1295,7 @@ def removePredictionStream():
         return 'Prediction stream not found', 404
 
     # Call server.removeStream with the prediction stream details
-    r = start.server.removeStream(payload=json.dumps({
+    r = start.server.removeOracleStream(payload=json.dumps({
         'source': pubStreamId.source,
         #'pubkey': start.wallet.publicKey, #ignored by server
         'stream': pubStreamId.stream,
