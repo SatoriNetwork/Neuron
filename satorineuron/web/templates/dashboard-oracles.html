@@ -98,13 +98,10 @@
                         </button>
                       </a>
                     </h6>
-                    <h6 class="mb-0 text-lg {% if darkmode %}dark-text{% endif %}" title="remove">
-                      <!--<a href=" url_for('removeStream', source=existingRelayStream['streamId']['source'], stream=existingRelayStream['streamId']['stream'], target=existingRelayStream['streamId']['target']) " onclick="showWorking();">-->
-                      <a href="{{ url_for('removeStream', topic=existingRelayStream['topic']) }}" class="requireConfirmation">
-                        <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;">
-                          <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">remove_circle_outline</i>
-                        </button>
-                      </a>
+                    <h6 class="mb-0 text-lg {% if darkmode %}dark-text{% endif %}" id="removeOracleStreamButton">
+                      <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;" title="remove" onclick="removeOracleStream('{{ existingRelayStream['topic'] }}')">
+                        <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">remove_circle_outline</i>
+                      </button>
                     </h6>
                   </div>
                 </td>
@@ -251,6 +248,68 @@
   </div>
 </div>
 <script>
+  function removeOracleStream(topic) {
+    if (!confirm('Are you sure you want to remove this stream? This action cannot be undone.')) {
+      return;
+    }
+    showWorking();
+    fetch('/remove_stream/' + topic, {
+      method: 'GET'
+    })
+    .then(response => {
+      if (response.ok) {
+        // Replace the remove button with a restore button
+        const buttonContainer = document.getElementById('removeOracleStreamButton');
+        if (buttonContainer) {
+          buttonContainer.innerHTML = `
+            <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;" title="restore" onclick="restoreOracleStream('${topic}')">
+              <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">check_circle_outline</i>
+            </button>
+          `;
+        }
+      } else {
+        alert('Failed to remove stream. Please try again.');
+      }
+      hideWorking();
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while removing the stream. Please try again.');
+      hideWorking();
+    });
+  }
+
+  function restoreOracleStream(topic) {
+    if (!confirm('Are you sure you want to restore this stream?')) {
+      return;
+    }
+    showWorking();
+    fetch('/restore_stream/' + topic, {
+      method: 'GET'
+    })
+    .then(response => {
+      if (response.ok) {
+        // Replace the restore button with a remove button
+        const buttonContainer = event.target.closest('h6');
+        if (buttonContainer) {
+          buttonContainer.innerHTML = `
+            <button class="btn btn-link text-dark p-0 fixed-plugin-close-button" style="margin-bottom: 0 !important;" title="remove" onclick="removeOracleStream('${topic}')">
+              <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 24px;">remove_circle_outline</i>
+            </button>
+          `;
+        }
+      } else {
+        alert('Failed to restore stream. Please try again.');
+      }
+      hideWorking();
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while restoring the stream. Please try again.');
+      hideWorking();
+    });
+  }
+
   document.getElementById('DataStreamsTable').addEventListener('click', function(event) {
     // Check if the clicked element is a link with class 'confirmAction'
     var target = event.target;
@@ -266,6 +325,7 @@
             // User clicked 'OK', navigate to the link
             window.location.href = target.getAttribute('href');
             showWorking();
+            target.style.display = 'none';
         } else {
             // User clicked 'Cancel', do nothing
             console.log("Action canceled.");
