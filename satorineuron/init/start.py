@@ -1135,13 +1135,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             matchedPubStream = self.findMatchingPubSubStream(message.uuid, False)
             matchedSubStream = self.findMatchingPubSubStream(matchedSubUuid)
 
-            self.server.publish(
-                topic=matchedPubStream.streamId.jsonId,
-                data=str(message.data['value'].iloc[0]),
-                observationTime=str(message.data.index[0]),
-                observationHash=str(message.data['hash'].iloc[0]),
-                isPrediction=True,
-                useAuthorizedCall=self.version >= Version("0.2.6"))
+            if not message.replace: # message.replace is False if its prediction on cadence
+                self.server.publish(
+                    topic=matchedPubStream.streamId.jsonId,
+                    data=str(message.data['value'].iloc[0]),
+                    observationTime=str(message.data.index[0]),
+                    observationHash=str(message.data['hash'].iloc[0]),
+                    isPrediction=True,
+                    useAuthorizedCall=self.version >= Version("0.2.6"))
             
             updatedPredictionData  = pd.concat([
                 self.data[matchedSubUuid]['predictionData'],
