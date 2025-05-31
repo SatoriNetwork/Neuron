@@ -145,9 +145,11 @@ else
     start_all_processes() {
         echo "Starting all processes at $(date)..."
 
-        nohup python satori.py > neuron.log 2>&1 &
         nohup python data.py > data.log 2>&1 &
+        nohup python satori.py > neuron.log 2>&1 &
         nohup python /Satori/Engine/satoriengine/veda/engine.py > engine.log 2>&1 &
+
+        sleep 3
         
         start_log_monitoring
     }
