@@ -4,7 +4,7 @@ services:
   sat01:
     image: satorinet/satorineuron:p2p
     container_name: sat01
-    #restart: always
+    restart: always
     network_mode: "host"
     volumes:
       - c:\repos\Satori\Neuron:/Satori/Neuron
@@ -22,4 +22,5 @@ services:
           memory: "3.5g"
     stdin_open: true
     tty: true
+    pull_policy: always
     entrypoint: ["bash", "/Satori/Neuron/satorineuron/web/start.sh"]

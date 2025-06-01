@@ -129,6 +129,7 @@ else
     start_log_monitoring() {
         # Monitor neuron.log for exit codes
         tail -f neuron.log | while read line; do
+            echo "[NEURON] $line"
             if [[ "$line" =~ Satori\ exited\ with\ code\ ([0-9]+)\. ]]; then
                 exit_code="${BASH_REMATCH[1]}"
                 echo "Exit code detected in neuron.log: $exit_code"
