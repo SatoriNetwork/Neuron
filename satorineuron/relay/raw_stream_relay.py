@@ -145,9 +145,9 @@ class RawStreamRelayEngine(Cached):
             {'value': [data]},
             index=[timestamp])
         try:
-            # if not hasattr(self, 'activateRawStream'):
-            #     self.activateRawStream = True
-            await start.dataClient.addActiveStream(uuid=stream.streamId.uuid) # TODO: this should be done better
+            if not hasattr(self, 'activateRawStream'):
+                await start.dataClient.addActiveStream(uuid=stream.streamId.uuid) # TODO: this should be done better
+                self.activateRawStream = True
             if start.transferProtocol == 'p2p-proactive-pubsub':
                 await start.dataClient.insertStreamData(
                     uuid=stream.streamId.uuid,
