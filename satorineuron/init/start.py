@@ -122,7 +122,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptionKeys: str
         self.publicationKeys: str
         # self.ipfs: Ipfs = Ipfs()
-        self.caches: dict[StreamId, disk.Cache] = {}
+        # self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.dataServerIp: str =  ''
         self.dataServerPort: Union[int, None] =  None
@@ -449,9 +449,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             if self.server.checkinCheck():
                 self.triggerRestart()
 
-    def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
-        """returns the reference to the cache of a stream"""
-        return self.caches.get(streamId)
+    # def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
+    #     """returns the reference to the cache of a stream"""
+    #     return self.caches.get(streamId)
 
     def networkIsTest(self, network: str = None) -> bool:
         return network.lower().strip() in ("testnet", "test", "ravencoin", "rvn")
@@ -616,9 +616,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     "publications:",
                     len(self.publications),
                     print=True)
-                self.caches = {
-                    x.streamId: disk.Cache(id=x.streamId)
-                    for x in set(self.subscriptions + self.publications)}
+                # self.caches = {
+                #     x.streamId: disk.Cache(id=x.streamId)
+                #     for x in set(self.subscriptions + self.publications)}
                 logging.info("checked in with Satori", color="green")
                 break
             except Exception as e:

@@ -1433,7 +1433,7 @@ def dashboard():
                 {
                     **stream.asMap(noneToBlank=True),
                     **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
-                    **{'late': start.relay.late(stream.streamId, timeToSeconds(start.cacheOf(stream.streamId).getLatestObservationTime()))},
+                    **{'late': start.relay.late(stream.streamId, timeToSeconds(None.getLatestObservationTime()))},
                     **{'cadenceStr': deduceCadenceString(stream.cadence)},
                     **{'offsetStr': deduceOffsetString(stream.offset)}}
                 for stream in start.relay.streams]
@@ -2865,7 +2865,7 @@ def relayCsv():
 @authRequired
 def relayHistoryCsv(topic: str = None):
     ''' returns a csv file of the history of the relay stream '''
-    cache = start.cacheOf(StreamId.fromTopic(topic))
+    cache = None
     return (
         (
             cache.df.drop(columns=['hash'])
@@ -2886,7 +2886,7 @@ def relayHistoryCsv(topic: str = None):
 @authRequired
 def mergeHistoryCsv(topic: str = None):
     ''' merge history uploaded  '''
-    cache = start.cacheOf(StreamId.fromTopic(topic))
+    cache = None
     if cache is not None:
         msg, status, f = getFile('.csv')
         if f is not None:
@@ -2912,7 +2912,7 @@ def mergeHistoryCsv(topic: str = None):
 @authRequired
 def removeHistoryCsv(topic: str = None):
     ''' removes history '''
-    cache = start.cacheOf(StreamId.fromTopic(topic))
+    cache = None
     if cache is not None and cache.df is not None:
         cache.remove()
         flash('history cleared successfully', 'success')
