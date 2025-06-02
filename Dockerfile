@@ -173,26 +173,10 @@ CMD ["bash", "./start_from_image.sh"]
 # unset GITHUB_USERNAME GITHUB_TOKEN
 ## slow
 # export $(grep -v '^#' .env | xargs)
-# docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:test         --push .
-# docker pull satorinet/satorineuron:test
+# docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:p2p         --push .
+# docker pull satorinet/satorineuron:p2p
 # docker tag satorinet/satorineuron:test satorinet/satorineuron:latest
 # docker push satorinet/satorineuron:latest
 # docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:rpi_satori   --push .
 # unset GITHUB_USERNAME GITHUB_TOKEN
 # echo "Done!"
-
-# Kolten
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Neumont\Enterprise\Satori\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
-
-# John
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\Satori\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
-
-# Mizuki
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\DevNeuron\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
-
-# Scott
-# docker run --rm -it --name satorineuron -p 24601:24601 -v C:\GitHub\Neuron:/Satori/Neuron --env ENV=prod satorinet/satorineuron:latest bash
-
-
-# docker buildx build --no-cache -f Dockerfile --platform linux/amd64,linux/arm64 --build-arg GPU_FLAG=off --build-arg BRANCH_FLAG=p2p -t satorinet/satorineuron:p2p         --push .
-# docker pull satorinet/satorineuron:p2p
