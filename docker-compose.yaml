@@ -4,7 +4,7 @@ services:
   sat01:
     image: satorinet/satorineuron:p2p
     container_name: sat01
-    restart: always
+    restart: unless-stopped
     network_mode: "host"
     volumes:
       - c:\repos\Satori\Neuron:/Satori/Neuron

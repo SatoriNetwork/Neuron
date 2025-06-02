@@ -1433,7 +1433,7 @@ def dashboard():
                 {
                     **stream.asMap(noneToBlank=True),
                     **{'latest': start.relay.latest.get(stream.streamId.jsonId, '')},
-                    **{'late': start.relay.late(stream.streamId, timeToSeconds(None.getLatestObservationTime()))},
+                    **{'late': start.relay.late(stream.streamId, timeToSeconds(time.time()))},
                     **{'cadenceStr': deduceCadenceString(stream.cadence)},
                     **{'offsetStr': deduceOffsetString(stream.offset)}}
                 for stream in start.relay.streams]
