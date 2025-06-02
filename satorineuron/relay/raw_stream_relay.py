@@ -18,6 +18,7 @@ from satorilib.concepts.structs import Stream, StreamId
 from satorilib.disk import Cached
 from satorilib.disk.cache import CachedResult
 from satorilib.datamanager import DataServerApi
+from satorilib.utils.time import datetimeToTimestamp, now
 import asyncio
 import pandas as pd
 
@@ -135,32 +136,35 @@ class RawStreamRelayEngine(Cached):
     ):
         ''' relays data to pubsub '''
         from satorineuron.init.start import getStart
-        logging.debug("publishing Stream UUID", stream.streamId.uuid, print=True)
-        logging.info(
-            'outgoing message:',
-            f'{stream.streamId.source}.{stream.streamId.stream}.{stream.streamId.target}',
-            data, timestamp, print=True)
+        uuid = stream.streamId.uuid
+        self.latest[stream.streamId.jsonId] = data
+        logging.debug("publishing Stream UUID", uuid, print=True)
         start = getStart()
+        timestamp = datetimeToTimestamp(now())
         dataForServer = pd.DataFrame(
             {'value': [data]},
             index=[timestamp])
         try:
             if not hasattr(self, 'activateRawStream'):
-                await start.dataClient.addActiveStream(uuid=stream.streamId.uuid) # TODO: this should be done better
+                await start.dataClient.addActiveStream(uuid=uuid) # TODO: this should be done better
                 self.activateRawStream = True
             if start.transferProtocol == 'p2p-proactive-pubsub':
                 await start.dataClient.insertStreamData(
-                    uuid=stream.streamId.uuid,
+                    uuid=uuid,
                     data=dataForServer,
                     isSub=True,
                     sendOnly=True)
             else:
                 await start.dataClient.insertStreamData(
-                    uuid=stream.streamId.uuid,
+                    uuid=uuid,
                     data=dataForServer,
                     isSub=True)
         except Exception as e:
             logging.error('Unable to set data: ', e)
+
+        latestData = await start.dataClient.getLocalStreamData(uuid=uuid) # TODO : make a function inside sqlite to just fetch the latest hash
+        observationHash = latestData.data['hash'].iloc[-1]
+
         start.publish(
             topic=stream.streamId.jsonId,
             data=data,
@@ -198,24 +202,15 @@ class RawStreamRelayEngine(Cached):
                 hookResult = RawStreamRelayEngine.callHook(stream, result)
                 logging.debug('hookResult', hookResult)
                 if hookResult is not None:
-                    cachedResult = self.save(stream, data=hookResult) # TODO : dataserver should handle this
-                    if cachedResult.success:
-                        self.run_async_in_thread(
-                            self.relay(
-                            stream,
-                            data=hookResult,
-                            timestamp=cachedResult.time,
-                            observationHash=cachedResult.hash
-                            )
+                    self.run_async_in_thread(
+                        self.relay(
+                        stream,
+                        data=hookResult,
+                        # timestamp=cachedResult.time,
+                        # observationHash=cachedResult.hash
                         )
-                        successes.append(True)
-                    else:
-                        # log or flash message or something...
-                        successes.append(False)
-                        logging.error(
-                            'Unable to save data for stream: ',
-                            f'{stream.streamId.stream}.{stream.streamId.target}',
-                            print=True)
+                    )
+                    successes.append(True)
                 else:
                     # log or flash message or something...
                     logging.error(

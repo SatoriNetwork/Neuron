@@ -37,6 +37,7 @@ from satorineuron.web import forms
 from satorineuron.structs.start import UiEndpoint
 from satorineuron.init.start import StartupDag
 from satorineuron.web.utils import deduceCadenceString, deduceOffsetString
+from satorilib.datamanager import DataServerApi, Message
 
 
 ###############################################################################
@@ -2865,11 +2866,14 @@ def relayCsv():
 @authRequired
 def relayHistoryCsv(topic: str = None):
     ''' returns a csv file of the history of the relay stream '''
-    cache = None
+    streamId = StreamId.fromTopic(topic)
+    async def getData() -> Message:
+        return await start.dataClient.getLocalStreamData(streamId.uuid)
+    data = asyncio.run(getData()).data
     return (
         (
-            cache.df.drop(columns=['hash'])
-            if cache is not None and cache.df is not None and 'hash' in cache.df.columns
+            data.drop(columns=['hash'])
+            if data is not None and 'hash' in data.columns
             else pd.DataFrame({'failure': [
                 f'no history found for stream with stream id of {topic}']}
             )
@@ -2877,7 +2881,7 @@ def relayHistoryCsv(topic: str = None):
         200,
         {
             'Content-Type': 'text/csv',
-            'Content-Disposition': f'attachment; filename={cache.id.stream}.{cache.id.target}.csv'
+            'Content-Disposition': f'attachment; filename={streamId.stream}.csv'
         })
 
 
@@ -2886,24 +2890,31 @@ def relayHistoryCsv(topic: str = None):
 @authRequired
 def mergeHistoryCsv(topic: str = None):
     ''' merge history uploaded  '''
-    cache = None
-    if cache is not None:
-        msg, status, f = getFile('.csv')
-        if f is not None:
+    async def mergeData(df: pd.DataFrame) -> Message:
+        if df is None or df.empty:
+            return Message(status=DataServerApi.statusFail.value)
+        return await start.dataClient.insertStreamData(streamId.uuid, df)
+    
+    streamId = StreamId.fromTopic(topic)
+    msg, status, f = getFile('.csv')
+    if status != 200:
+        flash(msg, 'error')
+        return redirect(url_for('dashboard'))
+    
+    if f is not None:
+        try:
             df = pd.read_csv(f)
-            cache.merge(df)
-            success, _ = cache.validateAllHashes()
-            if success:
-                flash('history merged successfully!', 'success')
+            f.close()  
+            response = asyncio.run(mergeData(df))
+            if response.status == DataServerApi.statusSuccess.value:
+                flash('History merged successfully!', 'success')
             else:
-                cache.saveHashes()
-                success, _ = cache.validateAllHashes()
-                if success:
-                    flash('history merged successfully!', 'success')
-        else:
-            flash(msg, 'success' if status == 200 else 'error')
+                flash('Failed to merge history', 'error')
+        except Exception as e:
+            flash(f'Error processing CSV: {str(e)}', 'error')
     else:
-        flash('history data not found', 'error')
+        flash('No file provided', 'error')
+    
     return redirect(url_for('dashboard'))
 
 
@@ -2912,9 +2923,12 @@ def mergeHistoryCsv(topic: str = None):
 @authRequired
 def removeHistoryCsv(topic: str = None):
     ''' removes history '''
-    cache = None
-    if cache is not None and cache.df is not None:
-        cache.remove()
+    async def deleteDataFromDatabase() -> Message:
+        return await start.dataClient.deleteStreamData(streamId.uuid)
+    
+    streamId = StreamId.fromTopic(topic)
+    response = asyncio.run(deleteDataFromDatabase())
+    if response.status == DataServerApi.statusSuccess.value:
         flash('history cleared successfully', 'success')
     else:
         flash('history not found', 'error')

@@ -9,10 +9,8 @@ services:
     volumes:
       - c:\repos\Satori\Neuron:/Satori/Neuron
       - c:\repos\Satori\Synapse:/Satori/Synapse
-      - c:\repos\Satori\Wallet\sat01:/Satori/Wallet
       - c:\repos\Satori\Lib:/Satori/Lib
       - c:\repos\Satori\Engine:/Satori/Engine
-      # - ~/.satori0/Neuron/satorineuron:/Satori/Neuron/satorineuron
     environment:
       - ENV=prod
     deploy:
