@@ -2872,17 +2872,18 @@ def relayHistoryCsv(topic: str = None):
     data = asyncio.run(getData()).data
     return (
         (
-            data.drop(columns=['hash'])
-            if data is not None and 'hash' in data.columns
+            data.drop(columns=[col for col in ['hash', 'provider'] if col in data.columns])
+            if data is not None
             else pd.DataFrame({'failure': [
                 f'no history found for stream with stream id of {topic}']}
             )
-        ).to_csv(),
+        ).to_csv(header=False),
         200,
         {
             'Content-Type': 'text/csv',
             'Content-Disposition': f'attachment; filename={streamId.stream}.csv'
-        })
+        }
+    )
 
 
 @app.route('/merge_history_csv/<topic>', methods=['POST'])
@@ -2893,13 +2894,12 @@ def mergeHistoryCsv(topic: str = None):
     async def mergeData(df: pd.DataFrame) -> Message:
         if df is None or df.empty:
             return Message(status=DataServerApi.statusFail.value)
-        return await start.dataClient.insertStreamData(streamId.uuid, df)
+        return await start.dataClient.mergeFromCsv(streamId.uuid, df)
     
     streamId = StreamId.fromTopic(topic)
     msg, status, f = getFile('.csv')
     if status != 200:
-        flash(msg, 'error')
-        return redirect(url_for('dashboard'))
+        return jsonify({'success': False, 'message': msg}), 400
     
     if f is not None:
         try:
@@ -2907,15 +2907,13 @@ def mergeHistoryCsv(topic: str = None):
             f.close()  
             response = asyncio.run(mergeData(df))
             if response.status == DataServerApi.statusSuccess.value:
-                flash('History merged successfully!', 'success')
+                return jsonify({'success': True, 'message': response.message['message']})
             else:
-                flash('Failed to merge history', 'error')
+                return jsonify({'success': False, 'message': response.message['message']})
         except Exception as e:
             flash(f'Error processing CSV: {str(e)}', 'error')
     else:
-        flash('No file provided', 'error')
-    
-    return redirect(url_for('dashboard'))
+        return jsonify({'success': False, 'message': 'No File Found'})
 
 
 @app.route('/remove_history_csv/<topic>', methods=['GET'])
@@ -2929,10 +2927,9 @@ def removeHistoryCsv(topic: str = None):
     streamId = StreamId.fromTopic(topic)
     response = asyncio.run(deleteDataFromDatabase())
     if response.status == DataServerApi.statusSuccess.value:
-        flash('history cleared successfully', 'success')
+        return jsonify({'success': True, 'message': 'History removed successfully!'})
     else:
-        flash('history not found', 'error')
-    return redirect(url_for('dashboard'))
+        return jsonify({'success': False, 'message': 'Error removing history'})
 
 
 @app.route('/trigger_relay/<topic>', methods=['GET'])
