@@ -122,7 +122,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.subscriptionKeys: str
         self.publicationKeys: str
         # self.ipfs: Ipfs = Ipfs()
-        # self.caches: dict[StreamId, disk.Cache] = {}
         self.relayValidation: ValidateRelayStream
         self.dataServerIp: str =  ''
         self.dataServerPort: Union[int, None] =  None
@@ -148,22 +147,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.transferProtocol: Union[str, None] = None
         self.invitedBy: str = None
         self.setInvitedBy()
-        self.latestObservationTime: str = 0
+        self.latestObservationTime: float = 0
         self.configRewardAddress: str = None
         self.setRewardAddress()
         self.setEngineVersion()
         self.setupWalletManager()
         self.ip = getPublicIpv4UsingCurl()
         self.restartQueue: Queue = Queue()
-        # self.restartQueueThread = threading.Thread(
-        #     target=self.restartWithQueue,
-        #     args=(self.restartQueue,),
+        # self.checkinCheckThread = threading.Thread( # TODO: clean up after making sure the newer async works well
+        #     target=self.checkinCheck,
         #     daemon=True)
-        # self.restartQueueThread.start()
-        self.checkinCheckThread = threading.Thread(
-            target=self.checkinCheck,
-            daemon=True)
-        self.checkinCheckThread.start()
+        # self.checkinCheckThread.start()
+        asyncio.create_task(self.checkinCheck())
         # self.delayedStart()
         alreadySetup: bool = os.path.exists(config.walletPath("wallet.yaml"))
         if not alreadySetup:
@@ -432,34 +427,39 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         time.sleep(60 * 60 * 6)
         self.buildEngine()
 
-    def checkinCheck(self):
-        while True:
-            time.sleep(60 * 60 * 6)
-            # loop through streams, if I haven't had an observation on a stream
-            # in more than 24 hours, delete it. and restart
-            # for stream in self.subscriptions:
-            #    ts = timestampToSeconds(
-            #        self.cacheOf(stream.streamId).getLatestObservationTime()
-            #    )
-            #    if ts > 0 and ts + 60*60*24 < time.time():
-            #        self.server.removeStream(stream.streamId.jsonId)
-            #        self.triggerRestart()
-            if self.latestObservationTime + 60*60*6 < time.time():
-                self.triggerRestart()
-            if self.server.checkinCheck():
-                self.triggerRestart()
+    # TODO: clean up after making sure the newer async works well
+    # def checkinCheck(self):
+    #     while True:
+    #         time.sleep(60 * 60 * 6)
+    #         # loop through streams, if I haven't had an observation on a stream
+    #         # in more than 24 hours, delete it. and restart
+    #         # for stream in self.subscriptions:
+    #         #    ts = timestampToSeconds(
+    #         #        self.cacheOf(stream.streamId).getLatestObservationTime()
+    #         #    )
+    #         #    if ts > 0 and ts + 60*60*24 < time.time():
+    #         #        self.server.removeStream(stream.streamId.jsonId)
+    #         #        self.triggerRestart()
+    #         if self.latestObservationTime + 60*60*6 < time.time():
+    #             self.triggerRestart()
+    #         if self.server.checkinCheck():
+    #             self.triggerRestart()
 
-    # def cacheOf(self, streamId: StreamId) -> Union[disk.Cache, None]:
-    #     """returns the reference to the cache of a stream"""
-    #     return self.caches.get(streamId)
+    async def checkinCheck(self):
+        while True:
+            await asyncio.sleep(60 * 60 * 6) 
+            current_time = time.time()
+            if self.latestObservationTime and (current_time - self.latestObservationTime > 60*60*6):
+                logging.warning("No observations in 6 hours, restarting")
+                self.triggerRestart()
+            if hasattr(self.server, 'checkinCheck') and self.server.checkinCheck():
+                logging.warning("Server check failed, restarting") 
+                self.triggerRestart()
 
     def networkIsTest(self, network: str = None) -> bool:
         return network.lower().strip() in ("testnet", "test", "ravencoin", "rvn")
 
     async def dataServerFinalize(self):
-        # transferProtocol = self.determineTransferProtocol()
-        # TODO: do something with this transfer protocol:
-        #       should we support just p2p-limited or (p2p-limited and pubsub)?
         await self.sharePubSubInfo()
         await self.populateData()
         await self.subscribeToRawData()
@@ -474,36 +474,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        #self.subConnect()
         self.pubsConnect()
-        await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
+        await self.dataServerFinalize() 
         if self.isDebug:
             return
         self.startRelay()
-        # await asyncio.Event().wait() # probably place this at the end of satori.py?
-
-    async def engine_necessary(self):
-        """Below are what is necessary for the Engine to start building"""
-        if self.walletOnlyMode:
-            self.walletVaultManager.setupWalletAndVault()
-            self.createServerConn()
-            return
-        # self.setMiningMode()
-        # self.setEngineVersion()
-        # self.createRelayValidation()
-        self.walletVaultManager.setupWalletAndVault()
-        # self.getVault()
-        self.createServerConn()
-        self.checkin()
-        # self.populateData()
-        # self.startSynergyEngine()
-        #self.subConnect()
-        # self.pubsConnect()
-        if self.isDebug:
-            return
-        # self.startRelay()
-        self.buildEngine()
-        time.sleep(60 * 60 * 24)
 
     async def startWalletOnly(self):
         """start the satori engine."""
@@ -523,9 +498,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
-        #self.subConnect()
         self.pubsConnect()
-        await self.dataServerFinalize() # TODO : This should come way b4, rn we need the pub/sub info to be filled
+        await self.dataServerFinalize() 
         if self.isDebug:
             return
         self.startRelay()
@@ -616,9 +590,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                     "publications:",
                     len(self.publications),
                     print=True)
-                # self.caches = {
-                #     x.streamId: disk.Cache(id=x.streamId)
-                #     for x in set(self.subscriptions + self.publications)}
                 logging.info("checked in with Satori", color="green")
                 break
             except Exception as e:
@@ -707,70 +678,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             values=[],
             predictions=[])
     
-
-
-
-    # async def buildEngine(self):
-    #     """start the engine, it will run w/ what it has til ipfs is synced"""
-
-
-    #     def handleNewPrediction(streamForecast: StreamForecast):
-    #         for stream_display in self.streamDisplay:
-    #             if stream_display.streamId == streamForecast.streamId:
-    #                 stream_display.value = streamForecast.currentValue["value"].iloc[-1]
-    #                 stream_display.prediction = streamForecast.forecast["pred"].iloc[0]
-    #                 stream_display.values = [
-    #                     value
-    #                     for value in streamForecast.currentValue.value]
-    #                 stream_display.predictions = [
-    #                     value
-    #                     for value in streamForecast.predictionHistory.value]
-    #                 self.addModelUpdate(stream_display)
-    #         logging.info(f'publishing {streamForecast.firstPrediction()} prediction for {streamForecast.predictionStreamId}', color='blue')
-    #         # self.server.publish( 
-    #         #     topic=streamForecast.predictionStreamId.topic(),
-    #         #     data=streamForecast.forecast["pred"].iloc[0],
-    #         #     observationTime=streamForecast.observationTime,
-    #         #     observationHash=streamForecast.observationHash,
-    #         #     isPrediction=True,
-    #         #     useAuthorizedCall=self.version >= Version("0.2.6"))
-
-    #     # TODO: we will have to change this some day to a mapping between the
-    #     #       publication (key) and all the supporting subscriptions (value)
-    #     #       because we will have a target feature stream and feature streams
-    #     #       {publication: [primarySubscription1, subscription2, ...]}
-    #     streamPairs = StreamPairs(
-    #         self.subscriptions,
-    #         StartupDag.predictionStreams(self.publications))
-    #     self.subscriptions, self.publications = streamPairs.get_matched_pairs()
-    #     print('SUBSCRIPTIONS', self.subscriptions)
-    #     print('PUBLICATIONS', self.publications)
-
-    #     # print([sub.streamId for sub in self.subscriptions])
-
-
-    #     self.engine: satoriengine.Engine = engine.getEngine(
-    #         run=self.engineVersion == 'v1',
-    #         subscriptions=self.subscriptions,
-    #         publications=self.publications)
-    #     self.engine.run()
-    #     # else:
-    #     #    logging.warning('Running in Local Mode.', color='green')
-    #     if self.engineVersion == 'v2':
-    #         self.aiengine: satoriengine.veda.engine.Engine = (
-    #             await satoriengine.veda.engine.Engine.create()
-    #         )
-    #         self.aiengine.predictionProduced.subscribe(
-    #             lambda x: handleNewPrediction(x) if x is not None else None)
-
-    def getMatchingStream(self, streamId: StreamId) -> Union[StreamId, None]:
-        for stream in self.publications:
-            if stream.streamId == streamId:
-                return stream.predicting  # predicting is already a StreamId
-            if stream.predicting == streamId:  # comparing StreamId objects directly
-                return stream.streamId
-        return None
-    
     def removePair(self, pub: StreamId, sub: StreamId):
         self.publications = [p for p in self.publications if p.streamId != pub]
         self.subscriptions = [s for s in self.subscriptions if s.streamId != sub]
@@ -794,31 +701,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def addToEngine(self, stream: Stream, publication: Stream):
         if self.aiengine is not None:
             self.aiengine.addStream(stream, publication)
-
-    def subConnect(self):
-        """establish a random pubsub connection used only for subscribing"""
-        if self.sub is not None:
-            self.sub.disconnect()
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.pubsub, status=False)
-            self.sub = None
-        if self.key:
-            signature = self.wallet.sign(self.key)
-            self.sub = engine.establishConnection(
-                url=random.choice(self.urlPubsubs),
-                # url='ws://pubsub3.satorinet.io:24603',
-                pubkey=self.wallet.publicKey,
-                key=signature.decode() + "|" + self.key,
-                emergencyRestart=self.emergencyRestart,
-                onConnect=lambda: self.updateConnectionStatus(
-                    connTo=ConnectionTo.pubsub,
-                    status=True),
-                onDisconnect=lambda: self.updateConnectionStatus(
-                    connTo=ConnectionTo.pubsub,
-                    status=False))
-        else:
-            time.sleep(30)
-            raise Exception("no key provided by satori server")
 
     def pubsConnect(self):
         """
@@ -877,7 +759,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 except Exception as e:
                     logging.warning(f'Failed to find a valid Server Ip, retrying in {waitingPeriod}')
                     await asyncio.sleep(waitingPeriod)
-        #return False?
 
     async def stayConnectedForever(self):
         ''' alternative to await asyncio.Event().wait() '''
@@ -886,10 +767,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             if not self.isConnectedToServer:
                 await self.connectToDataServer()
                 await self.dataServerFinalize()
-                #await self.start()
-                # should we manage all our other connections here too?
-                # pubsub
-                # electrumx
 
     def determineTransferProtocol(self, ipAddr: str, port: int = 24600) -> str:
         '''
@@ -906,7 +783,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         '''
         return config.get().get(
             'transfer protocol',
-            #'p2p' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive')
             'p2p-pubsub' if self.server.loopbackCheck(ipAddr, port) else 'p2p-proactive-pubsub')
     
     def determineInternalNatIp(self) -> str:
@@ -1119,6 +995,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 message.data
             ])
             self.data[message.uuid]['realData'] = updated_data.tail(100)
+            self.latestObservationTime = time.time()
         else:
             logging.warning('Raw Data Subscribtion Message',message.to_dict(True))
 
@@ -1229,57 +1106,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             streamDisplayer(publication)
             for publication in self.publications]
 
-
-    def startSynergyEngine(self):
-        """establish a synergy connection"""
-        """DISABLED FOR NOW:
-        Snippet of a tcpdump
-        23:11:41.073074 IP lpcpu04.58111 > dns.google.domain: 2468+ A? synergy.satorinet.io. (38)
-        23:11:41.073191 IP lpcpu04.42736 > dns.google.domain: 10665+ A? synergy.satorinet.io. (38)
-        23:11:41.073796 IP lpcpu04.10088 > dns.google.domain: 42995+ A? synergy.satorinet.io. (38)
-        23:11:41.073819 IP lpcpu04.42121 > dns.google.domain: 31559+ A? synergy.satorinet.io. (38)
-        23:11:41.073991 IP lpcpu04.44500 > dns.google.domain: 33234+ A? synergy.satorinet.io. (38)
-        23:11:41.074484 IP lpcpu04.40834 > dns.google.domain: 29728+ A? synergy.satorinet.io. (38)
-        23:11:41.074561 IP lpcpu04.62919 > dns.google.domain: 40503+ A? synergy.satorinet.io. (38)
-        23:11:41.074685 IP lpcpu04.38206 > dns.google.domain: 20506+ A? synergy.satorinet.io. (38)
-        23:11:41.075028 IP lpcpu04.58587 > dns.google.domain: 34024+ A? synergy.satorinet.io. (38)
-        23:11:41.075408 IP lpcpu04.45231 > dns.google.domain: 13854+ A? synergy.satorinet.io. (38)
-        23:11:41.075438 IP lpcpu04.49361 > dns.google.domain: 19875+ A? synergy.satorinet.io. (38)
-        23:11:41.075581 IP lpcpu04.57224 > dns.google.domain: 47540+ A? synergy.satorinet.io. (38)
-        same second, hundred of querys
-        """
-        if self.wallet:
-            self.synergy = SynergyManager(
-                url=self.urlSynergy,
-                wallet=self.wallet,
-                onConnect=self.syncDatasets)
-            logging.info("connected to Satori p2p network", color="green")
-        else:
-            raise Exception("wallet not open yet.")
-
-    def syncDataset(self, streamId: StreamId):
-        """establish a synergy connection"""
-        if self.synergy and self.synergy.isConnected:
-            for stream in self.subscriptions:
-                if streamId == stream.streamId:
-                    logging.info("resyncing stream:", stream, print=True)
-                    self.synergy.connectToPeer(stream.streamId)
-        # else:
-        #    raise Exception('synergy not created or not connected.')
-
-    def syncDatasets(self):
-        """establish a synergy connection"""
-        if self.synergy and self.synergy.isConnected:
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.synergy, status=True)
-            for stream in self.subscriptions:
-                self.synergy.connectToPeer(stream.streamId)
-        else:
-            self.updateConnectionStatus(
-                connTo=ConnectionTo.synergy, status=False)
-        # else:
-        #    raise Exception('synergy not created or not connected.')
-
     def pause(self, timeout: int = 60):
         """pause the engine."""
         self.paused = True
@@ -1296,16 +1122,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.asyncThread.cancelTask(self.pauseThread)
         self.pauseThread = None
         logging.info("AI engine unpaused", color="green")
-
-    def repullFor(self, streamId: StreamId):
-        if self.engine is not None:
-            for model in self.engine.models:
-                if model.variable == streamId:
-                    model.inputsUpdated.on_next(True)
-                else:
-                    for target in model.targets:
-                        if target == streamId:
-                            model.inputsUpdated.on_next(True)
 
     def delayedStart(self):
         alreadySetup: bool = os.path.exists(config.walletPath("wallet.yaml"))
@@ -1346,10 +1162,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             # latestTag.get()
             # if latestTag.isNew:
             #    self.triggerRestart()
-
-    def restartWithQueue(self, queue):
-        return_code = int(queue.get())  # Wait for signal
-        self.triggerRestart(return_code)
 
     def publish(
         self,
@@ -1442,7 +1254,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     
     def alignPredDataWithRealData(self, realDataDf, predictionDataDf) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Align prediction data with the NEXT real data point.
+        Align prediction data with the NEXT real data point. Used for aligning the raw data with pred data in the UI
         """
         if realDataDf.empty or predictionDataDf.empty:
             return realDataDf, predictionDataDf
