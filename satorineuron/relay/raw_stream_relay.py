@@ -146,7 +146,7 @@ class RawStreamRelayEngine(Cached):
             index=[timestamp])
         try:
             if not hasattr(self, 'activateRawStream'):
-                await start.dataClient.addActiveStream(uuid=uuid) # TODO: this should be done better
+                await start.dataClient.addActiveStream(uuid=uuid) 
                 self.activateRawStream = True
             if start.transferProtocol == 'p2p-proactive-pubsub':
                 await start.dataClient.insertStreamData(
@@ -162,21 +162,15 @@ class RawStreamRelayEngine(Cached):
         except Exception as e:
             logging.error('Unable to set data: ', e)
 
-        latestData = await start.dataClient.getLocalStreamData(uuid=uuid) # TODO : make a function inside sqlite to just fetch the latest hash
-        observationHash = latestData.data['hash'].iloc[-1]
-
+        lastHash = await start.dataClient.getHash(uuid)
+        
         start.publish(
             topic=stream.streamId.jsonId,
             data=data,
             observationTime=timestamp,
-            observationHash=observationHash,
+            observationHash=lastHash,
             toCentral=True,
             isPrediction=False)
-
-    def save(self, stream: Stream, data: str = None) -> CachedResult:
-        self.latest[stream.streamId.jsonId] = data
-        self.streamId = stream.streamId  # required by Cache
-        return self.disk.appendByAttributes(value=data, hashThis=True)
 
     def run_async_in_thread(self, coroutine):
         """Helper function to run an async function in a thread"""
