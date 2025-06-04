@@ -171,7 +171,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def network(self) -> str:
-        return 'main' if self.env in ['prod', 'local'] else 'test'
+        return 'main' if self.env in ['prod', 'local', 'testprod'] else 'test'
 
     @property
     def vault(self) -> EvrmoreWallet:
@@ -664,7 +664,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.configRewardAddress: str = str(config.get().get('reward address', ''))
         if (
             globally and
-            self.env in ['prod', 'local'] and
+            self.env in ['prod', 'local', 'testprod'] and
             EvrmoreWallet.addressIsValid(self.configRewardAddress)
         ):
             self.server.setRewardAddress(

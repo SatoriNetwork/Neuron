@@ -62,6 +62,7 @@ CORS(app, origins=[{
     'local': 'http://central',
     'dev': 'http://localhost:5002',
     'test': 'https://test.satorinet.io',
+    'testprod': 'https://satorinet.io',
     'prod': 'https://satorinet.io'}[ENV]])
 
 fail2ban_dir = config.get().get("fail2ban_log", None)
@@ -95,22 +96,22 @@ while True:
                 'local': 'http://central',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
+                'testprod': 'http://137.184.38.160',
                 'prod': 'https://stage.satorinet.io'}[ENV],
-                #'prod': 'http://137.184.38.160'}[ENV],  # n
             urlMundo={
                 # 'local': 'http://192.168.0.10:5002',
                 'local': 'https://mundo.satorinet.io',
                 'dev': 'http://localhost:5002',
                 'test': 'https://test.satorinet.io',
+                'testprod': 'https://mundo.satorinet.io:24607',
                 'prod': 'https://mundo.satorinet.io:24607'}[ENV],
-            # 'prod': 'https://64.23.142.242'}[ENV],
             urlPubsubs={
                 # 'local': ['ws://192.168.0.10:24603'],
                 'local': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
                 'dev': ['ws://localhost:24603'],
                 'test': ['ws://test.satorinet.io:24603'],
+                'testprod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603'],
                 'prod': ['ws://pubsub1.satorinet.io:24603', 'ws://pubsub5.satorinet.io:24603', 'ws://pubsub6.satorinet.io:24603']}[ENV],
-            # 'prod': ['ws://209.38.76.122:24603', 'ws://143.198.102.199:24603', 'ws://143.198.111.225:24603']}[ENV],
             isDebug=sys.argv[1] if len(sys.argv) > 1 else False)
 
         # start.buildEngine()

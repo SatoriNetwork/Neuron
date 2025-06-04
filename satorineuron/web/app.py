@@ -26,7 +26,7 @@ def startSatori():
 
 
 def isProdMode() -> bool:
-    return os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev')) == 'prod'
+    return os.environ.get('ENV', os.environ.get('SATORI_RUN_MODE', 'dev')) in ['prod', 'testprod']
 
 def isNotWalletMode() -> bool:
     return os.environ.get('RUNMODE') != 'wallet'
