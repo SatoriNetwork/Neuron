@@ -627,13 +627,9 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             'liquidity_balance': None,
         }
         '''
-        self.balances = self.server.getBalances()
-        #testing
-        self.balances = {
-            'currency': 100,
-            'chain_balance': 0,
-            'liquidity_balance': None,
-        }
+        success, self.balances = self.server.getBalances()
+        if not success:
+            logging.warning("Failed to get balances from server")
     
     def getBalance(self, currency: str = 'currency') -> float:
         return self.balances.get(currency, 0)
