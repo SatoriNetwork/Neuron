@@ -116,6 +116,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.paused: bool = False
         self.pauseThread: Union[threading.Thread, None] = None
         self.details: CheckinDetails = CheckinDetails(raw={})
+        self.balances: dict = {}
         self.key: str
         self.oracleKey: str
         self.idKey: str
@@ -206,7 +207,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def network(self) -> str:
-        return 'main' if self.env in ['prod', 'local'] else 'test'
+        return 'main' if self.env in ['prod', 'local', 'testprod'] else 'test'
 
     @property
     def vault(self) -> EvrmoreWallet:
@@ -218,10 +219,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def holdingBalance(self) -> float:
-        self._holdingBalance = round(
-            self.wallet.balance.amount
-            + (self.vault.balance.amount if self.vault is not None else 0),
-            8)
+        if self.wallet.balance.amount > 0:
+            self._holdingBalance = round(
+                self.wallet.balance.amount
+                + (self.vault.balance.amount if self.vault is not None else 0),
+                8)
+        else:
+            self._holdingBalance = self.getBalance()
         return self._holdingBalance
 
     def refreshBalance(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
@@ -469,18 +473,30 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         """start the satori engine."""
         await self.connectToDataServer()
         asyncio.create_task(self.stayConnectedForever())
+        # while True:
+        if self.ranOnce:
+            time.sleep(60 * 60)
+        self.ranOnce = True
+        if self.walletOnlyMode:
+            self.walletVaultManager.setupWalletAndVault()
+            self.createServerConn()
+            self.checkin()
+            self.getBalances()
+            logging.info("in WALLETONLYMODE")
+            return
         self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
+        self.getBalances()
         self.pubsConnect()
         await self.dataServerFinalize() 
         if self.isDebug:
             return
         self.startRelay()
 
-    async def startWalletOnly(self):
+    def startWalletOnly(self):
         """start the satori engine."""
         logging.info("running in walletOnly mode", color="blue")
         self.walletVaultManager.setupWalletAndVault()
@@ -498,6 +514,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.createRelayValidation()
         self.createServerConn()
         self.checkin()
+        self.getBalances()
         self.pubsConnect()
         await self.dataServerFinalize() 
         if self.isDebug:
@@ -600,6 +617,26 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             logging.warning(f"trying again in {x}")
             time.sleep(x)
 
+    def getBalances(self):
+        '''
+        example:
+        {
+            'currency': 100,
+            'chain_balance': 0,
+            'liquidity_balance': None,
+        }
+        '''
+        self.balances = self.server.getBalances()
+        #testing
+        self.balances = {
+            'currency': 100,
+            'chain_balance': 0,
+            'liquidity_balance': None,
+        }
+    
+    def getBalance(self, currency: str = 'currency') -> float:
+        return self.balances.get(currency, 0)
+
     def setRewardAddress(
         self,
         address: Union[str, None] = None,
@@ -616,7 +653,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             self.configRewardAddress: str = str(config.get().get('reward address', ''))
         if (
             globally and
-            self.env in ['prod', 'local'] and
+            self.env in ['prod', 'local', 'testprod'] and
             EvrmoreWallet.addressIsValid(self.configRewardAddress)
         ):
             self.server.setRewardAddress(

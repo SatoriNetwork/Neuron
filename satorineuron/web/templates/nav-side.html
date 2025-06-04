@@ -246,7 +246,7 @@
   </div>
   <div class="sidenav-footer position-absolute w-100 bottom-0 ">
     <div class="mx-3" style="text-align: end;">
-      <p style="color: #875677;">{{ version }}{% if env != 'prod' %} ({{ env }}){% endif %}</p>
+      <p style="color: #875677;">{{ version }}{% if env not in ['prod', 'testprod'] %} ({{ env }}){% endif %}</p>
     </div>
   </div>
   <!--
