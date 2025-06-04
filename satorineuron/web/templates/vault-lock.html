@@ -500,7 +500,7 @@
                 <button type="button" 
                         class="create-vault-btn" 
                         id="createVaultBtn"
-                        onclick="if(validateVaultPassword()) { showWorkingg(); document.querySelector('form').submit(); }">
+                        onclick="if(validateVaultPassword()) { showWorkingV2(); document.querySelector('form').submit(); }">
                     Create Vault
                 </button>
                 
@@ -520,7 +520,7 @@
                 {% else %}
                 <button type="submit" 
                         class="login-btn"
-                        onclick="showWorkingg();">
+                        onclick="showWorkingV2();">
                     Login
                 </button>
                 {% endif %}
@@ -566,7 +566,7 @@
             if (event.key === "Enter" || event.keyCode === 13) {
                 if (isOnRepeatField) {
                     if (validateVaultPassword()) {
-                        showWorkingg();
+                        showWorkingV2();
                         document.querySelector('form').submit();
                         return true;
                     }
@@ -604,7 +604,7 @@
         }
 
         // Show working indicator
-        function showWorkingg() {
+        function showWorkingV2() {
             const indicator = document.getElementById("workingIndicator");
             if (indicator) {
                 indicator.style.display = "block";
