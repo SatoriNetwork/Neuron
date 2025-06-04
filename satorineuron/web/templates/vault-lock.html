@@ -1,94 +1,644 @@
 {% block content %}
-<div class="{% if darkmode %}overlayBlack{% else %}overlayWhite{% endif %}" style="z-index: 997 !important; left:0px; background: {% if darkmode %}#212529 !important;{% else %}#f0f2f5 !important;{% endif %} display: {% if vaultOpened %}none{% else %}block{% endif %};">
-  <div class="container-for-center vertical-center" style="padding-left: 0px; top: 10%">
-    <div class="tight">
-      <div class="row mb-4">
-        <center>
-          <!-- Logo and Title above the textbox with styling changes, Mizuki -->
-          <div style="margin-bottom: 2rem; font-family: Zen Maru Gothic;">
-            <header style="font-size: 40px;padding-bottom:1rem;">Welcome to</header>
-            <span class="text-black" title="{{v}}" style="font-size: 120px; color: black;">
-              <img src="{{ url_for('static', filename='img/satori-light-inline.png') }}" style="max-height:360px;max-width:100%; width: auto; height: auto;">
-            </span>
-          </div>
-          <div class="col-xl-10 col-sm-10 mb-xl-4 mb-4">
-            <form action="/vault" method="POST">
-              {{ vaultPasswordForm.hidden_tag() }}
-              {{ vaultPasswordForm.csrf_token }}
-              <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
-                <div class="input-group input-group-outline">
-                  {{ vaultPasswordForm.password(
-                      size=256,
-                      style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
-                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
-                      placeholder="password" if wallet is none else "",
-                      autofocus=True,
-                      onkeypress="checkEnter(event);") }}
-                </div>
-              </div>
-              {% if wallet is none %}
-              <div class="d-flex px-3 py-1" style="padding: 1px !important; margin-bottom: 1.5rem;">
-                <div class="input-group input-group-outline">
-                  {{ vaultPasswordForm.password(
-                      size=256,
-                      style_="text-align: center; border: 2px solid" + (" #F9ED4E;" if darkmode else " #10051D;"),
-                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
-                      id="repeatPassword",
-                      placeholder="repeat password",
-                      autofocus=True,
-                      onkeypress="checkEnter(event);") }}
-                </div>
-              </div>
-              {% endif %}
-              <div class="d-flex px-3 py-1" style="padding: 1px !important; height: 20px; display:{{'block' if wallet is none else 'none'}};">
-                <div class="input-group input-group-outline">
-                  {{ vaultPasswordForm.submit(
-                      size=32,
-                      style_="display:block" if wallet is none else "display:none;",
-                      value="Create Vault",
-                      class_="tight form-control" + (" dark-colors" if darkmode else ""),
-                      onclick="if(validateVaultPassword()) showWorking();") }}
-                </div>
-              </div>
-              {% if wallet is not none %}
-              <button class="d-flex flex-row gap-2 btn btn-outline-dark" onclick="checkEnter(event); showWorking();">login</button> <!-- Login Button added, Mizuki -->
-              {% endif %}
-            </form>
-            <!--<input
-            style="text-align: center;"
-            class="tight form-control input-tall code-placeholder {% if darkmode %}dark-colors{% endif %}",
-            type="password" id="passwordInput" placeholder="Enter your password" />-->
-          </div>
-        </center>
-      </div>
-    </div>
-  </div>
-</div>
-<div style="z-index: 998 !important; left:0px; display: {% if vaultOpened %}none{% else %}block{% endif %}; height:800px; width:100%;">
-<script>
-  window.onload = function() {
-    document.getElementById("password").focus();
-  };
-  function checkEnter(event){
-    if (isFocused(document.querySelector('#repeatPassword'))) {
-      if (event.key === "Enter" || event.keyCode === 13) {
-        if(validateVaultPassword()) {
-          showWorking();
-          console.log('success');
-          return true;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satori - Vault Access</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: {% if darkmode %}#212529{% else %}#f0f2f5{% endif %};
+            min-height: 100vh;
+            font-family: 'Zen Maru Gothic', sans-serif;
         }
-        console.log('fail');
-        return false;
-      }
-      return event.keyCode != 13;
-    }
-  }
-  function validateVaultPassword() {
-    let repeat = document.getElementById("repeatPassword");
-    if (repeat === null ) {
-      return document.getElementById("password").value.length > 7;
-    }
-    return document.getElementById("password").value.length > 7 && repeat.value === document.getElementById("password").value;
-  }
-</script>
+        
+        .password-container {
+            background: {% if darkmode %}#343a40{% else %}#ffffff{% endif %};
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, {% if darkmode %}0.3{% else %}0.15{% endif %}),
+                0 15px 35px rgba(0, 0, 0, {% if darkmode %}0.2{% else %}0.1{% endif %}),
+                0 5px 15px rgba(0, 0, 0, {% if darkmode %}0.15{% else %}0.08{% endif %});
+            border: 1px solid rgba({% if darkmode %}255, 255, 255{% else %}0, 0, 0{% endif %}, {% if darkmode %}0.1{% else %}0.05{% endif %});
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .disclaimer-container {
+            background: {% if darkmode %}linear-gradient(135deg, rgba(52, 58, 64, 0.95) 0%, rgba(73, 80, 87, 0.9) 100%){% else %}linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%){% endif %};
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba({% if darkmode %}255, 255, 255{% else %}74, 74, 106{% endif %}, {% if darkmode %}0.1{% else %}0.1{% endif %});
+            box-shadow: 
+                0 8px 20px rgba(0, 0, 0, {% if darkmode %}0.3{% else %}0.08{% endif %}),
+                0 4px 8px rgba(0, 0, 0, {% if darkmode %}0.2{% else %}0.04{% endif %}),
+                inset 0 1px 0 rgba(255, 255, 255, {% if darkmode %}0.1{% else %}0.4{% endif %});
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .disclaimer-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4a4a6a 0%, #667eea 50%, #4a4a6a 100%);
+            opacity: 0.6;
+        }
+        
+        .disclaimer-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #4a4a6a 0%, #2d2d3f 100%);
+            border-radius: 50%;
+            color: white;
+            font-size: 0.9rem;
+            margin-right: 0.75rem;
+            box-shadow: 0 4px 8px rgba(74, 74, 106, 0.2);
+            flex-shrink: 0;
+        }
+        
+        .disclaimer-content {
+            display: flex;
+            align-items: flex-start;
+            color: {% if darkmode %}rgba(255, 255, 255, 0.85){% else %}#4a4a6a{% endif %};
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .disclaimer-text {
+            flex: 1;
+        }
+        
+        .disclaimer-text strong {
+            color: {% if darkmode %}#ffffff{% else %}#2d2d3f{% endif %};
+            font-weight: 600;
+        }
+        
+        .disclaimer-text .highlight {
+            background: {% if darkmode %}linear-gradient(135deg, rgba(249, 237, 78, 0.15) 0%, rgba(102, 126, 234, 0.15) 100%){% else %}linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(74, 74, 106, 0.1) 100%){% endif %};
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            font-weight: 500;
+            color: {% if darkmode %}#ffffff{% else %}#2d2d3f{% endif %};
+        }
+        
+        .enhanced-input {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        
+        .enhanced-input input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid {% if darkmode %}#F9ED4E{% else %}#10051D{% endif %};
+            border-radius: 15px;
+            font-size: 1.1rem;
+            text-align: center;
+            background: {% if darkmode %}#495057{% else %}rgba(255, 255, 255, 0.9){% endif %};
+            color: {% if darkmode %}#ffffff{% else %}#333333{% endif %};
+            backdrop-filter: blur(5px);
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, {% if darkmode %}0.2{% else %}0.1{% endif %}),
+                0 4px 8px rgba(0, 0, 0, {% if darkmode %}0.1{% else %}0.05{% endif %}),
+                inset 0 1px 0 rgba(255, 255, 255, {% if darkmode %}0.1{% else %}0.3{% endif %});
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+        
+        .enhanced-input input:focus {
+            border: 2px solid #667eea;
+            box-shadow: 
+                0 15px 35px rgba(102, 126, 234, 0.15),
+                0 8px 15px rgba(102, 126, 234, 0.1),
+                0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .enhanced-input input::placeholder {
+            color: {% if darkmode %}rgba(255, 255, 255, 0.6){% else %}rgba(0, 0, 0, 0.5){% endif %};
+            font-weight: 400;
+        }
+        
+        .logo-container {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        
+        .logo-container header {
+            font-size: 2.5rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: {% if darkmode %}#ffffff{% else %}#333{% endif %};
+            text-shadow: 0 2px 4px rgba(0, 0, 0, {% if darkmode %}0.3{% else %}0.1{% endif %});
+        }
+        
+        .logo-image {
+            max-height: 360px;
+            max-width: 100%;
+            width: auto;
+            height: auto;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, {% if darkmode %}0.3{% else %}0.1{% endif %}));
+        }
+        
+        .login-btn, .create-vault-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+        
+        .login-btn {
+            border: none;
+            background: linear-gradient(135deg, #4a4a6a 0%, #2d2d3f 100%);
+            color: white;
+            box-shadow: 
+                0 12px 25px rgba(74, 74, 106, 0.25),
+                0 6px 12px rgba(74, 74, 106, 0.15);
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 18px 35px rgba(74, 74, 106, 0.3),
+                0 8px 15px rgba(74, 74, 106, 0.2);
+            background: linear-gradient(135deg, #5a5a7a 0%, #3d3d4f 100%);
+        }
+        
+        .create-vault-btn {
+            border: 2px solid #4a4a6a;
+            background: transparent;
+            color: {% if darkmode %}#ffffff{% else %}#4a4a6a{% endif %};
+            box-shadow: 
+                0 8px 20px rgba(74, 74, 106, 0.1),
+                0 4px 8px rgba(74, 74, 106, 0.05);
+        }
+        
+        .create-vault-btn:hover {
+            background: linear-gradient(135deg, #4a4a6a 0%, #2d2d3f 100%);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 25px rgba(74, 74, 106, 0.25),
+                0 6px 12px rgba(74, 74, 106, 0.15);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: {% if vaultOpened %}none{% else %}flex{% endif %};
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            z-index: 997;
+            background: {% if darkmode %}#212529{% else %}#f0f2f5{% endif %};
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .working-indicator {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: {% if darkmode %}#ffffff{% else %}#333333{% endif %};
+            z-index: 1000;
+            background: {% if darkmode %}rgba(52, 58, 64, 0.95){% else %}rgba(255, 255, 255, 0.95){% endif %};
+            padding: 2rem 3rem;
+            border-radius: 20px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, {% if darkmode %}0.4{% else %}0.2{% endif %}),
+                0 15px 35px rgba(0, 0, 0, {% if darkmode %}0.3{% else %}0.15{% endif %});
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba({% if darkmode %}255, 255, 255{% else %}0, 0, 0{% endif %}, {% if darkmode %}0.1{% else %}0.05{% endif %});
+            animation: workingFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .enlightenment-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid {% if darkmode %}rgba(255, 255, 255, 0.1){% else %}rgba(0, 0, 0, 0.1){% endif %};
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: enlightenmentSpin 2s linear infinite;
+            margin: 0 auto 1rem auto;
+            position: relative;
+        }
+
+        .enlightenment-spinner::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 2px solid transparent;
+            border-top: 2px solid #4a4a6a;
+            border-radius: 50%;
+            animation: enlightenmentSpin 3s linear infinite reverse;
+        }
+
+        .enlightenment-spinner::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #4a4a6a 100%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: enlightenmentPulse 2s ease-in-out infinite;
+        }
+
+        .enlightenment-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .awakening-text {
+            display: inline-block;
+            color: {% if darkmode %}#ffffff{% else %}#333333{% endif %};
+            background: linear-gradient(135deg, #667eea 0%, #4a4a6a 50%, #667eea 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: awakeningFlow 2s ease-in-out infinite;
+            /* Fallback for browsers that don't support background-clip */
+            font-weight: 600;
+        }
+        
+        /* Fallback for better visibility */
+        @supports not (-webkit-background-clip: text) {
+            .awakening-text {
+                color: {% if darkmode %}#ffffff{% else %}#333333{% endif %} !important;
+                background: none !important;
+                -webkit-text-fill-color: initial !important;
+            }
+        }
+
+        .awakening-letter {
+            display: inline-block;
+            animation: awakeningPulse 1.5s ease-in-out infinite;
+        }
+
+        .awakening-letter:nth-child(1) { animation-delay: 0s; }
+        .awakening-letter:nth-child(2) { animation-delay: 0.1s; }
+        .awakening-letter:nth-child(3) { animation-delay: 0.2s; }
+        .awakening-letter:nth-child(4) { animation-delay: 0.3s; }
+        .awakening-letter:nth-child(5) { animation-delay: 0.4s; }
+        .awakening-letter:nth-child(6) { animation-delay: 0.5s; }
+        .awakening-letter:nth-child(7) { animation-delay: 0.6s; }
+        .awakening-letter:nth-child(8) { animation-delay: 0.7s; }
+        .awakening-letter:nth-child(9) { animation-delay: 0.8s; }
+
+        @keyframes awakeningFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes awakeningPulse {
+            0%, 100% { 
+                transform: scale(1) translateY(0px);
+                opacity: 0.8;
+            }
+            25% { 
+                transform: scale(1.1) translateY(-2px);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.05) translateY(-1px);
+                opacity: 0.9;
+            }
+            75% { 
+                transform: scale(1.08) translateY(-3px);
+                opacity: 1;
+            }
+        }
+
+        .enlightenment-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            animation: enlightenmentBreath 3s ease-in-out infinite;
+        }
+
+        .floating-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #4a4a6a 100%);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat 4s linear infinite;
+        }
+
+        .particle:nth-child(1) { left: 20%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 40%; animation-delay: 1s; }
+        .particle:nth-child(3) { left: 60%; animation-delay: 2s; }
+        .particle:nth-child(4) { left: 80%; animation-delay: 3s; }
+
+        @keyframes workingFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes enlightenmentSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes enlightenmentPulse {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes enlightenmentBreath {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay">
+        <div class="password-container fade-in floating">
+            <div class="logo-container">
+                <header>Welcome to</header>
+                <div>
+                    <img src="{{ url_for('static', filename='img/satori-light-inline.png') }}" class="logo-image" title="{{v}}">
+                </div>
+            </div>
+            
+            <form action="/vault" method="POST">
+                {{ vaultPasswordForm.hidden_tag() }}
+                {{ vaultPasswordForm.csrf_token }}
+                
+                <div class="enhanced-input">
+                    {{ vaultPasswordForm.password(
+                        size=256,
+                        class_="form-control" + (" dark-colors" if darkmode else ""),
+                        placeholder="Password" if wallet is none else "Enter your password",
+                        autofocus=True,
+                        id="password",
+                        autocomplete="current-password" if wallet is not none else "new-password") }}
+                </div>
+                
+                {% if wallet is none %}
+                <div class="enhanced-input" id="repeatPasswordContainer">
+                    <input type="password" 
+                           size="256"
+                           class="form-control{% if darkmode %} dark-colors{% endif %}"
+                           id="repeatPassword"
+                           name="repeatPassword"
+                           placeholder="Repeat password"
+                           autocomplete="new-password">
+                </div>
+                
+                <button type="button" 
+                        class="create-vault-btn" 
+                        id="createVaultBtn"
+                        onclick="if(validateVaultPassword()) { showWorkingg(); document.querySelector('form').submit(); }">
+                    Create Vault
+                </button>
+                
+                <div class="disclaimer-container fade-in-up">
+                    <div class="disclaimer-content">
+                        <div class="disclaimer-icon">
+                            🔐
+                        </div>
+                        <div class="disclaimer-text">
+                            <!-- <strong>Security Notice:</strong> Your password is the <span class="highlight">only way</span> to access your vault. 
+                            Please store it safely - recovery is not possible. -->
+                            <strong><span class="highlight">Security Notice :</span></strong> Your password is the only way to access your vault. 
+                            Please store it safely - recovery is not possible.
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <button type="submit" 
+                        class="login-btn"
+                        onclick="showWorkingg();">
+                    Login
+                </button>
+                {% endif %}
+                
+                <div class="working-indicator" id="workingIndicator">
+                    <div class="floating-particles">
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                    </div>
+                    <div class="enlightenment-spinner"></div>
+                    <div class="enlightenment-text">
+                        <div class="awakening-word">
+                            <span class="awakening-letter" style="animation-delay: 0s;">A</span>
+                            <span class="awakening-letter" style="animation-delay: 0.1s;">w</span>
+                            <span class="awakening-letter" style="animation-delay: 0.2s;">a</span>
+                            <span class="awakening-letter" style="animation-delay: 0.3s;">k</span>
+                            <span class="awakening-letter" style="animation-delay: 0.4s;">e</span>
+                            <span class="awakening-letter" style="animation-delay: 0.5s;">n</span>
+                            <span class="awakening-letter" style="animation-delay: 0.6s;">i</span>
+                            <span class="awakening-letter" style="animation-delay: 0.7s;">n</span>
+                            <span class="awakening-letter" style="animation-delay: 0.8s;">g</span>
+                        </div>
+                    </div>
+                    <div class="enlightenment-subtitle">Accessing the distributed consciousness</div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus on password input
+        window.onload = function() {
+            document.getElementById("password").focus();
+        };
+
+        // Check Enter key functionality
+        function checkEnter(event) {
+            const repeatPasswordField = document.querySelector('#repeatPassword');
+            const isOnRepeatField = repeatPasswordField && document.activeElement === repeatPasswordField;
+            
+            if (event.key === "Enter" || event.keyCode === 13) {
+                if (isOnRepeatField) {
+                    if (validateVaultPassword()) {
+                        showWorkingg();
+                        document.querySelector('form').submit();
+                        return true;
+                    }
+                    return false;
+                } else {
+                    // Move to repeat password field if it exists, otherwise submit
+                    if (repeatPasswordField) {
+                        repeatPasswordField.focus();
+                        return false;
+                    }
+                }
+            }
+            return event.keyCode !== 13;
+        }
+
+        // Validate vault password
+        function validateVaultPassword() {
+            const password = document.getElementById("password").value;
+            const repeatField = document.getElementById("repeatPassword");
+            
+            if (password.length < 8) {
+                alert("Password must be at least 8 characters long");
+                return false;
+            }
+            
+            if (repeatField) {
+                const repeatPassword = repeatField.value;
+                if (password !== repeatPassword) {
+                    alert("Passwords do not match");
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // Show working indicator
+        function showWorkingg() {
+            const indicator = document.getElementById("workingIndicator");
+            if (indicator) {
+                indicator.style.display = "block";
+            }
+        }
+
+        // Add event listeners for Enter key
+        document.addEventListener("keypress", checkEnter);
+
+        // Add interactive effects
+        document.querySelectorAll('.enhanced-input input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+
+        // Form submission validation
+        document.querySelector("form").addEventListener("submit", function(e) {
+            const hasRepeatField = document.getElementById("repeatPassword");
+            if (hasRepeatField && !validateVaultPassword()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Utility function to check if element is focused
+        function isFocused(element) {
+            return element && document.activeElement === element;
+        }
+    </script>
+</body>
+</html>
 {% endblock %}
