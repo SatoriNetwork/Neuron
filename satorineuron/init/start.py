@@ -164,6 +164,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         alreadySetup: bool = os.path.exists(config.walletPath("wallet.yaml"))
         if not alreadySetup:
             threading.Thread(target=self.delayedEngine).start()
+        self.ranOnce = False
         self.startFunction = self.start
         if self.runMode == RunMode.normal:
             self.startFunction = self.start
