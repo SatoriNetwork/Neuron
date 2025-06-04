@@ -26,15 +26,6 @@
             margin: 0 auto;
         }
         
-        .dark-mode .password-container {
-            background: #ffffff;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.2),
-                0 15px 35px rgba(0, 0, 0, 0.15),
-                0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
         .enhanced-input {
             position: relative;
             margin-bottom: 2rem;
@@ -43,7 +34,7 @@
         .enhanced-input input {
             width: 100%;
             padding: 1rem 1.5rem;
-            border: 2px solid transparent;
+            border: 2px solid #10051D;
             border-radius: 15px;
             font-size: 1.1rem;
             text-align: center;
@@ -66,32 +57,6 @@
             transform: translateY(-2px);
         }
         
-        .dark-mode .enhanced-input input {
-            background: #ffffff;
-            color: #333333;
-            border: 2px solid #e9ecef;
-            box-shadow: 
-                0 10px 25px rgba(0, 0, 0, 0.1),
-                0 5px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .dark-mode .enhanced-input input:focus {
-            border: 2px solid #667eea;
-            box-shadow: 
-                0 15px 35px rgba(102, 126, 234, 0.2),
-                0 8px 15px rgba(102, 126, 234, 0.15),
-                0 0 0 4px rgba(102, 126, 234, 0.1);
-        }
-        
-        .enhanced-input input::placeholder {
-            color: rgba(0, 0, 0, 0.5);
-            font-weight: 400;
-        }
-        
-        .dark-mode .enhanced-input input::placeholder {
-            color: rgba(0, 0, 0, 0.5);
-        }
-        
         .logo-container {
             margin-bottom: 3rem;
             text-align: center;
@@ -103,10 +68,6 @@
             margin-bottom: 1rem;
             color: #333;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .dark-mode .logo-container header {
-            color: #333333;
         }
         
         .logo-image {
@@ -139,10 +100,6 @@
             background: linear-gradient(135deg, #5a5a7a 0%, #3d3d4f 100%);
         }
         
-        .login-btn:active {
-            transform: translateY(0);
-        }
-        
         .create-vault-btn {
             width: 100%;
             padding: 1rem 2rem;
@@ -167,16 +124,6 @@
             box-shadow: 
                 0 12px 25px rgba(74, 74, 106, 0.25),
                 0 6px 12px rgba(74, 74, 106, 0.15);
-        }
-        
-        .dark-mode .create-vault-btn {
-            border-color: #4a4a6a;
-            color: #4a4a6a;
-        }
-        
-        .dark-mode .create-vault-btn:hover {
-            background: linear-gradient(135deg, #4a4a6a 0%, #2d2d3f 100%);
-            color: white;
         }
         
         .overlay {
@@ -207,7 +154,6 @@
             }
         }
         
-        /* Floating animation for subtle movement */
         .floating {
             animation: floating 6s ease-in-out infinite;
         }
@@ -228,33 +174,45 @@
                 </div>
             </div>
             
+            <!-- FIXED: Using Flask-WTF form structure like the working version -->
             <form action="/dashboard" method="POST">
+                {{ vaultPasswordForm.hidden_tag() }}
+                {{ vaultPasswordForm.csrf_token }}
+                
                 <div class="enhanced-input">
-                    <input type="password" 
-                           id="password" 
-                           name="password" 
-                           placeholder="Enter your password" 
-                           autocomplete="current-password">
+                    {{ vaultPasswordForm.password(
+                        size=256,
+                        style_="text-align: center; border: 2px solid #10051D;",
+                        class_="form-control",
+                        placeholder="Enter your password",
+                        autofocus=True,
+                        onkeypress="checkEnter(event);") }}
                 </div>
                 
-                <div class="enhanced-input" id="repeatPasswordContainer" style="display: none;">
-                    <input type="password" 
-                           id="repeatPassword" 
-                           name="repeatPassword" 
-                           placeholder="Repeat password" 
-                           autocomplete="new-password">
+                <!-- Show repeat password field if creating new vault -->
+                {% if wallet is none %}
+                <div class="enhanced-input" id="repeatPasswordContainer">
+                    {{ vaultPasswordForm.password(
+                        size=256,
+                        style_="text-align: center; border: 2px solid #10051D;",
+                        class_="form-control",
+                        id="repeatPassword",
+                        placeholder="Repeat password",
+                        onkeypress="checkEnter(event);") }}
                 </div>
                 
-                <button type="button" 
-                        id="createVaultBtn" 
-                        class="create-vault-btn" 
-                        style="display: none;">
-                    Create Vault
-                </button>
+                <div class="enhanced-input">
+                    {{ vaultPasswordForm.submit(
+                        size=32,
+                        value="Create Vault",
+                        class_="create-vault-btn",
+                        onclick="if(validateVaultPassword()) showWorking();") }}
+                </div>
+                {% endif %}
                 
                 <button type="submit" 
-                        id="loginBtn" 
-                        class="login-btn">
+                        class="login-btn"
+                        onclick="showWorking();">
                     Login
                 </button>
             </form>
@@ -264,99 +222,41 @@
     <script>
         // Auto-focus on password input
         window.onload = function() {
-            document.getElementById("password").focus();
+            document.querySelector('input[type="password"]').focus();
         };
 
-        // Toggle between login and create vault modes
-        let isCreateMode = false;
-        
-        function toggleMode() {
-            isCreateMode = !isCreateMode;
-            const repeatContainer = document.getElementById("repeatPasswordContainer");
-            const createBtn = document.getElementById("createVaultBtn");
-            const loginBtn = document.getElementById("loginBtn");
-            
-            if (isCreateMode) {
-                repeatContainer.style.display = "block";
-                createBtn.style.display = "block";
-                loginBtn.style.display = "none";
-            } else {
-                repeatContainer.style.display = "none";
-                createBtn.style.display = "none";
-                loginBtn.style.display = "block";
-            }
-        }
-
-        // Validate password
-        function validatePassword() {
-            const password = document.getElementById("password").value;
-            const repeatPassword = document.getElementById("repeatPassword").value;
-            
-            if (password.length < 8) {
-                alert("Password must be at least 8 characters long");
-                return false;
-            }
-            
-            if (isCreateMode && password !== repeatPassword) {
-                alert("Passwords do not match");
-                return false;
-            }
-            
-            return true;
-        }
-
-        // Handle form submission
-        document.querySelector("form").addEventListener("submit", function(e) {
-            e.preventDefault(); // Always prevent default submission
-            
-            const password = document.getElementById("password").value;
-            
-            // Custom validation without browser popup
-            if (password.length < 3) {
-                // You can replace this alert with a custom styled message if preferred
-                alert("Password is too short");
-                return;
-            }
-            
-            if (isCreateMode) {
-                const repeatPassword = document.getElementById("repeatPassword").value;
-                if (password !== repeatPassword) {
-                    alert("Passwords do not match");
-                    return;
-                }
-            }
-            
-            // If validation passes, submit the form
-            this.submit();
-        });
-
-        // Handle Enter key
-        document.addEventListener("keypress", function(e) {
-            if (e.key === "Enter") {
-                const focusedElement = document.activeElement;
-                if (focusedElement.id === "repeatPassword") {
-                    if (validatePassword()) {
-                        document.querySelector("form").submit();
+        function checkEnter(event) {
+            const repeatPassword = document.getElementById("repeatPassword");
+            if (repeatPassword && document.activeElement === repeatPassword) {
+                if (event.key === "Enter" || event.keyCode === 13) {
+                    if (validateVaultPassword()) {
+                        showWorking();
+                        return true;
                     }
+                    return false;
                 }
+                return event.keyCode != 13;
             }
-        });
-
-        // Dark mode toggle (you can call this function to switch modes)
-        function toggleDarkMode() {
-            document.body.classList.toggle("dark-mode");
         }
 
-        // Add some interactive effects
-        document.querySelectorAll('.enhanced-input input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-            });
+        function validateVaultPassword() {
+            const password = document.querySelector('input[type="password"]').value;
+            const repeat = document.getElementById("repeatPassword");
             
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
-        });
+            if (repeat === null) {
+                return password.length > 7;
+            }
+            return password.length > 7 && repeat.value === password;
+        }
+
+        function showWorking() {
+            // Add loading state if needed
+            console.log('Processing...');
+        }
+
+        function isFocused(element) {
+            return document.activeElement === element;
+        }
     </script>
 </body>
 </html>
