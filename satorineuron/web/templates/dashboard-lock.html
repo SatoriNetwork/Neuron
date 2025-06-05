@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Satori - Enhanced Password Form</title>
+    <title>Satori - Password Form</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -100,32 +100,6 @@
             background: linear-gradient(135deg, #5a5a7a 0%, #3d3d4f 100%);
         }
         
-        .create-vault-btn {
-            width: 100%;
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            font-weight: 500;
-            border: 2px solid #4a4a6a;
-            border-radius: 15px;
-            background: transparent;
-            color: #4a4a6a;
-            box-shadow: 
-                0 8px 20px rgba(74, 74, 106, 0.1),
-                0 4px 8px rgba(74, 74, 106, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            margin-bottom: 1rem;
-        }
-        
-        .create-vault-btn:hover {
-            background: linear-gradient(135deg, #4a4a6a 0%, #2d2d3f 100%);
-            color: white;
-            transform: translateY(-3px);
-            box-shadow: 
-                0 12px 25px rgba(74, 74, 106, 0.25),
-                0 6px 12px rgba(74, 74, 106, 0.15);
-        }
-        
         .overlay {
             position: fixed;
             top: 0;
@@ -162,6 +136,213 @@
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
         }
+
+        .working-indicator {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #333333;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem 3rem;
+            border-radius: 20px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.2),
+                0 15px 35px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            animation: workingFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .enlightenment-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top: 3px solid #9672fa;
+            border-radius: 50%;
+            animation: enlightenmentSpin 2s linear infinite;
+            margin: 0 auto 1rem auto;
+            position: relative;
+        }
+
+        .enlightenment-spinner::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 2px solid transparent;
+            border-top: 2px solid #4a4a6a;
+            border-radius: 50%;
+            animation: enlightenmentSpin 3s linear infinite reverse;
+        }
+
+        .enlightenment-spinner::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #4a4a6a 100%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: enlightenmentPulse 2s ease-in-out infinite;
+        }
+
+        .enlightenment-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .awakening-text {
+            display: inline-block;
+            color: #333333;
+            background: linear-gradient(135deg, #667eea 0%, #4a4a6a 50%, #667eea 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: awakeningFlow 2s ease-in-out infinite;
+            font-weight: 600;
+        }
+        
+        @supports not (-webkit-background-clip: text) {
+            .awakening-text {
+                color: #333333 !important;
+                background: none !important;
+                -webkit-text-fill-color: initial !important;
+            }
+        }
+
+        .awakening-letter {
+            display: inline-block;
+            animation: awakeningPulse 1.5s ease-in-out infinite;
+        }
+
+        .awakening-letter:nth-child(1) { animation-delay: 0s; }
+        .awakening-letter:nth-child(2) { animation-delay: 0.1s; }
+        .awakening-letter:nth-child(3) { animation-delay: 0.2s; }
+        .awakening-letter:nth-child(4) { animation-delay: 0.3s; }
+        .awakening-letter:nth-child(5) { animation-delay: 0.4s; }
+        .awakening-letter:nth-child(6) { animation-delay: 0.5s; }
+        .awakening-letter:nth-child(7) { animation-delay: 0.6s; }
+        .awakening-letter:nth-child(8) { animation-delay: 0.7s; }
+        .awakening-letter:nth-child(9) { animation-delay: 0.8s; }
+
+        @keyframes awakeningFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes awakeningPulse {
+            0%, 100% { 
+                transform: scale(1) translateY(0px);
+                opacity: 0.8;
+            }
+            25% { 
+                transform: scale(1.1) translateY(-2px);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.05) translateY(-1px);
+                opacity: 0.9;
+            }
+            75% { 
+                transform: scale(1.08) translateY(-3px);
+                opacity: 1;
+            }
+        }
+
+        .enlightenment-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            animation: enlightenmentBreath 3s ease-in-out infinite;
+        }
+
+        .floating-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #4a4a6a 100%);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat 4s linear infinite;
+        }
+
+        .particle:nth-child(1) { left: 20%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 40%; animation-delay: 1s; }
+        .particle:nth-child(3) { left: 60%; animation-delay: 2s; }
+        .particle:nth-child(4) { left: 80%; animation-delay: 3s; }
+
+        @keyframes workingFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes enlightenmentSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes enlightenmentPulse {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes enlightenmentBreath {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -174,7 +355,6 @@
                 </div>
             </div>
             
-            <!-- FIXED: Using Flask-WTF form structure like the working version -->
             <form action="/dashboard" method="POST">
                 {{ vaultPasswordForm.hidden_tag() }}
                 {{ vaultPasswordForm.csrf_token }}
@@ -186,35 +366,39 @@
                         class_="form-control",
                         placeholder="Enter your password",
                         autofocus=True,
+                        id="password",
                         onkeypress="checkEnter(event);") }}
                 </div>
-                
-                <!-- Show repeat password field if creating new vault -->
-                {% if wallet is none %}
-                <div class="enhanced-input" id="repeatPasswordContainer">
-                    {{ vaultPasswordForm.password(
-                        size=256,
-                        style_="text-align: center; border: 2px solid #10051D;",
-                        class_="form-control",
-                        id="repeatPassword",
-                        placeholder="Repeat password",
-                        onkeypress="checkEnter(event);") }}
-                </div>
-                
-                <div class="enhanced-input">
-                    {{ vaultPasswordForm.submit(
-                        size=32,
-                        value="Create Vault",
-                        class_="create-vault-btn",
-                        onclick="if(validateVaultPassword()) showWorking();") }}
-                </div>
-                {% endif %}
                 
                 <button type="submit" 
                         class="login-btn"
-                        onclick="showWorking();">
+                        onclick="showWorkingV2();">
                     Login
                 </button>
+                
+                <div class="working-indicator" id="workingIndicator">
+                    <div class="floating-particles">
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                    </div>
+                    <div class="enlightenment-spinner"></div>
+                    <div class="enlightenment-text">
+                        <div class="awakening-word">
+                            <span class="awakening-letter" style="animation-delay: 0s;">A</span>
+                            <span class="awakening-letter" style="animation-delay: 0.1s;">w</span>
+                            <span class="awakening-letter" style="animation-delay: 0.2s;">a</span>
+                            <span class="awakening-letter" style="animation-delay: 0.3s;">k</span>
+                            <span class="awakening-letter" style="animation-delay: 0.4s;">e</span>
+                            <span class="awakening-letter" style="animation-delay: 0.5s;">n</span>
+                            <span class="awakening-letter" style="animation-delay: 0.6s;">i</span>
+                            <span class="awakening-letter" style="animation-delay: 0.7s;">n</span>
+                            <span class="awakening-letter" style="animation-delay: 0.8s;">g</span>
+                        </div>
+                    </div>
+                    <div class="enlightenment-subtitle">Accessing the distributed consciousness</div>
+                </div>
             </form>
         </div>
     </div>
@@ -222,40 +406,22 @@
     <script>
         // Auto-focus on password input
         window.onload = function() {
-            document.querySelector('input[type="password"]').focus();
+            document.getElementById("password").focus();
         };
 
         function checkEnter(event) {
-            const repeatPassword = document.getElementById("repeatPassword");
-            if (repeatPassword && document.activeElement === repeatPassword) {
-                if (event.key === "Enter" || event.keyCode === 13) {
-                    if (validateVaultPassword()) {
-                        showWorking();
-                        return true;
-                    }
-                    return false;
-                }
-                return event.keyCode != 13;
+            if (event.key === "Enter" || event.keyCode === 13) {
+                showWorkingV2();
+                return true;
             }
+            return true;
         }
 
-        function validateVaultPassword() {
-            const password = document.querySelector('input[type="password"]').value;
-            const repeat = document.getElementById("repeatPassword");
-            
-            if (repeat === null) {
-                return password.length > 7;
+        function showWorkingV2() {
+            const indicator = document.getElementById("workingIndicator");
+            if (indicator) {
+                indicator.style.display = "block";
             }
-            return password.length > 7 && repeat.value === password;
-        }
-
-        function showWorking() {
-            // Add loading state if needed
-            console.log('Processing...');
-        }
-
-        function isFocused(element) {
-            return document.activeElement === element;
         }
     </script>
 </body>

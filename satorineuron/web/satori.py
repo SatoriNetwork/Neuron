@@ -1679,14 +1679,8 @@ def wallet(network: str = 'main'):
             'sendSatoriTransaction': presentSendSatoriTransactionform(request.form),
             'vaultPasswordForm': presentVaultPasswordForm()}))
     else:
-        return render_template('wallet-page.html', **getResp({
-            'title': 'Wallet',
-            'walletIcon': 'wallet',
-            'proxyParent': start.rewardAddress,
-            'vaultIsSetup': start.vault is not None,
+        return render_template('dashboard.html', **getResp({
             'vaultOpened': False,
-            'walletlockEnabled': True,
-            'network': network,
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
     #return render_template('wallet-page.html', **getResp({
@@ -2263,8 +2257,7 @@ def streams():
             'totalStreams': len(oracleStreams),
             'allStreams': oracleStreams}))
     else:
-        return render_template('streams.html', **getResp({
-            'title': 'Streams',
+        return render_template('dashboard.html', **getResp({
             'vaultOpened': False,
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
@@ -2377,10 +2370,9 @@ def proposals():
             'vaultPasswordForm': presentVaultPasswordForm(),
             }))
     else:
-        return render_template('proposals.html', **getResp({
+        return render_template('dashboard.html', **getResp({
             'vaultOpened': False,
             'vaultPasswordForm': presentVaultPasswordForm(),
-            'title': 'Proposals'
         }))
 
 
