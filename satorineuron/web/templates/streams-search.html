@@ -1,60 +1,575 @@
 {% block content %}
-<div class="row">
-  <div id="notification" style="display: none; position: fixed; top: 5px; right: 25px; background-color: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; width: 300px">
+<style>
+  /* Enhanced styling while maintaining existing color scheme */
+  .streams-container {
+    padding: 1rem;
+  }
+  
+  .streams-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+  }
+  
+  .search-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 1.5rem 1rem 1.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .search-input {
+    flex: 1;
+    min-width: 250px;
+    height: 48px;
+    border-radius: 8px;
+    border: 2px solid #e3e3e3;
+    padding: 0 16px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+  
+  .sort-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+    background: white;
+    color: #495057;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  
+  .sort-button:hover {
+    border-color: #4CAF50;
+    background: #f8f9fa;
+  }
+  
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e3e3e3;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .pagination-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: 2px solid #dee2e6;
+    background: white;
+    color: #495057;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: fit-content;
+  }
+  
+  .pagination-button:not(:disabled):hover {
+    border-color: #4CAF50;
+    background: #f8f9fa;
+  }
+  
+  .pagination-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #f8f9fa;
+  }
+  
+  .page-input-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #495057;
+  }
+  
+  .page-number-input {
+    width: 60px;
+    height: 36px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .page-number-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+  }
+  
+  .streams-table {
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  .streams-table th {
+    background: #f8f9fa;
+    padding: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e3e3e3;
+  }
+  
+  .streams-table td {
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f4;
+  }
+  
+  .stream-row {
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .stream-row:hover {
+    background-color: #fff8e1;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .action-button {
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+  }
+  
+  .action-button:hover {
+    background: rgba(76, 175, 80, 0.1);
+    transform: scale(1.1);
+  }
+  
+  .action-button i {
+    font-size: 20px;
+    color: #666;
+    transition: color 0.2s ease;
+  }
+  
+  .action-button:hover i {
+    color: #4CAF50;
+  }
+  
+  .action-button.active i {
+    color: #4CAF50;
+  }
+  
+  .action-button.inactive i {
+    color: #999;
+    opacity: 0.6;
+  }
+  
+  .stream-details-row {
+    background: #f8f9fa;
+  }
+  
+  .stream-details-content {
+    padding: 24px;
+    border-radius: 8px;
+    background: white;
+    margin: 8px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #666;
+    letter-spacing: 0.5px;
+  }
+  
+  .detail-value {
+    font-size: 14px;
+    color: #333;
+    word-break: break-word;
+  }
+  
+  .status-active {
+    color: #4CAF50;
+    font-weight: 600;
+  }
+  
+  .status-inactive {
+    color: #f44336;
+    font-weight: 600;
+  }
+  
+  /* Enhanced Modal Styling */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+  }
+  
+  .modal-content {
+    position: relative;
+    background: white;
+    margin: 2rem auto;
+    padding: 0;
+    border-radius: 16px;
+    max-width: 90vw;
+    max-height: 90vh;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  }
+  
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    border-bottom: 1px solid #e3e3e3;
+    background: #f8f9fa;
+  }
+  
+  .modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+  }
+  
+  .modal-close {
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border: none;
+    background: transparent;
+  }
+  
+  .modal-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  .modal-body {
+    padding: 24px;
+  }
+  
+  .chart-container {
+    height: 400px;
+    margin-bottom: 24px;
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 16px;
+  }
+  
+  .chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .chart-select {
+    padding: 8px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+  }
+  
+  .chart-select:focus {
+    outline: none;
+    border-color: #4CAF50;
+  }
+  
+  .observations-table-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e3e3e3;
+    border-radius: 8px;
+  }
+  
+  .observations-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  
+  .observations-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #e3e3e3;
+    position: sticky;
+    top: 0;
+  }
+  
+  .observations-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f3f4;
+  }
+  
+  .observations-table tr:hover {
+    background: #f8f9fa;
+  }
+  
+  /* Loading States */
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #f6b042;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .loading-text {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  /* Notification Enhancements */
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    max-width: 350px;
+    animation: slideIn 0.3s ease;
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .notification-success {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+  }
+  
+  .notification-error {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+  }
+  
+  /* Dark mode support */
+  .dark-colors {
+    background-color: #2d3748 !important;
+    color: #e2e8f0 !important;
+  }
+  
+  .dark-colors .streams-card {
+    background-color: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .dark-colors .search-input {
+    background-color: #4a5568;
+    border-color: #6b7280;
+    color: #e2e8f0;
+  }
+  
+  .dark-colors .pagination-controls {
+    background-color: #374151;
+    border-color: #4a5568;
+  }
+  
+  .dark-colors .stream-row:hover {
+    background-color: rgba(255, 193, 7, 0.1);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .search-controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .search-input {
+      min-width: 100%;
+    }
+    
+    .pagination-controls {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .details-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+      margin: 1rem;
+      max-width: calc(100vw - 2rem);
+    }
+    
+    .chart-container {
+      height: 300px;
+    }
+  }
+  
+  /* Remove spinner arrows from number input */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+</style>
+
+<div class="streams-container">
+  <!-- Notifications -->
+  <div id="notification" class="notification notification-success" style="display: none;">
     <!-- Notification message will be inserted here -->
   </div>
-  <div id="notification_error" style="display: none; position: fixed; top: 5px; right: 25px; background-color: #ff0000; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; width: 300px">
+  <div id="notification_error" class="notification notification-error" style="display: none;">
     <!-- Notification message will be inserted here -->
   </div>
+  
   <div class="col-lg-12 col-md-12 mb-md-0">
-    <div class="card {% if darkmode %}dark-colors{% endif %}">
-      <div class="card-header pb-0  {% if darkmode %}dark-colors{% endif %}">
+    <div class="card streams-card {% if darkmode %}dark-colors{% endif %}">
+      <!-- Card Header -->
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
         <div class="row">
           <div class="col-lg-6 col-7">
             <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
-            <p class="text-sm mb-0  {% if darkmode %}dark-colors{% endif %}">
+            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
               Real-World data streams, published by Satori Neurons
             </p>
           </div>
         </div>
       </div>
-      <div style="margin-left:24px;margin-top:15px;padding-right:26px;" class="d-flex flex-row gap-2">
-        <input style="width: -webkit-fill-available;height:51.82px;border-radius:0.5rem;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
-        <button id="popularitySortBtn" class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center" onclick="toggleSort('popularity')">Sort by Popularity <div style="margin-top:-3px" id="popularityIcon">↓</div></button>
+      
+      <!-- Search and Sort Controls -->
+      <div class="search-controls">
+        <input 
+          class="search-input" 
+          type="text" 
+          id="searchInput" 
+          placeholder="Search streams..." 
+          oninput="debounceSearch();" 
+        />
+        <button 
+          id="popularitySortBtn" 
+          class="sort-button" 
+          onclick="toggleSort('popularity')"
+        >
+          Sort by Popularity 
+          <span id="popularityIcon">↓</span>
+        </button>
       </div>
       
-      <!-- Pagination Controls at Top -->
-      <div style="display: flex; justify-content: center; padding: 1rem; align-items: center; gap: 1rem; margin-left: 24px; margin-right: 26px; border-bottom: 1px solid #e3e3e3;">
-        <button class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="prevPageBtnTop" onclick="previousPage()" disabled>Previous</button>
+      <!-- Pagination Controls -->
+      <div class="pagination-controls">
+        <button 
+          class="pagination-button" 
+          id="prevPageBtnTop" 
+          onclick="previousPage()" 
+          disabled
+        >
+          Previous
+        </button>
         
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <input type="number" id="pageNumberInput" min="1" max="1" value="1" 
-                 style="width: 50px; height: 32px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size: 14px; -webkit-appearance: none; -moz-appearance: textfield;"
-                 onkeypress="handlePageInputKeypress(event)"
-                 onchange="goToPage()" />
-          <span style="font-size: 14px;">of</span>
-          <span id="totalPagesTop" style="font-size: 14px;">1</span>
+        <div class="page-input-container">
+          <input 
+            type="number" 
+            id="pageNumberInput" 
+            class="page-number-input"
+            min="1" 
+            max="1" 
+            value="1" 
+            onkeypress="handlePageInputKeypress(event)"
+            onchange="goToPage()" 
+          />
+          <span>of</span>
+          <span id="totalPagesTop">1</span>
         </div>
         
-        <button class="d-flex flex-row gap-2 btn btn-outline-dark btn-outline-secondary" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="nextPageBtnTop" onclick="nextPage()" disabled >Next</button>
+        <button 
+          class="pagination-button" 
+          id="nextPageBtnTop" 
+          onclick="nextPage()" 
+          disabled
+        >
+          Next
+        </button>
       </div>
 
-      <style>
-        /* Remove spinner arrows from number input */
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-        
-        input[type="number"] {
-          -moz-appearance: textfield;
-        }
-      </style>
-
+      <!-- Table -->
       <div class="card-body px-0 pb-2">
-        <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
-          <table class="table align-items-center mb-0" style="table-layout: fixed;max-width: 100%;">
+        <div class="table-responsive" style="padding: 0 1rem 1rem 1rem;">
+          <table class="streams-table table align-items-center mb-0">
             <thead ondblclick='toggleVotingDetails();'>
               <tr>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 {% if darkmode %}dark-colors{% endif %}" style="width:40%;">Oracle</th>
@@ -65,9 +580,10 @@
             <tbody id="updating_table">
               <!-- Initial loading message -->
               <tr>
-                <td colspan="3" style="text-align:center; padding: 2rem;">
-                  <div class="spinner-border" role="status">
-                    <span class="sr-only">Loading streams...</span>
+                <td colspan="3">
+                  <div class="loading-container">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading streams...</div>
                   </div>
                 </td>
               </tr>
@@ -77,41 +593,51 @@
       </div>
     </div>
   </div>
-  <!-- Modal for Observations -->
+  
+  <!-- Enhanced Modal for Observations -->
   <div id="observationsModal" class="modal" style="display: none;">
-    <div id="modal-content" class="modal-content" style="position: relative;padding: 1rem;border-radius: 8px;background-color: #fff;max-height: 90vh;margin-top: 3rem;max-width: 150vh;margin-left: auto;margin-right: auto;">
-      <div class="d-flex" style="align-items:center; justify-content:space-between">
-        <h4 id="streamName"></h4>
-        <i class="material-icons opacity-10" class="close" onclick="closeModal()" style="cursor:pointer">cancel</i>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 id="streamName" class="modal-title"></h4>
+        <button class="modal-close" onclick="closeModal()">
+          <i class="material-icons">close</i>
+        </button>
       </div>
 
-      <div id="modalLoading" style="display: flex; height: 100%; justify-content: center; align-items: center">
-        Loading.....
-      </div>
+      <div class="modal-body">
+        <div id="modalLoading" class="loading-container">
+          <div class="spinner"></div>
+          <div class="loading-text">Loading observations...</div>
+        </div>
 
-      <!-- Graph Section -->
-      <div id="observationsGraphContainer" style="display: none; height: 300px; margin-bottom: 20px;">
-        <canvas id="observationsGraph"></canvas>
-      </div>
-      <div  style="width:35% padding:5px">
-        <select class="d-flex flex-row gap-2 btn btn-outline-dark" xname="Intervals" id="ZoomValue" onchange="ReRenderGraph()">
-          <option value="5" selected>5 Minute</option>
-          <option value="10" selected>10 Minute</option>
-          <option value="15" selected>15 Minute</option>
-          <option value="30" selected>30 Minute</option>
-          <option value="60" selected>1 Hour </option>
-          <option value="1440">1 Day</option>
-          <option value="10080">1 Week</option>
-          <option value="40320">1 Month</option>
-        </select>
-      </div>
-        <div id="observation-table" style="display: none; overflow-y: scroll; height: calc(100% - 350px);">
-          <table id="observationsTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+        <!-- Enhanced Chart Section -->
+        <div id="observationsGraphContainer" class="chart-container" style="display: none;">
+          <canvas id="observationsGraph"></canvas>
+        </div>
+        
+        <!-- Chart Controls -->
+        <div class="chart-controls" style="display: none;" id="chartControls">
+          <label for="ZoomValue">Time Interval:</label>
+          <select class="chart-select" name="Intervals" id="ZoomValue" onchange="ReRenderGraph()">
+            <option value="5">5 Minutes</option>
+            <option value="10">10 Minutes</option>
+            <option value="15">15 Minutes</option>
+            <option value="30">30 Minutes</option>
+            <option value="60">1 Hour</option>
+            <option value="1440">1 Day</option>
+            <option value="10080">1 Week</option>
+            <option value="40320">1 Month</option>
+          </select>
+        </div>
+        
+        <!-- Enhanced Observations Table -->
+        <div id="observation-table" class="observations-table-container" style="display: none;">
+          <table class="observations-table" id="observationsTable">
             <thead>
               <tr>
-                <th style="border-bottom: 1px solid #ccc; padding: 8px;">Time</th>
-                <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #533549">Real-World Value</th>
-                <th style="border-bottom: 1px solid #ccc; padding: 8px; color: #f6b042">Avg Prediction</th>
+                <th>Time</th>
+                <th style="color: #533549">Real-World Value</th>
+                <th style="color: #f6b042">Avg Prediction</th>
               </tr>
             </thead>
             <tbody id="observationsBody">
@@ -123,6 +649,7 @@
     </div>
   </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
@@ -141,8 +668,8 @@
   let isLoading = false;
   let totalPages = 1;
   let totalStreams = 0;
-  let hasNext = false;  // NEW: Track server's next page status
-  let hasPrev = false;  // NEW: Track server's previous page status
+  let hasNext = false;
+  let hasPrev = false;
   
   let sortOrder = {
     popularity: 'desc',
@@ -153,64 +680,51 @@
   let sortTimeout = null;
 
   function updatePaginationButtons(currentPage, totalPages, hasNext, hasPrev) {
-    // Update both top and bottom pagination buttons
     const prevBtnTop = document.getElementById('prevPageBtnTop');
     const nextBtnTop = document.getElementById('nextPageBtnTop');
     
-    // Update button states - disable based on data availability AND loading state
     prevBtnTop.disabled = !hasPrev || isLoading;
     nextBtnTop.disabled = !hasNext || isLoading;
 
-    // Update visual appearance
-    prevBtnTop.classList.toggle('btn-outline-secondary', !hasPrev || isLoading);
-    prevBtnTop.classList.toggle('btn-outline-dark', hasPrev && !isLoading);
+    prevBtnTop.classList.toggle('pagination-button-disabled', !hasPrev || isLoading);
+    nextBtnTop.classList.toggle('pagination-button-disabled', !hasNext || isLoading);
     
-    nextBtnTop.classList.toggle('btn-outline-secondary', !hasNext || isLoading);
-    nextBtnTop.classList.toggle('btn-outline-dark', hasNext && !isLoading);
-    
-    // Update total pages display only
     document.getElementById('totalPagesTop').textContent = totalPages;
     
-    // Always update page number input to current page when this function is called
     const pageInput = document.getElementById('pageNumberInput');
     pageInput.value = currentPage;
     pageInput.max = totalPages;
-}
+  }
 
-  // Handle page number input keypress (Enter key)
   function handlePageInputKeypress(event) {
     if (event.key === 'Enter') {
       goToPage();
     }
   }
 
-  // Go to specific page
   function goToPage() {
-  const pageInput = document.getElementById('pageNumberInput');
-  targetPage = parseInt(pageInput.value);
-  
-  if (isNaN(targetPage) || targetPage < 1 || targetPage > totalPages) {
-    pageInput.value = currentPage; // Reset to current page if invalid
-    showNotification("Please enter a valid page number", true);
-    return;
+    const pageInput = document.getElementById('pageNumberInput');
+    targetPage = parseInt(pageInput.value);
+    
+    if (isNaN(targetPage) || targetPage < 1 || targetPage > totalPages) {
+      pageInput.value = currentPage;
+      showNotification("Please enter a valid page number", true);
+      return;
+    }
+    
+    if (targetPage !== currentPage && !isLoading) {
+      pageInput.value = targetPage;
+      fetchStreams(currentSearch, targetPage, currentSort, currentOrder);
+    }
   }
-  
-  if (targetPage !== currentPage && !isLoading) {
-    // Keep the target page value in the input during loading
-    pageInput.value = targetPage;
-    fetchStreams(currentSearch, targetPage, currentSort, currentOrder);
-  }
-}
 
-  // Initial call to fetch streams
   fetchStreams();
 
-  // Close modal function
   function closeModal() {
     document.getElementById('observationsModal').style.display = 'none';
+    document.body.classList.remove('no-scroll');
   }
 
-  // Toggle voting details
   function toggleVotingDetails() {
     const tableBody = document.getElementById('updating_table');
     const rows = tableBody.querySelectorAll('tr');
@@ -221,19 +735,16 @@
     });
   }
 
-function setPaginationLoadingState(loading) {
-      const prevBtnTop = document.getElementById('prevPageBtnTop');
-      const nextBtnTop = document.getElementById('nextPageBtnTop');
-      
-      if (loading) {
-          prevBtnTop.disabled = true;
-          nextBtnTop.disabled = true;
-          prevBtnTop.classList.add('btn-outline-secondary');
-          prevBtnTop.classList.remove('btn-outline-dark');
-          nextBtnTop.classList.add('btn-outline-secondary');
-          nextBtnTop.classList.remove('btn-outline-dark');
-      }
-      // When loading is false, updatePaginationButtons will be called to restore proper state
+  function setPaginationLoadingState(loading) {
+    const prevBtnTop = document.getElementById('prevPageBtnTop');
+    const nextBtnTop = document.getElementById('nextPageBtnTop');
+    
+    if (loading) {
+      prevBtnTop.disabled = true;
+      nextBtnTop.disabled = true;
+      prevBtnTop.classList.add('pagination-button-disabled');
+      nextBtnTop.classList.add('pagination-button-disabled');
+    }
   }
 
   function showNotification(message, showError = false) {
@@ -246,31 +757,29 @@ function setPaginationLoadingState(loading) {
     }, 5000);
   }
 
-  // Server-side search with debouncing
   function debounceSearch() {
     if (timeout) {
-        clearTimeout(timeout);
+      clearTimeout(timeout);
     }
     
-    const tableBody = document.getElementById('updating_table');
     showLoadingState();
     
     timeout = setTimeout(() => {
-        const searchText = document.getElementById('searchInput').value.trim();
-        currentSearch = searchText;
-        currentPage = 1; // Reset to first page on new search
-        fetchStreams(searchText, 1, currentSort, currentOrder);
+      const searchText = document.getElementById('searchInput').value.trim();
+      currentSearch = searchText;
+      currentPage = 1;
+      fetchStreams(searchText, 1, currentSort, currentOrder);
     }, 300);
-}
+  }
 
-  // Show loading state
   function showLoadingState() {
     const tableBody = document.getElementById('updating_table');
     tableBody.innerHTML = `
       <tr>
-        <td colspan="3" style="text-align:center; padding: 2rem;">
-          <div class="spinner-border" role="status">
-            <span class="sr-only">Loading streams...</span>
+        <td colspan="3">
+          <div class="loading-container">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading streams...</div>
           </div>
         </td>
       </tr>
@@ -278,81 +787,83 @@ function setPaginationLoadingState(loading) {
   }
 
   function fetchStreams(search = '', page = 1, sort = 'popularity', order = 'desc') {
-  if (isLoading) return;
-  
-  isLoading = true;
-  
-  showLoadingState();
+    if (isLoading) return;
     
-  const params = new URLSearchParams({
+    isLoading = true;
+    showLoadingState();
+      
+    const params = new URLSearchParams({
       page: page,
       per_page: itemsPerPage,
       search: search || '',
       sort: sort,
       order: order
-  });
-  
-  fetch(`/streams/api?${params}`)
+    });
+    
+    fetch(`/streams/api?${params}`)
       .then(response => {
-          if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
       })
       .then(data => {
-          // Extract pagination data
-          const pagination = data || {
-              current_page: 1,
-              total_pages: 1,
-              total_count: 0,
-              has_prev: false,
-              has_next: false,
-              per_page: itemsPerPage
-          };
-          
-          // Update global state
-          currentPage = pagination.current_page;
-          totalPages = pagination.total_pages;
-          totalStreams = pagination.total_count;
-          hasNext = pagination.has_next;
-          hasPrev = pagination.has_prev;
-          updateStreamDisplay(data.streams || [], darkmode);
-          isLoading = false;
-          updatePaginationButtons(currentPage, totalPages, hasNext, hasPrev);
+        const pagination = data || {
+          current_page: 1,
+          total_pages: 1,
+          total_count: 0,
+          has_prev: false,
+          has_next: false,
+          per_page: itemsPerPage
+        };
+        
+        currentPage = pagination.current_page;
+        totalPages = pagination.total_pages;
+        totalStreams = pagination.total_count;
+        hasNext = pagination.has_next;
+        hasPrev = pagination.has_prev;
+        updateStreamDisplay(data.streams || [], darkmode);
+        isLoading = false;
+        updatePaginationButtons(currentPage, totalPages, hasNext, hasPrev);
       })
       .catch(error => {
-          console.error('Error fetching streams:', error);
-          const tableBody = document.getElementById('updating_table');
-          tableBody.innerHTML = `
-              <tr>
-                  <td colspan="3" style="text-align:center; padding: 2rem; color: red;">
-                      Error loading streams. Please try again.
-                      <br><button onclick="fetchStreams('${currentSearch}', ${currentPage}, '${currentSort}', '${currentOrder}')" class="btn btn-sm btn-outline-primary mt-2">Retry</button>
-                  </td>
-              </tr>
-          `;
-          
-          // Reset loading state and update buttons
-          isLoading = false;
-          updatePaginationButtons(currentPage, totalPages, hasNext, hasPrev);
-          showNotification("Failed to load streams", true);
+        console.error('Error fetching streams:', error);
+        const tableBody = document.getElementById('updating_table');
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="3">
+              <div class="loading-container">
+                <div style="color: #f44336; text-align: center;">
+                  <i class="material-icons" style="font-size: 48px; margin-bottom: 16px;">error</i>
+                  <div>Error loading streams. Please try again.</div>
+                  <button onclick="fetchStreams('${currentSearch}', ${currentPage}, '${currentSort}', '${currentOrder}')" 
+                          class="sort-button" style="margin-top: 16px;">
+                    Retry
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+        
+        isLoading = false;
+        updatePaginationButtons(currentPage, totalPages, hasNext, hasPrev);
+        showNotification("Failed to load streams", true);
       });
-}; 
+  }
 
-  // Updated pagination functions
   function nextPage() {
     if (!isLoading && hasNext) {
-        fetchStreams(currentSearch, currentPage + 1, currentSort, currentOrder);
+      fetchStreams(currentSearch, currentPage + 1, currentSort, currentOrder);
     }
-}
+  }
 
-function previousPage() {
+  function previousPage() {
     if (!isLoading && hasPrev) {
-        fetchStreams(currentSearch, currentPage - 1, currentSort, currentOrder);
+      fetchStreams(currentSearch, currentPage - 1, currentSort, currentOrder);
     }
-}
+  }
 
-  // Updated sort function
   function toggleSort(type) {
     if (sortTimeout) {
       clearTimeout(sortTimeout);
@@ -367,7 +878,7 @@ function previousPage() {
       
       currentSort = type;
       currentOrder = sortOrder[type];
-      currentPage = 1; // Reset to first page on sort change
+      currentPage = 1;
       
       fetchStreams(currentSearch, 1, currentSort, currentOrder);
     }, 200);
@@ -379,47 +890,52 @@ function previousPage() {
 
     if (streams.length === 0) {
       const noDataRow = document.createElement('tr');
-      noDataRow.innerHTML = '<td style="text-align:center; padding: 2rem;" colspan="3">No streams found.</td>';
+      noDataRow.innerHTML = `
+        <td colspan="3">
+          <div class="loading-container">
+            <i class="material-icons" style="font-size: 48px; color: #ccc;">search_off</i>
+            <div class="loading-text">No streams found.</div>
+          </div>
+        </td>
+      `;
       tableBody.appendChild(noDataRow);
       return;
     }
 
     streams.forEach(stream => {
-      // Calculate if last observation is within 24 hours
       const now = new Date();
       const latestObservationTime = new Date(stream.latest_observation_time);
       const isActive = (now - latestObservationTime) <= 24 * 60 * 60 * 1000;
 
       const row = document.createElement('tr');
+      row.className = 'stream-row';
       row.style.cursor = "pointer";
       row.onclick = () => toggleStreamDetails(row, stream.stream_id);
       row.id = `stream_${stream.stream_id}`;
-      let rowClass = darkmode ? 'yellow-dark-hover' : 'yellow-hover';
-      row.className = rowClass;
       
       const voteActionHtml = `
         <td>
-          <div class="d-flex gap-2">
-            <div id="observations">
-              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}');">stacked_line_chart</i>
-            </div>
+          <div class="action-buttons">
+            <button class="action-button" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}');">
+              <i class="material-icons">stacked_line_chart</i>
+            </button>
             ${stream.vote === 0 ?
-                `<div id="stream_increment_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
-                    <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
-                </div>` :
-                `<div id="stream_decrement_${stream.stream_id}" onclick="decrementVote(${stream.stream_id}, event);">
-                    <i class="material-icons opacity-10" title="Approved">thumb_up</i>
-                </div>`
+                `<button class="action-button inactive" id="stream_increment_${stream.stream_id}" title="Approve" onclick="incrementVote(${stream.stream_id}, event);">
+                    <i class="material-icons">thumb_up</i>
+                </button>` :
+                `<button class="action-button active" id="stream_decrement_${stream.stream_id}" title="Approved" onclick="decrementVote(${stream.stream_id}, event);">
+                    <i class="material-icons">thumb_up</i>
+                </button>`
             }
             ${hasRoom ? 
-                `<div id="stream_predict_${stream.stream_id}" onclick="predictStream(${stream.stream_id}, event);">
-                    <i class="material-icons opacity-10" title="Predict Stream">trending_up</i>
-                </div>` : 
+                `<button class="action-button" id="stream_predict_${stream.stream_id}" title="Predict Stream" onclick="predictStream(${stream.stream_id}, event);">
+                    <i class="material-icons">trending_up</i>
+                </button>` : 
                 ''
             }
-            <div id="stream_flag_${stream.stream_id}" onclick="flagStream(${stream.stream_id}, event);">
-              <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Flag Stream">flag</i>
-            </div>
+            <button class="action-button" id="stream_flag_${stream.stream_id}" title="Flag Stream" onclick="flagStream(${stream.stream_id}, event);">
+              <i class="material-icons">flag</i>
+            </button>
           </div>
         </td>
       `;
@@ -427,45 +943,95 @@ function previousPage() {
       row.innerHTML = `
         <td>
           <div class="d-flex px-3 py-1">
-            <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" title="${stream.oracle_address}">${stream.oracle_alias || stream.oracle_address}</h6>
+            <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" 
+                style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" 
+                title="${stream.oracle_address}">
+              ${stream.oracle_alias || stream.oracle_address}
+            </h6>
           </div>
         </td>
         <td>
           <div class="d-flex px-3 py-1">
-            <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${stream.stream}</h6>
+            <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" 
+                style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+              ${stream.stream}
+            </h6>
           </div>
         </td>
         ${voteActionHtml}
       `;
       tableBody.appendChild(row);
 
-      // Stream Details Row
+      // Enhanced Stream Details Row
       const streamDetailRow = document.createElement('tr');
-      streamDetailRow.className = 'stream-details';
+      streamDetailRow.className = 'stream-details stream-details-row';
       streamDetailRow.style.display = "none";
       streamDetailRow.innerHTML = `
         <td colspan="3">
-          <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8px;align-items:center;gap:5px;">
-            <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target || 'N/A'}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence || 'N/A'} seconds</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created:</strong> ${stream.stream_created_ts}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> ${stream.oracle_address}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> ${stream.total_vote}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags || 'N/A'}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> ${stream.vote}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> ${stream.latest_observation_value || 'N/A'}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Time:</strong> ${stream.latest_observation_time}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                <strong>Status:</strong>
-                <span style="color: ${isActive ? 'green' : 'red'};">
+          <div class="stream-details-content">
+            <div class="details-grid">
+              <div class="detail-item">
+                <div class="detail-label">Name</div>
+                <div class="detail-value">${stream.stream}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Target</div>
+                <div class="detail-value">${stream.target || 'N/A'}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Cadence</div>
+                <div class="detail-value">${stream.cadence || 'N/A'} seconds</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Created</div>
+                <div class="detail-value">${stream.stream_created_ts}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Oracle Address</div>
+                <div class="detail-value" style="word-break: break-all;">${stream.oracle_address}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Community Vote</div>
+                <div class="detail-value">${stream.total_vote}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Tags</div>
+                <div class="detail-value">${stream.tags || 'N/A'}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Your Vote</div>
+                <div class="detail-value">${stream.vote}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Latest Value</div>
+                <div class="detail-value">${stream.latest_observation_value || 'N/A'}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Latest Time</div>
+                <div class="detail-value">${stream.latest_observation_time}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Status</div>
+                <div class="detail-value ${isActive ? 'status-active' : 'status-inactive'}">
                   ${isActive ? 'Active' : 'Inactive'}
-                </span>
-              </p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Predictions Count:</strong> ${stream.predictors_count || 0}</p>
-              <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url || '#'}" target="_blank">${stream.url || 'N/A'}</a></p>
-              <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> ${stream.description || 'N/A'}</p>
+                </div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Predictions Count</div>
+                <div class="detail-value">${stream.predictors_count || 0}</div>
+              </div>
+            </div>
+            <div class="detail-item" style="margin-top: 16px;">
+              <div class="detail-label">URL</div>
+              <div class="detail-value">
+                <a href="${stream.url || '#'}" target="_blank" style="color: #f6b042; text-decoration: none;">
+                  ${stream.url || 'N/A'}
+                </a>
+              </div>
+            </div>
+            <div class="detail-item" style="margin-top: 16px;">
+              <div class="detail-label">Description</div>
+              <div class="detail-value">${stream.description || 'N/A'}</div>
             </div>
           </div>
         </td>
@@ -483,7 +1049,6 @@ function previousPage() {
     }
   }
 
-  // Increment Vote
   function incrementVote(streamId, event) {
     event.stopPropagation();
     fetch('/vote_on/sanction/incremental', {
@@ -495,9 +1060,12 @@ function previousPage() {
       if (response.ok) {
         const responseData = await response.json();
         const voteActionElement = document.getElementById(`stream_increment_${streamId}`);
-        voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Approved">thumb_up</i>';
+        voteActionElement.innerHTML = '<i class="material-icons">thumb_up</i>';
         voteActionElement.onclick = (e) => decrementVote(streamId, e);
         voteActionElement.id = `stream_decrement_${streamId}`;
+        voteActionElement.classList.add('active');
+        voteActionElement.classList.remove('inactive');
+        voteActionElement.title = "Approved";
         showNotification("Vote added");
       }
     })
@@ -507,7 +1075,6 @@ function previousPage() {
     });
   }
 
-  // Remove Vote
   function decrementVote(streamId, event) {
     event.stopPropagation();
     fetch('/clear_vote_on/sanction/incremental', {
@@ -519,9 +1086,12 @@ function previousPage() {
       if (response.ok) {
         const responseData = await response.json();
         const voteActionElement = document.getElementById(`stream_decrement_${streamId}`);
-        voteActionElement.innerHTML = '<i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>';
+        voteActionElement.innerHTML = '<i class="material-icons">thumb_up</i>';
         voteActionElement.onclick = (e) => incrementVote(streamId, e);
         voteActionElement.id = `stream_increment_${streamId}`;
+        voteActionElement.classList.remove('active');
+        voteActionElement.classList.add('inactive');
+        voteActionElement.title = "Approve";
         showNotification("Vote removed");
       }
     })
@@ -562,7 +1132,9 @@ function previousPage() {
     .then(async (response) => {
       if (response.ok) {
         const responseData = await response.json();
-        voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Flagged Stream">flag</i>';
+        voteActionElement.innerHTML = '<i class="material-icons">flag</i>';
+        voteActionElement.classList.add('active');
+        voteActionElement.title = "Flagged Stream";
         showNotification("Stream has been flagged for review.");
       } else {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -574,7 +1146,7 @@ function previousPage() {
     });
   }
 
-  // Chart and observation functions (keeping existing functionality)
+  // Chart and observation functions
   let observationsChart;
   var mostRecentName;
   var mostRecentStreamId;
@@ -597,21 +1169,27 @@ function previousPage() {
           label: 'Real World Data',
           data: [],
           borderColor: '#533549',
-          borderWidth: 1,
+          backgroundColor: 'rgba(83, 53, 73, 0.1)',
+          borderWidth: 2,
           pointBackgroundColor: '#533549',
-          pointRadius: 1.2,
+          pointBorderColor: '#533549',
+          pointRadius: 2,
+          pointHoverRadius: 4,
           fill: false,
-          tension: .5,
+          tension: 0.4,
         },
         {
           label: 'Predictions Data',
           data: [],
           borderColor: '#f6b042',
-          borderWidth: 1.8,
+          backgroundColor: 'rgba(246, 176, 66, 0.1)',
+          borderWidth: 2,
           pointBackgroundColor: '#f6b042',
+          pointBorderColor: '#f6b042',
           pointRadius: 2,
+          pointHoverRadius: 4,
           fill: false,
-          tension: .5,
+          tension: 0.4,
         }
       ],
     };
@@ -619,37 +1197,66 @@ function previousPage() {
     const chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
       scales: {
         x: {
-          title: { display: false, text: 'Time' },
-          grid: { display: false },
-          ticks: { display: false },
+          title: { 
+            display: true, 
+            text: 'Time',
+            font: { size: 12, weight: 'bold' }
+          },
+          grid: { 
+            display: true,
+            color: 'rgba(0, 0, 0, 0.1)'
+          },
+          ticks: { 
+            display: true,
+            maxTicksLimit: 10,
+            font: { size: 10 }
+          },
         },
-        y: { title: { display: true, text: 'Value' }, grid: { display: false } },
+        y: { 
+          title: { 
+            display: true, 
+            text: 'Value',
+            font: { size: 12, weight: 'bold' }
+          }, 
+          grid: { 
+            display: true,
+            color: 'rgba(0, 0, 0, 0.1)'
+          },
+          ticks: {
+            font: { size: 10 }
+          }
+        },
       },
       plugins: {
         tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: 'white',
+          bodyColor: 'white',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderWidth: 1,
+          cornerRadius: 6,
+          displayColors: true,
           callbacks: {
             label: function (context) {
-              return `Time: ${context.label}, Value: ${context.raw}`;
+              return `${context.dataset.label}: ${context.raw}`;
             },
           },
         },
         legend: {
-          display: false,
+          display: true,
+          position: 'top',
           labels: {
             font: { size: 12 },
             boxWidth: 12,
             boxHeight: 12,
-            generateLabels: function (chart) {
-              return chart.data.datasets.map((dataset, i) => ({
-                text: dataset.label,
-                fillStyle: dataset.borderColor,
-                strokeStyle: dataset.borderColor,
-                lineWidth: 2,
-                datasetIndex: i,
-              }));
-            },
+            padding: 20,
+            usePointStyle: true,
           },
         },
         zoom: {
@@ -689,21 +1296,21 @@ function previousPage() {
       const endIndex = Math.min(currentIndex + chunkSize, totalPoints);
       observationsChart.data.labels.push(...combinedTimes.slice(currentIndex, endIndex));
       observationsChart.data.datasets[0].data.push(...observationValues.slice(currentIndex, endIndex));
-      const realLow = Math.min(...observationValues)*.8;
-      const realHigh = Math.max(...observationValues)*1.25;
+      const realLow = Math.min(...observationValues) * 0.8;
+      const realHigh = Math.max(...observationValues) * 1.25;
       observationsChart.data.datasets[1].data.push(
         ...predictionValues.slice(currentIndex, endIndex).map(value =>
           value === 0 || value < realLow || value > realHigh ? null : value
         )
       );
 
-      const BoundLow = Math.min(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *0.98;
-      const BoundHigh = Math.max(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *1.02;
+      const BoundLow = Math.min(...predictionValues, ...observationValues, futureForecastingObservationAvgValue) * 0.98;
+      const BoundHigh = Math.max(...predictionValues, ...observationValues, futureForecastingObservationAvgValue) * 1.02;
       observationsChart.options.plugins.zoom.limits.y.min = BoundLow;
       observationsChart.options.plugins.zoom.limits.y.max = BoundHigh;
       observationsChart.options.plugins.zoom.limits.x.max = endIndex;
 
-      observationsChart.update();
+      observationsChart.update('none');
       currentIndex += chunkSize;
 
       if (currentIndex < totalPoints) {
@@ -737,14 +1344,14 @@ function previousPage() {
           }
 
           if (Array.isArray(pointRadius)) {
-            pointRadius.push(5);
+            pointRadius.push(6);
           } else {
             observationsChart.data.datasets[1].pointRadius = Array(observationsChart.data.datasets[1].data.length - 1).fill(2);
-            observationsChart.data.datasets[1].pointRadius.push(5);
+            observationsChart.data.datasets[1].pointRadius.push(6);
           }
 
           observationsChart.update();
-        }, 0);
+        }, 100);
       }
     }
 
@@ -775,20 +1382,20 @@ function previousPage() {
     const combinedTimes = Array.from(intervalsMap.keys()).sort((a, b) => new Date(a) - new Date(b));
     const observationValues = combinedTimes.map((time) => {
       const data = intervalsMap.get(time);
-      return data.observationAvg / data.count;
+      return (data.observationAvg / data.count).toFixed(4);
     });
     const predictionValues = combinedTimes.map((time) => {
       const data = intervalsMap.get(time);
-      return data.predictionAvg / data.count;
+      return (data.predictionAvg / data.count).toFixed(4);
     });
 
     let iterator = combinedTimes.length - 1;
     combinedTimes.slice().reverse().forEach(time => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${time}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observationValues[iterator]}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ccc;">${predictionValues[iterator]}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #f1f3f4;">${time}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #f1f3f4; color: #533549; font-weight: 500;">${observationValues[iterator]}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #f1f3f4; color: #f6b042; font-weight: 500;">${predictionValues[iterator]}</td>
       `;
       observationsBody.appendChild(row);
       iterator -= 1;
@@ -803,15 +1410,17 @@ function previousPage() {
     const observationsBody = document.getElementById('observationsBody');
     const graphContainer = document.getElementById('observationsGraphContainer');
     const graphCanvas = document.getElementById('observationsGraph');
-    const modelContent = document.getElementById('modal-content');
     const observationTable = document.getElementById('observation-table');
     const nameOfStream = document.getElementById('streamName');
+    const chartControls = document.getElementById('chartControls');
 
     nameOfStream.innerHTML = "Stream: " + mostRecentName;
     document.getElementById('observationsModal').style.display = 'block';
     graphContainer.style.display = 'none';
     observationTable.style.display = 'none';
+    chartControls.style.display = 'none';
     document.getElementById('modalLoading').style.display = "flex";
+    document.body.classList.add('no-scroll');
 
     fetch('/get_observations', {
       method: 'POST',
@@ -827,57 +1436,93 @@ function previousPage() {
         observationsBody.innerHTML = '';
         
         if (parsedObservations.length === 0) {
-          modelContent.style.height = "300px";
           graphContainer.style.display = 'none';
           observationTable.style.display = 'block';
-          observationTable.style.height = "300px";
-          observationTable.style.overflowY = "hidden";
+          chartControls.style.display = 'none';
           const noDataRow = document.createElement('tr');
-          noDataRow.innerHTML = '<td colspan="3" style="text-align: center; padding: 8px;">No data found</td>';
+          noDataRow.innerHTML = `
+            <td colspan="3" style="text-align: center; padding: 2rem;">
+              <div style="color: #999;">
+                <i class="material-icons" style="font-size: 48px; margin-bottom: 16px;">trending_flat</i>
+                <div>No observation data available</div>
+              </div>
+            </td>
+          `;
           observationsBody.appendChild(noDataRow);
         } else {
           graphContainer.style.display = 'block';
-          modelContent.style.height = "600px";
           observationTable.style.display = 'block';
-          observationTable.style.height = "calc(100% - 350px)";
-          observationTable.style.overflowY = "scroll";
+          chartControls.style.display = 'flex';
           
           parsedObservations.sort((a, b) => new Date(a.ts) - new Date(b.ts));
           showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody);
         }
 
         document.getElementById('modalLoading').style.display = "none";
-        document.body.classList.add('no-scroll');
-        graphContainer.addEventListener('wheel', (event) => {
-          event.stopPropagation();
-        }, { passive: false });
       }
     })
     .catch(error => {
       console.error('Error fetching observations:', error);
+      document.getElementById('modalLoading').innerHTML = `
+        <div style="color: #f44336; text-align: center;">
+          <i class="material-icons" style="font-size: 48px; margin-bottom: 16px;">error</i>
+          <div>Failed to load observations</div>
+          <button onclick="showObservations(${streamId}, '${streamName}')" 
+                  class="sort-button" style="margin-top: 16px;">
+            Retry
+          </button>
+        </div>
+      `;
       showNotification("Failed to load observations", true);
     });
   }
 
   function ReRenderGraph() {
-    showObservations(mostRecentStreamId, mostRecentName);
+    if (mostRecentStreamId && mostRecentName) {
+      const observationsBody = document.getElementById('observationsBody');
+      const graphContainer = document.getElementById('observationsGraphContainer');
+      
+      observationsBody.innerHTML = '';
+      graphContainer.style.display = 'none';
+      document.getElementById('modalLoading').style.display = "flex";
+      
+      // Small delay to show loading state
+      setTimeout(() => {
+        showObservations(mostRecentStreamId, mostRecentName);
+      }, 100);
+    }
   }
 
-  function closeModal() {
-    document.getElementById('observationsModal').style.display = 'none';
-    document.body.classList.remove('no-scroll');
-  }
-
+  // Enhanced modal close functionality
   window.onclick = function(event) {
     const modal = document.getElementById('observationsModal');
     if (event.target === modal) {
-      modal.style.display = 'none';
+      closeModal();
     }
   };
+
+  // Keyboard support for modal
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      const modal = document.getElementById('observationsModal');
+      if (modal.style.display === 'block') {
+        closeModal();
+      }
+    }
+  });
 
   // Initialize page
   document.addEventListener('DOMContentLoaded', function() {
     fetchStreams('', 1, 'popularity', 'desc');
   });
+
+  // Add body class for modal scroll prevention
+  const style = document.createElement('style');
+  style.textContent = `
+    .no-scroll {
+      overflow: hidden;
+    }
+  `;
+  document.head.appendChild(style);
 </script>
 {% endblock %}
