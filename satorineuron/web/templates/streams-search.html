@@ -20,19 +20,38 @@
       </div>
       <div style="margin-left:24px;margin-top:15px;padding-right:26px;" class="d-flex flex-row gap-2">
         <input style="width: -webkit-fill-available;height:51.82px;border-radius:0.5rem;padding-left:10px" type="text" id="searchInput" placeholder="Search streams..." oninput="debounceSearch();" />
-        <!--<button id="popularitySortBtn" class="d-flex flex-row gap-2 btn btn-outline-dark" style="align-items:center;justify-content:center" onclick="toggleSort('votedfor')">Sort by Voted For <div style="margin-top:-3px" id="votedforIcon">↓</div></button>-->
         <button id="popularitySortBtn" class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center" onclick="toggleSort('popularity')">Sort by Popularity <div style="margin-top:-3px" id="popularityIcon">↓</div></button>
-        <!--<button id="dateSortBtn"       class="d-flex flex-row gap-2 btn btn-outline-dark" style="align-items:center;justify-content:center" onclick="toggleSort('date')">Sort by Date <div style="margin-top:-3px" id="dateIcon"></div></button>-->
-        <!-- not categorized yet
-        <select style="padding:5px" id="categorySelect" onchange="filterByCategory()">
-          <option value="" disabled selected>Select Category</option>
-          <option value="all">All Categories</option>
-          <option value="weather">Weather</option>
-          <option value="crypto">Crypto</option>
-          <option value="stocks">Stocks</option>
-          <option value="government">Government Entities</option>
-        </select>-->
       </div>
+      
+      <!-- Pagination Controls at Top -->
+      <div style="display: flex; justify-content: center; padding: 1rem; align-items: center; gap: 1rem; margin-left: 24px; margin-right: 26px; border-bottom: 1px solid #e3e3e3;">
+        <button class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="prevPageBtnTop" onclick="previousPage()" disabled>Previous</button>
+        
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <input type="number" id="pageNumberInput" min="1" max="1" value="1" 
+                 style="width: 50px; height: 32px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size: 14px; -webkit-appearance: none; -moz-appearance: textfield;"
+                 onkeypress="handlePageInputKeypress(event)"
+                 onchange="goToPage()" />
+          <span style="font-size: 14px;">of</span>
+          <span id="totalPagesTop" style="font-size: 14px;">1</span>
+        </div>
+        
+        <button class="d-flex flex-row gap-2 btn btn-outline-dark btn-outline-secondary" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="nextPageBtnTop" onclick="nextPage()" disabled >Next</button>
+      </div>
+
+      <style>
+        /* Remove spinner arrows from number input */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
+      </style>
+
       <div class="card-body px-0 pb-2">
         <div class="table-responsive" style="padding-left:1rem;padding-right:1rem;">
           <table class="table align-items-center mb-0" style="table-layout: fixed;max-width: 100%;">
@@ -44,81 +63,16 @@
               </tr>
             </thead>
             <tbody id="updating_table">
-              {% for stream in streams %}
-              <tr
-                id="stream_{{stream['stream_id']}}"
-                class="{% if darkmode %}yellow-dark-hover{% else %}yellow-hover{% endif %}"
-                style="cursor:pointer"
-                onclick="toggleStreamDetails(this, {{ stream['stream_id'] }});">
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" title="{{ stream['oracle_address'] }}">{{ stream['oracle_alias'] or stream['oracle_address']  }}</h6>
+              <!-- Initial loading message -->
+              <tr>
+                <td colspan="3" style="text-align:center; padding: 2rem;">
+                  <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading streams...</span>
                   </div>
                 </td>
-                <td>
-                  <div class="d-flex px-3 py-1">
-                    <h6 class="mb-0 text-sm  {% if darkmode %}dark-text{% endif %}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{ stream['stream'] }}</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex gap-2">
-                    <div id="observations">
-                      <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations({{ stream['stream_id'] }}, stream['stream']);">stacked_line_chart</i>
-                    </div>
-                    {% if stream.vote == 0 %}
-                      <div id="stream_increment_{{stream['stream_id']}}" onclick="incrementVote({{ stream['stream_id'] }}, event);">
-                        <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>
-                      </div>
-                    {% else %}
-                      <div id="stream_decrement_{{stream['stream_id']}}" onclick="decrementVote({{ stream['stream_id'] }}, event);">
-                        <i class="material-icons opacity-10" title="Approved">thumb_up</i>
-                      </div>
-                    {% endif %}
-                    {% if hasRoom %}
-                      <div id="stream_predict_{{stream['stream_id']}}" onclick="predictStream({{ stream['stream_id'] }}, event);">
-                        <i class="material-icons opacity-10" title="Predict Stream">trending_up</i>
-                      </div>
-                    {% endif %}
-                    <div id="stream_flag_{{stream['stream_id']}}" onclick="flagStream({{ stream['stream_id'] }}, event);">
-                      <i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Flag Stream">flag</i>
-                    </div>
-                  </div>
-                </td>
-                 <!-- Additional details row -->
-                <tr class="stream-details" style="display: none;">
-                  <td colspan="3">
-                    <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
-                      <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> {{ stream['stream'] }}</p>
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> {{ stream['target'] }}</p>
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> {{ stream['cadence'] }} seconds</p>
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created:</strong> {{ stream['stream_created_ts'] }}</p>
-                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Stream ID:</strong> {{ stream['stream_id'] }}</p>-->
-                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author:</strong> {{ stream['author'] }}</p>-->
-                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Source:</strong> {{ stream['source'] }}</p>-->
-                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Public Key:</strong> {{ stream['oracle_pubkey'] }}</p>-->
-                        <!--<p style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author Alias:</strong> {{ stream['oracle_alias'] }}</p>-->
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cracle Address:</strong> {{ stream['oracle_address'] }}</p>
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> {{ stream['total_vote'] }}</p>
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> {{ stream['tags'] }}</p>
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> {{ stream['vote'] }}</p>
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> {{ stream['latest_observation_value'] }}</p>
-                        <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Time:</strong> {{ stream['latest_observation_time'] }}</p>
-                        <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="{{ stream['url'] }}" target="_blank">{{ stream['url'] }}</a></p>
-                        <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> {{ stream['description'] }}</p>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
               </tr>
-              {% endfor %}
             </tbody>
           </table>
-          <div style="display: flex; justify-content: center; padding: 1rem; align-items:center">
-            <button class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="prevPageBtn" onclick="previousPage()" disabled>Previous</button>
-            <span id="pageInfo" style="margin: 0 1rem;">Page 1</span>
-            <button class="d-flex flex-row gap-2 btn btn-outline-dark" style="min-width: fit-content;align-items:center;justify-content:center;margin-bottom:0px" id="nextPageBtn" onclick="nextPage()">Next</button>
-          </div>
         </div>
       </div>
     </div>
@@ -176,9 +130,20 @@
 <script type="text/javascript">
   const darkmode = {{ 'true' if darkmode else 'false' }};
   const hasRoom = {{ 'true' if hasRoom else 'false' }};
-  let storedStreams = {{ allStreams|tojson }};
-  let filteredStreams = storedStreams;
-  let displayStreams = storedStreams.slice(0, 100);
+  
+  // Server-side pagination variables
+  let currentPage = 1;
+  let targetPage = 1;
+  const itemsPerPage = 50;
+  let currentSearch = '';
+  let currentSort = 'popularity';
+  let currentOrder = 'desc';
+  let isLoading = false;
+  let totalPages = 1;
+  let totalStreams = 0;
+  let hasNext = false;  // NEW: Track server's next page status
+  let hasPrev = false;  // NEW: Track server's previous page status
+  
   let sortOrder = {
     popularity: 'desc',
     date: 'asc',
@@ -186,274 +151,241 @@
   };
   let timeout = null;
   let sortTimeout = null;
-  let filterTimeout = null;
 
-  let currentPage = 1;
-  const itemsPerPage = 100;
-  const totalStreams = {{ totalStreams }}; // Total number of streams passed from the backend
+  function updatePaginationButtons(currentPage, totalPages, hasNext, hasPrev) {
+    // Update both top and bottom pagination buttons
+    const prevBtnTop = document.getElementById('prevPageBtnTop');
+    const nextBtnTop = document.getElementById('nextPageBtnTop');
+    
+    // Update button states - disable based on data availability AND loading state
+    prevBtnTop.disabled = !hasPrev || isLoading;
+    nextBtnTop.disabled = !hasNext || isLoading;
 
-  function updatePaginationButtons(totalStreamsCount) {
-    document.getElementById('prevPageBtn').disabled = currentPage === 1;
-    document.getElementById('nextPageBtn').disabled = currentPage * itemsPerPage >= totalStreamsCount;
-    document.getElementById('pageInfo').textContent = `Page ${currentPage}`;
+    // Update visual appearance
+    prevBtnTop.classList.toggle('btn-outline-secondary', !hasPrev || isLoading);
+    prevBtnTop.classList.toggle('btn-outline-dark', hasPrev && !isLoading);
+    
+    nextBtnTop.classList.toggle('btn-outline-secondary', !hasNext || isLoading);
+    nextBtnTop.classList.toggle('btn-outline-dark', hasNext && !isLoading);
+    
+    // Update total pages display only
+    document.getElementById('totalPagesTop').textContent = totalPages;
+    
+    // Always update page number input to current page when this function is called
+    const pageInput = document.getElementById('pageNumberInput');
+    pageInput.value = currentPage;
+    pageInput.max = totalPages;
+}
+
+  // Handle page number input keypress (Enter key)
+  function handlePageInputKeypress(event) {
+    if (event.key === 'Enter') {
+      goToPage();
+    }
   }
 
-  // Next Page Function
-  function nextPage() {
-      if (currentPage * itemsPerPage < totalStreams) {
-          currentPage++;
-          displayStreams = filteredStreams.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-          updateStreamDisplay(displayStreams, darkmode);
-          updatePaginationButtons(filteredStreams.length);
+  // Go to specific page
+  function goToPage() {
+  const pageInput = document.getElementById('pageNumberInput');
+  targetPage = parseInt(pageInput.value);
+  
+  if (isNaN(targetPage) || targetPage < 1 || targetPage > totalPages) {
+    pageInput.value = currentPage; // Reset to current page if invalid
+    showNotification("Please enter a valid page number", true);
+    return;
+  }
+  
+  if (targetPage !== currentPage && !isLoading) {
+    // Keep the target page value in the input during loading
+    pageInput.value = targetPage;
+    fetchStreams(currentSearch, targetPage, currentSort, currentOrder);
+  }
+}
+
+  // Initial call to fetch streams
+  fetchStreams();
+
+  // Close modal function
+  function closeModal() {
+    document.getElementById('observationsModal').style.display = 'none';
+  }
+
+  // Toggle voting details
+  function toggleVotingDetails() {
+    const tableBody = document.getElementById('updating_table');
+    const rows = tableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+      if (row.classList.contains('stream-details')) {
+        row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
       }
+    });
   }
 
-  // Previous Page Function
-  function previousPage() {
-      if (currentPage > 1) {
-          currentPage--;
-          displayStreams = filteredStreams.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-          updateStreamDisplay(displayStreams, darkmode);
-          updatePaginationButtons(filteredStreams.length);
+function setPaginationLoadingState(loading) {
+      const prevBtnTop = document.getElementById('prevPageBtnTop');
+      const nextBtnTop = document.getElementById('nextPageBtnTop');
+      
+      if (loading) {
+          prevBtnTop.disabled = true;
+          nextBtnTop.disabled = true;
+          prevBtnTop.classList.add('btn-outline-secondary');
+          prevBtnTop.classList.remove('btn-outline-dark');
+          nextBtnTop.classList.add('btn-outline-secondary');
+          nextBtnTop.classList.remove('btn-outline-dark');
       }
+      // When loading is false, updatePaginationButtons will be called to restore proper state
   }
-
-  // Initialize display with the first page
-  displayStreams = filteredStreams.slice(0, itemsPerPage);
-  updateStreamDisplay(displayStreams, darkmode);
-  updatePaginationButtons(filteredStreams.length);
 
   function showNotification(message, showError = false) {
     const notification = document.getElementById(showError ? 'notification_error' : 'notification');
     notification.innerHTML = message;
     notification.style.display = 'block';
 
-    // Hide the notification after 2 seconds
     setTimeout(() => {
       notification.style.display = 'none';
-    }, 1000*5);
+    }, 5000);
   }
 
-  // Increment Vote
-  function incrementVote(streamId, event) {
-    event.stopPropagation();
-    fetch(
-      '/vote_on/sanction/incremental', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({streamId: streamId})})
-    .then(async (response) => {
-        if (response.ok) {
-            const responseData = await response.json();
-            console.log("responseData", responseData.message);
-            //const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(3) div[id="stream_${streamId}"]`);
-            const voteActionElement = document.getElementById(`stream_increment_${streamId}`);
-            voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Approved">thumb_up</i>';
-            voteActionElement.onclick = (e) => decrementVote(streamId, e);
-            voteActionElement.id = `stream_decrement_${streamId}`; // Update the id to match remove vote action
-            showNotification("Vote added");
-        }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showNotification("Something went wrong!", true);
-    });
-  }
-
-  // Remove Vote
-  function decrementVote(streamId, event) {
-    event.stopPropagation();
-    fetch(
-      '/clear_vote_on/sanction/incremental', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({streamId: streamId})})
-    .then(async (response) => {
-        if (response.ok) {
-          const responseData = await response.json();
-          console.log("responseData", responseData.message);
-          //const voteActionElement = document.querySelector(`#stream_${streamId} td:nth-child(3) div[id="stream_decrement_${streamId}"]`);
-          const voteActionElement = document.getElementById(`stream_decrement_${streamId}`);
-          voteActionElement.innerHTML = '<i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>';
-          voteActionElement.onclick = (e) => incrementVote(streamId, e);
-          voteActionElement.id = `stream_increment_${streamId}`;
-          showNotification("Vote removed");
-        }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showNotification("Something went wrong!", true);
-    });
-  }
-
-  function toggleStreamDetails(row, streamId) {
-    const detailsRow = row.nextElementSibling;
-    if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-      detailsRow.style.display = 'table-row';
-    } else {
-      detailsRow.style.display = 'none';
+  // Server-side search with debouncing
+  function debounceSearch() {
+    if (timeout) {
+        clearTimeout(timeout);
     }
+    
+    const tableBody = document.getElementById('updating_table');
+    showLoadingState();
+    
+    timeout = setTimeout(() => {
+        const searchText = document.getElementById('searchInput').value.trim();
+        currentSearch = searchText;
+        currentPage = 1; // Reset to first page on new search
+        fetchStreams(searchText, 1, currentSort, currentOrder);
+    }, 300);
+}
+
+  // Show loading state
+  function showLoadingState() {
+    const tableBody = document.getElementById('updating_table');
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="3" style="text-align:center; padding: 2rem;">
+          <div class="spinner-border" role="status">
+            <span class="sr-only">Loading streams...</span>
+          </div>
+        </td>
+      </tr>
+    `;
   }
 
+  function fetchStreams(search = '', page = 1, sort = 'popularity', order = 'desc') {
+  if (isLoading) return;
+  
+  isLoading = true;
+  
+  showLoadingState();
+    
+  const params = new URLSearchParams({
+      page: page,
+      per_page: itemsPerPage,
+      search: search || '',
+      sort: sort,
+      order: order
+  });
+  
+  fetch(`/streams/api?${params}`)
+      .then(response => {
+          if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+      })
+      .then(data => {
+          // Extract pagination data
+          const pagination = data || {
+              current_page: 1,
+              total_pages: 1,
+              total_count: 0,
+              has_prev: false,
+              has_next: false,
+              per_page: itemsPerPage
+          };
+          
+          // Update global state
+          currentPage = pagination.current_page;
+          totalPages = pagination.total_pages;
+          totalStreams = pagination.total_count;
+          hasNext = pagination.has_next;
+          hasPrev = pagination.has_prev;
+          updateStreamDisplay(data.streams || [], darkmode);
+          isLoading = false;
+          updatePaginationButtons(currentPage, totalPages, hasNext, hasPrev);
+      })
+      .catch(error => {
+          console.error('Error fetching streams:', error);
+          const tableBody = document.getElementById('updating_table');
+          tableBody.innerHTML = `
+              <tr>
+                  <td colspan="3" style="text-align:center; padding: 2rem; color: red;">
+                      Error loading streams. Please try again.
+                      <br><button onclick="fetchStreams('${currentSearch}', ${currentPage}, '${currentSort}', '${currentOrder}')" class="btn btn-sm btn-outline-primary mt-2">Retry</button>
+                  </td>
+              </tr>
+          `;
+          
+          // Reset loading state and update buttons
+          isLoading = false;
+          updatePaginationButtons(currentPage, totalPages, hasNext, hasPrev);
+          showNotification("Failed to load streams", true);
+      });
+}; 
+
+  // Updated pagination functions
+  function nextPage() {
+    if (!isLoading && hasNext) {
+        fetchStreams(currentSearch, currentPage + 1, currentSort, currentOrder);
+    }
+}
+
+function previousPage() {
+    if (!isLoading && hasPrev) {
+        fetchStreams(currentSearch, currentPage - 1, currentSort, currentOrder);
+    }
+}
+
+  // Updated sort function
   function toggleSort(type) {
-    if(sortTimeout) {
+    if (sortTimeout) {
       clearTimeout(sortTimeout);
     }
-    const tableBody = document.getElementById('updating_table');
-    tableBody.innerHTML = '';
-    const noDataRow = document.createElement('tr');
-    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
-    tableBody.appendChild(noDataRow);
+    
+    showLoadingState();
 
     sortTimeout = setTimeout(() => {
       sortOrder[type] = sortOrder[type] === 'asc' ? 'desc' : 'asc';
       const iconElement = document.getElementById(`${type}Icon`);
-      if (sortOrder[type] === 'asc') {
-        iconElement.innerHTML = '↑';
-      } else {
-        iconElement.innerHTML = '↓';
-      }
-      sortBy(type, sortOrder[type]);
+      iconElement.innerHTML = sortOrder[type] === 'asc' ? '↑' : '↓';
+      
+      currentSort = type;
+      currentOrder = sortOrder[type];
+      currentPage = 1; // Reset to first page on sort change
+      
+      fetchStreams(currentSearch, 1, currentSort, currentOrder);
     }, 200);
-  }
-
-  function sortBy(type, order) {
-    let sortedStreams = [...filteredStreams];
-
-    if (type === 'popularity') {
-      sortedStreams.sort((a, b) => {
-        const voteA = a.total_vote || 0;
-        const voteB = b.total_vote || 0;
-        return order === 'asc' ? voteA - voteB : voteB - voteA;
-      });
-    } else if (type === 'date') {
-      sortedStreams.sort((a, b) => {
-        const dateA = new Date(a.stream_created_ts);
-        const dateB = new Date(b.stream_created_ts);
-        return order === 'asc' ? dateA - dateB : dateB - dateA;
-      });
-    } else if (type === "votedfor") {
-      sortedStreams.sort((a, b) => {
-        const voteA = a.total_vote || 0;
-        const voteB = b.total_vote || 0;
-        return order === 'asc' ? voteA - voteB : voteB - voteA;
-      });
-    }
-
-    filteredStreams = sortedStreams;
-    displayStreams = sortedStreams.slice(0, 100);
-    updateStreamDisplay(displayStreams, darkmode);
-    updatePaginationButtons(filteredStreams.length);
-  }
-
-  function filterByCategory() {
-    if(filterTimeout) {
-      clearTimeout(filterTimeout);
-    }
-    const tableBody = document.getElementById('updating_table');
-    tableBody.innerHTML = '';
-    const noDataRow = document.createElement('tr');
-    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
-    tableBody.appendChild(noDataRow);
-
-    filterTimeout = setTimeout(() => {
-      const category = document.getElementById('categorySelect').value;
-      if (category === 'all') {
-        filteredStreams = [...storedStreams];
-      } else {
-        filteredStreams = storedStreams.filter(stream => stream.category === category);
-      }
-      displayStreams = filteredStreams.slice(0, 100);
-      updateStreamDisplay(displayStreams, darkmode);
-      updatePaginationButtons(filteredStreams.length);
-    }, 200);
-  }
-
-  function debounceSearch() {
-    console.log("debounceSearch called")
-    if(timeout) {
-      clearTimeout(timeout);
-    }
-    const tableBody = document.getElementById('updating_table');
-    tableBody.innerHTML = '';
-    const noDataRow = document.createElement('tr');
-    noDataRow.innerHTML = '<td style="text-align:center" colspan="3">Loading.....</td>';
-    tableBody.appendChild(noDataRow);
-    /// instead of fetching from the server, we're going to filter the existing ones.
-    //timeout = setTimeout(() => {
-    //  const searchText = document.getElementById('searchInput').value;
-    //  fetchStreams(searchText);
-    //}, 200);
-    timeout = setTimeout(() => {
-      const searchText = document.getElementById('searchInput').value;
-      if (searchText.trim() === '') {
-        filteredStreams = [...storedStreams];
-      } else {
-        filteredStreams = storedStreams.filter(stream => ['stream', 'description', 'oracle_alias', 'oracle_address', 'tags', 'target', 'url']
-          .some(field => stream[field] && stream[field].toLowerCase().includes(searchText.toLowerCase())));
-      }
-      displayStreams = filteredStreams.slice(0, 100);
-      updateStreamDisplay(displayStreams, darkmode);
-      updatePaginationButtons(filteredStreams.length);
-    }, 200);
-  }
-
-  /// unused
-  function fetchStreams(searchText) {
-    console.log("searchText", searchText);
-    console.log("storedStreams", storedStreams);
-
-    const filteredStreams = storedStreams.filter(stream =>
-        stream.stream.toLowerCase().includes(searchText.toLowerCase()) ||
-        stream.target.toLowerCase().includes(searchText.toLowerCase())
-    );
-
-    const popularityIconElement = document.getElementById(`popularityIcon`);
-    const dateIconElement = document.getElementById(`dateIcon`);
-    const votedforIconElement = document.getElementById(`votedforIcon`);
-    document.getElementById('categorySelect').value = "";
-
-    popularityIconElement.innerHTML = '↓';
-    dateIconElement.innerHTML = '';
-    votedforIconElement.innerHTML = '↓';
-
-    displayStreams = filteredStreams.slice(0,100);
-    updateStreamDisplay(displayStreams, darkmode)
-
-    {/* fetch(`/streams?search=${encodeURIComponent(searchText)}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Network response was not ok, status: ${response.status}`);
-            }
-
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return response.json();
-            } else {
-                throw new Error('Response was not in JSON format');
-            }
-        })
-        .then(data => {
-          console.log("Data", data.streams)
-          updateStreamDisplay(data.streams, darkmode)
-        })
-        .catch(error => console.error('Error fetching streams:', error)); */}
   }
 
   function updateStreamDisplay(streams, darkmode) {
     const tableBody = document.getElementById('updating_table');
     tableBody.innerHTML = '';
 
-    // Check if there are any streams to display
     if (streams.length === 0) {
-        const noDataRow = document.createElement('tr');
-        noDataRow.innerHTML = '<td style="text-align:center" colspan="3">No streams found.</td>'; // Adjust colspan based on your table structure
-        tableBody.appendChild(noDataRow);
-        return;
+      const noDataRow = document.createElement('tr');
+      noDataRow.innerHTML = '<td style="text-align:center; padding: 2rem;" colspan="3">No streams found.</td>';
+      tableBody.appendChild(noDataRow);
+      return;
     }
 
     streams.forEach(stream => {
-      // Calculate last observation is within 24 hours or not
+      // Calculate if last observation is within 24 hours
       const now = new Date();
       const latestObservationTime = new Date(stream.latest_observation_time);
       const isActive = (now - latestObservationTime) <= 24 * 60 * 60 * 1000;
@@ -464,11 +396,12 @@
       row.id = `stream_${stream.stream_id}`;
       let rowClass = darkmode ? 'yellow-dark-hover' : 'yellow-hover';
       row.className = rowClass;
+      
       const voteActionHtml = `
         <td>
           <div class="d-flex gap-2">
             <div id="observations">
-              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}' );">stacked_line_chart</i>
+              <i class="material-icons opacity-10" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}');">stacked_line_chart</i>
             </div>
             ${stream.vote === 0 ?
                 `<div id="stream_increment_${stream.stream_id}" onclick="incrementVote(${stream.stream_id}, event);">
@@ -489,40 +422,40 @@
             </div>
           </div>
         </td>
-        `;
+      `;
 
       row.innerHTML = `
-          <td>
-              <div class="d-flex px-3 py-1">
-                  <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" title="${stream.oracle_address}">${stream.oracle_alias || stream.oracle_address}</h6>
-              </div>
-          </td>
-          <td>
-              <div class="d-flex px-3 py-1">
-                  <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}">${stream.stream}</h6>
-              </div>
-          </td>
-          ${voteActionHtml}
+        <td>
+          <div class="d-flex px-3 py-1">
+            <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" title="${stream.oracle_address}">${stream.oracle_alias || stream.oracle_address}</h6>
+          </div>
+        </td>
+        <td>
+          <div class="d-flex px-3 py-1">
+            <h6 class="mb-0 text-sm ${darkmode ? 'dark-text' : ''}" style="max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${stream.stream}</h6>
+          </div>
+        </td>
+        ${voteActionHtml}
       `;
       tableBody.appendChild(row);
 
-      // Stream Details
-      const streamDetailRow = document.createElement('tr')
-      streamDetailRow.class = `stream-details`;
+      // Stream Details Row
+      const streamDetailRow = document.createElement('tr');
+      streamDetailRow.className = 'stream-details';
       streamDetailRow.style.display = "none";
       streamDetailRow.innerHTML = `
-        <td colspan="5">
-          <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8x;align-items:center;gap:5px;">
+        <td colspan="3">
+          <div class="d-flex px-3 py-1" style="flex-direction:column;gap:8px;align-items:center;gap:5px;">
             <div style="display:flex;width:100%;flex-direction:row;flex-wrap:wrap;">
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Name:</strong> ${stream.stream}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence} seconds</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created Timestamp:</strong> ${stream.stream_created_ts}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Author Address:</strong> ${stream.oracle_address}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Target:</strong> ${stream.target || 'N/A'}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Cadence:</strong> ${stream.cadence || 'N/A'} seconds</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Created:</strong> ${stream.stream_created_ts}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Oracle Address:</strong> ${stream.oracle_address}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Community Vote:</strong> ${stream.total_vote}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Tags:</strong> ${stream.tags || 'N/A'}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Vote:</strong> ${stream.vote}</p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> ${stream.latest_observation_value}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Value:</strong> ${stream.latest_observation_value || 'N/A'}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Latest Observation Time:</strong> ${stream.latest_observation_time}</p>
               <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 <strong>Status:</strong>
@@ -530,20 +463,122 @@
                   ${isActive ? 'Active' : 'Inactive'}
                 </span>
               </p>
-              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Predictions Count:</strong> ${stream.predictors_count}</p>
-              <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url}" target="_blank">${stream.url}</a></p>
-              <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> ${stream.description}</p>
+              <p class="text-sm" style="width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Predictions Count:</strong> ${stream.predictors_count || 0}</p>
+              <p class="text-sm" style="width:100%;white-space:wrap;"><strong>URL:</strong> <a href="${stream.url || '#'}" target="_blank">${stream.url || 'N/A'}</a></p>
+              <p class="text-sm" style="width:100%;white-space:wrap;padding-bottom:1rem;"><strong>Description:</strong> ${stream.description || 'N/A'}</p>
             </div>
           </div>
         </td>
-      `
+      `;
       tableBody.appendChild(streamDetailRow);
     });
   }
 
-  let observationsChart;
+  function toggleStreamDetails(row, streamId) {
+    const detailsRow = row.nextElementSibling;
+    if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+      detailsRow.style.display = 'table-row';
+    } else {
+      detailsRow.style.display = 'none';
+    }
+  }
 
-  // Formate date to shorter format
+  // Increment Vote
+  function incrementVote(streamId, event) {
+    event.stopPropagation();
+    fetch('/vote_on/sanction/incremental', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({streamId: streamId})
+    })
+    .then(async (response) => {
+      if (response.ok) {
+        const responseData = await response.json();
+        const voteActionElement = document.getElementById(`stream_increment_${streamId}`);
+        voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Approved">thumb_up</i>';
+        voteActionElement.onclick = (e) => decrementVote(streamId, e);
+        voteActionElement.id = `stream_decrement_${streamId}`;
+        showNotification("Vote added");
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Something went wrong!", true);
+    });
+  }
+
+  // Remove Vote
+  function decrementVote(streamId, event) {
+    event.stopPropagation();
+    fetch('/clear_vote_on/sanction/incremental', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({streamId: streamId})
+    })
+    .then(async (response) => {
+      if (response.ok) {
+        const responseData = await response.json();
+        const voteActionElement = document.getElementById(`stream_decrement_${streamId}`);
+        voteActionElement.innerHTML = '<i class="material-icons opacity-10" style="opacity:0.4 !important;" title="Approve">thumb_up</i>';
+        voteActionElement.onclick = (e) => incrementVote(streamId, e);
+        voteActionElement.id = `stream_increment_${streamId}`;
+        showNotification("Vote removed");
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Something went wrong!", true);
+    });
+  }
+
+  function predictStream(streamId, event) {
+    event.stopPropagation();
+    fetch('/predict/stream', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({streamId: streamId})
+    })
+    .then(async (response) => {
+      if (response.ok) {
+        const responseData = await response.json();
+        showNotification("Stream added successfully. Please restart to see it on the dashboard.");
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Something went wrong!", true);
+    });
+  }
+
+  function flagStream(streamId, event) {
+    event.stopPropagation();
+    const voteActionElement = document.getElementById(`stream_flag_${streamId}`);
+    
+    fetch('/flag/stream', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({streamId: streamId})
+    })
+    .then(async (response) => {
+      if (response.ok) {
+        const responseData = await response.json();
+        voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Flagged Stream">flag</i>';
+        showNotification("Stream has been flagged for review.");
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification("Failed to flag stream. Please try again.", true);
+    });
+  }
+
+  // Chart and observation functions (keeping existing functionality)
+  let observationsChart;
+  var mostRecentName;
+  var mostRecentStreamId;
+
   function formatDateToShort(dateString) {
     const date = new Date(dateString);
     return `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}, ${date.getFullYear()}`;
@@ -552,7 +587,6 @@
   function renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue, chunkSize = 100) {
     const totalPoints = combinedTimes.length;
     let currentIndex = 0;
-
     const ctx = graphCanvas.getContext('2d');
 
     Chart.register(ChartZoom);
@@ -590,17 +624,6 @@
           title: { display: false, text: 'Time' },
           grid: { display: false },
           ticks: { display: false },
-          /**
-            ticks: {
-              callback: function (value, index, ticks) {
-                // Show only the first and last labels
-                if (index === 0 || index === ticks.length - 1) {
-                  return this.getLabelForValue(value);
-                }
-                return '';
-              },
-            },
-          */
         },
         y: { title: { display: true, text: 'Value' }, grid: { display: false } },
       },
@@ -640,7 +663,6 @@
             threshold: 10
           },
           zoom: {
-            
             wheel: {
               enabled: true
             },
@@ -649,12 +671,12 @@
             },
             mode: 'xy',
           }
-      },
+        },
       }
     };
 
     if (observationsChart) {
-      observationsChart.destroy(); // Destroy the previous chart instance
+      observationsChart.destroy();
     }
 
     observationsChart = new Chart(ctx, {
@@ -675,31 +697,26 @@
         )
       );
 
-      //calculate bounds for zoom.  
       const BoundLow = Math.min(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *0.98;
       const BoundHigh = Math.max(...predictionValues,...observationValues,futureForecastingObservationAvgValue) *1.02;
-      //set the new bounds
       observationsChart.options.plugins.zoom.limits.y.min = BoundLow;
       observationsChart.options.plugins.zoom.limits.y.max = BoundHigh;
       observationsChart.options.plugins.zoom.limits.x.max = endIndex;
 
       observationsChart.update();
-
       currentIndex += chunkSize;
 
       if (currentIndex < totalPoints) {
-        requestAnimationFrame(addChunk); // Schedule the next chunk
-      }  else {
-        // Add the future forecasting point as part of the predictions dataset
+        requestAnimationFrame(addChunk);
+      } else {
         const lastTimestamp = combinedTimes[combinedTimes.length - 1];
         const futureTimestamp = new Date(lastTimestamp);
-        futureTimestamp.setMinutes(futureTimestamp.getMinutes() + 10); // Add 10 minutes to the last timestamp
+        futureTimestamp.setMinutes(futureTimestamp.getMinutes() + 10);
         const formattedFutureTimestamp = futureTimestamp.toLocaleString('en-US');
         observationsChart.data.labels.push(formattedFutureTimestamp);
         observationsChart.data.datasets[1].data.push(futureForecastingObservationAvgValue);
         observationsChart.update();
 
-        // Highlight the last point after rendering
         setTimeout(() => {
           const pointBackgroundColors = observationsChart.data.datasets[1].pointBackgroundColor;
           const pointBorderColors = observationsChart.data.datasets[1].pointBorderColor;
@@ -713,10 +730,10 @@
           }
 
           if (Array.isArray(pointBorderColors)) {
-              pointBorderColors.push('#00bfff');
+            pointBorderColors.push('#00bfff');
           } else {
-              observationsChart.data.datasets[1].pointBorderColor = Array(observationsChart.data.datasets[1].data.length - 1).fill('#f6b042');
-              observationsChart.data.datasets[1].pointBorderColor.push('#00bfff');
+            observationsChart.data.datasets[1].pointBorderColor = Array(observationsChart.data.datasets[1].data.length - 1).fill('#f6b042');
+            observationsChart.data.datasets[1].pointBorderColor.push('#00bfff');
           }
 
           if (Array.isArray(pointRadius)) {
@@ -734,49 +751,39 @@
     addChunk();
   }
 
-
   function showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody) {
     const ctx = graphCanvas.getContext('2d');
 
-    // Helper: Round to nearest 10 minutes
-    const roundToTenMinutes = (date) => {
-        const msInTenMinutes = 10 * 60 * 1000;
-        return new Date(Math.round(new Date(date).getTime() / msInTenMinutes) * msInTenMinutes);
-    };
-    ZoomController = (date) => {
-      Zoom = document.getElementById("ZoomValue").value;
-
+    const ZoomController = (date) => {
+      const Zoom = document.getElementById("ZoomValue").value;
       const msInOneMinute = 10 * 60 * 100 * Zoom;
       return new Date(Math.round(new Date(date).getTime() / msInOneMinute) * msInOneMinute);
-  };
-    // Process observations to group by 10-minute intervals
+    };
+
     const intervalsMap = new Map();
     parsedObservations.forEach((obs) => {
-        const roundedTime = ZoomController(obs.ts).toLocaleString('en-US');
-        if (!intervalsMap.has(roundedTime)) {
-            intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
-        }
-        const current = intervalsMap.get(roundedTime);
-        current.observationAvg += parseFloat(obs.value); // Use value for observations
-        current.predictionAvg += parseFloat(obs.avg);   // Use avg for predictions
-        current.count += 1;
-
-
+      const roundedTime = ZoomController(obs.ts).toLocaleString('en-US');
+      if (!intervalsMap.has(roundedTime)) {
+        intervalsMap.set(roundedTime, { observationAvg: 0, predictionAvg: 0, count: 0 });
+      }
+      const current = intervalsMap.get(roundedTime);
+      current.observationAvg += parseFloat(obs.value);
+      current.predictionAvg += parseFloat(obs.avg);
+      current.count += 1;
     });
 
-    // Prepare sorted data for the chart
     const combinedTimes = Array.from(intervalsMap.keys()).sort((a, b) => new Date(a) - new Date(b));
     const observationValues = combinedTimes.map((time) => {
-        const data = intervalsMap.get(time);
-        return data.observationAvg / data.count; // Average observation value
+      const data = intervalsMap.get(time);
+      return data.observationAvg / data.count;
     });
     const predictionValues = combinedTimes.map((time) => {
-        const data = intervalsMap.get(time);
-        return data.predictionAvg / data.count; // Average prediction value
+      const data = intervalsMap.get(time);
+      return data.predictionAvg / data.count;
     });
 
-    iterator = combinedTimes.length-1;
-    combinedTimes.reverse().forEach(time => {
+    let iterator = combinedTimes.length - 1;
+    combinedTimes.slice().reverse().forEach(time => {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td style="padding: 8px; border-bottom: 1px solid #ccc;">${time}</td>
@@ -784,20 +791,14 @@
         <td style="padding: 8px; border-bottom: 1px solid #ccc;">${predictionValues[iterator]}</td>
       `;
       observationsBody.appendChild(row);
-      iterator-=1;
-
+      iterator -= 1;
     });
-    combinedTimes.reverse();
-
 
     renderGraphChunked(graphCanvas, combinedTimes, observationValues, predictionValues, futureForecastingObservationAvgValue);
   }
-  var mostRecentName;
-  var mostRecentStreamId;
-  // Show Observations Modal with observations list and graph for value vs time
+
   function showObservations(streamId, streamName) {
     mostRecentName = streamName;
-    
     mostRecentStreamId = streamId;
     const observationsBody = document.getElementById('observationsBody');
     const graphContainer = document.getElementById('observationsGraphContainer');
@@ -807,7 +808,6 @@
     const nameOfStream = document.getElementById('streamName');
 
     nameOfStream.innerHTML = "Stream: " + mostRecentName;
-    // Show observation modal
     document.getElementById('observationsModal').style.display = 'block';
     graphContainer.style.display = 'none';
     observationTable.style.display = 'none';
@@ -822,15 +822,13 @@
       if (response.ok) {
         const data = await response.json();
         let parsedObservationsAndMostRecent = JSON.parse(data.observations);
-        parsedObservations = parsedObservationsAndMostRecent[0]
-        let futureForecastingObservationAvgValue = parsedObservationsAndMostRecent[1]
+        let parsedObservations = parsedObservationsAndMostRecent[0];
+        let futureForecastingObservationAvgValue = parsedObservationsAndMostRecent[1];
         observationsBody.innerHTML = '';
+        
         if (parsedObservations.length === 0) {
-          // modal container css changes
-          modelContent.style.height = "300px"
-          // Graph container css  changes
+          modelContent.style.height = "300px";
           graphContainer.style.display = 'none';
-          // Table style css changes
           observationTable.style.display = 'block';
           observationTable.style.height = "300px";
           observationTable.style.overflowY = "hidden";
@@ -838,63 +836,38 @@
           noDataRow.innerHTML = '<td colspan="3" style="text-align: center; padding: 8px;">No data found</td>';
           observationsBody.appendChild(noDataRow);
         } else {
-          // Graph container css changes
           graphContainer.style.display = 'block';
-          // modal container css changes
-
-          modelContent.style.height = "600px"
-
-          // Table style css changes
+          modelContent.style.height = "600px";
           observationTable.style.display = 'block';
           observationTable.style.height = "calc(100% - 350px)";
           observationTable.style.overflowY = "scroll";
           
-          // Render a graph
           parsedObservations.sort((a, b) => new Date(a.ts) - new Date(b.ts));
           showLineBarGraph(graphCanvas, parsedObservations, futureForecastingObservationAvgValue, observationsBody);
-          /*
-          parsedObservations.reverse().forEach(observation => {
-            console.log(observation.time);
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.ts}</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.value}</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ccc;">${observation.avg}</td>
-            `;
-            observationsBody.appendChild(row);
-          });
-          */
         }
 
-        document.getElementById('modalLoading').style.display = "none"
-        updateStreamDisplay(displayStreams, darkmode);
-        updatePaginationButtons(filteredStreams.length);
-        document.body.classList.add('no-scroll');  // Disable scroll on main content
+        document.getElementById('modalLoading').style.display = "none";
+        document.body.classList.add('no-scroll');
         graphContainer.addEventListener('wheel', (event) => {
-          event.stopPropagation(); // Prevent scroll event for zoom effecting the main content.
+          event.stopPropagation();
         }, { passive: false });
-
       }
     })
     .catch(error => {
       console.error('Error fetching observations:', error);
-      updateStreamDisplay(displayStreams, darkmode);
-      updatePaginationButtons(filteredStreams.length);
       showNotification("Failed to load observations", true);
     });
   }
 
-  function ReRenderGraph(){
+  function ReRenderGraph() {
     showObservations(mostRecentStreamId, mostRecentName);
   }
 
-  // Close Modal
   function closeModal() {
     document.getElementById('observationsModal').style.display = 'none';
-    document.body.classList.remove('no-scroll');  // Re-enable scroll on main content
+    document.body.classList.remove('no-scroll');
   }
 
-  // Close modal on outside click
   window.onclick = function(event) {
     const modal = document.getElementById('observationsModal');
     if (event.target === modal) {
@@ -902,49 +875,9 @@
     }
   };
 
-  function predictStream(streamId, event) {
-    event.stopPropagation();
-    fetch(
-      '/predict/stream', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({streamId: streamId})})
-    .then(async (response) => {
-        if (response.ok) {
-            const responseData = await response.json();
-            console.log("responseData", responseData.message);
-            showNotification("Stream added successfully. Please restart to see it on the dashboard.");
-        }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showNotification("Something went wrong!", true);
-    });
-  }
-  function flagStream(streamId, event) {
-    event.stopPropagation();
-    const voteActionElement = document.getElementById(`stream_flag_${streamId}`);
-    
-    fetch(
-      '/flag/stream', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({streamId: streamId})})
-    .then(async (response) => {
-        if (response.ok) {
-            const responseData = await response.json();
-            console.log("responseData", responseData.message);
-            voteActionElement.innerHTML = '<i class="material-icons opacity-10" title="Flagged Stream">flag</i>';
-            showNotification("Stream has been flagged for review.");
-        } else {
-            // Handle non-200 responses
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showNotification("Failed to flag stream. Please try again.", true);
-    });
-  }
+  // Initialize page
+  document.addEventListener('DOMContentLoaded', function() {
+    fetchStreams('', 1, 'popularity', 'desc');
+  });
 </script>
 {% endblock %}

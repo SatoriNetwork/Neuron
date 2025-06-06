@@ -2222,19 +2222,51 @@ def poolParticipants():
     return jsonify({'data': participants}), 200
 
 
+# @app.route('/streams', methods=['GET', 'POST'])
+# @userInteracted
+# @vaultRequired
+# @authRequired
+# def streams():
+#     # Commenting down as of now, will be used in future if we need to make the call to server for search streams
+#     # as of now we have limited streams so we can search in client side
+#     # Get search text from query parameters
+#     # searchText = request.args.get('search', None)
+#     # if searchText is not None:
+#     #     streamsData = getStreams(searchText)
+#     #     return jsonify({'streams': streamsData})
+
+#     def acceptSubmittion(passwordForm):
+#         _vault = start.openVault(
+#             password=passwordForm.password.data,
+#             create=True)
+
+#     if request.method == 'POST':
+#         acceptSubmittion(forms.VaultPassword(formdata=request.form))
+
+#     if start.vault is not None and not start.vault.isEncrypted:
+#         oracleStreams = start.getAllOracleStreams(fetch=True)
+#         return render_template('streams.html', **getResp({
+#             'title': 'Streams',
+#             'network': start.network,
+#             'vault': start.vault,
+#             'vaultOpened': True,
+#             'vaultPasswordForm': presentVaultPasswordForm(),
+#             'hasRoom': len(start.subscriptions) < 10, # TODO: fix for multivariate situation
+#             'darkmode': darkmode,
+#             'streams': oracleStreams[0:100],
+#             'totalStreams': len(oracleStreams),
+#             'allStreams': oracleStreams}))
+#     else:
+#         return render_template('dashboard.html', **getResp({
+#             'vaultOpened': False,
+#             'vaultPasswordForm': presentVaultPasswordForm(),
+#         }))
+
 @app.route('/streams', methods=['GET', 'POST'])
 @userInteracted
 @vaultRequired
 @authRequired
 def streams():
-    # Commenting down as of now, will be used in future if we need to make the call to server for search streams
-    # as of now we have limited streams so we can search in client side
-    # Get search text from query parameters
-    # searchText = request.args.get('search', None)
-    # if searchText is not None:
-    #     streamsData = getStreams(searchText)
-    #     return jsonify({'streams': streamsData})
-
     def acceptSubmittion(passwordForm):
         _vault = start.openVault(
             password=passwordForm.password.data,
@@ -2244,23 +2276,85 @@ def streams():
         acceptSubmittion(forms.VaultPassword(formdata=request.form))
 
     if start.vault is not None and not start.vault.isEncrypted:
-        oracleStreams = start.getAllOracleStreams(fetch=True)
         return render_template('streams.html', **getResp({
             'title': 'Streams',
             'network': start.network,
             'vault': start.vault,
             'vaultOpened': True,
             'vaultPasswordForm': presentVaultPasswordForm(),
-            'hasRoom': len(start.subscriptions) < 10, # TODO: fix for multivariate situation
+            'hasRoom': len(start.subscriptions) < 10,
             'darkmode': darkmode,
-            'streams': oracleStreams[0:100],
-            'totalStreams': len(oracleStreams),
-            'allStreams': oracleStreams}))
+            'streams': [], 
+            'totalStreams': 0, 
+        }))
     else:
         return render_template('dashboard.html', **getResp({
             'vaultOpened': False,
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
+    
+    
+@app.route('/streams/api', methods=['GET'])
+@userInteracted
+@vaultRequired
+@authRequired
+def streams_api():
+    """API endpoint for paginated streams data"""
+    try:
+        if start.vault is None or start.vault.isEncrypted:
+            return jsonify({'error': 'Vault not accessible'}), 401
+            
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', 100, type=int), 200) 
+        search = request.args.get('search', '').strip()
+        sort_by = request.args.get('sort', 'popularity') 
+        order = request.args.get('order', 'desc')  
+        
+        if page < 1:
+            page = 1
+        if per_page < 1:
+            per_page = 100
+            
+        oracleStreams, pagination_info = start.getPaginatedOracleStreams(
+            page=page,           
+            per_page=per_page,    
+            searchText=search,     
+            sort_by=sort_by,
+            order=order,
+            force_refresh=True      
+        )
+
+        if isinstance(pagination_info, dict):
+            response_data = {
+                'streams': oracleStreams,
+                'current_page': pagination_info.get('current_page', page),
+                'total_pages': pagination_info.get('total_pages', 1),
+                'total_count': pagination_info.get('total_count', len(oracleStreams)),
+                'has_prev': pagination_info.get('has_prev', False),
+                'has_next': pagination_info.get('has_next', False),
+                'per_page': pagination_info.get('per_page', per_page)
+            }
+        else:
+            total_count = pagination_info if isinstance(pagination_info, int) else len(oracleStreams)
+            total_pages = (total_count + per_page - 1) // per_page
+            has_prev = page > 1
+            has_next = page < total_pages
+            
+            response_data = {
+                'streams': oracleStreams,
+                'current_page': page,
+                'total_pages': total_pages,
+                'total_count': total_count,
+                'has_prev': has_prev,
+                'has_next': has_next,
+                'per_page': per_page
+            }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        logging.error(f"Error in streams_api: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 
 @app.route('/vote_on/sanction/incremental', methods=['POST'])
