@@ -7,7 +7,7 @@
   
   .streams-card {
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
     border: none;
   }
   
@@ -27,13 +27,14 @@
     border: 2px solid #e3e3e3;
     padding: 0 16px;
     font-size: 14px;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .search-input:focus {
     outline: none;
-    border-color: #4CAF50;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    border-color: #f6b042;
+    box-shadow: 0 0 0 3px rgba(246, 176, 66, 0.1), 0 4px 8px rgba(0, 0, 0, 0.15);
   }
   
   .sort-button {
@@ -50,11 +51,14 @@
     cursor: pointer;
     transition: all 0.3s ease;
     white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .sort-button:hover {
-    border-color: #4CAF50;
+    border-color: #f6b042;
     background: #f8f9fa;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
   }
   
   .pagination-controls {
@@ -82,11 +86,14 @@
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: fit-content;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .pagination-button:not(:disabled):hover {
-    border-color: #4CAF50;
+    border-color: #f6b042;
     background: #f8f9fa;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
   }
   
   .pagination-button:disabled {
@@ -111,11 +118,14 @@
     text-align: center;
     font-size: 14px;
     font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
   }
   
   .page-number-input:focus {
     outline: none;
-    border-color: #4CAF50;
+    border-color: #f6b042;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .streams-table {
@@ -162,11 +172,13 @@
     cursor: pointer;
     background: transparent;
     border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .action-button:hover {
     background: rgba(76, 175, 80, 0.1);
     transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
   
   .action-button i {
@@ -183,6 +195,26 @@
     color: #4CAF50;
   }
   
+  .action-button.chart-button:hover {
+    background: rgba(33, 150, 243, 0.1);
+  }
+  
+  .action-button.chart-button:hover i {
+    color: #2196F3;
+  }
+  
+  .action-button.flag-button:hover {
+    background: rgba(244, 67, 54, 0.1);
+  }
+  
+  .action-button.flag-button:hover i {
+    color: #f44336;
+  }
+  
+  .action-button.flag-button.flagged {
+    background: rgba(244, 67, 54, 0.1);
+  }
+  
   .action-button.inactive i {
     color: #999;
     opacity: 0.6;
@@ -197,7 +229,7 @@
     border-radius: 8px;
     background: white;
     margin: 8px;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
   
   .details-grid {
@@ -257,7 +289,7 @@
     border-radius: 16px;
     max-width: 90vw;
     max-height: 90vh;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
     overflow: hidden;
   }
   
@@ -317,12 +349,14 @@
     background: white;
     font-size: 14px;
     cursor: pointer;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .chart-select:focus {
     outline: none;
     border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .observations-table-container {
@@ -769,7 +803,7 @@
       currentSearch = searchText;
       currentPage = 1;
       fetchStreams(searchText, 1, currentSort, currentOrder);
-    }, 300);
+    }, 1000);
   }
 
   function showLoadingState() {
@@ -916,7 +950,7 @@
       const voteActionHtml = `
         <td>
           <div class="action-buttons">
-            <button class="action-button" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}');">
+            <button class="action-button chart-button" title="History" onclick="event.stopPropagation(); showObservations(${stream.stream_id}, '${stream.stream}');">
               <i class="material-icons">stacked_line_chart</i>
             </button>
             ${stream.vote === 0 ?
@@ -933,7 +967,7 @@
                 </button>` : 
                 ''
             }
-            <button class="action-button" id="stream_flag_${stream.stream_id}" title="Flag Stream" onclick="flagStream(${stream.stream_id}, event);">
+            <button class="action-button flag-button" id="stream_flag_${stream.stream_id}" title="Flag Stream" onclick="flagStream(${stream.stream_id}, event);">
               <i class="material-icons">flag</i>
             </button>
           </div>
@@ -1133,7 +1167,7 @@
       if (response.ok) {
         const responseData = await response.json();
         voteActionElement.innerHTML = '<i class="material-icons">flag</i>';
-        voteActionElement.classList.add('active');
+        voteActionElement.classList.add('flagged');
         voteActionElement.title = "Flagged Stream";
         showNotification("Stream has been flagged for review.");
       } else {
