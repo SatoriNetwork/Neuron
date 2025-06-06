@@ -11,6 +11,11 @@
             background: #ffffff;
             min-height: 100vh;
             font-family: 'Zen Maru Gothic', sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        
+        body.dark-color-login {
+            background: #1a1a1a;
         }
         
         .password-container {
@@ -24,6 +29,16 @@
             border: 1px solid rgba(0, 0, 0, 0.05);
             max-width: 500px;
             margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+        
+        .password-container.dark-color-login {
+            background: #2a2a2a;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.6),
+                0 15px 35px rgba(0, 0, 0, 0.4),
+                0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .enhanced-input {
@@ -46,6 +61,21 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             outline: none;
+            color: #333;
+        }
+        
+        .enhanced-input.dark-color-login input {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(35, 35, 35, 0.95);
+            color: #ffffff;
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        
+        .enhanced-input.dark-color-login input::placeholder {
+            color: #999999;
         }
         
         .enhanced-input input:focus {
@@ -55,6 +85,14 @@
                 0 8px 15px rgba(102, 126, 234, 0.1),
                 0 0 0 4px rgba(102, 126, 234, 0.1);
             transform: translateY(-2px);
+        }
+        
+        .enhanced-input.dark-color-login input:focus {
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 15px 35px rgba(255, 255, 255, 0.1),
+                0 8px 15px rgba(255, 255, 255, 0.05),
+                0 0 0 4px rgba(255, 255, 255, 0.1);
         }
         
         .logo-container {
@@ -68,12 +106,23 @@
             margin-bottom: 1rem;
             color: #333;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: color 0.3s ease;
+        }
+        
+        .logo-container header.dark-color-login {
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         .logo-image {
             max-height: 200px;
             max-width: 100%;
             filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1));
+            transition: filter 0.3s ease;
+        }
+        
+        .logo-image.dark-color-login {
+            filter: brightness(0) invert(1) drop-shadow(0 10px 20px rgba(255, 255, 255, 0.1));
         }
         
         .login-btn {
@@ -92,12 +141,29 @@
             cursor: pointer;
         }
         
+        .login-btn.dark-color-login {
+            background: rgba(40, 40, 40, 0.9);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 12px 25px rgba(0, 0, 0, 0.4),
+                0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
         .login-btn:hover {
             transform: translateY(-3px);
             box-shadow: 
                 0 18px 35px rgba(74, 74, 106, 0.3),
                 0 8px 15px rgba(74, 74, 106, 0.2);
             background: linear-gradient(135deg, #5a5a7a 0%, #3d3d4f 100%);
+        }
+        
+        .login-btn.dark-color-login:hover {
+            background: rgba(50, 50, 50, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 18px 35px rgba(0, 0, 0, 0.5),
+                0 8px 15px rgba(0, 0, 0, 0.4);
         }
         
         .overlay {
@@ -155,6 +221,16 @@
             backdrop-filter: blur(15px);
             border: 1px solid rgba(0, 0, 0, 0.05);
             animation: workingFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
+        }
+        
+        .working-indicator.dark-color-login {
+            background: rgba(40, 40, 40, 0.95);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.6),
+                0 15px 35px rgba(0, 0, 0, 0.5);
         }
 
         .enlightenment-spinner {
@@ -166,6 +242,12 @@
             animation: enlightenmentSpin 2s linear infinite;
             margin: 0 auto 1rem auto;
             position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .enlightenment-spinner.dark-color-login {
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid #ffffff;
         }
 
         .enlightenment-spinner::before {
@@ -179,6 +261,11 @@
             border-top: 2px solid #4a4a6a;
             border-radius: 50%;
             animation: enlightenmentSpin 3s linear infinite reverse;
+            transition: all 0.3s ease;
+        }
+        
+        .enlightenment-spinner.dark-color-login::before {
+            border-top: 2px solid #cccccc;
         }
 
         .enlightenment-spinner::after {
@@ -192,6 +279,11 @@
             border-radius: 50%;
             transform: translate(-50%, -50%);
             animation: enlightenmentPulse 2s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+        
+        .enlightenment-spinner.dark-color-login::after {
+            background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
         }
 
         .enlightenment-text {
@@ -215,11 +307,27 @@
             background-clip: text;
             animation: awakeningFlow 2s ease-in-out infinite;
             font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .awakening-text.dark-color-login {
+            color: #ffffff;
+            background: linear-gradient(135deg, #ffffff 0%, #cccccc 50%, #ffffff 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         @supports not (-webkit-background-clip: text) {
             .awakening-text {
                 color: #333333 !important;
+                background: none !important;
+                -webkit-text-fill-color: initial !important;
+            }
+            
+            .awakening-text.dark-color-login {
+                color: #ffffff !important;
                 background: none !important;
                 -webkit-text-fill-color: initial !important;
             }
@@ -269,6 +377,11 @@
             font-size: 0.9rem;
             opacity: 0.7;
             animation: enlightenmentBreath 3s ease-in-out infinite;
+            transition: color 0.3s ease;
+        }
+        
+        .enlightenment-subtitle.dark-color-login {
+            color: #cccccc;
         }
 
         .floating-particles {
@@ -288,6 +401,11 @@
             border-radius: 50%;
             opacity: 0;
             animation: particleFloat 4s linear infinite;
+            transition: all 0.3s ease;
+        }
+        
+        .particle.dark-color-login {
+            background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
         }
 
         .particle:nth-child(1) { left: 20%; animation-delay: 0s; }
@@ -345,59 +463,60 @@
         }
     </style>
 </head>
-<body>
-    <div class="overlay">
-        <div class="password-container fade-in floating">
+<body class="{% if darkmode %}dark-color-login{% endif %}">
+<div class="overlay">
+        <div class="password-container fade-in floating {% if darkmode %}dark-color-login{% endif %}">
             <div class="logo-container">
-                <header>Welcome to</header>
+                <header class="{% if darkmode %}dark-color-login{% endif %}">Welcome to</header>
                 <div>
-                    <img src="{{ url_for('static', filename='img/satori-light-inline.png') }}" style="max-height:360px;max-width:100%; width: auto; height: auto;">
+                    <img src="{{ url_for('static', filename='img/satori-light-inline.png') }}" style="max-height:360px;max-width:100%; width: auto; height: auto;" class="logo-image {% if darkmode %}dark-color-login{% endif %}">
                 </div>
             </div>
             
             <form action="/dashboard" method="POST">
-                {{ vaultPasswordForm.hidden_tag() }}
-                {{ vaultPasswordForm.csrf_token }}
+                <!-- Hidden CSRF token fields that would be generated by Flask-WTF -->
+                <input type="hidden" name="csrf_token" value="placeholder_csrf_token">
                 
-                <div class="enhanced-input">
-                    {{ vaultPasswordForm.password(
-                        size=256,
-                        style_="text-align: center; border: 2px solid #10051D;",
-                        class_="form-control",
-                        placeholder="Enter your password",
-                        autofocus=True,
-                        id="password",
-                        onkeypress="checkEnter(event);") }}
+                <div class="enhanced-input {% if darkmode %}dark-color-login{% endif %}">
+                    <input type="password" 
+                           name="password"
+                           size="256"
+                           style="text-align: center;"
+                           class="form-control"
+                           placeholder="Enter your password"
+                           autofocus
+                           id="password"
+                           onkeypress="checkEnter(event);">
                 </div>
                 
                 <button type="submit" 
-                        class="login-btn"
+                        class="login-btn {% if darkmode %}dark-color-login{% endif %}"
                         onclick="showWorkingV2();">
                     Login
                 </button>
                 
-                <div class="working-indicator" id="workingIndicator">
-                    <div class="floating-particles">
-                        <div class="particle"></div>
-                        <div class="particle"></div>
-                        <div class="particle"></div>
-                        <div class="particle"></div>
+                <div class="working-indicator {% if darkmode %}dark-color-login{% endif %}" id="workingIndicator">
+                    <div class="floating-particles {% if darkmode %}dark-color-login{% endif %}">
+                        <div class="particle {% if darkmode %}dark-color-login{% endif %}"></div>
+                        <div class="particle {% if darkmode %}dark-color-login{% endif %}"></div>
+                        <div class="particle {% if darkmode %}dark-color-login{% endif %}"></div>
+                        <div class="particle {% if darkmode %}dark-color-login{% endif %}"></div>
                     </div>
-                    <div class="enlightenment-spinner"></div>
+                    <div class="enlightenment-spinner {% if darkmode %}dark-color-login{% endif %}"></div>
                     <div class="enlightenment-text">
-                        <div class="awakening-word">
-                            <span class="awakening-letter" style="animation-delay: 0s;">A</span>
-                            <span class="awakening-letter" style="animation-delay: 0.1s;">w</span>
-                            <span class="awakening-letter" style="animation-delay: 0.2s;">a</span>
-                            <span class="awakening-letter" style="animation-delay: 0.3s;">k</span>
-                            <span class="awakening-letter" style="animation-delay: 0.4s;">e</span>
-                            <span class="awakening-letter" style="animation-delay: 0.5s;">n</span>
-                            <span class="awakening-letter" style="animation-delay: 0.6s;">i</span>
-                            <span class="awakening-letter" style="animation-delay: 0.7s;">n</span>
-                            <span class="awakening-letter" style="animation-delay: 0.8s;">g</span>
+                        <div class="awakening-word {% if darkmode %}dark-color-login{% endif %}">
+                            <span class="awakening-letter awakening-text {% if darkmode %}dark-color-login{% endif %}" style="animation-delay: 0s;">A</span>
+                            <span class="awakening-letter awakening-text {% if darkmode %}dark-color-login{% endif %}" style="animation-delay: 0.1s;">w</span>
+                            <span class="awakening-letter awakening-text {% if darkmode %}dark-color-login{% endif %}" style="animation-delay: 0.2s;">a</span>
+                            <span class="awakening-letter awakening-text {% if darkmode %}dark-color-login{% endif %}" style="animation-delay: 0.3s;">k</span>
+                            <span class="awakening-letter awakening-text {% if darkmode %}dark-color-login{% endif %}" style="animation-delay: 0.4s;">e</span>
+                            <span class="awakening-letter awakening-text {% if darkmode %}dark-color-login{% endif %}" style="animation-delay: 0.5s;">n</span>
+                            <span class="awakening-letter awakening-text {% if darkmode %}dark-color-login{% endif %}" style="animation-delay: 0.6s;">i</span>
+                            <span class="awakening-letter awakening-text {% if darkmode %}dark-color-login{% endif %}" style="animation-delay: 0.7s;">n</span>
+                            <span class="awakening-letter awakening-text {% if darkmode %}dark-color-login{% endif %}" style="animation-delay: 0.8s;">g</span>
                         </div>
                     </div>
-                    <div class="enlightenment-subtitle">Accessing the distributed consciousness</div>
+                    <div class="enlightenment-subtitle {% if darkmode %}dark-color-login{% endif %}">Accessing the distributed consciousness</div>
                 </div>
             </form>
         </div>
@@ -412,6 +531,8 @@
         function checkEnter(event) {
             if (event.key === "Enter" || event.keyCode === 13) {
                 showWorkingV2();
+                // Allow form submission
+                event.target.form.submit();
                 return true;
             }
             return true;
@@ -422,6 +543,8 @@
             if (indicator) {
                 indicator.style.display = "block";
             }
+            // Allow form submission to continue
+            return true;
         }
     </script>
 </body>

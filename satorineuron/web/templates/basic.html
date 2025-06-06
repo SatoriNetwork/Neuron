@@ -29,17 +29,29 @@
 	</div>
   <!--{ % include 'loader.html' %}-->
   <!--{ % include 'header.html' % }-->
-  {% include 'nav-side.html' %}
-  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-    {% include 'header.html' %}
+  
+  <!-- Only show side navigation if vault is opened -->
+  {% if vaultOpened %}
+    {% include 'nav-side.html' %}
+  {% endif %}
+  
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg {% if not vaultOpened %}vault-locked{% endif %}">
+    <!-- Only show header if vault is opened -->
+    {% if vaultOpened %}
+      {% include 'header.html' %}
+    {% endif %}
+    
     <div class="container-fluid py-4">
       {% include 'flash.html' %}
       {% block content %}
       {% endblock %}
       <!--{ % include 'footer.html' % }-->
-
     </div>
-    {% include 'footer-nav.html' %}
+    
+    <!-- Only show footer navigation if vault is opened -->
+    {% if vaultOpened %}
+      {% include 'footer-nav.html' %}
+    {% endif %}
   </main>
   <!--{ % include 'settings.html' % }-->
   {% include 'scripts.html' %}
@@ -114,7 +126,10 @@
     spinnerCheckInterval = setInterval(checkSpinnerDisplaying, 100);
     
     window.onload = function () {
-      updateSpinner();
+      // Only update spinner positioning if vault is opened
+      {% if vaultOpened %}
+        updateSpinner();
+      {% endif %}
     }
   </script>
   </body>
