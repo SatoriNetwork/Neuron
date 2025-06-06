@@ -18,23 +18,150 @@
     margin: 1.5rem 1.5rem 1rem 1.5rem;
     flex-wrap: wrap;
   }
-  
-  .search-input {
+
+  .search-input-group {
+    display: flex;
     flex: 1;
     min-width: 250px;
-    height: 48px;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
+    overflow: hidden;
+    align-items: stretch;
     border: 2px solid #e3e3e3;
+  }
+
+  .search-input {
+    flex: 1;
+    height: 44px;
+    border: none;
+    border-radius: 8px 0 0 8px;
     padding: 0 16px;
     font-size: 14px;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .search-input:focus {
     outline: none;
-    border-color: #f6b042;
-    box-shadow: 0 0 0 3px rgba(246, 176, 66, 0.1), 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
+    background: white;
+  }
+
+  .search-input:focus {
+    background: #fafafa;
+  }
+
+  .search-button, .clear-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 44px;
+    border: none;
+    background: white;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  .search-button {
+    border-radius: 0;
+  }
+
+  .search-button:last-child {
+    border-radius: 0 6px 6px 0;
+  }
+
+  .clear-button {
+    border-radius: 0;
+    min-width: 40px;
+  }
+
+  .clear-button + .search-button {
+    border-radius: 0 6px 6px 0;
+  }
+
+  .search-button:hover {
+    background: #f8f9fa;
+  }
+
+  .search-button:hover i {
+    color: #f6b042;
+  }
+
+  .clear-button:hover {
+    background: #f8f9fa;
+  }
+
+  .clear-button:hover i {
+    color: #f44336;
+  }
+
+  .search-button:active, .clear-button:active {
+    transform: translateY(0);
+  }
+
+  .search-button:disabled, .clear-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .search-button i, .clear-button i {
+    font-size: 20px;
+  }
+
+  /* Loading state for search button */
+  .search-button.loading {
+    background: #f8f9fa;
+    cursor: not-allowed;
+  }
+
+  .search-button.loading i {
+    color: #f6b042;
+    animation: spin 1s linear infinite;
+  }
+
+  .search-button.loading i {
+    animation: spin 1s linear infinite;
+  }
+
+  /* Only highlight the search input on focus */
+  .search-input:focus {
+    background: #fafafa;
+  }
+
+  /* Responsive design for search controls */
+  @media (max-width: 768px) {
+    .search-controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .search-input-group {
+      min-width: 100%;
+    }
+  }
+
+  /* Dark mode support */
+  .dark-colors .search-input {
+    background-color: #4a5568;
+    border-color: #6b7280;
+    color: #e2e8f0;
+  }
+
+  .dark-colors .search-button,
+  .dark-colors .clear-button {
+    background-color: #4a5568;
+    border-color: #6b7280;
+    color: #e2e8f0;
+  }
+
+  .dark-colors .search-input::placeholder {
+    color: #a0aec0;
   }
   
   .sort-button {
@@ -546,14 +673,35 @@
       </div>
       
       <!-- Search and Sort Controls -->
+      <!-- Updated Search Controls Section -->
+      <!-- Updated Search Controls Section -->
       <div class="search-controls">
-        <input 
-          class="search-input" 
-          type="text" 
-          id="searchInput" 
-          placeholder="Search streams..." 
-          oninput="debounceSearch();" 
-        />
+        <div class="search-input-group">
+          <input 
+            class="search-input" 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search streams..." 
+            onkeypress="handleSearchKeypress(event)"
+          />
+          <button 
+            class="search-button" 
+            id="searchButton"
+            onclick="performSearch()"
+            title="Search streams"
+          >
+            <i class="material-icons">search</i>
+          </button>
+          <button 
+            class="clear-button" 
+            id="clearButton"
+            onclick="clearSearch()"
+            title="Clear search"
+            style="display: none;"
+          >
+            <i class="material-icons">clear</i>
+          </button>
+        </div>
         <button 
           id="popularitySortBtn" 
           class="sort-button" 
@@ -704,6 +852,7 @@
   let totalStreams = 0;
   let hasNext = false;
   let hasPrev = false;
+  let searchTimeout = null;
   
   let sortOrder = {
     popularity: 'desc',
@@ -712,6 +861,57 @@
   };
   let timeout = null;
   let sortTimeout = null;
+
+
+  function handleSearchKeypress(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      performSearch();
+    }
+  }
+
+  function performSearch() {
+    if (isLoading) return;
+    
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const clearButton = document.getElementById('clearButton');
+    const searchText = searchInput.value.trim();
+    
+    // Update UI state
+    searchButton.classList.add('loading');
+    searchButton.disabled = true;
+    
+    // Show/hide clear button based on search text
+    if (searchText) {
+      clearButton.style.display = 'flex';
+    }
+    
+    currentSearch = searchText;
+    currentPage = 1;
+    
+    // Perform the search
+    fetchStreams(searchText, 1, currentSort, currentOrder)
+      .finally(() => {
+        // Reset button state
+        searchButton.classList.remove('loading');
+        searchButton.disabled = false;
+      });
+  }
+
+  function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const clearButton = document.getElementById('clearButton');
+    
+    searchInput.value = '';
+    clearButton.style.display = 'none';
+    searchInput.focus();
+    
+    // Perform search with empty string
+    currentSearch = '';
+    currentPage = 1;
+    fetchStreams('', 1, currentSort, currentOrder);
+  }
 
   function updatePaginationButtons(currentPage, totalPages, hasNext, hasPrev) {
     const prevBtnTop = document.getElementById('prevPageBtnTop');
@@ -792,19 +992,31 @@
   }
 
   function debounceSearch() {
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-    
+  if (timeout) {
+    clearTimeout(timeout);
+  }
+  
+  // Capture the current search value immediately
+  const currentSearchText = document.getElementById('searchInput').value.trim();
+  
+  // Show loading state only if search text has actually changed
+  if (currentSearchText !== currentSearch) {
     showLoadingState();
+  }
+  
+  timeout = setTimeout(() => {
+    // Re-check the search input value at execution time
+    const searchText = document.getElementById('searchInput').value.trim();
     
-    timeout = setTimeout(() => {
-      const searchText = document.getElementById('searchInput').value.trim();
+    // Only proceed if the search text is still the same as when timeout was set
+    // This prevents race conditions where user continues typing after request is sent
+    if (searchText === currentSearchText) {
       currentSearch = searchText;
       currentPage = 1;
       fetchStreams(searchText, 1, currentSort, currentOrder);
-    }, 1000);
-  }
+    }
+  }, 300);
+}
 
   function showLoadingState() {
     const tableBody = document.getElementById('updating_table');
@@ -821,7 +1033,7 @@
   }
 
   function fetchStreams(search = '', page = 1, sort = 'popularity', order = 'desc') {
-    if (isLoading) return;
+    if (isLoading) return Promise.resolve();
     
     isLoading = true;
     showLoadingState();
@@ -834,7 +1046,7 @@
       order: order
     });
     
-    fetch(`/streams/api?${params}`)
+    return fetch(`/streams/api?${params}`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -1547,6 +1759,18 @@
 
   // Initialize page
   document.addEventListener('DOMContentLoaded', function() {
+    fetchStreams('', 1, 'popularity', 'desc');
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const clearButton = document.getElementById('clearButton');
+    
+    // Show clear button if there's initial search text
+    if (searchInput.value.trim()) {
+      clearButton.style.display = 'flex';
+    }
+    
     fetchStreams('', 1, 'popularity', 'desc');
   });
 
