@@ -74,6 +74,41 @@
     border-radius: 0 6px 6px 0;
   }
 
+  .search-button.animate i {
+      animation: iconPulse 1.5s infinite;
+      color: #f6b042;
+  }
+
+  @keyframes iconPulse {
+      0% {
+          transform: scale(1);
+          filter: drop-shadow(0 0 0 rgba(246, 176, 66, 0.7));
+      }
+      70% {
+          transform: scale(1.2);
+          filter: drop-shadow(0 0 8px rgba(246, 176, 66, 0.8));
+      }
+      100% {
+          transform: scale(1);
+          filter: drop-shadow(0 0 0 rgba(246, 176, 66, 0.7));
+      }
+  }
+
+  @keyframes pulse {
+      0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(246, 176, 66, 0.7);
+      }
+      70% {
+          transform: scale(1.05);
+          box-shadow: 0 0 0 10px rgba(246, 176, 66, 0);
+      }
+      100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(246, 176, 66, 0);
+      }
+  }
+
   .clear-button {
     border-radius: 0;
     min-width: 40px;
@@ -195,7 +230,7 @@
     gap: 1rem;
     padding: 1.5rem;
     border-bottom: 1px solid #e3e3e3;
-    background: #f8f9fa;
+    background: white;  /* Changed from #f8f9fa to white */
     border-radius: 8px 8px 0 0;
   }
   
@@ -599,7 +634,7 @@
   }
   
   .dark-colors .pagination-controls {
-    background-color: #374151;
+    background-color: #2d3748;  
     border-color: #4a5568;
   }
   
@@ -660,14 +695,32 @@
   
   <div class="col-lg-12 col-md-12 mb-md-0">
     <div class="card streams-card {% if darkmode %}dark-colors{% endif %}">
-      <!-- Card Header -->
-      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}">
-        <div class="row">
+      <!-- Enhanced Card Header -->
+      <div class="card-header pb-0 {% if darkmode %}dark-colors{% endif %}" style="background: {% if darkmode %}#2d3748{% else %}white{% endif %}; position: relative; overflow: hidden;">
+        <!-- Decorative background elements -->
+        <!-- <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(246, 176, 66, 0.1) 0%, transparent 70%); border-radius: 50%;"></div>
+        <div style="position: absolute; bottom: -30px; left: -30px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(83, 53, 73, 0.08) 0%, transparent 70%); border-radius: 50%;"></div> -->
+        
+        <div class="row align-items-center" style="position: relative; z-index: 2;">
           <div class="col-lg-6 col-7">
-            <h6 class="{% if darkmode %}dark-colors{% endif %}">Oracle Streams</h6>
-            <p class="text-sm mb-0 {% if darkmode %}dark-colors{% endif %}">
-              Real-World data streams, published by Satori Neurons
-            </p>
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #f6b042 0%, #e09935 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(246, 176, 66, 0.3); flex-shrink: 0;">
+                <i class="material-icons" style="color: white; font-size: 24px;">insights</i>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <h6 class="mb-0" style="font-weight: 700; font-size: 18px; color: {% if darkmode %}#e2e8f0{% else %}#333{% endif %}; letter-spacing: -0.5px;">Oracle Streams</h6>
+                <p class="text-sm mb-0" style="color: {% if darkmode %}#a0aec0{% else %}#666{% endif %}; font-weight: 500;">
+                  Real-World data streams, published by 
+                  <span style="color: #f6b042; font-weight: 600;">Satori Neurons</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 col-5 text-end">
+            <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(246, 176, 66, 0.1); border-radius: 20px; border: 1px solid rgba(246, 176, 66, 0.3);">
+              <div style="width: 8px; height: 8px; background: #4CAF50; border-radius: 50%; animation: pulse 2s infinite;"></div>
+              <span style="font-size: 12px; color: {% if darkmode %}#e2e8f0{% else %}#666{% endif %}; font-weight: 600;">LIVE</span>
+            </div>
           </div>
         </div>
       </div>
@@ -683,6 +736,7 @@
             id="searchInput" 
             placeholder="Search streams..." 
             onkeypress="handleSearchKeypress(event)"
+            oninput="handleSearchInput()"
           />
           <button 
             class="search-button" 
@@ -879,6 +933,7 @@
     const searchText = searchInput.value.trim();
     
     // Update UI state
+    searchButton.classList.remove('animate');
     searchButton.classList.add('loading');
     searchButton.disabled = true;
     
@@ -897,6 +952,17 @@
         searchButton.classList.remove('loading');
         searchButton.disabled = false;
       });
+  }
+
+  function handleSearchInput() {
+      const searchInput = document.getElementById('searchInput');
+      const searchButton = document.getElementById('searchButton');
+      
+      if (searchInput.value.trim().length > 0) {
+          searchButton.classList.add('animate');
+      } else {
+          searchButton.classList.remove('animate');
+      }
   }
 
   function clearSearch() {
