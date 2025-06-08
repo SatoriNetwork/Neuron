@@ -892,10 +892,10 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             streamPairs = StreamPairs(
                 self.subscriptions,
                 StartupDag.predictionStreams(self.publications))
+            subscriptions, publications = streamPairs.get_matched_pairs()
             self.streamDisplay = [
                 self.streamDisplayer(subscription)
-                for subscription in self.subscriptions]
-            subscriptions, publications = streamPairs.get_matched_pairs()
+                for subscription in subscriptions]
             predictionStreamsToPredict = config.get().get('prediction stream', None)
             if predictionStreamsToPredict is not None:
                 streamsLen = int(predictionStreamsToPredict)
