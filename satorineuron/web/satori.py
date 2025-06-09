@@ -972,15 +972,16 @@ def sendSatoriTransactionUsing(
 
     def acceptSubmittion(sendSatoriForm):
         def refreshWallet():
-            time.sleep(10)
             myWallet.get()
             myWallet.updateBalances()
             myWallet.getReadyToSend()
 
         logging.debug('balance one:', myWallet.balance.amount, myWallet.currency.amount, color='magenta')
-        if myWallet.shouldPullUnspents():
+        start.walletManager.connect()
+        #if myWallet.shouldPullUnspents():
             # we call this on page load, don't call unless balance has changed
-            myWallet.getReadyToSend()
+        #    myWallet.getReadyToSend()
+        refreshWallet()
         if myWallet.isEncrypted:
             return 'Vault is encrypted, please unlock it and try again.'
         logging.debug('balance two:', myWallet.balance.amount, myWallet.currency.amount, color='magenta')
@@ -994,6 +995,7 @@ def sendSatoriTransactionUsing(
             flash(f'unable to send Transaction: {transactionResult.msg}')
             refreshWallet()
             return flash(transactionResult.msg)
+        time.sleep(10)
         refreshWallet()
         return transactionResult.msg
 
