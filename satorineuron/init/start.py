@@ -29,7 +29,7 @@ from satorineuron import logging
 from satorineuron import config
 from satorineuron.init import engine
 from satorineuron.init.tag import LatestTag, Version
-from satorineuron.init.wallet import WalletVaultManager
+from satorineuron.init.wallet import WalletManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, UiEndpoint, StartupDagStruct
@@ -103,7 +103,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.sendToUI = sendToUI or (lambda x: None)
         logging.debug(f'mode: {self.runMode.name}', print=True)
         self.userInteraction = time.time()
-        self.walletVaultManager: WalletVaultManager
+        self.walletManager: WalletManager
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
         # self.chatUpdates: BehaviorSubject = BehaviorSubject(None)
@@ -212,11 +212,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def vault(self) -> EvrmoreWallet:
-        return self.walletVaultManager.vault
+        return self.walletManager.vault
 
     @property
     def wallet(self) -> EvrmoreWallet:
-        return self.walletVaultManager.wallet
+        return self.walletManager.wallet
 
     @property
     def holdingBalance(self) -> float:
@@ -357,32 +357,28 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
 
     def setupWalletManager(self):
-        self.walletVaultManager = WalletVaultManager(
-            updateConnectionStatus=self.updateConnectionStatus,
-            persistent=self.runMode == RunMode.wallet,
-            useElectrumx=self.runMode != RunMode.worker)
-        self.walletVaultManager.setup()
+        self.walletManager = WalletManager.create(
+            update_connection_status=self.updateConnectionStatus)
 
     def shutdownWallets(self):
-        self.walletVaultManager.disconnect()
-        self.walletVaultManager.electrumx = None
-        self.walletVaultManager._wallet = None
-        self.walletVaultManager._vault = None
+        self.walletManager._electrumx = None
+        self.walletManager._wallet = None
+        self.walletManager._vault = None
 
     def closeVault(self):
-        self.walletVaultManager.closeVault()
+        self.walletManager.close_vault()
 
     def openVault(self, password: Union[str, None] = None, create: bool = False):
-        return self.walletVaultManager.openVault(password=password, create=create)
+        return self.walletManager.open_vault(password=password, create=create)
 
     def getWallet(self, **kwargs):
-        return self.walletVaultManager.getWallet()
+        return self.walletManager.wallet
 
     def getVault(self, password: Union[str, None] = None, create: bool = False) -> Union[EvrmoreWallet, None]:
-        return self.walletVaultManager.getVault(password=password, create=create)
+        return self.walletManager.open_vault(password=password, create=create)
 
     def electrumxCheck(self):
-        self.walletVaultManager.electrumxCheck()
+        self.walletManager.is_connected()
 
     def watchForVersionUpdates(self):
         """
@@ -426,7 +422,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def userInteracted(self):
         self.userInteraction = time.time()
         # tell engines or managers the user interacted, incase they care:
-        self.walletVaultManager.userInteracted()
+        self.walletManager.userInteracted()
 
     def delayedEngine(self):
         time.sleep(60 * 60 * 6)
@@ -479,13 +475,13 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60 * 60)
         self.ranOnce = True
         if self.walletOnlyMode:
-            self.walletVaultManager.setupWalletAndVault()
+            self.walletManager.setupWalletAndVault()
             self.createServerConn()
             self.checkin()
             self.getBalances()
             logging.info("in WALLETONLYMODE")
             return
-        self.walletVaultManager.setupWalletAndVault()
+        self.walletManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
@@ -500,7 +496,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def startWalletOnly(self):
         """start the satori engine."""
         logging.info("running in walletOnly mode", color="blue")
-        self.walletVaultManager.setupWalletAndVault()
+        self.walletManager.setupWalletAndVault()
         self.createServerConn()
         return
 
@@ -509,8 +505,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info("running in worker mode", color="blue")
         await self.connectToDataServer()
         asyncio.create_task(self.stayConnectedForever())
-        self.walletVaultManager.setupWalletAndVault()
-        #self.walletVaultManager.setupWalletAndVaultIdentities()
+        self.walletManager.setupWalletAndVault()
+        #self.walletManager.setupWalletAndVaultIdentities()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
@@ -620,6 +616,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def getBalances(self):
         '''
+        we get this from the server, not electrumx
         example:
         {
             'currency': 100,
@@ -630,6 +627,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         success, self.balances = self.server.getBalances()
         if not success:
             logging.warning("Failed to get balances from server")
+        return success, self.balances
     
     def getBalance(self, currency: str = 'currency') -> float:
         return self.balances.get(currency, 0)
