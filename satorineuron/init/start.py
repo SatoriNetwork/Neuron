@@ -378,7 +378,16 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.walletManager.open_vault(password=password, create=create)
 
     def electrumxCheck(self):
-        self.walletManager.is_connected()
+        if self.walletManager.is_connected():
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.electrumx, 
+                status=True)
+            return True
+        else:
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.electrumx, 
+                status=False)
+            return False
 
     def watchForVersionUpdates(self):
         """
@@ -418,11 +427,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             target=watchForever,
             daemon=True)
         self.watchVersionThread.start()
-
-    def userInteracted(self):
-        self.userInteraction = time.time()
-        # tell engines or managers the user interacted, incase they care:
-        self.walletManager.userInteracted()
 
     def delayedEngine(self):
         time.sleep(60 * 60 * 6)
@@ -475,13 +479,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60 * 60)
         self.ranOnce = True
         if self.walletOnlyMode:
-            self.walletManager.setupWalletAndVault()
             self.createServerConn()
             self.checkin()
             self.getBalances()
             logging.info("in WALLETONLYMODE")
             return
-        self.walletManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
@@ -496,7 +498,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def startWalletOnly(self):
         """start the satori engine."""
         logging.info("running in walletOnly mode", color="blue")
-        self.walletManager.setupWalletAndVault()
         self.createServerConn()
         return
 
@@ -505,8 +506,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info("running in worker mode", color="blue")
         await self.connectToDataServer()
         asyncio.create_task(self.stayConnectedForever())
-        self.walletManager.setupWalletAndVault()
-        #self.walletManager.setupWalletAndVaultIdentities()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
@@ -577,7 +576,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         self.setRewardAddress(globally=True)
 
                 self.updateConnectionStatus(
-                    connTo=ConnectionTo.central, status=True)
+                    connTo=ConnectionTo.central, 
+                    status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
                 self.poolIsAccepting = bool(
@@ -608,7 +608,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 break
             except Exception as e:
                 self.updateConnectionStatus(
-                    connTo=ConnectionTo.central, status=False)
+                    connTo=ConnectionTo.central,
+                    status=False)
                 logging.warning(f"connecting to central err: {e}")
             x = x * 1.5 if x < 60 * 60 * 6 else 60 * 60 * 6
             logging.warning(f"trying again in {x}")
