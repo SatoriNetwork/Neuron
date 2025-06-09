@@ -368,19 +368,19 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.walletManager._vault = None
 
     def closeVault(self):
-        self.walletManager.close_vault()
+        self.walletManager.closeVault()
 
     def openVault(self, password: Union[str, None] = None, create: bool = False):
-        return self.walletManager.open_vault(password=password, create=create)
+        return self.walletManager.openVault(password=password, create=create)
 
     def getWallet(self, **kwargs):
         return self.walletManager.wallet
 
     def getVault(self, password: Union[str, None] = None, create: bool = False) -> Union[EvrmoreWallet, None]:
-        return self.walletManager.open_vault(password=password, create=create)
+        return self.walletManager.openVault(password=password, create=create)
 
     def electrumxCheck(self):
-        if self.walletManager.is_connected():
+        if self.walletManager.isConnected():
             self.updateConnectionStatus(
                 connTo=ConnectionTo.electrumx, 
                 status=True)

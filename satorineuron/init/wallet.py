@@ -13,34 +13,34 @@ class WalletManager:
 
     @staticmethod
     def create(
-        wallet_path: Optional[str] = "wallet.yaml",
-        vault_path: Optional[str] = "vault.yaml",
-        vault_password: Optional[str] = None,
-        cache_path: Optional[str] = None,
-        peers_cache: Optional[str] = None,
-        update_connection_status: Optional[Callable] = None
+        walletPath: Optional[str] = "wallet.yaml",
+        vaultPath: Optional[str] = "vault.yaml",
+        vaultPassword: Optional[str] = None,
+        cachePath: Optional[str] = None,
+        peersCache: Optional[str] = None,
+        updateConnectionStatus: Optional[Callable] = None
     ) -> 'WalletManager':
         """
         Create a new WalletManager instance with wallet and vault.
         
         Args:
-            wallet_path: Path to the wallet YAML file
-            vault_path: Path to the vault YAML file
-            vault_password: Password for the vault
-            cache_path: Path to cache directory
-            peers_cache: Path to peers cache file
+            walletPath: Path to the wallet YAML file
+            vaultPath: Path to the vault YAML file
+            vaultPassword: Password for the vault
+            cachePath: Path to cache directory
+            peersCache: Path to peers cache file
         """
-        wallet_path = wallet_path or config.walletPath('wallet.yaml')
-        vault_path = vault_path or config.walletPath('vault.yaml')
-        vault_password = vault_password or str(config.get().get('vault password'))
+        walletPath = walletPath or config.walletPath('wallet.yaml')
+        vaultPath = vaultPath or config.walletPath('vault.yaml')
+        vaultPassword = vaultPassword or str(config.get().get('vault password'))
         
         # Only create vault if we have both a password and the file doesn't exist yet
-        create_vault = vault_password is not None and not os.path.exists(vault_path)
+        createVault = vaultPassword is not None and not os.path.exists(vaultPath)
         
         WalletManager.performMigrationBackup("wallet")
         WalletManager.performMigrationBackup("vault")
         manager = WalletManager()
-        manager.setup(wallet_path, vault_path, vault_password, create_vault, cache_path, peers_cache, update_connection_status)
+        manager.setup(walletPath, vaultPath, vaultPassword, createVault, cachePath, peersCache, updateConnectionStatus)
         return manager
 
     @staticmethod
@@ -57,56 +57,46 @@ class WalletManager:
         self._wallet: Optional[EvrmoreWallet] = None
         self._vault: Optional[EvrmoreWallet] = None
         self._electrumx: Optional[Electrumx] = None
-        self._update_connection_status: Optional[Callable] = None
-
-    @property
-    def wallet(self) -> Optional[EvrmoreWallet]:
-        """Get the wallet instance without ensuring connection."""
-        return self._wallet
-
-    @property
-    def vault(self) -> Optional[EvrmoreWallet]:
-        """Get the vault instance without ensuring connection."""
-        return self._vault
+        self._updateConnectionStatus: Optional[Callable] = None
 
     def setup(
         self,
-        wallet_path: str,
-        vault_path: str,
-        vault_password: str,
-        create_vault: bool,
-        cache_path: Optional[str] = None,
-        peers_cache: Optional[str] = None,
-        update_connection_status: Optional[Callable] = None,
+        walletPath: str,
+        vaultPath: str,
+        vaultPassword: str,
+        createVault: bool,
+        cachePath: Optional[str] = None,
+        peersCache: Optional[str] = None,
+        updateConnectionStatus: Optional[Callable] = None,
     ):
-        self._initialize_wallet(wallet_path, cache_path, peers_cache)
-        self._initialize_vault(vault_path, cache_path, peers_cache, vault_password, create_vault)
-        self._update_connection_status = update_connection_status
+        self._initializeWallet(walletPath, cachePath, peersCache)
+        self._initializeVault(vaultPath, cachePath, peersCache, vaultPassword, createVault)
+        self._updateConnectionStatus = updateConnectionStatus
 
-    def _initialize_wallet(
+    def _initializeWallet(
         self,
-        wallet_path: str,
-        cache_path: Optional[str] = None,
-        peers_cache: Optional[str] = None,
+        walletPath: str,
+        cachePath: Optional[str] = None,
+        peersCache: Optional[str] = None,
     ) -> EvrmoreWallet:
         """Initialize the wallet, which doesn't require a password."""
         if self._wallet is not None:
             return self._wallet
         self._wallet = EvrmoreWallet.create(
-            walletPath=wallet_path,
-            cachePath=cache_path,
-            identity=EvrmoreIdentity(wallet_path),
+            walletPath=walletPath,
+            cachePath=cachePath,
+            identity=EvrmoreIdentity(walletPath),
             persistent=False,  # We want lazy connection
-            cachedPeersFile=peers_cache
+            cachedPeersFile=peersCache
         )
         logging.info('initialized wallet', color='green')
         return self._wallet
 
-    def _initialize_vault(
+    def _initializeVault(
         self,
-        vault_path: str,
-        cache_path: Optional[str] = None,
-        peers_cache: Optional[str] = None,
+        vaultPath: str,
+        cachePath: Optional[str] = None,
+        peersCache: Optional[str] = None,
         password: Union[str, None] = None,
         create: bool = False,
     ) -> Union[EvrmoreWallet, None]:
@@ -118,7 +108,7 @@ class WalletManager:
         """
         try:
             # Case 1: No vault file and no password - wait for password
-            if not os.path.exists(vault_path) and not create:
+            if not os.path.exists(vaultPath) and not create:
                 return None
 
             # Case 2: Existing vault instance - handle password updates
@@ -137,11 +127,11 @@ class WalletManager:
 
             # Case 3: Create new vault or load existing vault
             self._vault = EvrmoreWallet.create(
-                walletPath=vault_path,
-                identity=EvrmoreIdentity(vault_path, password=password),
-                cachePath=cache_path,
+                walletPath=vaultPath,
+                identity=EvrmoreIdentity(vaultPath, password=password),
+                cachePath=cachePath,
                 persistent=False,  # We want lazy connection
-                cachedPeersFile=peers_cache
+                cachedPeersFile=peersCache
             )
             logging.info('initialized vault', color='green')
             return self._vault
@@ -156,7 +146,7 @@ class WalletManager:
         Returns True if connection is successful, False otherwise.
         """
         try:
-            if not self.is_connected():
+            if not self.isConnected():
                 # Try to reconnect if needed
                 try:
                     self._electrumx.reconnect()
@@ -170,17 +160,17 @@ class WalletManager:
                 hostPorts=config.get().get('electrumx servers'),
                 persistent=False)
             
-            if self.is_connected():
+            if self.isConnected():
                 # Update wallet and vault with current electrumx instance
                 if self._wallet:
                     self._wallet.electrumx = self._electrumx
                 if self._vault:
                     self._vault.electrumx = self._electrumx
-                self._update_connection_status(
+                self._updateConnectionStatus(
                     connTo=ConnectionTo.electrumx,
                     status=True)
                 return True
-            self._update_connection_status(
+            self._updateConnectionStatus(
                 connTo=ConnectionTo.electrumx,
                 status=False)
             return False
@@ -188,14 +178,24 @@ class WalletManager:
             logging.error(f"Failed to establish Electrumx connection: {e}")
             return False
 
-    def is_connected(self) -> bool:
+    def isConnected(self) -> bool:
         """Check if there is a valid and active Electrumx connection."""
         return (
             self._electrumx is not None 
-            and self._electrumx.connected() 
+            and self._electrumx.connected()
         )
 
-    def open_vault(
+    @property
+    def wallet(self) -> Optional[EvrmoreWallet]:
+        """Get the wallet instance without ensuring connection."""
+        return self._wallet
+
+    @property
+    def vault(self) -> Optional[EvrmoreWallet]:
+        """Get the vault instance without ensuring connection."""
+        return self._vault
+
+    def openVault(
         self,
         password: Union[str, None] = None,
         create: bool = False,
@@ -205,10 +205,10 @@ class WalletManager:
                 return self._vault
             self._vault.open(password)
             return self._vault
-        return self._initialize_vault(password=password, create=create)
+        return self._initializeVault(password=password, create=create)
 
-    def close_vault(self) -> Union[EvrmoreWallet, None]:
-        ''' close the vault, reopen it without decrypting it. '''
+    def closeVault(self) -> Union[EvrmoreWallet, None]:
+        """Close the vault, reopen it without decrypting it."""
         if isinstance(self._vault, EvrmoreWallet):
             self._vault.close()
         return self._vault
