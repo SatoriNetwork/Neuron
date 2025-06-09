@@ -615,7 +615,6 @@ def import_wallet():
 
         # Restart wallet service
         start.setupWalletManager()
-        start.walletVaultManager.setupWalletAndVault()
 
         # Backups are retained, no cleanup performed
         return jsonify({'success': True, 'backup': backupPath})
@@ -738,13 +737,6 @@ def modeDark():
 # def testconnected():
 #    logging.debug(start.wallet.connected())
 #    return redirect(url_for('dashboard'))
-
-
-@app.route('/test/disconnect', methods=['GET'])
-@userInteracted
-def testdisconnect():
-    logging.debug(start.walletVaultManager.disconnect())
-    return redirect(url_for('dashboard'))
 
 
 # @app.route('/test/connect', methods=['GET'])
