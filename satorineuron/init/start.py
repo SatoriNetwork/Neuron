@@ -360,7 +360,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def setupWalletManager(self):
         self.walletManager = WalletManager.create(
-            update_connection_status=self.updateConnectionStatus)
+            updateConnectionStatus=self.updateConnectionStatus)
 
     def shutdownWallets(self):
         self.walletManager._electrumx = None
