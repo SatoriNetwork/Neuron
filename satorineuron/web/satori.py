@@ -1392,7 +1392,7 @@ def dashboard():
         #     [model.miniOverview() for model in start.engine.models]
         #     if start.engine is not None else [])  # StreamOverviews.demo()
         streamOverviews = [stream for stream in start.streamDisplay]
-        holdingBalance = start.refreshBalance()
+        holdingBalance = start.refreshBalance() #TODO: don't refresh on dashboard load - it's an electrumx connection - make a button instead.
         holdingBalanceBase = start.holdingBalanceBase
         stakeStatus = holdingBalance + holdingBalanceBase  >= start.stakeRequired or (
             start.details.wallet.get('rewardaddress', None) not in [
