@@ -180,3 +180,8 @@ CMD ["bash", "./start_from_image.sh"]
 # docker buildx build --no-cache -f Dockerfile --platform linux/arm64             --build-arg GPU_FLAG=$GPU_FLAG --build-arg BRANCH_FLAG=$BRANCH_FLAG --build-arg GITHUB_USERNAME=$GITHUB_USERNAME --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t satorinet/satorineuron:rpi_satori   --push .
 # unset GITHUB_USERNAME GITHUB_TOKEN
 # echo "Done!"
+
+
+# p2p
+# docker run --rm -it --name satorineuron --network host -v ~/repos/Satori/Neuron:/Satori/Neuron -v ~/repos/Satori/Lib:/Satori/Lib -v ~/repos/Satori/Engine:/Satori/Engine --env ENV=testprod satorinet/satorineuron:p2p bash
+# docker exec -it satorineuron bash
