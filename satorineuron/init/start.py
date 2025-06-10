@@ -348,6 +348,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         else:
         #    print("Ethereum address not found")
             return ""
+        
     @property
     def evrvaultaddressforward(self) -> str:
         evrvaultaddress = self.details.wallet.get('vaultaddress', '')
@@ -356,7 +357,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         else:
         #    print("EVR Vault address not found")
             return ""
-
 
     def setupWalletManager(self):
         self.walletManager = WalletManager.create(
