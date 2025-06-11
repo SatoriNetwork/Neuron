@@ -66,7 +66,7 @@ def acceptRelaySubmission(start: 'StartupDag', data: dict):
     start.publish(
         topic=StreamId(
             source=data.get('source', 'satori'),
-            author=start.wallet.publicKey,
+            author=start.wallet.pubkey,
             stream=data.get('name'),
             target=data.get('target')).jsonId,
         data=data.get('data'),
@@ -120,7 +120,7 @@ def registerDataStream(start: 'StartupDag', data: dict, restart: bool = True):
     # if already exists, remove it
     thisStream = StreamId(
         source=data.get('source', 'satori'),
-        author=start.wallet.publicKey,
+        author=start.wallet.pubkey,
         stream=data.get('name'),
         target=data.get('target'))
     if thisStream in [s.streamId for s in start.relay.streams]:

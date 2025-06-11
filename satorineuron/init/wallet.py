@@ -13,8 +13,8 @@ class WalletManager:
 
     @staticmethod
     def create(
-        walletPath: Optional[str] = "wallet.yaml",
-        vaultPath: Optional[str] = "vault.yaml",
+        walletPath: Optional[str] = None,
+        vaultPath: Optional[str] = None,
         vaultPassword: Optional[str] = None,
         cachePath: Optional[str] = None,
         peersCache: Optional[str] = None,

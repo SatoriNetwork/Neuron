@@ -39,7 +39,7 @@ class ValidateRelayStream(object):
         from satorineuron.init.start import getStart
         streamId = StreamId(
             source=source,
-            author=getStart().wallet.publicKey,
+            author=getStart().wallet.pubkey,
             stream=name,
             target=target)
         if streamId in self.claimed:
@@ -48,7 +48,7 @@ class ValidateRelayStream(object):
             return {}
         r = getStart().server.getStreams(stream={
             'source': source,
-            'pubkey': getStart().wallet.publicKey,
+            'pubkey': getStart().wallet.pubkey,
             'stream': name,
             **({'target': target} if target is not None else {})})
         if r.text == 'no streams found':
@@ -60,7 +60,7 @@ class ValidateRelayStream(object):
         from satorineuron.init.start import getStart
         streamId = StreamId(
             source=data.get('source', 'satori'),
-            author=getStart().wallet.publicKey,
+            author=getStart().wallet.pubkey,
             stream=data.get('name'),
             target=data.get('target'))
         if streamId in self.claimed:
@@ -73,7 +73,7 @@ class ValidateRelayStream(object):
 
         r = getStart().server.registerStream(stream={
             'source': data.get('source', 'satori'),
-            'pubkey': getStart().wallet.publicKey,
+            'pubkey': getStart().wallet.pubkey,
             'stream': data.get('name'),
             'target': data.get('target', ''),
             'cadence': data.get('cadence'),
@@ -98,10 +98,10 @@ class ValidateRelayStream(object):
         '''
         from satorineuron.init.start import getStart
         r = getStart().server.registerSubscription(subscription={
-            'author': {'pubkey': getStart().wallet.publicKey, },
+            'author': {'pubkey': getStart().wallet.pubkey, },
             'stream': {
                 'source': data.get('source', 'satori'),
-                'pubkey': getStart().wallet.publicKey,
+                'pubkey': getStart().wallet.pubkey,
                 'stream': data.get('name'),
                 'target': data.get('target', ''),
                 'cadence': data.get('cadence'),
@@ -122,7 +122,7 @@ class ValidateRelayStream(object):
         from satorineuron.init.start import getStart
         streamId = StreamId(
             source=data.get('source', 'satori'),
-            author=getStart().wallet.publicKey,
+            author=getStart().wallet.pubkey,
             stream=data.get('name'),
             target=data.get('target'))
         config.put(
@@ -265,7 +265,7 @@ class ValidateRelayStream(object):
             saver = RelayStreamHistorySaver(
                 id=StreamId(
                     source=data.get('source', 'satori'),
-                    author=getStart().wallet.publicKey,
+                    author=getStart().wallet.pubkey,
                     stream=data.get('name'),
                     target=data.get('target')))
             values = historyInstance.getAll()
@@ -360,7 +360,7 @@ class RelayStreamHistorySaver(Cached):
         # no need to register pin at the time.
         # peer = getStart().ipfs.address()
         # payload = {
-        #    'author': {'pubkey': getStart().wallet.publicKey},
+        #    'author': {'pubkey': getStart().wallet.pubkey},
         #    'stream': self.id.mapId,
         #    'ipfs': pinAddress,
         #    'disk': system.directorySize(path),

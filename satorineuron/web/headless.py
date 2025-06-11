@@ -140,7 +140,7 @@ def mineToAddress(address: str):
     vault = start.getVault(network=network)
     success, result = start.server.mineToAddress(
         vaultSignature=vault.sign(address),
-        vaultPubkey=vault.publicKey,
+        vaultPubkey=vault.pubkey,
         address=address)
     if success:
         return 'OK', 200
@@ -156,7 +156,7 @@ def stakeForAddress(address: str):
     vault = start.getVault(network=network)
     success, result = start.server.stakeForAddress(
         vaultSignature=vault.sign(address),
-        vaultPubkey=vault.publicKey,
+        vaultPubkey=vault.pubkey,
         address=address)
     if success:
         return 'OK', 200

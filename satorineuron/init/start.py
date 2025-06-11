@@ -557,7 +557,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         ip=self.ip,
                         vaultInfo={
                             'vaultaddress': vault.address, 
-                            'vaultpubkey': vault.publicKey,
+                            'vaultpubkey': vault.pubkey,
                         } if isinstance(vault, EvrmoreWallet) else None))
                 
                 if self.details.get('sponsor') != self.invitedBy:
@@ -630,7 +630,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         success, self.balances = self.server.getBalances()
         if not success:
             logging.warning("Failed to get balances from server")
-        return success, self.balances
+        return self.getBalance()
     
     def getBalance(self, currency: str = 'currency') -> float:
         return self.balances.get(currency, 0)
@@ -656,7 +656,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ):
             self.server.setRewardAddress(
                 signature=self.wallet.sign(self.configRewardAddress),
-                pubkey=self.wallet.publicKey,
+                pubkey=self.wallet.pubkey,
                 address=self.configRewardAddress)
             return True
         return False
@@ -752,7 +752,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 engine.establishConnection(
                     subscription=False,
                     url=pubsubMachine,
-                    pubkey=self.wallet.publicKey + ":publishing",
+                    pubkey=self.wallet.pubkey + ":publishing",
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
 
