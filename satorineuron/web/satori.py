@@ -1430,8 +1430,14 @@ def dashboard():
             'vaultPasswordForm': presentVaultPasswordForm(),
         }))
 
-
-
+@app.route('/fetch/vault/balance/electrumx', methods=['GET'])
+@authRequired
+def fetchWalletBalanceFromElectrumx():
+    holdingBalanceVault = start.refreshBalance(forVault=True, threaded=False)
+    return jsonify({
+        'holdingBalance': holdingBalanceVault, 
+        'holdingBalanceBase': 0  
+    })
 
 @app.route('/fetch/wallet/stats/daily', methods=['GET'])
 @authRequired
