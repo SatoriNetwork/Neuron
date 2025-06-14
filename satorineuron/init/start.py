@@ -29,7 +29,7 @@ from satorineuron import logging
 from satorineuron import config
 from satorineuron.init import engine
 from satorineuron.init.tag import LatestTag, Version
-from satorineuron.init.wallet import WalletVaultManager
+from satorineuron.init.wallet import WalletManager
 from satorineuron.common.structs import ConnectionTo
 from satorineuron.relay import RawStreamRelayEngine, ValidateRelayStream
 from satorineuron.structs.start import RunMode, UiEndpoint, StartupDagStruct
@@ -103,7 +103,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         self.sendToUI = sendToUI or (lambda x: None)
         logging.debug(f'mode: {self.runMode.name}', print=True)
         self.userInteraction = time.time()
-        self.walletVaultManager: WalletVaultManager
+        self.walletManager: WalletManager
         self.asyncThread: AsyncThread = AsyncThread()
         self.isDebug: bool = isDebug
         # self.chatUpdates: BehaviorSubject = BehaviorSubject(None)
@@ -212,11 +212,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     @property
     def vault(self) -> EvrmoreWallet:
-        return self.walletVaultManager.vault
+        return self.walletManager.vault
 
     @property
     def wallet(self) -> EvrmoreWallet:
-        return self.walletVaultManager.wallet
+        return self.walletManager.wallet
 
     @property
     def holdingBalance(self) -> float:
@@ -230,6 +230,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self._holdingBalance
 
     def refreshBalance(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        self.walletManager.connect()
         if forWallet and isinstance(self.wallet, EvrmoreWallet):
             if threaded:
                 threading.Thread(target=self.wallet.get).start()
@@ -243,6 +244,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         return self.holdingBalance
 
     def refreshUnspents(self, threaded: bool = True, forWallet: bool = True, forVault: bool = True):
+        self.walletManager.connect()
         if forWallet and isinstance(self.wallet, EvrmoreWallet):
             if threaded:
                 threading.Thread(target=self.wallet.getReadyToSend).start()
@@ -346,6 +348,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         else:
         #    print("Ethereum address not found")
             return ""
+        
     @property
     def evrvaultaddressforward(self) -> str:
         evrvaultaddress = self.details.wallet.get('vaultaddress', '')
@@ -355,34 +358,38 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         #    print("EVR Vault address not found")
             return ""
 
-
     def setupWalletManager(self):
-        self.walletVaultManager = WalletVaultManager(
-            updateConnectionStatus=self.updateConnectionStatus,
-            persistent=self.runMode == RunMode.wallet,
-            useElectrumx=self.runMode != RunMode.worker)
-        self.walletVaultManager.setup()
+        self.walletManager = WalletManager.create(
+            updateConnectionStatus=self.updateConnectionStatus)
 
     def shutdownWallets(self):
-        self.walletVaultManager.disconnect()
-        self.walletVaultManager.electrumx = None
-        self.walletVaultManager._wallet = None
-        self.walletVaultManager._vault = None
+        self.walletManager._electrumx = None
+        self.walletManager._wallet = None
+        self.walletManager._vault = None
 
     def closeVault(self):
-        self.walletVaultManager.closeVault()
+        self.walletManager.closeVault()
 
     def openVault(self, password: Union[str, None] = None, create: bool = False):
-        return self.walletVaultManager.openVault(password=password, create=create)
+        return self.walletManager.openVault(password=password, create=create)
 
     def getWallet(self, **kwargs):
-        return self.walletVaultManager.getWallet()
+        return self.walletManager.wallet
 
     def getVault(self, password: Union[str, None] = None, create: bool = False) -> Union[EvrmoreWallet, None]:
-        return self.walletVaultManager.getVault(password=password, create=create)
+        return self.walletManager.openVault(password=password, create=create)
 
     def electrumxCheck(self):
-        self.walletVaultManager.electrumxCheck()
+        if self.walletManager.isConnected():
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.electrumx, 
+                status=True)
+            return True
+        else:
+            self.updateConnectionStatus(
+                connTo=ConnectionTo.electrumx, 
+                status=False)
+            return False
 
     def watchForVersionUpdates(self):
         """
@@ -422,11 +429,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             target=watchForever,
             daemon=True)
         self.watchVersionThread.start()
-
-    def userInteracted(self):
-        self.userInteraction = time.time()
-        # tell engines or managers the user interacted, incase they care:
-        self.walletVaultManager.userInteracted()
 
     def delayedEngine(self):
         time.sleep(60 * 60 * 6)
@@ -479,13 +481,11 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
             time.sleep(60 * 60)
         self.ranOnce = True
         if self.walletOnlyMode:
-            self.walletVaultManager.setupWalletAndVault()
             self.createServerConn()
             self.checkin()
             self.getBalances()
             logging.info("in WALLETONLYMODE")
             return
-        self.walletVaultManager.setupWalletAndVault()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
@@ -500,7 +500,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def startWalletOnly(self):
         """start the satori engine."""
         logging.info("running in walletOnly mode", color="blue")
-        self.walletVaultManager.setupWalletAndVault()
         self.createServerConn()
         return
 
@@ -509,8 +508,6 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         logging.info("running in worker mode", color="blue")
         await self.connectToDataServer()
         asyncio.create_task(self.stayConnectedForever())
-        self.walletVaultManager.setupWalletAndVault()
-        #self.walletVaultManager.setupWalletAndVaultIdentities()
         self.setMiningMode()
         self.createRelayValidation()
         self.createServerConn()
@@ -560,7 +557,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         ip=self.ip,
                         vaultInfo={
                             'vaultaddress': vault.address, 
-                            'vaultpubkey': vault.publicKey,
+                            'vaultpubkey': vault.pubkey,
                         } if isinstance(vault, EvrmoreWallet) else None))
                 
                 if self.details.get('sponsor') != self.invitedBy:
@@ -581,7 +578,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                         self.setRewardAddress(globally=True)
 
                 self.updateConnectionStatus(
-                    connTo=ConnectionTo.central, status=True)
+                    connTo=ConnectionTo.central, 
+                    status=True)
                 # logging.debug(self.details, color='magenta')
                 self.key = self.details.key
                 self.poolIsAccepting = bool(
@@ -612,7 +610,8 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 break
             except Exception as e:
                 self.updateConnectionStatus(
-                    connTo=ConnectionTo.central, status=False)
+                    connTo=ConnectionTo.central,
+                    status=False)
                 logging.warning(f"connecting to central err: {e}")
             x = x * 1.5 if x < 60 * 60 * 6 else 60 * 60 * 6
             logging.warning(f"trying again in {x}")
@@ -620,6 +619,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
 
     def getBalances(self):
         '''
+        we get this from the server, not electrumx
         example:
         {
             'currency': 100,
@@ -630,6 +630,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         success, self.balances = self.server.getBalances()
         if not success:
             logging.warning("Failed to get balances from server")
+        return self.getBalance()
     
     def getBalance(self, currency: str = 'currency') -> float:
         return self.balances.get(currency, 0)
@@ -655,7 +656,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         ):
             self.server.setRewardAddress(
                 signature=self.wallet.sign(self.configRewardAddress),
-                pubkey=self.wallet.publicKey,
+                pubkey=self.wallet.pubkey,
                 address=self.configRewardAddress)
             return True
         return False
@@ -751,7 +752,7 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
                 engine.establishConnection(
                     subscription=False,
                     url=pubsubMachine,
-                    pubkey=self.wallet.publicKey + ":publishing",
+                    pubkey=self.wallet.pubkey + ":publishing",
                     emergencyRestart=self.emergencyRestart,
                     key=signature.decode() + "|" + self.oracleKey))
 

@@ -20,5 +20,5 @@ eserver = SatoriServerClient(e, url=urlServer)
 edetails = CheckinDetails(eserver.checkin(referrer=referrer))
 edetails.key[0:5]
 signature = e.sign(edetails.key)
-esub = SatoriPubSubConn(uid=e.publicKey, router=print, payload=f'{signature.decode()}|{edetails.key}',
+esub = SatoriPubSubConn(uid=e.pubkey, router=print, payload=f'{signature.decode()}|{edetails.key}',
                         url='ws://pubsub.satorinet.io:3002', onConnect=lambda: print('connected-'), onDisconnect=lambda: print('-disconnected'))

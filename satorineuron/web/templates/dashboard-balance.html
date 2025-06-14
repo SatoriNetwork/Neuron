@@ -1,24 +1,83 @@
 {% block content %}
-  <style>
-    /* Styles removed - no longer needed */
-  </style>
-
   <div class="col-xl-3 col-lg-3 col-sm-12 mb-xl-0 mb-4">
     <div class="card {% if darkmode %}dark-colors{% endif %}">
       <div class="card-header p-3 pt-2 {% if darkmode %}dark-colors{% endif %}">
-        <div class="text-center pt-3" style="display:block;">
-          <h6 class="text-center {% if darkmode %}dark-colors{% endif %}" style="font-size: 17px; vertical-align: middle;">
+        <div class="position-relative pt-3 mb-3">
+          <h6 class="text-center {% if darkmode %}dark-colors{% endif %} mb-0" style="font-size: 17px;">
             Holdings
           </h6>
+          <button id="refresh-btn" class="btn btn-link text-dark p-0 position-absolute" style="top: 50%; right: 0; transform: translateY(-50%); margin: 0;" onclick="refreshBalance();" title="refresh balance">
+            <i class="material-icons {% if darkmode %}dark-text{% endif %}" style="font-size: 20px;">refresh</i>
+          </button>
         </div>
-        <div class="text-center" style="padding-top:2rem; padding-bottom:3rem;">
-          <h4 class="mb-0 {% if darkmode %}dark-colors{% endif %}">
+        <div class="text-center" style="padding-top:1rem; padding-bottom:3rem;">
+          <h4 id="balance-amount" class="mb-0 {% if darkmode %}dark-colors{% endif %}">
             {{ "%.3f"|format(((holdingBalance | default(0)) + (holdingBalanceBase | default(0))) | round(3)) }}
           </h4>
           <p class="text-sm text-capitalize {% if darkmode %}dark-colors{% endif %}" style="margin-bottom:0;">SATORI</p>
         </div>
       </div>
-      <div class="card-footer p-1"></div>
+      <div class="card-footer p-2"></div>
     </div>
   </div>
+
+  <script>
+    function refreshBalance() {
+      const refreshBtn = document.getElementById('refresh-btn');
+      const balanceElement = document.getElementById('balance-amount');
+      const refreshIcon = refreshBtn.querySelector('i');
+      
+      // Disable button and show loading state
+      refreshBtn.disabled = true;
+      refreshIcon.style.animation = 'spin 1s linear infinite';
+      
+      // Add CSS for spin animation if not already present
+      if (!document.querySelector('#spin-animation-style')) {
+        const style = document.createElement('style');
+        style.id = 'spin-animation-style';
+        style.textContent = `
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      // Make AJAX request to refresh balance
+      fetch('/fetch/vault/balance/electrumx', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(balanceData => {
+        console.log('Received balance data:', balanceData);
+        
+        // Update the balance display
+        const totalBalance = (balanceData.holdingBalance || 0) + (balanceData.holdingBalanceBase || 0);
+        balanceElement.textContent = totalBalance.toFixed(3);
+        
+        // Show success feedback
+        refreshIcon.style.color = 'green';
+      })
+      .catch(error => {
+        console.error('Error refreshing balance:', error);
+        
+        // Show error feedback
+        refreshIcon.style.color = 'red';
+      })
+      .finally(() => {
+        // Re-enable button and stop loading animation
+        refreshBtn.disabled = false;
+        refreshIcon.style.animation = '';
+      });
+    }
+  </script>
 {% endblock %}
