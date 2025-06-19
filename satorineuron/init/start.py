@@ -480,6 +480,14 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
         if self.ranOnce:
             time.sleep(60 * 60)
         self.ranOnce = True
+        if self.serverConnectedRecently():
+            last_checkin = config.get().get('server checkin')
+            elapsed_minutes = (time.time() - last_checkin) / 60
+            wait_minutes = max(0, 10 - elapsed_minutes)
+            if wait_minutes > 0:
+                logging.info(f"Server connected recently, waiting {wait_minutes:.1f} minutes")
+                await asyncio.sleep(wait_minutes * 60)
+        self.recordServerConnection()
         if self.walletOnlyMode:
             self.createServerConn()
             self.checkin()
@@ -530,6 +538,18 @@ class StartupDag(StartupDagStruct, metaclass=SingletonMeta):
     def createRelayValidation(self):
         self.relayValidation = ValidateRelayStream()
         logging.info("started relay validation engine", color="green")
+
+    def serverConnectedRecently(self, threshold_minutes: int = 10) -> bool:
+        """Check if server was connected to recently without side effects."""
+        last_checkin = config.get().get('server checkin')
+        if last_checkin is None:
+            return False
+        elapsed_seconds = time.time() - last_checkin
+        return elapsed_seconds < (threshold_minutes * 60)
+
+    def recordServerConnection(self) -> None:
+        """Record the current time as the last server connection time."""
+        config.add(data={'server checkin': time.time()})
 
     def createServerConn(self):
         logging.debug(self.urlServer, color="teal")
