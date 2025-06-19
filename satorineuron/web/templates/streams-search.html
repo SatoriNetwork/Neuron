@@ -1843,7 +1843,7 @@
       }
       const current = intervalsMap.get(roundedTime);
       current.observationAvg += parseFloat(obs.value);
-      current.predictionAvg += parseFloat(obs.median);
+      current.predictionAvg += parseFloat(obs.avg);
       current.count += 1;
     });
 
